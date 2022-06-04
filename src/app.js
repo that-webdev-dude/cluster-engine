@@ -1,5 +1,8 @@
+import { Display } from "./cluster";
 import { Engine } from "./cluster";
 
 export default () => {
-  console.log("🚀 ~ file: app.js ~ line 2 ~ Engine", Engine);
+  const display = new Display({
+    canvas: document.querySelector("#display"),
+  });
 };
