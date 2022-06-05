@@ -1,7 +1,7 @@
 class MouseControls {
-  constructor(container) {
+  constructor(container = document.body) {
     // state
-    this.element = container || document.body;
+    this.element = container;
     this.position = { x: 0, y: 0 };
     this.released = false; // true on the first frame only where released
     this.pressed = false; // true on the first frame only then pressed
@@ -10,6 +10,7 @@ class MouseControls {
     // handlers
     // TODO
     // ADD A SCREEN RESIZE HANDLER
+    this.element.addEventListener("contextmenu", (e) => e.preventDefault());
     document.addEventListener("mousemove", this.move.bind(this), false);
     document.addEventListener("mousedown", this.down.bind(this), false);
     document.addEventListener("mouseup", this.up.bind(this), false);
