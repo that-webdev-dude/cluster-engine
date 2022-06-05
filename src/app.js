@@ -1,33 +1,32 @@
 import cluster from "./cluster/index.js";
-const { Engine } = cluster;
-const { Container } = cluster;
-const { KeyControls } = cluster;
-const { MouseControls } = cluster;
+const { Engine, Container, CanvasRenderer, Text } = cluster;
 
 export default () => {
   // game setup
-  const canvas = document.querySelector("#display");
-  const ctx = canvas.getContext("2d");
-  canvas.height = 640;
-  canvas.width = 832;
+  const width = 832;
+  const height = 640;
+  const renderer = new CanvasRenderer(width, height);
+  document.querySelector("#app").appendChild(renderer.view);
 
-  // temp game element
-  const player = {
-    update: function () {
-      console.log("player updated!");
-    },
-  };
+  // game objects
+  const message = new Text("The renderer!", {
+    font: "16pt 'Press Start 2p'",
+    fill: "DarkRed",
+    align: "center",
+  });
+  message.position.x = width / 2;
+  message.position.y = height / 2;
 
   const scene = new Container();
-  scene.add(player);
-  scene.update();
-  scene.remove(player);
+  scene.add(message);
 
   const gameLoop = new Engine(
     // game logic
     (dt) => {},
     // game rendering
-    () => {}
+    () => {
+      renderer.render(scene);
+    }
   );
 
   // start

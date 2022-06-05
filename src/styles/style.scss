@@ -25,7 +25,9 @@ body {
   align-items: center;
   justify-content: center;
 
-  #display {
+
+  #display,
+  canvas {
     border: solid 1px rgb(200, 200, 200);
   }
 }
