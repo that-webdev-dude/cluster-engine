@@ -2,24 +2,15 @@ class KeyControls {
   constructor() {
     this.keys = {};
 
-    document.addEventListener(
-      "keydown",
-      (e) => {
-        if (["ArrowUp", "ArrowRight", "ArrowDown", "ArrowLeft", "Space"].indexOf(e.code)) {
-          e.preventDefault();
-        }
-        this.keys[e.code] = true;
-      },
-      false
-    );
+    document.addEventListener("keydown", (e) => {
+      if (["ArrowUp", "ArrowRight", "ArrowDown", "ArrowLeft", "Space"].indexOf(e.code))
+        e.preventDefault();
+      this.keys[e.code] = true;
+    });
 
-    document.addEventListener(
-      "keyup",
-      (e) => {
-        this.keys[e.code] = false;
-      },
-      false
-    );
+    document.addEventListener("keyup", (e) => {
+      this.keys[e.code] = false;
+    });
   }
 
   // Helpers
