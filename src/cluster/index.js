@@ -1,5 +1,7 @@
-import Engine from "./lib/Engine";
-import KeyControls from "./lib/KeyControls";
-import MouseControls from "./lib/MouseControls";
+import Engine from "./core/Engine";
+import Container from "./core/Container";
 
-export { Engine, KeyControls, MouseControls };
+import KeyControls from "./controls/KeyControls";
+import MouseControls from "./controls/MouseControls";
+
+export default { Engine, Container, KeyControls, MouseControls };

@@ -1,6 +1,8 @@
-import { Engine } from "./cluster";
-import { KeyControls } from "./cluster";
-import { MouseControls } from "./cluster";
+import cluster from "./cluster/index.js";
+const { Engine } = cluster;
+const { Container } = cluster;
+const { KeyControls } = cluster;
+const { MouseControls } = cluster;
 
 export default () => {
   // game setup
@@ -9,22 +11,21 @@ export default () => {
   canvas.height = 640;
   canvas.width = 832;
 
-  const mouse = new MouseControls(canvas);
-  let y = canvas.height / 2;
-  let x = canvas.width / 2;
-  let color = 0;
+  // temp game element
+  const player = {
+    update: function () {
+      console.log("player updated!");
+    },
+  };
+
+  const scene = new Container();
+  scene.add(player);
+  scene.update();
+  scene.remove(player);
 
   const gameLoop = new Engine(
     // game logic
-    (dt) => {
-      x = mouse.position.x;
-      y = mouse.position.y;
-      if (!mouse.isDown) color += 10;
-      if (color > 360) color -= 360;
-      ctx.fillStyle = `hsl(${color}, 50%, 50%)`;
-      ctx.fillRect(x, y, 50, 50);
-      mouse.update();
-    },
+    (dt) => {},
     // game rendering
     () => {}
   );
