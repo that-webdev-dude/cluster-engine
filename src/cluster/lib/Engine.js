@@ -72,9 +72,6 @@ class Engine {
     }
   }
 
-  /**
-   *
-   */
   start() {
     this.#currentTime = window.performance.now();
     this.#frameRequest = window.requestAnimationFrame((timestamp) => {
@@ -82,9 +79,6 @@ class Engine {
     });
   }
 
-  /**
-   *
-   */
   stop() {
     window.cancelAnimationFrame(this.#frameRequest);
   }
