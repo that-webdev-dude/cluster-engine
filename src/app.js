@@ -1,5 +1,8 @@
 import cluster from "./cluster/index.js";
-const { Engine, Container, CanvasRenderer, Text } = cluster;
+const { CanvasRenderer } = cluster;
+const { Container } = cluster;
+const { Engine } = cluster;
+const { Text } = cluster;
 
 export default () => {
   // game setup
@@ -16,19 +19,24 @@ export default () => {
   });
   message.position.x = width / 2;
   message.position.y = height / 2;
+  message.update = function (dt) {
+    this.position.x += 0.25 * dt;
+    if (this.position.x > 1032) {
+      this.position.x = -232;
+    }
+  };
 
   const scene = new Container();
   scene.add(message);
 
   const gameLoop = new Engine(
-    // game logic
-    (dt) => {},
-    // game rendering
+    (dt) => {
+      scene.update(dt);
+    },
     () => {
       renderer.render(scene);
     }
   );
 
-  // start
   gameLoop.start();
 };
