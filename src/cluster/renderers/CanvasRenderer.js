@@ -31,11 +31,16 @@ class CanvasRenderer {
       container.children.forEach((child) => {
         // if not visible shouldn't be processed
         if (child.visible == false) return;
+
+        // here we save the canvas state
+        // for further processing
         ctx.save();
-        // translates the context origin
+
         // if the child has a position property
+        // translates the context origin
         if (child.position)
           ctx.translate(Math.round(child.position.x), Math.round(child.position.y));
+
         // if child is type Text...
         if (child.text) {
           const { font, fill, align } = child.style;
@@ -43,9 +48,17 @@ class CanvasRenderer {
           if (fill) ctx.fillStyle = fill;
           if (align) ctx.textAlign = align;
           ctx.fillText(child.text, 0, 0);
+          // if child is type Texture...
+        } else if (child.texture) {
+          const { x, y } = child.position;
+          ctx.drawImage(child.texture.img, x, y);
         }
+
         // if child is a container...
         if (child.children) renderRecursive(child);
+
+        // we restore the canvas state
+        // after processing
         ctx.restore();
       });
     }

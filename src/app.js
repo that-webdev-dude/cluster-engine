@@ -1,8 +1,11 @@
+import textureSrc from "./images/spaceship.png";
 import cluster from "./cluster/index.js";
 const { CanvasRenderer } = cluster;
 const { Container } = cluster;
 const { Engine } = cluster;
 const { Text } = cluster;
+const { Texture } = cluster;
+const { Sprite } = cluster;
 
 export default () => {
   // game setup
@@ -12,22 +15,26 @@ export default () => {
   document.querySelector("#app").appendChild(renderer.view);
 
   // game objects
-  const message = new Text("The renderer!", {
-    font: "16pt 'Press Start 2p'",
-    fill: "DarkRed",
-    align: "center",
-  });
-  message.position.x = width / 2;
-  message.position.y = height / 2;
-  message.update = function (dt) {
-    this.position.x += 0.25 * dt;
-    if (this.position.x > 1032) {
-      this.position.x = -232;
-    }
-  };
-
   const scene = new Container();
-  scene.add(message);
+
+  const texture = new Texture(textureSrc);
+  for (let i = 0; i < 50; i++) {
+    const speed = Math.random() * 150 + 50;
+    const ship = new Sprite(texture);
+    ship.position.x = Math.random() * width;
+    ship.position.y = Math.random() * height;
+    ship.update = function (dt) {
+      ship.position.x += (speed / 1000) * dt;
+      ship.position.y += (speed / 1000) * dt;
+      if (ship.position.x > width) {
+        ship.position.x = -32;
+      }
+      if (ship.position.y > height) {
+        ship.position.y = -32;
+      }
+    };
+    scene.add(ship);
+  }
 
   const gameLoop = new Engine(
     (dt) => {
