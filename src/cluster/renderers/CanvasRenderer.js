@@ -38,8 +38,8 @@ class CanvasRenderer {
 
         // if the child has a position property
         // translates the context origin
-        if (child.position)
-          ctx.translate(Math.round(child.position.x), Math.round(child.position.y));
+        // if (child.position)
+        //   ctx.translate(Math.round(child.position.x), Math.round(child.position.y));
 
         // if child is type Text...
         if (child.text) {

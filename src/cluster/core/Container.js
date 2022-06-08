@@ -16,10 +16,11 @@ class Container {
   }
 
   update(dt, t) {
-    this.children.forEach((child) => {
+    this.children = this.children.filter((child) => {
       if (child.update) {
         child.update(dt, t);
       }
+      return child.dead ? false : true;
     });
   }
 }
