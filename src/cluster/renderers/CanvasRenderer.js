@@ -44,10 +44,11 @@ class CanvasRenderer {
         // if child is type Text...
         if (child.text) {
           const { font, fill, align } = child.style;
+          const { position } = child;
           if (font) ctx.font = font;
           if (fill) ctx.fillStyle = fill;
           if (align) ctx.textAlign = align;
-          ctx.fillText(child.text, 0, 0);
+          ctx.fillText(child.text, position.x, position.y);
           // if child is type Texture...
         } else if (child.texture) {
           const { x, y } = child.position;
