@@ -41,11 +41,23 @@ class CanvasRenderer {
           ctx.translate(Math.round(child.position.x), Math.round(child.position.y));
         }
 
+        if (child.anchor) {
+          ctx.translate(child.anchor.x, child.anchor.y);
+        }
+
         if (child.scale) {
           ctx.scale(child.scale.x, child.scale.y);
         }
 
+        if (child.angle) {
+          const { x: px, y: py } = child.pivot;
+          ctx.translate(px, py);
+          ctx.rotate((Math.PI / 180) * child.angle);
+          ctx.translate(-px, -py);
+        }
+
         // if child is type Text...
+        // if child is type Texture...
         if (child.text) {
           const { font, fill, align } = child.style;
           const { position } = child;
@@ -53,7 +65,6 @@ class CanvasRenderer {
           if (fill) ctx.fillStyle = fill;
           if (align) ctx.textAlign = align;
           ctx.fillText(child.text, position.x, position.y);
-          // if child is type Texture...
         } else if (child.texture) {
           ctx.drawImage(child.texture.img, 0, 0);
         }
@@ -61,8 +72,7 @@ class CanvasRenderer {
         // if child is a container...
         if (child.children) renderRecursive(child);
 
-        // we restore the canvas state
-        // after processing
+        // restore the canvas state
         ctx.restore();
       });
     }

@@ -16,35 +16,25 @@ export default () => {
   const height = 300;
   const game = new Game({ width, height });
 
-  // game objects
-  const buildings = game.scene.add(new Container());
-  function makeRandomBuilding(building, x) {
-    const { position, scale } = building;
-    scale.x = math.randf(1, 3);
-    scale.y = math.randf(1, 3);
-    position.x = x;
-    position.y = height - scale.y * 64;
-  }
-  for (let i = 0; i < 50; i++) {
-    const building = buildings.add(new Sprite(new Texture(buildingImageUrl)));
-    makeRandomBuilding(building, math.rand(width));
-  }
+  // controller
+  const controller = new KeyControls();
 
+  // game objects
   const ship = game.scene.add(new Sprite(new Texture(playerImageUrl)));
-  ship.position.x = width / 2 - 216;
-  ship.position.y = height / 2 - 124;
+  ship.position.x = width / 2 - 16;
+  ship.position.y = height / 2;
+  ship.anchor.x = -16;
+  ship.anchor.y = -16;
+  ship.pivot.x = 16;
+  ship.pivot.y = 16;
+
   ship.update = function (dt, t) {
-    const { position } = this;
-    position.y += Math.sin(20 * t);
+    let flipped = controller.action;
+    this.scale.x = flipped ? -1 : 1;
+    this.anchor.x = flipped ? 32 : 0;
+    ship.angle += 2;
   };
 
   // start
-  game.run((dt, t) => {
-    buildings.map((building) => {
-      building.position.x -= 100 * dt;
-      if (building.position.x < -80) {
-        makeRandomBuilding(building, math.randf(width, width + 80));
-      }
-    });
-  });
+  game.run((dt, t) => {});
 };
