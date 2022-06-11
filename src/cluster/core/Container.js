@@ -5,6 +5,10 @@ class Container {
   }
 
   /** methods */
+  map(f = () => {}) {
+    return this.children.map(f);
+  }
+
   add(child) {
     this.children.push(child);
     return child;
