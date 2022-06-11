@@ -15,27 +15,20 @@ export default () => {
   const game = new Game({ width, height });
 
   // game objects
-  const ships = new Container();
-  for (let i = 0; i < 30; i++) {
-    const ship = ships.add(new Sprite(new Texture(playerImageUrl)));
-    ship.position.y = Math.random() * height;
-    ship.position.x = Math.random() * width;
-    ship.update = function (dt, t) {
-      let { position } = this;
-      position.x += dt * 200;
-    };
-  }
+  const ship = game.scene.add(new Sprite(new Texture(playerImageUrl)));
 
-  // scene
-  game.scene.add(ships);
+  ship.position.x = -32;
+  ship.position.y = height / 2 - 16;
+  ship.update = function (dt, t) {
+    let { position, scale } = this;
+    position.x += dt * 200;
+    scale.x = 1.5 * Math.abs(Math.sin(t * 1.5));
+    scale.y = 2.5 * Math.abs(Math.sin(t * 1.5));
+    if (position.x > width) {
+      position.x = -32;
+    }
+  };
 
   // start
-  game.run((dt, t) => {
-    ships.map((ship) => {
-      let { position } = ship;
-      if (position.x > width) {
-        position.x = -32;
-      }
-    });
-  });
+  game.run((dt, t) => {});
 };

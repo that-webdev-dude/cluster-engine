@@ -36,10 +36,14 @@ class CanvasRenderer {
         // for further processing
         ctx.save();
 
-        // if the child has a position property
-        // translates the context origin
-        // if (child.position)
-        //   ctx.translate(Math.round(child.position.x), Math.round(child.position.y));
+        // canvas transforms first
+        if (child.position) {
+          ctx.translate(Math.round(child.position.x), Math.round(child.position.y));
+        }
+
+        if (child.scale) {
+          ctx.scale(child.scale.x, child.scale.y);
+        }
 
         // if child is type Text...
         if (child.text) {
@@ -51,8 +55,7 @@ class CanvasRenderer {
           ctx.fillText(child.text, position.x, position.y);
           // if child is type Texture...
         } else if (child.texture) {
-          const { x, y } = child.position;
-          ctx.drawImage(child.texture.img, x, y);
+          ctx.drawImage(child.texture.img, 0, 0);
         }
 
         // if child is a container...
