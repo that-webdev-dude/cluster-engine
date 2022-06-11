@@ -1,0 +1,52 @@
+/**
+ * Return an integer random number between min & max.
+ * If max is "undefined" return a random number between 0 & min.
+ * If min & max are "undefined" return a random number between 0 & 1.
+ * @param {number} min lower limit
+ * @param {number} max upper limit
+ * @returns {number} integer random number between min:max or 0: min or 0:1
+ */
+function rand(min, max) {
+  return Math.floor(randf(min, max));
+}
+
+/**
+ * Generate a floating point random number between min & max.
+ * If max is "undefined" return a random number between 0 & min.
+ * If min & max are "undefined" return a random number between 0 & 1.
+ * @param {number} min lower limit
+ * @param {number} max upper limit
+ * @returns {number} floating point random number between min:max or 0: min or 0:1
+ */
+function randf(min, max) {
+  if (max == null) {
+    max = min || 1;
+    min = 0;
+  }
+  return Math.random() * (max - min) + min;
+}
+
+/**
+ * Generate a boolean flag with given odds.
+ * @param {number} odds number of odds (default is 2)
+ * @returns {boolean} true with given "odds"
+ */
+function randOneIn(odds = 2) {
+  return rand(0, odds) === 0;
+}
+
+/**
+ * Pick a random element from an array.
+ * @param {Array} items target array
+ * @returns {*} picked array item
+ */
+function randOneFrom(items = []) {
+  return items[rand(0, items.length)];
+}
+
+export default {
+  rand,
+  randf,
+  randOneIn,
+  randOneFrom,
+};

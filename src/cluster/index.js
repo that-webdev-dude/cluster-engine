@@ -1,3 +1,4 @@
+import math from "./utils/math";
 import Game from "./core/Game";
 import Text from "./core/Text";
 import Engine from "./core/Engine";
@@ -9,6 +10,7 @@ import MouseControls from "./input/MouseControls";
 import CanvasRenderer from "./renderers/CanvasRenderer";
 
 export default {
+  math,
   Game,
   Text,
   Engine,
