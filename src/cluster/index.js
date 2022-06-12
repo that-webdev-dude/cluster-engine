@@ -5,6 +5,7 @@ import Engine from "./core/Engine";
 import Sprite from "./core/Sprite";
 import Texture from "./core/Texture";
 import Container from "./core/Container";
+import TileSprite from "./core/TileSprite";
 import KeyControls from "./input/KeyControls";
 import MouseControls from "./input/MouseControls";
 import CanvasRenderer from "./renderers/CanvasRenderer";
@@ -17,6 +18,7 @@ export default {
   Sprite,
   Texture,
   Container,
+  TileSprite,
   KeyControls,
   MouseControls,
   CanvasRenderer,
