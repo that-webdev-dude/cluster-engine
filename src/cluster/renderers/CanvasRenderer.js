@@ -66,7 +66,23 @@ class CanvasRenderer {
           if (align) ctx.textAlign = align;
           ctx.fillText(child.text, position.x, position.y);
         } else if (child.texture) {
-          ctx.drawImage(child.texture.img, 0, 0);
+          // can be a tilesprite or regular sprite
+          const { img } = child.texture.img;
+          if (child.tileW && child.tileH) {
+            ctx.drawImage(
+              img,
+              child.frame.x * child.tileW,
+              child.frame.y * child.tileH,
+              child.tileW,
+              chile.tileH,
+              0,
+              0,
+              child.tileW,
+              chile.tileH
+            );
+          } else {
+            ctx.drawImage(img, 0, 0);
+          }
         }
 
         // if child is a container...
