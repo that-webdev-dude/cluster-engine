@@ -5,6 +5,7 @@ import Player from "./entities/Player";
 const { Texture } = cluster;
 const { Sprite } = cluster;
 const { Game } = cluster;
+const { math } = cluster;
 
 export default () => {
   // setup
@@ -20,7 +21,12 @@ export default () => {
 
   // game objects
   const background = game.scene.add(new Sprite(new Texture(backgroundImageUrl)));
-  const player = game.scene.add(new Player());
+
+  for (let i = 0; i < 100; i++) {
+    const player = game.scene.add(new Player());
+    player.position.x = math.rand(width - 32);
+    player.position.y = math.rand(height - 32);
+  }
 
   // start
   game.run((dt, t) => {});

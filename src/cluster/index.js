@@ -1,7 +1,6 @@
 import math from "./utils/math";
 import Game from "./core/Game";
 import Text from "./core/Text";
-import Engine from "./core/Engine";
 import Sprite from "./core/Sprite";
 import Texture from "./core/Texture";
 import Container from "./core/Container";
@@ -14,7 +13,6 @@ export default {
   math,
   Game,
   Text,
-  Engine,
   Sprite,
   Texture,
   Container,

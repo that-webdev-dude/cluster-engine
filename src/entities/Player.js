@@ -7,12 +7,25 @@ const texture = new Texture(playerImageUrl);
 class Player extends TileSprite {
   constructor() {
     super(texture, 32, 32);
+    this.animationRate = 0.1;
+    this.currentFrame = 0;
+    this.currentTime = 0;
+    this.frames = [
+      { x: 0, y: 0 },
+      { x: 1, y: 0 },
+      { x: 2, y: 0 },
+      { x: 3, y: 0 },
+    ];
+
+    this.frame = this.frames[this.currentFrame];
   }
 
   update(dt, t) {
-    // Math.floor(t / 0.1) % 4 → timing trick
-    // will cycle & return a value from 0:3 every 0.1s
-    this.frame.x = Math.floor(t / 0.25) % 4;
+    this.currentTime += dt;
+    if (this.currentTime > this.animationRate) {
+      this.frame = this.frames[this.currentFrame++ % this.frames.length];
+      this.currentTime -= this.animationRate;
+    }
   }
 }
 
