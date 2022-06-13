@@ -1,12 +1,14 @@
-import playerImageUrl from "../images/player.png";
+import squizzballImageUrl from "../images/squizzball.png";
 import cluster from "../cluster";
-const { Texture, TileSprite } = cluster;
+const { Texture, TileSprite, math } = cluster;
 
-const texture = new Texture(playerImageUrl);
+const texture = new Texture(squizzballImageUrl);
 
-class Player extends TileSprite {
+class Squizzball extends TileSprite {
   constructor() {
     super(texture, 32, 32);
+    this.speed = math.rand(20, 100);
+    this.anchor = { x: -16, y: -16 };
     this.animationRate = 0.1;
     this.currentFrame = 0;
     this.currentTime = 0;
@@ -21,6 +23,9 @@ class Player extends TileSprite {
   }
 
   update(dt, t) {
+    const { position, speed } = this;
+    position.x += speed * dt;
+
     this.currentTime += dt;
     if (this.currentTime > this.animationRate) {
       this.frame = this.frames[this.currentFrame++ % this.frames.length];
@@ -29,4 +34,4 @@ class Player extends TileSprite {
   }
 }
 
-export default Player;
+export default Squizzball;

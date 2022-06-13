@@ -44,9 +44,23 @@ function randOneFrom(items = []) {
   return items[rand(0, items.length)];
 }
 
+/**
+ * Compute the euclidean distance between point a & b.
+ * Points passed in must be Object type with x & y properties.
+ * @param {Object} a
+ * @param {Object} b
+ * @returns {number}
+ */
+function distance(a, b) {
+  const dx = a.x - b.x;
+  const dy = a.y - b.y;
+  return Math.sqrt(dx * dx + dy * dy);
+}
+
 export default {
   rand,
   randf,
   randOneIn,
   randOneFrom,
+  distance,
 };
