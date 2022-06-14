@@ -13,7 +13,7 @@ export default () => {
 
   // game objects
   const squizzballs = game.scene.add(new Container());
-  for (let i = 0; i < 50; i++) {
+  for (let i = 0; i < 1; i++) {
     const squizzball = squizzballs.add(new Squizzball());
     squizzball.position.x = math.rand(width - 16);
     squizzball.position.y = math.rand(height - 16);

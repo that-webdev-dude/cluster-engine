@@ -1,3 +1,4 @@
+import Animation from "./Animation";
 import Sprite from "./Sprite";
 
 class TileSprite extends Sprite {
@@ -6,6 +7,11 @@ class TileSprite extends Sprite {
     this.tileW = tileW;
     this.tileH = tileH;
     this.frame = { x: 0, y: 0 };
+    this.animation = new Animation(this);
+  }
+
+  update(dt) {
+    this.animation.update(dt);
   }
 }
 
