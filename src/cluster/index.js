@@ -4,6 +4,7 @@ import Text from "./core/Text";
 import Sprite from "./core/Sprite";
 import Texture from "./core/Texture";
 import Container from "./core/Container";
+import TileMap from "./core/TileMap";
 import TileSprite from "./core/TileSprite";
 import KeyControls from "./input/KeyControls";
 import MouseControls from "./input/MouseControls";
@@ -16,6 +17,7 @@ export default {
   Sprite,
   Texture,
   Container,
+  TileMap,
   TileSprite,
   KeyControls,
   MouseControls,
