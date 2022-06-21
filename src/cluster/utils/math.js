@@ -57,10 +57,23 @@ function distance(a, b) {
   return Math.sqrt(dx * dx + dy * dy);
 }
 
+/**
+ * Clamp the value to the provided boundaries
+ * defined by min and max parameters
+ * @param {number} value
+ * @param {number} min
+ * @param {number} max
+ * @returns {number} clamped value
+ */
+function clamp(value, min, max) {
+  return Math.max(min, Math.min(value, max));
+}
+
 export default {
   rand,
   randf,
   randOneIn,
   randOneFrom,
   distance,
+  clamp,
 };

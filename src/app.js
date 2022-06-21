@@ -1,11 +1,8 @@
-import playerImageURL from "./images/player.png";
-import tilesImageURL from "./images/tiles.png";
-import levelImageURL from "./images/level.png";
 import cluster from "./cluster/index.js";
-import Texture from "./cluster/core/Texture";
-import math from "./cluster/utils/math";
-import TileMap from "./cluster/core/TileMap";
-const { Game } = cluster;
+import Squizz from "./entities/Squizz.js";
+import Level from "./levels/Level";
+
+const { Game, KeyControls, math } = cluster;
 
 export default () => {
   // setup
@@ -14,24 +11,22 @@ export default () => {
   const game = new Game({ width, height });
 
   // controller
-  // ...
-
-  // game level
-  const tileW = 32;
-  const tileH = 32;
-  const mapW = width / 32;
-  const mapH = height / 32;
-  const tiles = [];
-  for (let column = 0; column < mapW; column++) {
-    for (let row = 0; row < mapH; row++) {
-      tiles.push({ x: math.rand(512 / 32), y: math.rand(512 / 32) });
-    }
-  }
-  const map = new TileMap(tiles, mapW, mapH, tileW, tileH, new Texture(levelImageURL));
+  const controller = new KeyControls();
 
   // game objects
-  game.scene.add(map);
+  const squizz = new Squizz(controller);
+  const level = new Level(width, height);
+
+  // game level
+  game.scene.add(level);
+  game.scene.add(squizz);
 
   // game logic
-  game.run((dt, t) => {});
+  game.run((dt, t) => {
+    const {
+      bounds: { top, right, bottom, left },
+    } = level;
+    squizz.position.x = math.clamp(squizz.position.x, left, right);
+    squizz.position.y = math.clamp(squizz.position.y, top, bottom);
+  });
 };
