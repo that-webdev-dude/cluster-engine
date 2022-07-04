@@ -3,9 +3,8 @@ import TileSprite from "./TileSprite";
 
 class TileMap extends Container {
   /**
-   * TileMap Is a Container that positions
-   * TileSprites into a grid
-   * @param {Array} tiles array of tile indexes
+   * TileMap is a Container that positions TileSprites into a grid
+   * @param {Array} tiles array of tile positions relative to texture [{x: number, y: number}, ...]
    * @param {number} mapW width of the map in number of tiles (columns)
    * @param {number} mapH height of the map in number of tiles (rows)
    * @param {number} tileW width of a single tile
