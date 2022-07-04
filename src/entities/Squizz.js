@@ -11,7 +11,8 @@ class Squizz extends TileSprite {
     // initialize
     super(texture, 32, 32);
     // this.anchor = { x: -16, y: -16 };
-    this.speed = 150;
+    this.speed = 0.15;
+    this.direction = { x: 1, y: 0 };
     this.controller = controller;
     this.animation.add(
       "roll",
@@ -30,10 +31,22 @@ class Squizz extends TileSprite {
   update(dt, t) {
     super.update(dt);
 
-    const { position, controller, speed } = this;
+    const { x: controllerX, y: controllerY } = this.controller;
 
-    position.x += controller.x * speed * dt;
-    position.y += controller.y * speed * dt;
+    if (controllerX && controllerX !== this.direction.x) {
+      // change to horizontal movement
+      this.direction.x = controllerX;
+      this.direction.y = 0;
+      this.position.y = Math.round(this.position.y / 32) * 32;
+    } else if (controllerY && controllerY !== this.direction.y) {
+      // change to vertical movement
+      this.direction.y = controllerY;
+      this.direction.x = 0;
+      this.position.x = Math.round(this.position.x / 32) * 32;
+    }
+
+    this.position.x += this.direction.x * dt * (32 / this.speed);
+    this.position.y += this.direction.y * dt * (32 / this.speed);
   }
 }
 

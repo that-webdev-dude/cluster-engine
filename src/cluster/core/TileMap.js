@@ -36,6 +36,22 @@ class TileMap extends Container {
   get height() {
     return this.mapH * this.tileH;
   }
+
+  pixelToMapPosition(pixelPosition) {
+    const { tileW, tileH } = this;
+    return {
+      x: Math.floor(pixelPosition.x / tileW),
+      y: Math.floor(pixelPosition.y / tileH),
+    };
+  }
+
+  mapToPixelPosition(mapPosition) {
+    const { tileW, tileH } = this;
+    return {
+      x: mapPosition.x * tileW,
+      y: mapPosition.y * tileH,
+    };
+  }
 }
 
 export default TileMap;
