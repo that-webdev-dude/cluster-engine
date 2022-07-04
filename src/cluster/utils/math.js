@@ -58,7 +58,7 @@ function distance(a, b) {
 }
 
 /**
- * Clamp the value to the provided boundaries
+ * Clamp the value to the provided min max limits
  * defined by min and max parameters
  * @param {number} value
  * @param {number} min
