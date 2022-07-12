@@ -28,7 +28,5 @@ export default () => {
     } = level;
     squizz.position.x = math.clamp(squizz.position.x, left, right);
     squizz.position.y = math.clamp(squizz.position.y, top, bottom);
-
-    // console.log(level.mapToPixelPosition({ x: 1, y: 1 }));
   });
 };

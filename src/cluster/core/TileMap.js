@@ -51,6 +51,24 @@ class TileMap extends Container {
       y: mapPosition.y * tileH,
     };
   }
+
+  tileAtMapPosition(mapPosition) {
+    return this.children[mapPosition.y * this.mapW + mapPosition.x];
+  }
+
+  tileAtPixelPosition(position) {
+    return this.tileAtMapPosition(this.pixelToMapPosition(position));
+  }
+
+  setFrameAtMapPosition(mapPosition, frame) {
+    const tile = this.tileAtMapPosition(mapPosition);
+    tile.frame = frame;
+    return tile;
+  }
+
+  setFrameAtPixelPosition(position, frame) {
+    return this.setFrameAtMapPosition(this.pixelToMapPosition(position), frame);
+  }
 }
 
 export default TileMap;
