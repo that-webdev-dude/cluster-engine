@@ -10,6 +10,14 @@ class TileSprite extends Sprite {
     this.animation = new Animation(this);
   }
 
+  get width() {
+    return this.tileW;
+  }
+
+  get height() {
+    return this.tileH;
+  }
+
   update(dt) {
     this.animation.update(dt);
   }

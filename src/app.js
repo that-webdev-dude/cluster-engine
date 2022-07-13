@@ -2,7 +2,7 @@ import cluster from "./cluster/index.js";
 import Squizz from "./entities/Squizz.js";
 import Level from "./levels/Level";
 
-const { Game, KeyControls, math } = cluster;
+const { Game, KeyControls, math, entity } = cluster;
 
 export default () => {
   // setup
@@ -28,5 +28,6 @@ export default () => {
     } = level;
     squizz.position.x = math.clamp(squizz.position.x, left, right);
     squizz.position.y = math.clamp(squizz.position.y, top, bottom);
+    const ground = level.checkGround(entity.center(squizz));
   });
 };

@@ -41,12 +41,26 @@ class Level extends TileMap {
 
     // initialize
     super(level, mapW, mapH, tileW, tileH, texture);
+    this.blankFrame = { x: 0, y: 0 };
+    this.lastTile = null;
     this.bounds = {
-      top: tileH,
+      top: tileH * 2,
       right: width - tileW * 2,
       bottom: height - tileH * 2,
       left: tileW,
     };
+  }
+
+  checkGround(position) {
+    const { blankFrame, lastTile } = this;
+    const tile = this.tileAtPixelPosition(position);
+    if (tile === lastTile) return "checked";
+    this.lastTile = tile;
+    if (tile.frame !== blankFrame) {
+      this.setFrameAtPixelPosition(position, blankFrame);
+      return "solid";
+    }
+    return "cleared";
   }
 }
 
