@@ -2,7 +2,7 @@ import cluster from "./cluster/index.js";
 import Squizz from "./entities/Squizz.js";
 import Level from "./levels/Level";
 
-const { Game, KeyControls, math, entity } = cluster;
+const { Game, KeyControls, Camera, math, entity } = cluster;
 
 export default () => {
   // setup
@@ -15,11 +15,17 @@ export default () => {
 
   // game objects
   const squizz = new Squizz(controller);
-  const level = new Level(width, height);
+  const level = new Level(width * 2, height * 2);
+  const camera = new Camera(
+    squizz,
+    { width, height },
+    { width: level.width, height: level.height }
+  );
 
   // game level
-  game.scene.add(level);
-  game.scene.add(squizz);
+  game.scene.add(camera);
+  camera.add(level);
+  camera.add(squizz);
 
   // game logic
   game.run((dt, t) => {

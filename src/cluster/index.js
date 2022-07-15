@@ -11,6 +11,7 @@ import TileSprite from "./core/TileSprite";
 import KeyControls from "./input/KeyControls";
 import MouseControls from "./input/MouseControls";
 import CanvasRenderer from "./renderers/CanvasRenderer";
+import Camera from "./core/Camera";
 
 export default {
   entity,
@@ -25,4 +26,5 @@ export default {
   KeyControls,
   MouseControls,
   CanvasRenderer,
+  Camera,
 };
