@@ -10,6 +10,11 @@ class Baddie extends TileSprite {
     this.xSpeed = xSpeed || 0;
     this.ySpeed = ySpeed || 0;
   }
+
+  update(dt, t) {
+    this.position.x += this.xSpeed * dt;
+    this.position.y += this.ySpeed * dt;
+  }
 }
 
 export default Baddie;

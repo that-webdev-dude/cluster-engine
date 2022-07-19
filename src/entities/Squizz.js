@@ -11,6 +11,7 @@ class Squizz extends TileSprite {
     // initialize
     super(texture, 32, 32);
     // this.anchor = { x: -16, y: -16 };
+    this.dead = false;
     this.speed = 0.15;
     this.direction = { x: 1, y: 0 };
     this.controller = controller;
