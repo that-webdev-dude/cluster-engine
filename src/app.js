@@ -1,5 +1,6 @@
 import cluster from "./cluster/index.js";
 import Squizz from "./entities/Squizz.js";
+import Baddie from "./entities/Baddie.js";
 import Level from "./levels/Level";
 
 const { Game, KeyControls, Camera, math, entity } = cluster;
@@ -26,6 +27,7 @@ export default () => {
   game.scene.add(camera);
   camera.add(level);
   camera.add(squizz);
+  // camera.add(new Baddie(0, 0));
 
   // game logic
   game.run((dt, t) => {
