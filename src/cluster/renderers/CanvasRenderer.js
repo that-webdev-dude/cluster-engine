@@ -60,11 +60,10 @@ class CanvasRenderer {
         // if child is type Texture...
         if (child.text) {
           const { font, fill, align } = child.style;
-          const { position } = child;
           if (font) ctx.font = font;
           if (fill) ctx.fillStyle = fill;
           if (align) ctx.textAlign = align;
-          ctx.fillText(child.text, position.x, position.y);
+          ctx.fillText(child.text, 0, 0);
         } else if (child.texture) {
           // can be a tilesprite or regular sprite
           const { img } = child.texture;
