@@ -45,6 +45,14 @@ class KeyControls {
   get action() {
     return this.keys["Space"];
   }
+
+  reset() {
+    for (let key in this.keys) {
+      this.keys[key] = false;
+    }
+
+    return this;
+  }
 }
 
 export default KeyControls;
