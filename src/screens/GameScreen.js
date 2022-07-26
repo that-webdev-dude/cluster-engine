@@ -35,8 +35,6 @@ class GameScreen extends Container {
     this.baddies = baddies;
   }
 
-  init() {}
-
   addBaddies(level) {
     const baddies = new Container();
     // horizontal

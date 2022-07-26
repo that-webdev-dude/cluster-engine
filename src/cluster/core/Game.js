@@ -22,7 +22,7 @@ class Game {
   }
 
   run(gameUpdate = () => {}) {
-    const { scene, renderer } = this;
+    const { renderer } = this;
     let t = 0;
     let dt = 0;
     let last = 0;
@@ -32,9 +32,9 @@ class Game {
       t = ms / 1000;
       dt = Math.min(t - last, MAX_FRAME * 5);
       last = t;
-      scene.update(dt, t);
+      this.scene.update(dt, t);
       gameUpdate(dt, t);
-      renderer.render(scene);
+      renderer.render(this.scene);
     };
 
     requestAnimationFrame(loop);
