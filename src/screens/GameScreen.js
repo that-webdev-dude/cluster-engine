@@ -7,7 +7,7 @@ import Squizz from "../entities/Squizz";
 import Level from "../levels/Level";
 
 class GameScreen extends Container {
-  constructor(game, controller) {
+  constructor(game, controller, onGameOver = () => {}) {
     super();
     const level = new Level(game.width * 2, game.height * 2);
     const squizz = new Squizz(controller);
@@ -33,6 +33,7 @@ class GameScreen extends Container {
     this.squizz = squizz;
     this.camera = camera;
     this.baddies = baddies;
+    this.onGameOver = onGameOver;
   }
 
   addBaddies(level) {
@@ -58,18 +59,14 @@ class GameScreen extends Container {
 
   update(dt, t) {
     super.update(dt, t);
-
     const { squizz, level, baddies } = this;
+
     // update the squizz position
     const {
       bounds: { top, right, bottom, left },
     } = level;
     squizz.position.x = math.clamp(squizz.position.x, left, right);
     squizz.position.y = math.clamp(squizz.position.y, top, bottom);
-
-    // check for the squizz ground covered
-    const ground = level.checkGround(entity.center(squizz));
-    if (ground === "cleared") squizz.dead = true;
 
     baddies.map((b) => {
       // baddies screenwrap
@@ -87,6 +84,14 @@ class GameScreen extends Container {
         squizz.dead = true;
       }
     });
+
+    // check for the squizz ground covered
+    const ground = level.checkGround(entity.center(squizz));
+    if (ground === "cleared") {
+      squizz.dead = true;
+    }
+
+    if (squizz.dead) this.onGameOver();
   }
 }
 

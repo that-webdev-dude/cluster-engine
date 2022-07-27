@@ -23,7 +23,6 @@ class LogoScreen extends Container {
 
     if (this.showLength < 0) {
       this.onStart();
-      console.log("switch screen");
     }
   }
 }
