@@ -5,6 +5,8 @@ const STEP = 1 / 60;
 const MAX_FRAME = STEP * 5;
 
 class Game {
+  #renderer;
+
   constructor(
     { width = 832, height = 640, parent = "#app" } = {
       width: 832,
@@ -12,17 +14,23 @@ class Game {
       parent: "#app",
     }
   ) {
-    this.renderer = new CanvasRenderer(width, height);
     this.scene = new Container();
-    this.width = width;
-    this.height = height;
+    this.#renderer = new CanvasRenderer(width, height);
 
     // initialize
-    document.querySelector(parent).appendChild(this.renderer.view);
+    document.querySelector(parent).appendChild(this.#renderer.view);
+  }
+
+  get height() {
+    return this.#renderer.height;
+  }
+
+  get width() {
+    return this.#renderer.width;
   }
 
   run(gameUpdate = () => {}) {
-    const { renderer } = this;
+    // const { #renderer } = this;
     let t = 0;
     let dt = 0;
     let last = 0;
@@ -34,7 +42,7 @@ class Game {
       last = t;
       this.scene.update(dt, t);
       gameUpdate(dt, t);
-      renderer.render(this.scene);
+      this.#renderer.render(this.scene);
     };
 
     requestAnimationFrame(loop);

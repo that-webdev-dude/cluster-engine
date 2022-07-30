@@ -3,11 +3,12 @@ import Container from "./Container";
 
 class Camera extends Container {
   /**
-   * Container of all the "filmable" game elements. All of
-   * the game items (except the UI components)
+   * Container of all the "filmable" game elements.
+   * All of the game items (except the UI components).
+   * @constructor
    * @param {*} subject what the camera should follow
-   * @param {*} viewport the size of the camera screen { ..., width, height }
-   * @param {*} worldSize the size of the game world { ..., width, height }
+   * @param {Object} viewport the size of the camera screen { ..., width, height }
+   * @param {} worldSize the size of the game world { ..., width, height }
    */
   constructor(subject, viewport, worldSize = viewport) {
     super();

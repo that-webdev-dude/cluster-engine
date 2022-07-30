@@ -10,10 +10,12 @@ export default () => {
   // helpers
 
   // setup
-  const width = 640;
   const height = 320;
-  const game = new Game({ width, height });
+  const width = 640;
+  // const game = new Game({ width, height });
+  const game = new Game();
   const controller = new KeyControls();
+  console.log("file: app.js ~ line 16 ~ game", game);
 
   // helpers
   const newGame = () => {
