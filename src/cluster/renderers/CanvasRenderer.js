@@ -19,8 +19,7 @@ class CanvasRenderer {
       // the state holds a reference to the context
       const canvas = document.createElement("canvas");
       this.height = canvas.height = height;
-      canvas.width = width;
-      // this.width = canvas.width = width;
+      this.width = canvas.width = width;
       this.view = canvas;
       this.context = canvas.getContext("2d");
       // here we set the text baseline property to top
@@ -32,13 +31,6 @@ class CanvasRenderer {
       CanvasRenderer.instance = this;
       return this;
     }
-  }
-
-  /**
-   * @readonly {Number}
-   */
-  get width() {
-    return this.context.canvas.width;
   }
 
   /**

@@ -7,17 +7,13 @@ import GameoverScreen from "./screens/GameoverScreen.js";
 const { Game, KeyControls } = cluster;
 
 export default () => {
-  // helpers
-
-  // setup
   const height = 320;
   const width = 640;
-  // const game = new Game({ width, height });
+
   const game = new Game();
   const controller = new KeyControls();
   console.log("file: app.js ~ line 16 ~ game", game);
 
-  // helpers
   const newGame = () => {
     game.scene = new GameScreen(game, controller, gameoverScreen);
   };

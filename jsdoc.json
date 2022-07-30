@@ -1,6 +1,6 @@
 {
   "source": {
-    "include": ["src"],
+    "include": ["src/cluster"],
     "includePattern": ".js$",
     "excludePattern": "(node_modules/|docs)"
   },
