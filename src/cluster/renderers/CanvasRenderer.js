@@ -3,7 +3,7 @@
 class CanvasRenderer {
   /**
    * @description
-   * Game Renderer.
+   * Game Renderer model
    * This game renderer should be used for
    * any 2D canvas based HTML games
    * @param {Number} width width in pixels of the game view
@@ -25,8 +25,6 @@ class CanvasRenderer {
       this.view = canvas;
       this.context = canvas.getContext("2d");
 
-      this.context.textBaseline = "top";
-      this.context.imageSmoothingEnabled = false;
       this.#init();
 
       CanvasRenderer.instance = this;
@@ -35,6 +33,8 @@ class CanvasRenderer {
   }
 
   #init() {
+    this.context.textBaseline = "top";
+    this.context.imageSmoothingEnabled = false;
     document.addEventListener("keypress", (event) => {
       if (event.code === "KeyF") {
         this.#toggleFullscreen();
@@ -42,13 +42,13 @@ class CanvasRenderer {
     });
   }
 
-  // /**
-  //  * toggleFullscreen()
-  //  * to add the fullscreen functionality to this display
-  //  * using the fullscreen api
-  //  * @returns {Void}
-  //  * @private
-  //  */
+  /**
+   * toggleFullscreen():
+   * to add the fullscreen functionality to this display
+   * using the fullscreen api
+   * @returns {Void}
+   * @private
+   */
   #toggleFullscreen() {
     if (!document.fullscreenElement) {
       this.view.requestFullscreen();
@@ -60,7 +60,7 @@ class CanvasRenderer {
   }
 
   /**
-   * renderRecursive()
+   * renderRecursive():
    * recursive render of all the childre of the
    * passed container to the current context.
    * @param {Container} container
@@ -128,7 +128,7 @@ class CanvasRenderer {
   }
 
   /**
-   * render()
+   * render():
    * Traverse the container tree structure and renders the child nodes.
    * The container is passed in as parameter.
    * The clear flag set to true clears the context
