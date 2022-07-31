@@ -15,7 +15,10 @@ class Game {
     }
   ) {
     this.scene = new Container();
-    this.#renderer = new CanvasRenderer(width, height);
+    this.#renderer = new CanvasRenderer({
+      height,
+      width,
+    });
 
     // initialize
     document.querySelector(parent).appendChild(this.#renderer.view);

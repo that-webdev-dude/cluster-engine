@@ -1,56 +1,52 @@
+import KeyController from "./KeyController";
+
 class KeyControls {
+  #controller = null;
+
   constructor() {
-    this.keys = {};
-
-    document.addEventListener("keydown", (e) => {
-      if (["ArrowUp", "ArrowRight", "ArrowDown", "ArrowLeft", "Space"].indexOf(e.code))
-        e.preventDefault();
-      this.keys[e.code] = true;
-    });
-
-    document.addEventListener("keyup", (e) => {
-      this.keys[e.code] = false;
-    });
+    this.#controller = new KeyController([
+      { code: "ArrowUp", action: "moveUp" },
+      { code: "ArrowDown", action: "moveDown" },
+      { code: "ArrowLeft", action: "moveLeft" },
+      { code: "ArrowRight", action: "moveRight" },
+      { code: "Space", action: "action" },
+    ]);
   }
 
   // Helpers
   get x() {
-    if (this.keys["ArrowRight"]) return 1;
-    if (this.keys["ArrowLeft"]) return -1;
+    if (this.#controller.moveRight.isActive) return 1;
+    if (this.#controller.moveLeft.isActive) return -1;
     return 0;
   }
 
   get y() {
-    if (this.keys["ArrowDown"]) return 1;
-    if (this.keys["ArrowUp"]) return -1;
+    if (this.#controller.moveDown.isActive) return 1;
+    if (this.#controller.moveUp.isActive) return -1;
     return 0;
   }
 
   get moveUp() {
-    return this.keys["ArrowUp"];
+    return this.#controller.moveUp.isActive;
   }
 
   get moveDown() {
-    return this.keys["ArrowDown"];
+    return this.#controller.moveDown.isActive;
   }
 
   get moveLeft() {
-    return this.keys["ArrowLeft"];
+    return this.#controller.moveLeft.isActive;
   }
 
   get moveRight() {
-    return this.keys["ArrowRight"];
+    return this.#controller.moveRight.isActive;
   }
 
   get action() {
-    return this.keys["Space"];
+    return this.#controller.action.isActive;
   }
 
   reset() {
-    for (let key in this.keys) {
-      this.keys[key] = false;
-    }
-
     return this;
   }
 }

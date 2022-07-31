@@ -3,53 +3,76 @@
 class CanvasRenderer {
   /**
    * @description
-   * Game Renderer model as a DOM canvas object.
+   * Game Renderer.
    * This game renderer should be used for
    * any 2D canvas based HTML games
    * @param {Number} width width in pixels of the game view
    * @param {Number} height height in pixels of the game view
+   * @returns {CanvasRenderer}
    */
-  constructor(width = 832, height = 640) {
+  constructor(
+    { width = 832, height = 640 } = {
+      width: 832,
+      height: 640,
+    }
+  ) {
     if (CanvasRenderer.instance) {
       return CanvasRenderer.instance;
     } else {
-      // renderer state
-      // it makes a new canvas element with alias "view"
-      // the canvas dimensions are passed in the constructor
-      // the state holds a reference to the context
       const canvas = document.createElement("canvas");
       this.height = canvas.height = height;
       this.width = canvas.width = width;
       this.view = canvas;
       this.context = canvas.getContext("2d");
-      // here we set the text baseline property to top
-      // for consistency with all the other elements rendered on the canvas
-      // no smoothing is allowed as well
+
       this.context.textBaseline = "top";
       this.context.imageSmoothingEnabled = false;
+      this.#init();
 
       CanvasRenderer.instance = this;
       return this;
     }
   }
 
+  #init() {
+    document.addEventListener("keypress", (event) => {
+      if (event.code === "KeyF") {
+        this.#toggleFullscreen();
+      }
+    });
+  }
+
+  // /**
+  //  * toggleFullscreen()
+  //  * to add the fullscreen functionality to this display
+  //  * using the fullscreen api
+  //  * @returns {Void}
+  //  * @private
+  //  */
+  #toggleFullscreen() {
+    if (!document.fullscreenElement) {
+      this.view.requestFullscreen();
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+      }
+    }
+  }
+
   /**
-   * renderRecursive() (private)
-   * @description
-   * For each child of a container, renders the
-   * child to the renderer canvas 2D context.
+   * renderRecursive()
+   * recursive render of all the childre of the
+   * passed container to the current context.
    * @param {Container} container
+   * @returns {Void}
+   * @private
    */
   #renderRecursive(container) {
     container.children.forEach((child) => {
-      // if not visible shouldn't be processed
       if (child.visible == false) return;
 
-      // here we save the canvas state
-      // for further processing
       this.context.save();
 
-      // canvas transforms first
       if (child.position) {
         this.context.translate(Math.round(child.position.x), Math.round(child.position.y));
       }
@@ -69,8 +92,6 @@ class CanvasRenderer {
         this.context.translate(-px, -py);
       }
 
-      // if child is type Text...
-      // if child is type Texture...
       if (child.text) {
         const { font, fill, align } = child.style;
         if (font) this.context.font = font;
@@ -93,24 +114,21 @@ class CanvasRenderer {
             child.tileH
           );
         } else {
-          // or regular sprite
+          // ...or regular sprite
           this.context.drawImage(img, 0, 0);
         }
       }
 
-      // if child is a container...
       if (child.children) {
         this.#renderRecursive(child);
       }
 
-      // restore the canvas state
       this.context.restore();
     });
   }
 
   /**
    * render()
-   * @description
    * Traverse the container tree structure and renders the child nodes.
    * The container is passed in as parameter.
    * The clear flag set to true clears the context
@@ -118,6 +136,7 @@ class CanvasRenderer {
    * @param {Container} container
    * @param {Boolean} clear
    * @returns {Void}
+   * @public
    */
   render(container, clear = true) {
     // prettier-ignore

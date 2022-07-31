@@ -54,9 +54,9 @@ class TitleScreen extends Container {
   update(dt, t) {
     super.update(dt, t);
 
-    const { controller, title } = this;
-    title.position.y += Math.sin(t / 0.125) * 0.75;
-    if (controller.action) {
+    // const { controller, title } = this;
+    this.title.position.y += Math.sin(t / 0.125) * 0.75;
+    if (this.controller.action) {
       this.onStart();
       this.controller.reset();
     }
