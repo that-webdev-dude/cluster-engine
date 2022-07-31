@@ -2,10 +2,9 @@
 
 class CanvasRenderer {
   /**
-   * @description
    * Game Renderer model
    * This game renderer should be used for
-   * any 2D canvas based HTML games
+   * any 2D canvas based HTML games.
    * @param {Number} width width in pixels of the game view
    * @param {Number} height height in pixels of the game view
    * @returns {CanvasRenderer}
@@ -43,11 +42,9 @@ class CanvasRenderer {
   }
 
   /**
-   * toggleFullscreen():
-   * to add the fullscreen functionality to this display
+   * toggleFullscreen()
+   * fullscreen functionality to the current view (DOM canvas),
    * using the fullscreen api
-   * @returns {Void}
-   * @private
    */
   #toggleFullscreen() {
     if (!document.fullscreenElement) {
@@ -60,12 +57,10 @@ class CanvasRenderer {
   }
 
   /**
-   * renderRecursive():
+   * renderRecursive()
    * recursive render of all the childre of the
    * passed container to the current context.
    * @param {Container} container
-   * @returns {Void}
-   * @private
    */
   #renderRecursive(container) {
     container.children.forEach((child) => {
@@ -128,15 +123,13 @@ class CanvasRenderer {
   }
 
   /**
-   * render():
+   * render()
    * Traverse the container tree structure and renders the child nodes.
    * The container is passed in as parameter.
    * The clear flag set to true clears the context
    * before drawing the next frame.
    * @param {Container} container
    * @param {Boolean} clear
-   * @returns {Void}
-   * @public
    */
   render(container, clear = true) {
     // prettier-ignore
