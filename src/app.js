@@ -19,25 +19,25 @@ export default () => {
     height: 320,
   });
 
-  const m = new Mouse(controller);
-  const c = new Cheese();
+  const a = new Mouse(controller);
+  const b = new Cheese();
 
-  game.scene.add(m);
-  game.scene.add(c);
+  game.scene.add(a);
+  game.scene.add(b);
 
-  relocate(m, game.width, game.height);
-  relocate(c, game.width, game.height);
+  relocate(a, game.width, game.height);
+  relocate(b, game.width, game.height);
 
   game.run(() => {
     if (
       // bounding box collision
-      m.position.x + m.width >= c.position.x &&
-      m.position.x <= c.position.x + c.width &&
-      m.position.y + m.height >= c.position.y &&
-      m.position.y <= c.position.y + c.height
+      a.position.x + a.width >= b.position.x &&
+      a.position.x <= b.position.x + b.width &&
+      a.position.y + a.height >= b.position.y &&
+      a.position.y <= b.position.y + b.height
     ) {
       // hit
-      relocate(c, game.width, game.height);
+      relocate(b, game.width, game.height);
     }
   });
 };
