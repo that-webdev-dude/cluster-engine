@@ -1,6 +1,7 @@
 import entity from "./utils/entity";
 import math from "./utils/math";
 
+import Rect from "./core/Rect";
 import Game from "./core/Game";
 import Text from "./core/Text";
 import Sprite from "./core/Sprite";
@@ -16,6 +17,7 @@ import Camera from "./core/Camera";
 export default {
   entity,
   math,
+  Rect,
   Game,
   Text,
   Sprite,

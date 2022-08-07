@@ -1,8 +1,8 @@
 import cluster from "./cluster/index.js";
-
 import Cheese from "./entities/Cheese.js";
 import Mouse from "./entities/Mouse.js";
 import math from "./cluster/utils/math.js";
+import entity from "./cluster/utils/entity.js";
 
 const { Game, KeyControls } = cluster;
 
@@ -19,25 +19,16 @@ export default () => {
     height: 320,
   });
 
-  const a = new Mouse(controller);
-  const b = new Cheese();
+  const mouse = new Mouse(controller);
+  const cheese = new Cheese();
 
-  game.scene.add(a);
-  game.scene.add(b);
+  game.scene.add(entity.debug(mouse));
+  game.scene.add(entity.debug(cheese));
 
-  relocate(a, game.width, game.height);
-  relocate(b, game.width, game.height);
+  relocate(mouse, game.width, game.height);
+  relocate(cheese, game.width, game.height);
 
   game.run(() => {
-    if (
-      // bounding box collision
-      a.position.x + a.width >= b.position.x &&
-      a.position.x <= b.position.x + b.width &&
-      a.position.y + a.height >= b.position.y &&
-      a.position.y <= b.position.y + b.height
-    ) {
-      // hit
-      relocate(b, game.width, game.height);
-    }
+    entity.hit(mouse, cheese, () => relocate(cheese, game.width, game.height));
   });
 };

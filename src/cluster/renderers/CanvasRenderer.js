@@ -93,6 +93,10 @@ class CanvasRenderer {
         if (fill) this.context.fillStyle = fill;
         if (align) this.context.textAlign = align;
         this.context.fillText(child.text, 0, 0);
+      } else if (child.width && child.height && child.style) {
+        // draw a rectangle
+        this.context.fillStyle = child.style.fill;
+        this.context.fillRect(0, 0, child.width, child.height);
       } else if (child.texture) {
         // can be a tilesprite...
         const { img } = child.texture;

@@ -8,6 +8,12 @@ class Mouse extends Sprite {
     this.controller = controller;
     this.height = 51;
     this.width = 100;
+    this.hitbox = {
+      x: 18,
+      y: 6,
+      width: 72,
+      height: 38,
+    };
   }
 
   update(dt, t) {

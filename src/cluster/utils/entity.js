@@ -1,5 +1,11 @@
+import Rect from "../core/Rect";
 import math from "./math";
 
+/**
+ * center()
+ * @param {*} entity
+ * @returns
+ */
 function center(entity) {
   const { position, width, height } = entity;
   return {
@@ -8,8 +14,77 @@ function center(entity) {
   };
 }
 
-function distance(a, b) {
-  return math.distance(center(a), center(b));
+/**
+ * distance()
+ * Circle based collision detection
+ * @param {*} entity1
+ * @param {*} entity2
+ * @returns
+ */
+function distance(entity1, entity2) {
+  return math.distance(center(entity1), center(entity2));
 }
 
-export default { center, distance };
+/**
+ * hitBounds()
+ * @param {*} entity
+ * @returns
+ */
+function hitBounds(entity) {
+  const { position, hitbox } = entity;
+  return {
+    x: position.x + hitbox.x,
+    y: position.y + hitbox.y,
+    width: hitbox.width,
+    height: hitbox.height,
+  };
+}
+
+/**
+ * hit()
+ * AABB collision detection
+ * @param {*} entity1
+ * @param {*} entity2
+ * @param {*} hitCallback
+ */
+function hit(entity1, entity2, hitCallback) {
+  const a = hitBounds(entity1);
+  const b = hitBounds(entity2);
+
+  if (
+    a.x + a.width >= b.x &&
+    a.x <= b.x + b.width &&
+    a.y + a.height >= b.y &&
+    a.y <= b.y + b.height
+  ) {
+    hitCallback();
+  }
+}
+
+/**
+ * debug()
+ * @param {*} entity
+ * @returns
+ */
+function debug(entity) {
+  entity.children = entity.children || [];
+  const boundingbox = new Rect({
+    height: entity.height,
+    width: entity.width,
+    style: { fill: "rgba(255,255,0,0.25)" },
+  });
+
+  const hitbox = new Rect({
+    width: entity.hitbox.width,
+    height: entity.hitbox.height,
+    style: { fill: "rgba(255,0,0,0.25)" },
+  });
+  hitbox.position.x = entity.position.x + entity.hitbox.x;
+  hitbox.position.y = entity.position.y + entity.hitbox.y;
+
+  entity.children.push(boundingbox);
+  entity.children.push(hitbox);
+  return entity;
+}
+
+export default { center, distance, debug, hit };
