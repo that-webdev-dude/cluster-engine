@@ -50,7 +50,6 @@ function hitBounds(entity) {
 function hit(entity1, entity2, hitCallback) {
   const a = hitBounds(entity1);
   const b = hitBounds(entity2);
-
   if (
     a.x + a.width >= b.x &&
     a.x <= b.x + b.width &&
