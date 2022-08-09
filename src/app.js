@@ -1,6 +1,7 @@
 import cluster from "./cluster/index.js";
 import Player from "./entities/Player.js";
 import Level from "./levels/Level.js";
+import entity from "./cluster/utils/entity.js";
 
 const { Game, KeyControls } = cluster;
 const GAME_WIDTH = 480 * 2 - 48;
@@ -18,7 +19,7 @@ export default () => {
     height: GAME_HEIGHT * 2,
   });
 
-  const player = new Player();
+  const player = new Player(new KeyControls(), level);
 
   game.scene.add(level);
   game.scene.add(player);

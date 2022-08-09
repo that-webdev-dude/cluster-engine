@@ -78,12 +78,12 @@ function debug(entity) {
     height: entity.hitbox.height,
     style: { fill: "rgba(255,0,0,0.25)" },
   });
-  hitbox.position.x = entity.position.x + entity.hitbox.x;
-  hitbox.position.y = entity.position.y + entity.hitbox.y;
+  hitbox.position.x = entity.hitbox.x;
+  hitbox.position.y = entity.hitbox.y;
 
   entity.children.push(boundingbox);
   entity.children.push(hitbox);
   return entity;
 }
 
-export default { center, distance, debug, hit };
+export default { center, distance, debug, hitBounds, hit };

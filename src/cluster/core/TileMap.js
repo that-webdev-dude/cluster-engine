@@ -97,6 +97,23 @@ class TileMap extends Container {
   }
 
   /**
+   * tilesAtCorners()
+   *
+   * @param {*} bounds
+   * @param {*} xo
+   * @param {*} yo
+   * @returns
+   */
+  tilesAtCorners(bounds, xo = 0, yo = 0) {
+    return [
+      [bounds.x, bounds.y],
+      [bounds.x + bounds.width, bounds.y],
+      [bounds.x, bounds.y + bounds.height],
+      [bounds.x + bounds.width, bounds.y + bounds.height],
+    ].map(([x, y]) => this.tileAtPixelPosition({ x: x + xo, y: y + yo }));
+  }
+
+  /**
    * setFrameAtMapPosition()
    *
    * @param {*} mapPosition
