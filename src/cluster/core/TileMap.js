@@ -28,14 +28,32 @@ class TileMap extends Container {
     });
   }
 
+  /**
+   * width:
+   *
+   * @property
+   * @readonly
+   */
   get width() {
     return this.mapW * this.tileW;
   }
 
+  /**
+   * height:
+   *
+   * @property
+   * @readonly
+   */
   get height() {
     return this.mapH * this.tileH;
   }
 
+  /**
+   * pixelToMapPosition()
+   *
+   * @param {*} pixelPosition
+   * @returns
+   */
   pixelToMapPosition(pixelPosition) {
     const { tileW, tileH } = this;
     return {
@@ -44,6 +62,12 @@ class TileMap extends Container {
     };
   }
 
+  /**
+   * mapToPixelPosition()
+   *
+   * @param {*} mapPosition
+   * @returns
+   */
   mapToPixelPosition(mapPosition) {
     const { tileW, tileH } = this;
     return {
@@ -52,20 +76,46 @@ class TileMap extends Container {
     };
   }
 
+  /**
+   * tileAtMapPosition()
+   *
+   * @param {*} mapPosition
+   * @returns
+   */
   tileAtMapPosition(mapPosition) {
     return this.children[mapPosition.y * this.mapW + mapPosition.x];
   }
 
+  /**
+   * tileAtPixelPosition()
+   *
+   * @param {*} position
+   * @returns
+   */
   tileAtPixelPosition(position) {
     return this.tileAtMapPosition(this.pixelToMapPosition(position));
   }
 
+  /**
+   * setFrameAtMapPosition()
+   *
+   * @param {*} mapPosition
+   * @param {*} frame
+   * @returns
+   */
   setFrameAtMapPosition(mapPosition, frame) {
     const tile = this.tileAtMapPosition(mapPosition);
     tile.frame = frame;
     return tile;
   }
 
+  /**
+   * setFrameAtPixelPosition()
+   *
+   * @param {*} position
+   * @param {*} frame
+   * @returns
+   */
   setFrameAtPixelPosition(position, frame) {
     return this.setFrameAtMapPosition(this.pixelToMapPosition(position), frame);
   }

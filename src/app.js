@@ -1,4 +1,5 @@
 import cluster from "./cluster/index.js";
+import Player from "./entities/Player.js";
 import Level from "./levels/Level.js";
 
 const { Game, KeyControls } = cluster;
@@ -13,12 +14,14 @@ export default () => {
   });
 
   const level = new Level({
-    width: GAME_WIDTH,
-    height: GAME_HEIGHT,
+    width: GAME_WIDTH * 2,
+    height: GAME_HEIGHT * 2,
   });
 
-  // console.log("file: app.js ~ line 16 ~ level", level);
+  const player = new Player();
+
   game.scene.add(level);
+  game.scene.add(player);
 
   game.run(() => {
     // game update

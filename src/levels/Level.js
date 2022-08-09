@@ -3,9 +3,22 @@ import cluster from "../cluster";
 
 const { Texture, TileMap, math } = cluster;
 const TILE_INDEXES = [
-  { id: "empty", x: 1, y: 2 },
-  { id: "wall", x: 2, y: 2 },
-  { id: "wall_end", x: 3, y: 2 },
+  {
+    id: "empty",
+    x: 1,
+    y: 2,
+    walkable: true,
+  },
+  {
+    id: "wall",
+    x: 2,
+    y: 2,
+  },
+  {
+    id: "wall_end",
+    x: 3,
+    y: 2,
+  },
 ];
 
 const getTileIndexById = (id = "") => {
@@ -33,7 +46,7 @@ class Level extends TileMap {
     const level = Array(mapW * mapH).fill(0);
     for (let y = 0; y < mapH; y++) {
       for (let x = 0; x < mapW; x++) {
-        // if has already a tile blick coming from the side walls really
+        // if has already a tile block coming from the side walls really
         if (level[y * mapW + x] === getTileIndexById("wall")) {
           continue;
         }
@@ -43,7 +56,7 @@ class Level extends TileMap {
           continue;
         }
         // skip every other inner blocks add side walls
-        if (x % 2 || y % 2 || math.randOneIn(3)) {
+        if (x % 2 || y % 2 || math.randOneIn(4)) {
           continue;
         } else {
           level[y * mapW + x] = getTileIndexById("wall");
@@ -58,7 +71,7 @@ class Level extends TileMap {
       }
     }
 
-    // refine to add end-wall blocks
+    // refine pass1: to add end-wall blocks
     for (let y = 0; y < mapH - 1; y++) {
       for (let x = 0; x < mapW; x++) {
         if (level[y * mapW + x] === getTileIndexById("wall")) {
@@ -67,6 +80,11 @@ class Level extends TileMap {
           }
         }
       }
+    }
+
+    // refine pass2: to add end-wall blocks at the very end
+    for (let x = 0; x < mapW; x++) {
+      level[(mapH - 1) * mapW + x] = getTileIndexById("wall_end");
     }
 
     // TileMap initialize
