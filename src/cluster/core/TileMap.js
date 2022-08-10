@@ -30,7 +30,7 @@ class TileMap extends Container {
 
   /**
    * width:
-   *
+   * width of the TileMap in pixels
    * @property
    * @readonly
    */
@@ -40,7 +40,7 @@ class TileMap extends Container {
 
   /**
    * height:
-   *
+   * height of the TileMap in pixels
    * @property
    * @readonly
    */
@@ -110,7 +110,12 @@ class TileMap extends Container {
       [bounds.x + bounds.width, bounds.y],
       [bounds.x, bounds.y + bounds.height],
       [bounds.x + bounds.width, bounds.y + bounds.height],
-    ].map(([x, y]) => this.tileAtPixelPosition({ x: x + xo, y: y + yo }));
+    ].map(([x, y]) =>
+      this.tileAtPixelPosition({
+        x: x + xo,
+        y: y + yo,
+      })
+    );
   }
 
   /**

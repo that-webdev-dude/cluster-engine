@@ -1,4 +1,5 @@
 import cluster from "./cluster/index.js";
+import Pickup from "./entities/Pickup.js";
 import Player from "./entities/Player.js";
 import Level from "./levels/Level.js";
 import entity from "./cluster/utils/entity.js";
@@ -15,14 +16,16 @@ export default () => {
   });
 
   const level = new Level({
-    width: GAME_WIDTH * 2,
+    width: GAME_WIDTH,
     height: GAME_HEIGHT * 2,
   });
-
-  const player = new Player(new KeyControls(), level);
-
   game.scene.add(level);
+
+  const player = new Player(controller, level);
   game.scene.add(player);
+
+  const pickup = new Pickup();
+  game.scene.add(pickup);
 
   game.run(() => {
     // game update
