@@ -22,20 +22,12 @@ const TILE_INDEXES = [
 ];
 
 const getTileIndexById = (id = "") => {
-  if (id.length > 0) {
-    return TILE_INDEXES.findIndex((tile) => tile.id === id);
-  } else {
-    return 0;
-  }
+  if (id.length > 0) return TILE_INDEXES.findIndex((tile) => tile.id === id);
+  return 0;
 };
 
 class Level extends TileMap {
-  constructor(
-    { width = 0, height = 0 } = {
-      width: 0,
-      height: 0,
-    }
-  ) {
+  constructor(width, height) {
     // level setup
     const texture = new Texture(tilesImageURL);
     const tileW = 48;
@@ -96,6 +88,10 @@ class Level extends TileMap {
       tileH,
       texture
     );
+  }
+
+  findFreeSpot() {
+    return { x: 0, y: 0 };
   }
 }
 
