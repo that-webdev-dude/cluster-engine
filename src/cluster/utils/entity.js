@@ -43,13 +43,13 @@ function hitBounds(entity) {
 /**
  * hit()
  * AABB collision detection
- * @param {*} entity1
- * @param {*} entity2
- * @param {*} hitCallback
+ * @param {Entity} mainEntity
+ * @param {Entity} targetEntity
+ * @param {Function} hitCallback
  */
-function hit(entity1, entity2, hitCallback) {
-  const a = hitBounds(entity1);
-  const b = hitBounds(entity2);
+function hit(mainEntity, targetEntity, hitCallback) {
+  const a = hitBounds(mainEntity);
+  const b = hitBounds(targetEntity);
   if (
     a.x + a.width >= b.x &&
     a.x <= b.x + b.width &&
@@ -58,6 +58,20 @@ function hit(entity1, entity2, hitCallback) {
   ) {
     hitCallback();
   }
+}
+
+/**
+ * hits()
+ * AABB collision detection
+ * on multiple target entities
+ * @param {Entity} mainEntity the main entity (likely the player)
+ * @param {Array<Entity>} targetEntities an array of entities
+ * @param {Function} hitCallback collision callback
+ */
+function hits(mainEntity, targetEntities, hitCallback) {
+  targetEntities.forEach((targetEntity) => {
+    hit(mainEntity, targetEntity, hitCallback);
+  });
 }
 
 /**
@@ -86,4 +100,4 @@ function debug(entity) {
   return entity;
 }
 
-export default { center, distance, debug, hitBounds, hit };
+export default { center, distance, debug, hitBounds, hit, hits };

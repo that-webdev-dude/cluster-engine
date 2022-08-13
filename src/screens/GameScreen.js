@@ -1,4 +1,5 @@
 import Container from "../cluster/core/Container";
+import entity from "../cluster/utils/entity";
 import Pickup from "../entities/Pickup";
 import Player from "../entities/Player";
 import Level from "../levels/Level";
@@ -19,8 +20,8 @@ class GameScreen extends Container {
 
     // init
     this.level = this.add(level);
-    this.player = this.add(player);
     this.pickups = this.add(pickups);
+    this.player = this.add(player);
 
     this.populate();
   }
@@ -35,6 +36,22 @@ class GameScreen extends Container {
 
   update(dt, t) {
     super.update(dt, t);
+    const { player, pickups } = this;
+
+    // collision detection player - maze walls
+    // ...
+
+    // collision detection player - pickups
+    pickups.children.forEach((pickup) => {
+      entity.hit(player, pickup, () => {
+        pickup.dead = true;
+      });
+    });
+
+    // pickups repopulation if no more on the map
+    if (pickups.children.length <= 0) {
+      this.populate();
+    }
   }
 }
 

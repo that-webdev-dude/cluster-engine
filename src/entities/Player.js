@@ -2,6 +2,7 @@ import tilesImageURL from "../images/tiles.png";
 import TileSprite from "../cluster/core/TileSprite";
 import Texture from "../cluster/core/Texture";
 import deadInTracks from "../cluster/movement/deadInTracks";
+import wallslide from "../cluster/movement/wallslide";
 
 class Player extends TileSprite {
   constructor(controller, level) {
@@ -36,20 +37,22 @@ class Player extends TileSprite {
       0.25
     );
 
-    this.animation.play("idle");
-    // this.animation.play("walk");
+    // this.animation.play("idle");
+    this.animation.play("walk");
   }
 
   update(dt, t) {
     super.update(dt, t);
-    const dx = this.controller.x * dt * 100;
-    const dy = this.controller.y * dt * 100;
-    // // can I move to this position?
-    const r = deadInTracks(this, this.level, dx, dy);
-    if (r.x !== 0 && r.y !== 0) {
-      r.x /= Math.sqrt(2);
-      r.y /= Math.sqrt(2);
-    }
+    const dx = this.controller.x * dt * 150;
+    const dy = this.controller.y * dt * 150;
+    // can I move to this position?
+    // const r = deadInTracks(this, this.level, dx, dy);
+    // console.log("file: Player.js ~ line 50 ~ Player ~ update ~ r", r);
+
+    // can I move to this position?
+    const r = wallslide(this, this.level, dx, dy);
+    // console.log("file: Player.js ~ line 51 ~ Player ~ update ~ r", r);
+
     this.position.x += r.x;
     this.position.y += r.y;
   }
