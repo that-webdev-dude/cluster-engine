@@ -16,18 +16,19 @@ class GameScreen extends Container {
 
     // pickups
     const pickups = new Container();
-    this.populate(pickups, level);
 
     // init
-    this.add(level);
-    this.add(player);
-    this.add(pickups);
+    this.level = this.add(level);
+    this.player = this.add(player);
+    this.pickups = this.add(pickups);
+
+    this.populate();
   }
 
-  populate(pickups, level) {
+  populate() {
+    const { pickups, level } = this;
     for (let i = 0; i < 5; i++) {
-      const pickup = new Pickup();
-      pickups.add(pickup);
+      const pickup = pickups.add(new Pickup());
       pickup.position = level.findFreeSpot();
     }
   }

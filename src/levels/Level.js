@@ -91,7 +91,21 @@ class Level extends TileMap {
   }
 
   findFreeSpot() {
-    return { x: 0, y: 0 };
+    const { mapW, mapH } = this;
+
+    let x = 0;
+    let y = 0;
+    let found = false;
+
+    while (!found) {
+      x = math.rand(mapW);
+      y = math.rand(mapH);
+      const { frame } = this.tileAtMapPosition({ x, y });
+      if (frame.walkable) {
+        found = true;
+      }
+    }
+    return this.mapToPixelPosition({ x, y });
   }
 }
 
