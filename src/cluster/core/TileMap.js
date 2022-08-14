@@ -106,10 +106,10 @@ class TileMap extends Container {
    */
   tilesAtCorners(bounds, xo = 0, yo = 0) {
     return [
-      [bounds.x, bounds.y],
-      [bounds.x + bounds.width, bounds.y],
-      [bounds.x, bounds.y + bounds.height],
-      [bounds.x + bounds.width, bounds.y + bounds.height],
+      [bounds.x, bounds.y], // top left
+      [bounds.x + bounds.width, bounds.y], // top right
+      [bounds.x, bounds.y + bounds.height], // bottom left
+      [bounds.x + bounds.width, bounds.y + bounds.height], // bottom right
     ].map(([x, y]) =>
       this.tileAtPixelPosition({
         x: x + xo,

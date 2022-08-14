@@ -1,6 +1,15 @@
 import entity from "../utils/entity";
 
-export default (targetEntity, level, dx, dy) => {
+/**
+ * wallslide():
+ *
+ * @param {Entity} targetEntity - the entity to test for collisions
+ * @param {TileMap} level - the tilemap describing the environment
+ * @param {Number} dx - intentional amount of x movement
+ * @param {Number} dy - intentional amount of y movement
+ * @returns {Object} thie amount of x & y the targetEntity is allowed to move
+ */
+const wallslide = (targetEntity, level, dx, dy) => {
   const bounds = entity.hitBounds(targetEntity);
   let xo = dx;
   let yo = dy;
@@ -10,14 +19,14 @@ export default (targetEntity, level, dx, dy) => {
     const tiles = level.tilesAtCorners(bounds, 0, yo);
     const [tl, tr, bl, br] = tiles.map((tile) => tile && tile.frame.walkable);
     if (dy < 0 && !(tl && tr)) {
-      // hit your head
+      // hit your head if (tl & tr) are not walkable
       // compute the exact distance between the targetEntity top bound and the bottom edge of the tile
       const tileEdge = tiles[0].position.y + tiles[0].height;
       yo = tileEdge - bounds.y;
     }
 
     if (dy > 0 && !(bl && br)) {
-      // hit your feet
+      // hit your feet if (bl & br) are not walkable
       // compute the exact distance between the targetEntity bottom bound and the top edge of the tile
       const tileEdge = tiles[2].position.y - 1;
       yo = tileEdge - (bounds.y + bounds.height);
@@ -45,3 +54,5 @@ export default (targetEntity, level, dx, dy) => {
 
   return { x: xo, y: yo };
 };
+
+export default wallslide;
