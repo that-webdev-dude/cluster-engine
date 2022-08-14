@@ -1,7 +1,7 @@
 import tilesImageURL from "../images/tiles.png";
 import TileSprite from "../cluster/core/TileSprite";
 import Texture from "../cluster/core/Texture";
-import deadInTracks from "../cluster/movement/deadInTracks";
+// import deadInTracks from "../cluster/movement/deadInTracks";
 import wallslide from "../cluster/movement/wallslide";
 
 class Player extends TileSprite {

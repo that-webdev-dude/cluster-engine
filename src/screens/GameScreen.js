@@ -2,6 +2,7 @@ import Container from "../cluster/core/Container";
 import entity from "../cluster/utils/entity";
 import Pickup from "../entities/Pickup";
 import Player from "../entities/Player";
+import Bat from "../entities/Bat";
 import Level from "../levels/Level";
 
 class GameScreen extends Container {
@@ -18,20 +19,39 @@ class GameScreen extends Container {
     // pickups
     const pickups = new Container();
 
+    // enemies: bats
+    const bats = new Container();
+
     // init
     this.level = this.add(level);
     this.pickups = this.add(pickups);
     this.player = this.add(player);
+    this.bats = this.add(bats);
 
     this.populate();
   }
 
-  populate() {
+  setPickups() {
     const { pickups, level } = this;
     for (let i = 0; i < 5; i++) {
       const pickup = pickups.add(new Pickup());
       pickup.position = level.findFreeSpot();
     }
+  }
+
+  setBats() {
+    const { bats, level } = this;
+    for (let i = 0; i < 3; i++) {
+      const bat = bats.add(new Bat());
+      bat.position = level.findFreeSpot();
+      bat.waypoint = level.findFreeSpot();
+      bat.setWaypoint = () => level.findFreeSpot();
+    }
+  }
+
+  populate() {
+    this.setPickups();
+    this.setBats();
   }
 
   update(dt, t) {
@@ -50,7 +70,7 @@ class GameScreen extends Container {
 
     // pickups repopulation if no more on the map
     if (pickups.children.length <= 0) {
-      this.populate();
+      this.setPickups();
     }
   }
 }
