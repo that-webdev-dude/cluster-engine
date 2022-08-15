@@ -4,6 +4,7 @@ import Pickup from "../entities/Pickup";
 import Player from "../entities/Player";
 import Bat from "../entities/Bat";
 import Level from "../levels/Level";
+import Totem from "../entities/Totem";
 import Bullet from "../entities/Bullet";
 
 class GameScreen extends Container {
@@ -20,24 +21,33 @@ class GameScreen extends Container {
     // pickups
     const pickups = new Container();
 
-    // enemies: bats
-    const bats = new Container();
+    // baddies
+    const baddies = new Container();
 
     // init
     this.level = this.add(level);
     this.pickups = this.add(pickups);
     this.player = this.add(player);
-    this.bats = this.add(bats);
+    this.baddies = this.add(baddies);
+    this.totem = this.add(
+      new Totem(this.player, () => {
+        this.fireBullet();
+      })
+    );
+    this.totem.position = this.level.findFreeSpot();
 
-    this.bullet = this.add(new Bullet());
-    this.bullet.position = this.level.findFreeSpot();
-    let angleToPlayer = entity.angle(this.player, this.bullet);
-    this.bullet.direction = {
+    this.populate();
+  }
+
+  fireBullet() {
+    const bullet = this.add(new Bullet());
+    bullet.position = { x: this.totem.position.x, y: this.totem.position.y };
+    let angleToPlayer = entity.angle(this.player, bullet);
+    bullet.direction = {
       x: Math.sin(angleToPlayer),
       y: Math.cos(angleToPlayer),
     };
-
-    this.populate();
+    this.baddies.add(bullet);
   }
 
   setPickups() {
@@ -48,10 +58,10 @@ class GameScreen extends Container {
     }
   }
 
-  setBats() {
-    const { bats, level } = this;
+  setEnemies() {
+    const { baddies, level } = this;
     for (let i = 0; i < 3; i++) {
-      const bat = bats.add(new Bat());
+      const bat = baddies.add(new Bat());
       bat.position = level.findFreeSpot();
       bat.waypoint = level.findFreeSpot();
       bat.setWaypoint = () => level.findFreeSpot();
@@ -60,7 +70,7 @@ class GameScreen extends Container {
 
   populate() {
     this.setPickups();
-    this.setBats();
+    this.setEnemies();
   }
 
   update(dt, t) {
