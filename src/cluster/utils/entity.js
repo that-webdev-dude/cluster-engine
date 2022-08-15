@@ -2,9 +2,10 @@ import Rect from "../core/Rect";
 import math from "./math";
 
 /**
- * center()
- * @param {*} entity
- * @returns
+ * Computes the center's coordinate
+ * of the target entity
+ * @param {Object} entity entity type object
+ * @returns {Object} the x/y coordinates of the entity's center
  */
 function center(entity) {
   const { position, width, height } = entity;
@@ -15,14 +16,25 @@ function center(entity) {
 }
 
 /**
- * distance()
- * Circle based collision detection
- * @param {*} entity1
- * @param {*} entity2
- * @returns
+ * Computes the distance (pixels) between the center of entity1
+ * and the center of entity2
+ * @param {Object} entity1 entity type object
+ * @param {Object} entity2 entity type object
+ * @returns {Number} the distance between the entities
  */
 function distance(entity1, entity2) {
   return math.distance(center(entity1), center(entity2));
+}
+
+/**
+ * Computes the angle (radians) between the center of entity1
+ * and the center of entity2
+ * @param {Object} entity1 entity type object
+ * @param {Object} entity2 entity type object
+ * @returns {Number} the angle between the entities
+ */
+function angle(entity1, entity2) {
+  return math.angle(center(entity1), center(entity2));
 }
 
 /**
@@ -100,4 +112,12 @@ function debug(entity) {
   return entity;
 }
 
-export default { center, distance, debug, hitBounds, hit, hits };
+export default {
+  center,
+  distance,
+  angle,
+  debug,
+  hitBounds,
+  hit,
+  hits,
+};

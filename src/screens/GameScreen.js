@@ -4,6 +4,7 @@ import Pickup from "../entities/Pickup";
 import Player from "../entities/Player";
 import Bat from "../entities/Bat";
 import Level from "../levels/Level";
+import Bullet from "../entities/Bullet";
 
 class GameScreen extends Container {
   constructor(game, controller) {
@@ -27,6 +28,14 @@ class GameScreen extends Container {
     this.pickups = this.add(pickups);
     this.player = this.add(player);
     this.bats = this.add(bats);
+
+    this.bullet = this.add(new Bullet());
+    this.bullet.position = this.level.findFreeSpot();
+    let angleToPlayer = entity.angle(this.player, this.bullet);
+    this.bullet.direction = {
+      x: Math.sin(angleToPlayer),
+      y: Math.cos(angleToPlayer),
+    };
 
     this.populate();
   }

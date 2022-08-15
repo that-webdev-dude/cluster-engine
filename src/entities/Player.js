@@ -15,7 +15,7 @@ class Player extends TileSprite {
       x: 8,
       y: 24,
       width: 30,
-      height: 24,
+      height: 20,
     };
 
     this.animation.add(

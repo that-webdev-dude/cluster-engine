@@ -58,6 +58,18 @@ function distance(a, b) {
 }
 
 /**
+ * Compute the angle between two points a & b
+ * @param {Object} a x/y coordinate object
+ * @param {Object} b x/y coordinate object
+ * @returns {number} angle between a & b in radians
+ */
+function angle(a, b) {
+  let dx = a.x - b.x;
+  let dy = a.y - b.y;
+  return Math.atan2(dx, dy);
+}
+
+/**
  * Clamp the value to the provided min max limits
  * defined by min and max parameters
  * @param {number} value
@@ -75,5 +87,6 @@ export default {
   randOneIn,
   randOneFrom,
   distance,
+  angle,
   clamp,
 };
