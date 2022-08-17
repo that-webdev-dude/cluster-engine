@@ -10,6 +10,9 @@ class Player extends TileSprite {
     this.controller = controller;
     this.level = level;
 
+    // this.anchor = { x: 48, y: 0 };
+    // this.scale = { x: -1, y: 1 };
+
     this.position = { x: 48, y: 48 };
     this.hitbox = {
       x: 8,
@@ -41,17 +44,29 @@ class Player extends TileSprite {
     this.animation.play("walk");
   }
 
+  lookLeft() {
+    this.anchor = { x: 48, y: 0 };
+    this.scale = { x: -1, y: 1 };
+  }
+
+  lookRight() {
+    this.anchor = { x: 0, y: 0 };
+    this.scale = { x: 1, y: 1 };
+  }
+
   update(dt, t) {
     super.update(dt, t);
     const dx = this.controller.x * dt * 150;
     const dy = this.controller.y * dt * 150;
-    // can I move to this position?
-    // const r = deadInTracks(this, this.level, dx, dy);
-    // console.log("file: Player.js ~ line 50 ~ Player ~ update ~ r", r);
+
+    if (dx < 0) {
+      this.lookLeft();
+    } else if (dx > 0) {
+      this.lookRight();
+    }
 
     // can I move to this position?
     const r = wallslide(this, this.level, dx, dy);
-    // console.log("file: Player.js ~ line 51 ~ Player ~ update ~ r", r);
 
     this.position.x += r.x;
     this.position.y += r.y;

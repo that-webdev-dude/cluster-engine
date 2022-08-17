@@ -23,7 +23,7 @@ class Totem extends TileSprite {
   update(dt, t) {
     super.update(dt, t);
 
-    let charge = math.randOneIn(200);
+    let charge = math.randOneIn(150);
     if (charge) {
       this.state.set(states.CHARGE);
       this.timer = 1;

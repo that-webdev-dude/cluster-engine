@@ -42,7 +42,10 @@ class GameScreen extends Container {
   fireBullet() {
     const bullet = this.add(new Bullet());
     bullet.position = { x: this.totem.position.x, y: this.totem.position.y };
+
     let angleToPlayer = entity.angle(this.player, bullet);
+    bullet.pivot = { x: 28, y: 28 };
+    bullet.angle = (180 / Math.PI) * angleToPlayer + 90;
     bullet.direction = {
       x: Math.sin(angleToPlayer),
       y: Math.cos(angleToPlayer),

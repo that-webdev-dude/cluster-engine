@@ -11,10 +11,30 @@ class Bullet extends TileSprite {
     this.direction = direction;
   }
 
+  lookLeft() {
+    this.anchor = { x: 48, y: 0 };
+    this.scale = { x: -1, y: 1 };
+  }
+
+  lookRight() {
+    this.anchor = { x: 0, y: 0 };
+    this.scale = { x: 1, y: 1 };
+  }
+
   update(dt, t) {
     super.update(dt, t);
-    this.position.x += this.direction.x * this.speed * dt;
-    this.position.y += this.direction.y * this.speed * dt;
+
+    let dx = this.direction.x * this.speed * dt;
+    let dy = this.direction.y * this.speed * dt;
+
+    if (dx < 0) {
+      this.lookLeft();
+    } else if (dx > 0) {
+      this.lookRight();
+    }
+
+    this.position.x += dx;
+    this.position.y += dy;
     this.lifespan -= dt;
     if (this.lifespan < 0) {
       this.dead = true;

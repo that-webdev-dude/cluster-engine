@@ -21,6 +21,16 @@ class Bat extends TileSprite {
     this.animation.play("fly");
   }
 
+  lookLeft() {
+    this.anchor = { x: 0, y: 0 };
+    this.scale = { x: 1, y: 1 };
+  }
+
+  lookRight() {
+    this.anchor = { x: 48, y: 0 };
+    this.scale = { x: -1, y: 1 };
+  }
+
   update(dt, t) {
     super.update(dt, t);
 
@@ -33,12 +43,21 @@ class Bat extends TileSprite {
     let isCloseX = Math.abs(waypointDistanceX) <= step;
     let isCloseY = Math.abs(waypointDistanceY) <= step;
 
+    let dx = speed * (waypointDistanceX > 0 ? 1 : -1) * dt;
+    let dy = speed * (waypointDistanceY > 0 ? 1 : -1) * dt;
+
+    if (dx < 0) {
+      this.lookLeft();
+    } else if (dx > 0) {
+      this.lookRight();
+    }
+
     if (!isCloseX) {
-      position.x += speed * (waypointDistanceX > 0 ? 1 : -1) * dt;
+      position.x += dx;
     }
 
     if (!isCloseY) {
-      position.y += speed * (waypointDistanceY > 0 ? 1 : -1) * dt;
+      position.y += dy;
     }
 
     if (isCloseX && isCloseY) {

@@ -12,6 +12,16 @@ class Pickup extends TileSprite {
       width: 48,
       height: 48,
     };
+
+    this.pivot = { x: 24, y: 24 };
+    this.angle = 0;
+  }
+
+  update(dt, t) {
+    this.angle += dt * 150;
+    if (this.angle >= 360) {
+      this.angle = 0;
+    }
   }
 }
 
