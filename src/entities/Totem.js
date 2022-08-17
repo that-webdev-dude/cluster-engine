@@ -1,4 +1,4 @@
-import tilesImageURL from "../images/tiles.png";
+import tilesImageURL from "../images/tiles_pixel.png";
 import TileSprite from "../cluster/core/TileSprite";
 import Texture from "../cluster/core/Texture";
 import math from "../cluster/utils/math";

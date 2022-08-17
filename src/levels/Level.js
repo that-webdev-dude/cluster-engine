@@ -1,4 +1,4 @@
-import tilesImageURL from "../images/tiles.png";
+import tilesImageURL from "../images/tiles_pixel.png";
 import cluster from "../cluster";
 
 const { Texture, TileMap, math } = cluster;
