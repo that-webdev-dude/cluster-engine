@@ -13,6 +13,7 @@ import KeyControls from "./input/KeyControls";
 import MouseControls from "./input/MouseControls";
 import CanvasRenderer from "./renderers/CanvasRenderer";
 import Camera from "./core/Camera";
+import State from "./core/State";
 
 export default {
   entity,
@@ -29,4 +30,5 @@ export default {
   MouseControls,
   CanvasRenderer,
   Camera,
+  State,
 };
