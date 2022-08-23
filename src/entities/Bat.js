@@ -9,6 +9,12 @@ class Bat extends TileSprite {
     this.speed = 100;
     this.waypoint = { x: 0, y: 0 };
     this.setWaypoint = () => {};
+    this.hitbox = {
+      x: 0,
+      y: 0,
+      width: 48,
+      height: 48,
+    };
     this.animation.add(
       "fly",
       [
@@ -17,7 +23,6 @@ class Bat extends TileSprite {
       ],
       0.25
     );
-
     this.animation.play("fly");
   }
 

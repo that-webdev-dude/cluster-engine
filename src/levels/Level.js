@@ -1,5 +1,7 @@
+import Pathfinder from "../cluster/core/Pathfinder";
 import tilesImageURL from "../images/tiles_pixel.png";
 import cluster from "../cluster";
+import entity from "../cluster/utils/entity";
 
 const { Texture, TileMap, math } = cluster;
 const TILE_INDEXES = [
@@ -34,6 +36,7 @@ class Level extends TileMap {
     const tileH = 48;
     const mapW = width / tileW;
     const mapH = height / tileH;
+
     // procedural maze generator
     const level = Array(mapW * mapH).fill(0);
     for (let y = 0; y < mapH; y++) {
@@ -88,15 +91,28 @@ class Level extends TileMap {
       tileH,
       texture
     );
+
+    // pathfinder
+    this.path = new Pathfinder(
+      this.map((tile) => {
+        let { position } = tile;
+        let { walkable = false } = tile.frame;
+        return {
+          position: {
+            x: position.x / tileW,
+            y: position.y / tileH,
+          },
+          walkable,
+        };
+      })
+    );
   }
 
   findFreeSpot() {
     const { mapW, mapH } = this;
-
     let x = 0;
     let y = 0;
     let found = false;
-
     while (!found) {
       x = math.rand(mapW);
       y = math.rand(mapH);
@@ -106,6 +122,18 @@ class Level extends TileMap {
       }
     }
     return this.mapToPixelPosition({ x, y });
+  }
+
+  findPath(enemy, player) {
+    const enemyCenter = entity.center(enemy);
+    const playerCenter = entity.center(player);
+    const enemyPosition = this.pixelToMapPosition(enemyCenter);
+    console.log("file: Level.js ~ line 131 ~ Level ~ findPath ~ enemyPosition", enemyPosition);
+    const playerPosition = this.pixelToMapPosition(playerCenter);
+    console.log("file: Level.js ~ line 133 ~ Level ~ findPath ~ playerPosition", playerPosition);
+    // const path = this.path.find(enemyPosition, playerPosition) || [];
+    return [];
+    // return path;
   }
 }
 

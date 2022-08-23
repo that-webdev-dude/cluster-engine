@@ -67,7 +67,7 @@ class Pathfinder {
   /**
    * Pathfinder
    * Handles the in-game pathfinding using the A* algorithm.
-   * @param {Array<{x: number, y: number, walkable: boolean}>} nodeMap array of map positions and walkable flag
+   * @param {Array<{position: Object, walkable: boolean}>} nodeMap array of map positions and walkable flag
    * @return {Pathfinder}
    */
   constructor(nodeMap) {
@@ -79,6 +79,7 @@ class Pathfinder {
         walkable || false
       )
     })
+
     this.#initialize();
   }
 
@@ -229,6 +230,28 @@ class Pathfinder {
       });
     }
   }
+
+  // /**
+  //  * findAsync()
+  //  * Finds the shortest path from the "startPosition"
+  //  * to the "endPosition". Returns an arrey of map position coordinates
+  //  * from the targetNode, backward to the starting node.
+  //  * The returned coordinates are in map position.
+  //  * @param {Object} startNode xy map position coordinates of the start point
+  //  * @param {Object} targetNode xy map position coordinates of the end point
+  //  * @returns {Array<{x,y}>} array of successive map points across the path
+  //  * @public
+  //  */
+  // findAsync(startNode, targetNode) {
+  //   return new Promise((resolve, reject) => {
+  //     const path = this.find(startNode, targetNode);
+  //     if (path) {
+  //       resolve(path);
+  //     } else {
+  //       reject(new Error("Pathfinder: something went wrong"));
+  //     }
+  //   });
+  // }
 }
 
 export default Pathfinder;

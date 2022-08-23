@@ -6,6 +6,8 @@ import Bat from "../entities/Bat";
 import Level from "../levels/Level";
 import Totem from "../entities/Totem";
 import Bullet from "../entities/Bullet";
+import Ghost from "../entities/Ghost";
+import TileSprite from "../cluster/core/TileSprite";
 
 class GameScreen extends Container {
   constructor(game, controller) {
@@ -62,12 +64,25 @@ class GameScreen extends Container {
   }
 
   setEnemies() {
-    const { baddies, level } = this;
+    const { player, baddies, level } = this;
+    // bats
     for (let i = 0; i < 3; i++) {
       const bat = baddies.add(new Bat());
       bat.position = level.findFreeSpot();
       bat.waypoint = level.findFreeSpot();
-      bat.setWaypoint = () => level.findFreeSpot();
+      bat.setWaypoint = () => {
+        return level.findFreeSpot();
+      };
+    }
+
+    // ghosts
+    for (let i = 0; i < 1; i++) {
+      const ghost = baddies.add(new Ghost());
+      ghost.position = level.findFreeSpot();
+      // ghost.waypoints = level.findPath(ghost, player);
+      // ghost.setWaypoints = () => {
+      //   return level.findPath(ghost, player);
+      // };
     }
   }
 
@@ -76,12 +91,17 @@ class GameScreen extends Container {
     this.setEnemies();
   }
 
-  update(dt, t) {
+  async update(dt, t) {
     super.update(dt, t);
-    const { player, pickups } = this;
+    const { player, baddies, pickups } = this;
 
-    // collision detection player - maze walls
-    // ...
+    // collision detection player - enemies
+    baddies.children.forEach((enemy) => {
+      entity.hit(player, enemy, () => {
+        // enemy.dead = true;
+        // GAE OVER
+      });
+    });
 
     // collision detection player - pickups
     pickups.children.forEach((pickup) => {
