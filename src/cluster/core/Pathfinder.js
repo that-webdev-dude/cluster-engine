@@ -202,7 +202,7 @@ class Pathfinder {
 
       if (currentNode.isTarget) {
         let currentPathNode = targetNode;
-        let path = [];
+        let path = [startNode];
         let count = 100;
         while (currentPathNode !== startNode) {
           path.push(currentPathNode);
@@ -231,27 +231,19 @@ class Pathfinder {
     }
   }
 
-  // /**
-  //  * findAsync()
-  //  * Finds the shortest path from the "startPosition"
-  //  * to the "endPosition". Returns an arrey of map position coordinates
-  //  * from the targetNode, backward to the starting node.
-  //  * The returned coordinates are in map position.
-  //  * @param {Object} startNode xy map position coordinates of the start point
-  //  * @param {Object} targetNode xy map position coordinates of the end point
-  //  * @returns {Array<{x,y}>} array of successive map points across the path
-  //  * @public
-  //  */
-  // findAsync(startNode, targetNode) {
-  //   return new Promise((resolve, reject) => {
-  //     const path = this.find(startNode, targetNode);
-  //     if (path) {
-  //       resolve(path);
-  //     } else {
-  //       reject(new Error("Pathfinder: something went wrong"));
-  //     }
-  //   });
-  // }
+  /**
+   * findAsync()
+   */
+  findAsync(startNode, targetNode) {
+    return new Promise((resolve, reject) => {
+      const path = this.find(startNode, targetNode);
+      if (path) {
+        resolve(path);
+      } else {
+        reject([]);
+      }
+    });
+  }
 }
 
 export default Pathfinder;

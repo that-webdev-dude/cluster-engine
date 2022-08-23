@@ -6,9 +6,8 @@ import wallslide from "../cluster/movement/wallslide";
 class Ghost extends TileSprite {
   constructor(setPath) {
     super(new Texture(tilesImageURL), 48, 48);
-    // this.level = level;
     this.frame = { x: 5, y: 1 };
-    this.speed = 100;
+    this.speed = 75;
     this.hitbox = {
       x: 0,
       y: 0,
@@ -35,42 +34,40 @@ class Ghost extends TileSprite {
     this.waypoint = this.path.pop();
   }
 
-  update(dt, t) {
+  async update(dt, t) {
     super.update(dt, t);
 
     let { path, position, speed } = this;
 
     if (path.length === 0) {
-      this.path = this.setPath();
+      await this.setPath();
       this.setWaypoint();
-    }
+    } else {
+      let waypointDistanceX = this.waypoint.x - position.x;
+      let waypointDistanceY = this.waypoint.y - position.y;
+      let step = speed * dt;
+      let isCloseX = Math.abs(waypointDistanceX) <= step;
+      let isCloseY = Math.abs(waypointDistanceY) <= step;
+      let dx = speed * (waypointDistanceX > 0 ? 1 : -1) * dt;
+      let dy = speed * (waypointDistanceY > 0 ? 1 : -1) * dt;
 
-    let waypointDistanceX = this.waypoint.x - position.x;
-    let waypointDistanceY = this.waypoint.y - position.y;
-    let step = speed * dt;
+      if (dx < 0) {
+        this.lookLeft();
+      } else if (dx > 0) {
+        this.lookRight();
+      }
 
-    let isCloseX = Math.abs(waypointDistanceX) <= step;
-    let isCloseY = Math.abs(waypointDistanceY) <= step;
+      if (!isCloseX) {
+        position.x += dx;
+      }
 
-    let dx = speed * (waypointDistanceX > 0 ? 1 : -1) * dt;
-    let dy = speed * (waypointDistanceY > 0 ? 1 : -1) * dt;
+      if (!isCloseY) {
+        position.y += dy;
+      }
 
-    if (dx < 0) {
-      this.lookLeft();
-    } else if (dx > 0) {
-      this.lookRight();
-    }
-
-    if (!isCloseX) {
-      position.x += dx;
-    }
-
-    if (!isCloseY) {
-      position.y += dy;
-    }
-
-    if (isCloseX && isCloseY) {
-      this.setWaypoint();
+      if (isCloseX && isCloseY) {
+        this.setWaypoint();
+      }
     }
   }
 }

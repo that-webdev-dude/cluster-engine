@@ -55,7 +55,8 @@ class GameScreen extends Container {
   }
 
   setEnemies() {
-    const { totem, baddies, level } = this;
+    const { totem, baddies, level, player } = this;
+
     // totem
     totem.position = this.level.findFreeSpot();
 
@@ -73,13 +74,18 @@ class GameScreen extends Container {
     for (let i = 0; i < 1; i++) {
       const ghost = baddies.add(new Ghost(level));
       ghost.position = level.findFreeSpot();
-      ghost.setPath = () => {
-        return [
-          level.findFreeSpot(),
-          level.findFreeSpot(),
-          level.findFreeSpot(),
-          level.findFreeSpot(),
-        ];
+      ghost.setPath = async () => {
+        try {
+          const path = await level.path(ghost, player);
+          ghost.path = path.map((tile) => {
+            return {
+              x: tile.x * level.tileW,
+              y: tile.y * level.tileH,
+            };
+          });
+        } catch (error) {
+          ghost.path = [level.findFreeSpot()];
+        }
       };
     }
   }
@@ -96,8 +102,9 @@ class GameScreen extends Container {
     // collision detection player - enemies
     baddies.children.forEach((enemy) => {
       entity.hit(player, enemy, () => {
-        // enemy.dead = true;
+        enemy.dead = true;
         // GAME OVER
+        console.log("GAME OVER");
       });
     });
 

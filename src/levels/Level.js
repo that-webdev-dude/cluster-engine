@@ -93,7 +93,7 @@ class Level extends TileMap {
     );
 
     // pathfinder
-    this.path = new Pathfinder(
+    this.pathFinder = new Pathfinder(
       this.map((tile) => {
         let { position } = tile;
         let { walkable = false } = tile.frame;
@@ -124,16 +124,27 @@ class Level extends TileMap {
     return this.mapToPixelPosition({ x, y });
   }
 
-  findPath(enemy, player) {
+  // path(enemy, player) {
+  //   const enemyCenter = entity.center(enemy);
+  //   const playerCenter = entity.center(player);
+  //   const enemyPosition = this.pixelToMapPosition(enemyCenter);
+  //   const playerPosition = this.pixelToMapPosition(playerCenter);
+  //   return (
+  //     this.pathFinder.find(enemyPosition, playerPosition).map((tile) => {
+  //       return {
+  //         x: tile.x * 48,
+  //         y: tile.y * 48,
+  //       };
+  //     }) || []
+  //   );
+  // }
+
+  path(enemy, player) {
     const enemyCenter = entity.center(enemy);
     const playerCenter = entity.center(player);
     const enemyPosition = this.pixelToMapPosition(enemyCenter);
-    console.log("file: Level.js ~ line 131 ~ Level ~ findPath ~ enemyPosition", enemyPosition);
     const playerPosition = this.pixelToMapPosition(playerCenter);
-    console.log("file: Level.js ~ line 133 ~ Level ~ findPath ~ playerPosition", playerPosition);
-    // const path = this.path.find(enemyPosition, playerPosition) || [];
-    return [];
-    // return path;
+    return this.pathFinder.findAsync(enemyPosition, playerPosition);
   }
 }
 
