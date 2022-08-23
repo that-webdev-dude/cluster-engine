@@ -1,7 +1,6 @@
 import tilesImageURL from "../images/tiles_pixel.png";
 import TileSprite from "../cluster/core/TileSprite";
 import Texture from "../cluster/core/Texture";
-import wallslide from "../cluster/movement/wallslide";
 
 class Ghost extends TileSprite {
   constructor(setPath) {
