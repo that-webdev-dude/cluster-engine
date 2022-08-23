@@ -9,6 +9,12 @@ class Bullet extends TileSprite {
     this.speed = 200;
     this.lifespan = 5;
     this.direction = direction;
+    this.hitbox = {
+      x: 0,
+      y: 0,
+      width: 48,
+      height: 48,
+    };
   }
 
   lookLeft() {

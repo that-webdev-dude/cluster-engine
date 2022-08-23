@@ -18,10 +18,10 @@ class Pickup extends TileSprite {
   }
 
   update(dt, t) {
-    this.angle += dt * 150;
-    if (this.angle >= 360) {
-      this.angle = 0;
-    }
+    // this.angle += dt * 150;
+    // if (this.angle >= 360) {
+    //   this.angle = 0;
+    // }
   }
 }
 

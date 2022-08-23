@@ -7,52 +7,43 @@ import Level from "../levels/Level";
 import Totem from "../entities/Totem";
 import Bullet from "../entities/Bullet";
 import Ghost from "../entities/Ghost";
-import TileSprite from "../cluster/core/TileSprite";
 
 class GameScreen extends Container {
   constructor(game, controller) {
     super();
     const { width, height } = game;
 
-    // level
+    // actors
     const level = new Level(width, height);
-
-    // player
     const player = new Player(controller, level);
-
-    // pickups
     const pickups = new Container();
-
-    // baddies
     const baddies = new Container();
+    const totem = new Totem(player, () => {
+      this.fireBullet();
+    });
 
     // init
     this.level = this.add(level);
     this.pickups = this.add(pickups);
     this.player = this.add(player);
     this.baddies = this.add(baddies);
-    this.totem = this.add(
-      new Totem(this.player, () => {
-        this.fireBullet();
-      })
-    );
-    this.totem.position = this.level.findFreeSpot();
-
+    this.totem = this.add(totem);
     this.populate();
   }
 
   fireBullet() {
+    const { totem, player, baddies } = this;
     const bullet = this.add(new Bullet());
-    bullet.position = { x: this.totem.position.x, y: this.totem.position.y };
-
-    let angleToPlayer = entity.angle(this.player, bullet);
+    bullet.position = { x: totem.position.x, y: totem.position.y };
     bullet.pivot = { x: 28, y: 28 };
+
+    let angleToPlayer = entity.angle(player, bullet);
     bullet.angle = (180 / Math.PI) * angleToPlayer + 90;
     bullet.direction = {
       x: Math.sin(angleToPlayer),
       y: Math.cos(angleToPlayer),
     };
-    this.baddies.add(bullet);
+    baddies.add(bullet);
   }
 
   setPickups() {
@@ -64,9 +55,12 @@ class GameScreen extends Container {
   }
 
   setEnemies() {
-    const { player, baddies, level } = this;
+    const { totem, baddies, level } = this;
+    // totem
+    totem.position = this.level.findFreeSpot();
+
     // bats
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < 1; i++) {
       const bat = baddies.add(new Bat());
       bat.position = level.findFreeSpot();
       bat.waypoint = level.findFreeSpot();
@@ -77,12 +71,16 @@ class GameScreen extends Container {
 
     // ghosts
     for (let i = 0; i < 1; i++) {
-      const ghost = baddies.add(new Ghost());
+      const ghost = baddies.add(new Ghost(level));
       ghost.position = level.findFreeSpot();
-      // ghost.waypoints = level.findPath(ghost, player);
-      // ghost.setWaypoints = () => {
-      //   return level.findPath(ghost, player);
-      // };
+      ghost.setPath = () => {
+        return [
+          level.findFreeSpot(),
+          level.findFreeSpot(),
+          level.findFreeSpot(),
+          level.findFreeSpot(),
+        ];
+      };
     }
   }
 
@@ -91,7 +89,7 @@ class GameScreen extends Container {
     this.setEnemies();
   }
 
-  async update(dt, t) {
+  update(dt, t) {
     super.update(dt, t);
     const { player, baddies, pickups } = this;
 
@@ -99,7 +97,7 @@ class GameScreen extends Container {
     baddies.children.forEach((enemy) => {
       entity.hit(player, enemy, () => {
         // enemy.dead = true;
-        // GAE OVER
+        // GAME OVER
       });
     });
 
