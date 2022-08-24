@@ -240,7 +240,7 @@ class Pathfinder {
       if (path) {
         resolve(path);
       } else {
-        reject([]);
+        reject(new Error("Pathfinder: no path!"));
       }
     });
   }

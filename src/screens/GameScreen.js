@@ -71,21 +71,26 @@ class GameScreen extends Container {
     }
 
     // ghosts
-    for (let i = 0; i < 1; i++) {
+    for (let i = 0; i < 2; i++) {
       const ghost = baddies.add(new Ghost(level));
       ghost.position = level.findFreeSpot();
-      ghost.setPath = async () => {
-        try {
-          const path = await level.path(ghost, player);
-          ghost.path = path.map((tile) => {
-            return {
-              x: tile.x * level.tileW,
-              y: tile.y * level.tileH,
-            };
-          });
-        } catch (error) {
-          ghost.path = [level.findFreeSpot()];
-        }
+      ghost.setPath = () => {
+        level.pathAsync(
+          ghost,
+          player,
+          (path) => {
+            ghost.path = path.map((tile) => {
+              return {
+                x: tile.x * level.tileW,
+                y: tile.y * level.tileH,
+              };
+            });
+            ghost.waypoint = ghost.path.pop();
+          },
+          (error) => {
+            ghost.path = [level.findFreeSpot()];
+          }
+        );
       };
     }
   }
@@ -104,7 +109,7 @@ class GameScreen extends Container {
       entity.hit(player, enemy, () => {
         enemy.dead = true;
         // GAME OVER
-        console.log("GAME OVER");
+        // console.log("GAME OVER");
       });
     });
 

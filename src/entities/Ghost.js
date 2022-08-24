@@ -3,10 +3,10 @@ import TileSprite from "../cluster/core/TileSprite";
 import Texture from "../cluster/core/Texture";
 
 class Ghost extends TileSprite {
-  constructor(setPath) {
+  constructor() {
     super(new Texture(tilesImageURL), 48, 48);
     this.frame = { x: 5, y: 1 };
-    this.speed = 75;
+    this.speed = 100;
     this.hitbox = {
       x: 0,
       y: 0,
@@ -16,7 +16,7 @@ class Ghost extends TileSprite {
 
     this.path = [];
     this.waypoint = null;
-    this.setPath = setPath;
+    this.setPath = () => {};
   }
 
   lookLeft() {
@@ -33,17 +33,13 @@ class Ghost extends TileSprite {
     this.waypoint = this.path.pop();
   }
 
-  async update(dt, t) {
-    super.update(dt, t);
+  followPath(dt, t) {
+    if (this.waypoint) {
+      let { position, speed } = this;
 
-    let { path, position, speed } = this;
-
-    if (path.length === 0) {
-      await this.setPath();
-      this.setWaypoint();
-    } else {
       let waypointDistanceX = this.waypoint.x - position.x;
       let waypointDistanceY = this.waypoint.y - position.y;
+
       let step = speed * dt;
       let isCloseX = Math.abs(waypointDistanceX) <= step;
       let isCloseY = Math.abs(waypointDistanceY) <= step;
@@ -67,6 +63,18 @@ class Ghost extends TileSprite {
       if (isCloseX && isCloseY) {
         this.setWaypoint();
       }
+    } else {
+      // ghost is stuck!
+      this.setPath();
+    }
+  }
+
+  update(dt, t) {
+    super.update(dt, t);
+    if (this.path.length === 0) {
+      this.setPath();
+    } else {
+      this.followPath(dt, t);
     }
   }
 }
