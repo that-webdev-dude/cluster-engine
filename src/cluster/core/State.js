@@ -2,8 +2,8 @@ class State {
   constructor(initialState) {
     this.current = initialState;
     this.previous = null;
-    this.changed = false;
-    this.first = false;
+    this.changed = true;
+    this.first = true;
     this.time = 0;
   }
 

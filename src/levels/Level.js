@@ -147,16 +147,16 @@ class Level extends TileMap {
     return this.pathFinder.findAsync(enemyPosition, playerPosition);
   }
 
-  async pathAsync(enemy, player, callback = () => {}, errorHandler = () => {}) {
+  async pathAsync(enemy, player, onPath = () => {}, onError = () => {}) {
     const enemyCenter = entity.center(enemy);
     const playerCenter = entity.center(player);
     const enemyPosition = this.pixelToMapPosition(enemyCenter);
     const playerPosition = this.pixelToMapPosition(playerCenter);
     try {
       const path = await this.pathFinder.findAsync(enemyPosition, playerPosition);
-      callback(path);
+      onPath(path);
     } catch (error) {
-      errorHandler(error);
+      onError(error);
     }
   }
 }

@@ -62,11 +62,15 @@ class GameScreen extends Container {
 
     // bats
     for (let i = 0; i < 1; i++) {
-      const bat = baddies.add(new Bat());
+      const bat = baddies.add(new Bat(player));
       bat.position = level.findFreeSpot();
       bat.waypoint = level.findFreeSpot();
-      bat.setWaypoint = () => {
-        return level.findFreeSpot();
+      bat.setWaypoint = (targetEntity = null) => {
+        if (targetEntity) {
+          return player.position;
+        } else {
+          return level.findFreeSpot();
+        }
       };
     }
 
