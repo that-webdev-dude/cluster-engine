@@ -20,17 +20,18 @@ class Player extends TileSprite {
       x: 10,
       y: 0,
       width: 30,
-      height: 46,
+      height: 48,
     };
 
     this.speed = 250;
     this.vel = -10;
     this.jumping = false;
+    this.falling = false;
 
     // player animation setup - prettier-ignore
     this.animation.add("jump", [{ x: 0, y: 0 }], 0.1);
     this.animation.add(
-      "rest",
+      "sleep",
       [
         { x: 4, y: 0 },
         { x: 5, y: 0 },
@@ -64,6 +65,7 @@ class Player extends TileSprite {
     super.update(dt, t);
     const { position, controller, level, speed, gameOver } = this;
 
+<<<<<<< HEAD
     // if (gameOver) {
     //   this.rotation += dt * 5;
     //   this.pivot.y = 24;
@@ -71,6 +73,8 @@ class Player extends TileSprite {
     //   return;
     // }
 
+=======
+>>>>>>> ch06_fixed_state
     const { x } = controller;
     const xo = x * dt * speed;
     let yo = 0;
@@ -82,7 +86,7 @@ class Player extends TileSprite {
 
     if (this.jumping) {
       yo += this.vel;
-      this.vel += 32 * dt; // need a consistent delta time
+      this.vel += 32 * dt;
     }
 
     const r = wallslide(this, level, xo, yo);
@@ -113,6 +117,7 @@ class Player extends TileSprite {
         this.lookLeft();
       }
     } else if (!x) {
+<<<<<<< HEAD
       this.animation.play("rest");
     }
 
@@ -132,6 +137,10 @@ class Player extends TileSprite {
     //     this.scale.x = -1;
     //   }
     // }
+=======
+      this.animation.play("sleep");
+    }
+>>>>>>> ch06_fixed_state
   }
 }
 
