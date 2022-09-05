@@ -1,5 +1,4 @@
 import tilesImageURL from "../images/tiles.png";
-import TileSprite from "../cluster/core/TileSprite";
 import Texture from "../cluster/core/Texture";
 import TileMap from "../cluster/core/TileMap";
 
@@ -9,11 +8,11 @@ const levelMap = [
   '#',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ','#',
   '#',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ','#',
   '#',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ','#',
-  '#',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ','#',
-  '#',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ','#',
-  '#',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ','#',
-  '#',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ','#',
-  '#',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ','#',
+  '#',' ',' ',' ',' ',' ',' ','#','#','#','#',' ',' ',' ',' ',' ',' ',' ',' ','#',
+  '#',' ',' ',' ',' ',' ',' ',' ','#','#','#','#','#','#','#',' ',' ',' ',' ','#',
+  '#',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ','#','#',
+  '#',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ','#','#','#',
+  '#',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ','#','#','#','#',
   '#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#',
 ]
 
@@ -26,8 +25,6 @@ class Level extends TileMap {
     const texture = new Texture(tilesImageURL);
 
     const tiles = levelMap.map((symbol, index) => {
-      // const positionY = Math.floor(index / mapW) * tileW;
-      // const positionX = (index % mapW) * tileH;
       const tile = {};
       switch (symbol) {
         case " ": // walkable tile
@@ -46,9 +43,12 @@ class Level extends TileMap {
 
     for (let y = 1; y < mapH; y++) {
       for (let x = 0; x < mapW; x++) {
-        const index = y * mapW + x;
-        const isWall = !("walkable" in tiles[y * mapW + x]);
-        if (isWall && "walkable" in tiles[(y - 1) * mapW + x]) {
+        // const index = y * mapW + x;
+        // const positionY = Math.floor(index / mapW) * tileW;
+        // const positionX = (index % mapW) * tileH;
+        const isCurrentWall = !("walkable" in tiles[y * mapW + x]);
+        const isAboveWalkable = "walkable" in tiles[(y - 1) * mapW + x];
+        if (isCurrentWall && isAboveWalkable) {
           tiles[y * mapW + x].x = 3;
           tiles[y * mapW + x].y = 3;
         }

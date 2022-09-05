@@ -9,7 +9,7 @@ export default () => {
   const game = new Game({ height: 48 * 10, width: 48 * 20 });
 
   const level = game.scene.add(new Level(game));
-  const player = game.scene.add(new Player(input, game));
+  const player = game.scene.add(new Player(input, game, level));
 
   game.run(() => {
     // game scene here...

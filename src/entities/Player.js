@@ -1,21 +1,25 @@
 import tilesImageURL from "../images/tiles.png";
 import TileSprite from "../cluster/core/TileSprite.js";
 import Texture from "../cluster/core/Texture.js";
+import wallslide from "../cluster/movement/wallslide";
 
 class Player extends TileSprite {
-  constructor(controller, game) {
+  constructor(controller, game, level) {
     super(new Texture(tilesImageURL), 48, 48);
     this.game = game;
-    this.controller = controller;
-    this.position = { x: 48, y: game.height - 48 };
-    this.speed = { x: 200, y: -10 };
-    this.jumping = false;
+    this.map = level;
+    this.controls = controller;
+    this.position = { x: 48 * 2, y: game.height - 48 * 4 };
     this.hitbox = {
-      x: 0,
+      x: 10,
       y: 0,
-      width: 48,
-      height: 48,
+      width: 30,
+      height: 46,
     };
+
+    this.speed = 250;
+    this.vel = -10;
+    this.jumping = false;
 
     // player animation setup - prettier-ignore
     this.animation.add("jump", [{ x: 0, y: 0 }], 0.1);
@@ -52,30 +56,65 @@ class Player extends TileSprite {
 
   update(dt, t) {
     super.update(dt, t);
+    const { position, controls, map, speed, gameOver } = this;
 
-    if (!this.jumping && this.controller.action) {
+    // if (gameOver) {
+    //   this.rotation += dt * 5;
+    //   this.pivot.y = 24;
+    //   this.pivot.x = 24;
+    //   return;
+    // }
+
+    const { x } = controls;
+    const xo = x * dt * speed;
+    let yo = 0;
+
+    if (!this.jumping && controls.action) {
+      this.vel = -10;
       this.jumping = true;
     }
 
     if (this.jumping) {
-      this.speed.y += 32 * dt;
-      this.position.y += this.speed.y;
+      yo += this.vel;
+      this.vel += 32 * dt; // need a consistent delta time
     }
 
-    if (this.jumping && this.position.y > this.game.height - 48) {
-      this.position.y = this.game.height - 48;
+    const r = wallslide(this, map, xo, yo);
+
+    if (r.hits.down) {
       this.jumping = false;
-      this.speed.y = -10;
+      this.vel = 0;
+    }
+    if (r.hits.up) {
+      this.vel = 0;
     }
 
-    if (this.controller.x) {
-      let dx = this.speed.x * dt * this.controller.x;
-      this.position.x += dx;
-      this.animation.play("walk");
-      dx > 0 ? this.lookRight() : this.lookLeft();
-    } else {
-      this.animation.play("rest");
+    // Check if falling
+    if (!this.jumping && !r.hits.down) {
+      this.jumping = true;
+      this.vel = 3;
     }
+
+    position.x += r.x;
+    position.y += r.y;
+
+    // Animations
+    // if ((this.invincible -= dt) > 0) {
+    //   this.alpha = (t * 10 % 2) | 0 ? 0 : 1;
+    // } else {
+    //   this.alpha = 1;
+    // }
+
+    // if (x && !this.jumping) {
+    //   this.frame.x = ((t / 0.1) | 0) % 4;
+    //   if (x > 0) {
+    //     this.anchor.x = 0;
+    //     this.scale.x = 1;
+    //   } else if (x < 0){
+    //     this.anchor.x = this.w;
+    //     this.scale.x = -1;
+    //   }
+    // }
   }
 }
 
