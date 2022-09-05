@@ -7,24 +7,25 @@ class Player extends TileSprite {
   constructor(controller, game, level) {
     super(new Texture(tilesImageURL), 48, 48);
     this.game = game;
-    this.map = level;
-    this.controls = controller;
+    this.level = level;
+    this.controller = controller;
     this.position = { x: 48 * 2, y: game.height - 48 * 4 };
     this.hitbox = {
       x: 10,
       y: 0,
       width: 30,
-      height: 46,
+      height: 48,
     };
 
     this.speed = 250;
     this.vel = -10;
     this.jumping = false;
+    this.falling = false;
 
     // player animation setup - prettier-ignore
     this.animation.add("jump", [{ x: 0, y: 0 }], 0.1);
     this.animation.add(
-      "rest",
+      "sleep",
       [
         { x: 4, y: 0 },
         { x: 5, y: 0 },
@@ -56,30 +57,23 @@ class Player extends TileSprite {
 
   update(dt, t) {
     super.update(dt, t);
-    const { position, controls, map, speed, gameOver } = this;
+    const { position, controller, level, speed, gameOver } = this;
 
-    // if (gameOver) {
-    //   this.rotation += dt * 5;
-    //   this.pivot.y = 24;
-    //   this.pivot.x = 24;
-    //   return;
-    // }
-
-    const { x } = controls;
+    const { x } = controller;
     const xo = x * dt * speed;
     let yo = 0;
 
-    if (!this.jumping && controls.action) {
+    if (!this.jumping && controller.action) {
       this.vel = -10;
       this.jumping = true;
     }
 
     if (this.jumping) {
       yo += this.vel;
-      this.vel += 32 * dt; // need a consistent delta time
+      this.vel += 32 * dt;
     }
 
-    const r = wallslide(this, map, xo, yo);
+    const r = wallslide(this, level, xo, yo);
 
     if (r.hits.down) {
       this.jumping = false;
@@ -99,22 +93,16 @@ class Player extends TileSprite {
     position.y += r.y;
 
     // Animations
-    // if ((this.invincible -= dt) > 0) {
-    //   this.alpha = (t * 10 % 2) | 0 ? 0 : 1;
-    // } else {
-    //   this.alpha = 1;
-    // }
-
-    // if (x && !this.jumping) {
-    //   this.frame.x = ((t / 0.1) | 0) % 4;
-    //   if (x > 0) {
-    //     this.anchor.x = 0;
-    //     this.scale.x = 1;
-    //   } else if (x < 0){
-    //     this.anchor.x = this.w;
-    //     this.scale.x = -1;
-    //   }
-    // }
+    if (x && !this.jumping) {
+      this.animation.play("walk");
+      if (x > 0) {
+        this.lookRight();
+      } else if (x < 0) {
+        this.lookLeft();
+      }
+    } else if (!x) {
+      this.animation.play("sleep");
+    }
   }
 }
 
