@@ -2,7 +2,9 @@ import CanvasRenderer from "../renderers/CanvasRenderer";
 import Container from "./Container";
 
 const STEP = 1 / 60;
+const MULTIPLIER = 1;
 const MAX_FRAME = STEP * 5;
+const SPEED = STEP * MULTIPLIER;
 
 class Game {
   #renderer;
@@ -20,6 +22,8 @@ class Game {
       width,
     });
 
+    this.debug_updates = 0;
+
     // initialize
     document.querySelector(parent).appendChild(this.#renderer.view);
   }
@@ -33,7 +37,6 @@ class Game {
   }
 
   run(gameUpdate = () => {}) {
-    // const { #renderer } = this;
     let t = 0;
     let dt = 0;
     let last = 0;
@@ -41,14 +44,27 @@ class Game {
     const loop = (ms) => {
       requestAnimationFrame(loop);
       t = ms / 1000;
-      dt = Math.min(t - last, MAX_FRAME * 5);
+      dt += Math.min(t - last, MAX_FRAME * 5);
       last = t;
-      this.scene.update(dt, t);
-      gameUpdate(dt, t);
+
+      while (dt >= SPEED) {
+        this.scene.update(STEP, t / MULTIPLIER);
+        gameUpdate(STEP, t / MULTIPLIER);
+        dt -= SPEED;
+        // this.debug_updates++;
+      }
+
+      // console.log("file: Game.js ~ line 58 ~ Game ~ loop ~ this.debug_updates", this.debug_updates);
       this.#renderer.render(this.scene);
+      // this.debug_updates = 0;
     };
 
-    requestAnimationFrame(loop);
+    const init = (ms) => {
+      last = ms / 1000;
+      requestAnimationFrame(loop);
+    };
+
+    requestAnimationFrame(init);
   }
 }
 

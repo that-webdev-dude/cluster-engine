@@ -12,6 +12,9 @@ export default () => {
   const player = game.scene.add(new Player(input, game, level));
 
   game.run(() => {
-    // game scene here...
+    // mimic intensive task here
+    // for (let i = 0; i < 1000; i++) {
+    //   console.log(i);
+    // }
   });
 };
