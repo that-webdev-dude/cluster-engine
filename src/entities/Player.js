@@ -65,16 +65,6 @@ class Player extends TileSprite {
     super.update(dt, t);
     const { position, controller, level, speed, gameOver } = this;
 
-<<<<<<< HEAD
-    // if (gameOver) {
-    //   this.rotation += dt * 5;
-    //   this.pivot.y = 24;
-    //   this.pivot.x = 24;
-    //   return;
-    // }
-
-=======
->>>>>>> ch06_fixed_state
     const { x } = controller;
     const xo = x * dt * speed;
     let yo = 0;
@@ -117,30 +107,8 @@ class Player extends TileSprite {
         this.lookLeft();
       }
     } else if (!x) {
-<<<<<<< HEAD
-      this.animation.play("rest");
-    }
-
-    // if ((this.invincible -= dt) > 0) {
-    //   this.alpha = (t * 10 % 2) | 0 ? 0 : 1;
-    // } else {
-    //   this.alpha = 1;
-    // }
-
-    // if (x && !this.jumping) {
-    //   this.frame.x = ((t / 0.1) | 0) % 4;
-    //   if (x > 0) {
-    //     this.anchor.x = 0;
-    //     this.scale.x = 1;
-    //   } else if (x < 0) {
-    //     this.anchor.x = this.w;
-    //     this.scale.x = -1;
-    //   }
-    // }
-=======
       this.animation.play("sleep");
     }
->>>>>>> ch06_fixed_state
   }
 }
 
