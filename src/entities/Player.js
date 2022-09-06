@@ -94,8 +94,7 @@ class Player extends TileSprite {
       this.vel = 3;
     }
 
-    position.x += r.x;
-    position.y += r.y;
+    position.add(r);
 
     // Animations
     if (x && !this.jumping) {
