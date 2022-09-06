@@ -10,12 +10,11 @@ const states = {
 };
 
 class Player extends TileSprite {
-  constructor(controller, game, level) {
+  constructor(controller, level) {
     super(new Texture(tilesImageURL), 48, 48);
-    this.game = game;
     this.level = level;
     this.controller = controller;
-    this.position = { x: 48 * 2, y: game.height - 48 * 4 };
+    // this.position = { x: 48 * 2, y: level.height - 48 * 4 };
     this.hitbox = {
       x: 10,
       y: 0,

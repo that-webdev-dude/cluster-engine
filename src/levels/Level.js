@@ -1,15 +1,26 @@
 import tilesImageURL from "../images/tiles.png";
 import Texture from "../cluster/core/Texture";
 import TileMap from "../cluster/core/TileMap";
+import Vector from "../cluster/utils/Vector";
 
 // prettier-ignore
 const levelMap = [
   '#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#',
   '#',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ','#',
   '#',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ','#',
+  '#',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ','#','#','#','#','#','#','#','#','#',
   '#',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ','#',
-  '#','#','#','#','#',' ',' ','#','#','#','#',' ',' ',' ',' ',' ',' ',' ',' ','#',
+  '#',' ',' ','#','#','#','#','#','#',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ','#',
   '#',' ',' ',' ',' ',' ',' ',' ','#','#','#','#','#','#','#',' ',' ',' ',' ','#',
+  '#',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ','#','#',
+  '#',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ','#','#','#',
+  '#',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ','#','#','#','#',
+  '#',' ',' ',' ','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#','#',
+  '#','#',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ','#',
+  '#','#','#',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ','#',
+  '#','#','#','#',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ','#',
+  '#','#','#','#','#',' ',' ','#','#','#','#',' ',' ',' ',' ',' ',' ',' ',' ','#',
+  '#','#','P',' ',' ',' ',' ',' ','#','#','#','#','#','#','#',' ',' ',' ',' ','#',
   '#',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ','#','#',
   '#',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ','#','#','#',
   '#',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ',' ','#','#','#','#',
@@ -17,12 +28,15 @@ const levelMap = [
 ]
 
 class Level extends TileMap {
-  constructor(game) {
+  constructor() {
     const tileW = 48;
     const tileH = 48;
-    const mapW = game.width / tileW + 0;
-    const mapH = game.height / tileH + 0;
+    const mapW = 20;
+    const mapH = 20;
     const texture = new Texture(tilesImageURL);
+    const spawns = {
+      player: new Vector(),
+    };
 
     const tiles = levelMap.map((symbol, index) => {
       const tile = {};
@@ -31,12 +45,28 @@ class Level extends TileMap {
           tile.walkable = true;
           tile.x = 1;
           tile.y = 2;
-
           break;
+
         case "#": // wall tile
           tile.x = 2;
           tile.y = 3;
           break;
+
+        case "P": // spawn player
+          const positionY = Math.floor(index / mapW) * tileW;
+          const positionX = (index % mapW) * tileH;
+          spawns.player.set(positionX, positionY);
+
+          tile.walkable = true;
+          tile.x = 1;
+          tile.y = 2;
+          break;
+
+        default:
+          // just make a walkable tile
+          tile.walkable = true;
+          tile.x = 1;
+          tile.y = 2;
       }
       return tile;
     });
@@ -56,6 +86,8 @@ class Level extends TileMap {
     }
 
     super(tiles, mapW, mapH, tileW, tileH, texture);
+
+    this.spawns = spawns;
   }
 }
 
