@@ -1,4 +1,5 @@
 import math from "../utils/math";
+import Vector from "../utils/Vector";
 import Container from "./Container";
 
 class Camera extends Container {
@@ -12,7 +13,7 @@ class Camera extends Container {
    */
   constructor(subject, viewport, worldSize = viewport) {
     super();
-    this.position = { x: 0, y: 0 };
+    this.position = new Vector();
     this.offset = { x: 0, y: 0 };
     this.height = viewport.height;
     this.width = viewport.width;

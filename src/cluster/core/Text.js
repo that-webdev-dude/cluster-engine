@@ -1,8 +1,10 @@
+import Vector from "../utils/Vector";
+
 class Text {
   constructor(text = "", style = {}) {
     this.text = text;
     this.style = style;
-    this.position = { x: 0, y: 0 };
+    this.position = new Vector();
   }
 }
 

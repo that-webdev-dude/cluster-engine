@@ -1,3 +1,4 @@
+import Vector from "./utils/Vector";
 import entity from "./utils/entity";
 import math from "./utils/math";
 
@@ -16,6 +17,7 @@ import Camera from "./core/Camera";
 import State from "./core/State";
 
 export default {
+  Vector,
   entity,
   math,
   Rect,
