@@ -1,6 +1,6 @@
 import Container from "../cluster/core/Container";
 import Vector from "../cluster/utils/Vector";
-import CrashTestDummy from "../entities/CrashTestDummy";
+import Dummy from "../entities/Dummy";
 
 class GameScreen extends Container {
   constructor(game, controller) {
@@ -11,14 +11,14 @@ class GameScreen extends Container {
     this.controller = controller;
     this.height = height;
     this.width = width;
-    this.ctd = this.add(new CrashTestDummy(velocity));
+    this.dummy = this.add(new Dummy(velocity));
     this.initialize();
   }
 
   // init
   initialize() {
-    const { ctd, height } = this;
-    this.ctd.position.set(0, height - 48);
+    const { dummy, height } = this;
+    this.dummy.position.set(0, height - 48);
   }
 
   // update
