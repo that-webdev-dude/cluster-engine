@@ -4,7 +4,7 @@ class Text {
   constructor(text = "", style = {}) {
     this.text = text;
     this.style = style;
-    this.position = new Vector();
+    this.position = new Vector(0, 0);
   }
 }
 

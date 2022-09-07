@@ -3,7 +3,7 @@ import Container from "./Container";
 
 const STEP = 1 / 60;
 const MULTIPLIER = 1;
-const MAX_FRAME = STEP * 5;
+const MAX_FRAME = STEP * 3;
 const SPEED = STEP * MULTIPLIER;
 
 class Game {
