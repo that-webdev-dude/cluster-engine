@@ -7,41 +7,45 @@ class GameScreen extends Container {
   constructor(game, controller) {
     super();
     const { width, height } = game;
-    const velocity = width / 3;
+    const dummies = new Container();
+    const bounds = {
+      x: 0,
+      y: 0,
+      w: width,
+      h: height,
+    };
 
     this.controller = controller;
-    this.height = height;
-    this.width = width;
-    this.dummy = this.add(new Dummy(velocity));
-    this.timer = this.add(new Timer(new Vector(width / 2, 50)));
+    this.elapsed = 0;
+    this.running = true;
+    this.bounds = bounds;
+
+    // this.dummies = this.add(dummies);
+    this.dummy = this.add(new Dummy(bounds));
+    this.timer = this.add(new Timer(new Vector(bounds.w / 2, 50)));
+
     this.initialize();
   }
 
-  // test init
+  // initialize
   initialize() {
-    const { dummy, height } = this;
-    dummy.position.set(0, height - 48);
-  }
-
-  // test reset
-  reset() {
-    const { dummy, timer, height } = this;
-    timer.reset();
-    dummy.position.set(0, height - 48);
+    // const { bounds } = this;
+    // for (let i = 0; i < 1; i++) {
+    //   this.dummies.children.push(new Dummy(bounds));
+    // }
   }
 
   // test update
   update(dt, t) {
-    super.update(dt, t);
-    const { dummy, timer, width, height, controller } = this;
+    const { timer, dummy } = this;
+    this.elapsed += dt;
+    if (this.elapsed >= 2) this.running = false;
 
-    if (dummy.position.x >= width) {
-      timer.stop();
-      dummy.position.set(width, height - 48);
-    }
-
-    if (controller.action) {
-      this.reset();
+    if (this.running) {
+      super.update(dt, t);
+      timer.text = `time: ${this.elapsed.toFixed(3)}, vel: ${dummy.velocity.x.toFixed(
+        3
+      )}, pos: ${dummy.position.x.toFixed(3)}`;
     }
   }
 }

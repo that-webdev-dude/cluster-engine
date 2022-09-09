@@ -9,7 +9,6 @@ class Timer extends Text {
       align: "center",
     });
 
-    console.log("file: Timer.js ~ line 15 ~ Timer ~ constructor ~ positionVec", positionVec);
     this.time = 0;
     this.running = true;
     this.position.copy(positionVec);
