@@ -7,7 +7,8 @@ class GameScreen extends Container {
   constructor(game, controller) {
     super();
     const { width, height } = game;
-    const dummies = new Container();
+    // const dummies = new Container();
+    const timer = this.add(new Timer(new Vector(width / 2, 50)));
     const bounds = {
       x: 0,
       y: 0,
@@ -19,35 +20,24 @@ class GameScreen extends Container {
     this.elapsed = 0;
     this.running = true;
     this.bounds = bounds;
+    this.height = height;
+    this.width = width;
 
     // this.dummies = this.add(dummies);
-    this.dummy = this.add(new Dummy(bounds));
-    this.timer = this.add(new Timer(new Vector(bounds.w / 2, 50)));
-
-    this.initialize();
-  }
-
-  // initialize
-  initialize() {
-    // const { bounds } = this;
     // for (let i = 0; i < 1; i++) {
     //   this.dummies.children.push(new Dummy(bounds));
     // }
+    this.dummy = this.add(
+      new Dummy(bounds, (text) => {
+        timer.text = text;
+      })
+    );
   }
 
   // test update
-  update(dt, t) {
-    const { timer, dummy } = this;
-    this.elapsed += dt;
-    if (this.elapsed >= 2) this.running = false;
-
-    if (this.running) {
-      super.update(dt, t);
-      timer.text = `time: ${this.elapsed.toFixed(3)}, vel: ${dummy.velocity.x.toFixed(
-        3
-      )}, pos: ${dummy.position.x.toFixed(3)}`;
-    }
-  }
+  // update(dt, t) {
+  //   super.update(dt, t);
+  // }
 }
 
 export default GameScreen;

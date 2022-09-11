@@ -25,8 +25,8 @@ class Timer extends Text {
 
   update(dt, t) {
     if (this.running) {
-      this.time += dt;
-      this.text = `${this.time.toFixed(3)}`;
+      // this.time += dt;
+      // this.text = `${this.time.toFixed(3)}`;
     }
   }
 }
