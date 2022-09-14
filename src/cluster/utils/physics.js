@@ -18,9 +18,10 @@ function integrate(entity, dt) {
   const vy = vel.y + acc.y * dt;
   const x = ((vel.x + vx) / 2) * dt;
   const y = ((vel.y + vy) / 2) * dt;
-  pos.add({ x, y });
+  // pos.add({ x, y });
   vel.set(vx, vy);
   acc.set(0, 0);
+  return { x, y };
 }
 
 export default {
