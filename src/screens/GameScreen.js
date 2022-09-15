@@ -1,43 +1,27 @@
 import Container from "../cluster/core/Container";
 import Dummy from "../entities/Dummy";
 import math from "../cluster/utils/math";
-import Vector from "../cluster/utils/Vector";
-import Text from "../cluster/core/Text";
-
-class Logger extends Text {
-  constructor(position = new Vector(0, 0), text = "") {
-    super(text, {
-      font: "16px 'Press Start 2p'",
-      fill: "red",
-      align: "center",
-    });
-    this.position = position;
-    this.text = text;
-  }
-
-  log(text) {
-    this.text = text;
-  }
-}
 
 class GameScreen extends Container {
   constructor(game, input) {
     super();
-    const dummy = new Dummy(game, input);
-    const logger = new Logger(new Vector(game.width / 2, 10));
 
-    this.dummy = dummy;
-    this.logger = logger;
-
-    this.add(dummy);
-    this.add(logger);
+    this.balls = this.add(new Container());
+    for (let i = 0; i < 30; i++) {
+      let ball = new Dummy(game, input);
+      // prettier-ignore
+      ball.position.set(
+        math.rand(48, game.width - 96), 
+        math.rand(48, game.height - 96)
+      );
+      this.balls.children.push(ball);
+    }
   }
 
   // test update
   update(dt, t) {
     super.update(dt, t);
-    const { dummy, logger } = this;
-    logger.log(`dummy vel: ${dummy.velocity.x.toFixed(3)}`);
+    // collision detection and resolution
   }
 }
 
