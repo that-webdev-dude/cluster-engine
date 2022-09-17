@@ -9,35 +9,20 @@ import physics from "../cluster/utils/physics";
 const MAX_POWER = 500;
 
 class Dummy extends TileSprite {
-  constructor(game, input) {
+  constructor(bounds) {
     super(new Texture(crashTestImageURL), 48, 48);
-    const bounds = {
-      top: 0,
-      right: game.width - 48,
-      bottom: game.height - 48,
-      left: 0,
-    };
-
-    this.input = input;
-    this.bounds = bounds;
+    let vx = math.rand(-MAX_POWER, MAX_POWER);
+    let vy = math.rand(-MAX_POWER, MAX_POWER);
     this.acceleration = new Vector();
-    this.velocity = new Vector(math.rand(-MAX_POWER, MAX_POWER), math.rand(-MAX_POWER, MAX_POWER));
+    this.velocity = new Vector(vx, vy);
+    this.bounds = bounds;
+    this.radius = 24;
   }
 
   update(dt, t) {
-    // this properties
-    // prettier-ignore
-    const {
-    input,
-    position,
-    velocity,
-    bounds,
-  } = this;
-
+    const { position, bounds } = this;
     let d = physics.integrate(this, dt);
-
     let r = bounce(this, bounds, d.x, d.y);
-
     position.add(r);
   }
 }
