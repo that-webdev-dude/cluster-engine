@@ -17,5 +17,5 @@ export default () => {
   };
 
   play();
-  // game.run();
+  game.run();
 };

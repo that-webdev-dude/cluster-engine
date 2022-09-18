@@ -8,34 +8,17 @@ class MouseControls {
     // down: true on mouse held down
     this.element = container;
     this.position = { x: 0, y: 0 };
-    this.isReleased = false;
+    this.isDown = false;
     this.isPressed = false;
-    this.idDown = false;
+    this.isReleased = false;
 
     // handlers
     // TODO
     // ADD A SCREEN RESIZE HANDLER
-    document.addEventListener("contextmenu", (e) => {
-      e.preventDefault();
-    });
-
-    document.addEventListener("mousemove", (e) => {
-      //   e.preventDefault();
-      this.#getCurrentPosition(e);
-    });
-
-    document.addEventListener("mousedown", (e) => {
-      //   e.preventDefault();
-      this.isDown = true;
-      this.isPressed = true;
-      this.#getCurrentPosition(e);
-    });
-
-    document.addEventListener("mouseup", (e) => {
-      //   e.preventDefault();
-      this.isDown = false;
-      this.isReleased = true;
-    });
+    document.addEventListener("contextmenu", (e) => e.preventDefault());
+    document.addEventListener("mousemove", (e) => this.move(e));
+    document.addEventListener("mousedown", (e) => this.down(e));
+    document.addEventListener("mouseup", (e) => this.up(e));
   }
 
   //   internals
@@ -46,6 +29,22 @@ class MouseControls {
     const yRatio = element.height / element.clientHeight;
     position.x = (clientX - rect.left) * xRatio;
     position.y = (clientY - rect.top) * yRatio;
+  }
+
+  move(e) {
+    this.#getCurrentPosition(e);
+  }
+
+  down(e) {
+    this.isDown = true;
+    this.isPressed = true;
+    this.#getCurrentPosition(e);
+  }
+
+  up(e) {
+    this.isDown = false;
+    this.isReleased = true;
+    this.#getCurrentPosition(e);
   }
 
   update() {
