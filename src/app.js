@@ -1,50 +1,21 @@
 // imports
-import Matter from "../vendor/matter";
+import GameScreen from "./screens/GameScreen";
+import cluster from "./cluster";
 
 export default () => {
-  const { Engine, Render, Runner, Bodies, Composite, World } = Matter;
-  const height = 600;
-  const width = 800;
+  const { Game, KeyControls, MouseControls } = cluster;
+  const w = 800;
+  const h = 400;
+  const game = new Game({ width: w, height: h });
+  const input = {
+    key: new KeyControls(),
+    mouse: new MouseControls(game.view),
+  };
 
-  // game init !!!!!
-  const engine = Engine.create();
+  const play = () => {
+    game.scene = new GameScreen(game, input, play);
+  };
 
-  // bodies !!!!!
-  // prettier-ignore
-  const course =  Bodies.rectangle(
-    width / 2, 
-    height / 2, 
-    width - 100, 
-    48, 
-    { isStatic: true } 
-  );
-
-  const balls = Array(50)
-    .fill(0)
-    .map((b) => {
-      const radius = Math.random() * 25 + 5;
-      const x = Math.random() * width;
-      const y = Math.random() * -1000;
-      const options = {
-        restitution: 0.7,
-      };
-
-      return Bodies.circle(x, y, radius, options);
-    });
-
-  // world !!!!!
-  World.add(engine.world, [course, ...balls]);
-  Runner.run(engine);
-
-  // debug render !!!!!
-  const render = Render.create({
-    element: document.querySelector("#app"),
-    engine: engine,
-    options: {
-      width: width,
-      height: height,
-      showAngleIndicator: true,
-    },
-  });
-  Render.run(render);
+  play();
+  // game.run();
 };

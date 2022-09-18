@@ -36,6 +36,10 @@ class Game {
     return this.#renderer.width;
   }
 
+  get view() {
+    return this.#renderer.view;
+  }
+
   run(gameUpdate = () => {}) {
     let t = 0;
     let dt = 0;
