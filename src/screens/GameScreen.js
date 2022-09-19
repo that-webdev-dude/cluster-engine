@@ -3,6 +3,7 @@ import Container from "../cluster/core/Container";
 import Vector from "../cluster/utils/Vector";
 import Course from "../entities/Course";
 import Penguin from "../entities/Penguin";
+import Arrow from "../entities/Arrow";
 
 class GameScreen extends Container {
   constructor(game, input, onRestart = () => {}) {
@@ -13,11 +14,13 @@ class GameScreen extends Container {
     this.restart = onRestart;
     this.ready = false;
 
+    const arrow = new Arrow();
     const course = new Course(new Vector(450, 300));
-    const penguin = new Penguin(new Vector(this.width / 2, this.height / 2));
+    const penguin = new Penguin(new Vector(this.width / 10, this.height / 2));
 
     this.course = this.add(course);
     this.penguin = this.add(penguin);
+    this.arrow = this.add(arrow);
 
     // matterjs engine setup
     this.engine = Engine.create({ enableSleeping: true });
@@ -27,6 +30,7 @@ class GameScreen extends Container {
     // game events
     Events.on(penguin.body, "sleepStart", () => {
       this.ready = true;
+      // arrow.visible = true;
     });
 
     // debug matter renderer
@@ -44,19 +48,28 @@ class GameScreen extends Container {
 
   update(dt, t) {
     super.update(dt, t);
-    const { penguin, input, height, ready } = this;
+    const { penguin, input, height, arrow } = this;
 
     // penguin off the edge
     if (penguin.position.y >= height) {
       this.restart();
     }
 
-    // player taken a shot
-    if (input.mouse.isReleased && this.ready) {
-      const power = 0.01;
-      const angle = -Math.PI / 1.75;
-      penguin.fire(power, angle);
-      this.ready = false;
+    // start stroke
+    if (input.mouse.isPressed) {
+      arrow.start(input.mouse.position);
+    }
+
+    if (this.ready) {
+      if (input.mouse.isDown || input.mouse.isReleased) {
+        const { angle, power } = arrow.drag(input.mouse.position);
+        arrow.visible = true;
+        if (input.mouse.isReleased) {
+          this.ready = false;
+          arrow.visible = false;
+          penguin.fire(power * 0.021, (angle * Math.PI) / 180); // angle in radians
+        }
+      }
     }
 
     input.mouse.update();
