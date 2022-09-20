@@ -116,6 +116,20 @@ class CanvasRenderer {
         // draw a rectangle
         this.context.fillStyle = child.style.fill;
         this.context.fillRect(0, 0, child.width, child.height);
+      } else if (child.style && child.path) {
+        // draw a path
+        // if (Array.isArray(child.path)) {
+        const [head, ...tail] = child.path;
+        const { style } = child;
+        this.context.fillStyle = style.fill || "red";
+        this.context.beginPath();
+        this.context.moveTo(head.x, head.y);
+        tail.forEach(({ x, y }) => {
+          this.context.lineTo(x, y);
+        });
+        this.context.closePath();
+        this.context.fill();
+        // }
       }
 
       if (child.children) {
