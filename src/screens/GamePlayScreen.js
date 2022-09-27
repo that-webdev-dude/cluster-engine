@@ -17,6 +17,12 @@ class Path {
 }
 
 class Physics {
+  /**
+   * collisionDetection_cc
+   * @param {*} a
+   * @param {*} b
+   * @returns
+   */
   static collisionDetection_cc(a, b) {
     let minDistance = a.radius + b.radius;
     return math.distance(a.position, b.position) <= minDistance;
