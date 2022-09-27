@@ -122,7 +122,7 @@ class CanvasRenderer {
         const { style, radius } = child;
         const { stroke, fill } = style;
         context.strokeStyle = stroke || "transparent";
-        context.fillStyle = fill || "black";
+        context.fillStyle = fill || "transparent";
         context.beginPath();
         context.arc(0, 0, radius, 0, Math.PI * 2, true);
         context.fill();
