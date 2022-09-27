@@ -63,41 +63,42 @@ class CanvasRenderer {
    * @param {Container} container
    */
   #renderRecursive(container) {
+    const { context } = this;
     container.children.forEach((child) => {
       if (child.visible == false) return;
 
-      this.context.save();
+      context.save();
 
       if (child.position) {
-        this.context.translate(Math.round(child.position.x), Math.round(child.position.y));
+        context.translate(Math.round(child.position.x), Math.round(child.position.y));
       }
 
       if (child.anchor) {
-        this.context.translate(child.anchor.x, child.anchor.y);
+        context.translate(child.anchor.x, child.anchor.y);
       }
 
       if (child.scale) {
-        this.context.scale(child.scale.x, child.scale.y);
+        context.scale(child.scale.x, child.scale.y);
       }
 
       if (child.angle) {
         const { x: px, y: py } = child.pivot;
-        this.context.translate(px, py);
-        this.context.rotate((Math.PI / 180) * child.angle);
-        this.context.translate(-px, -py);
+        context.translate(px, py);
+        context.rotate((Math.PI / 180) * child.angle);
+        context.translate(-px, -py);
       }
 
       if (child.text) {
         const { font, fill, align } = child.style;
-        if (font) this.context.font = font;
-        if (fill) this.context.fillStyle = fill;
-        if (align) this.context.textAlign = align;
-        this.context.fillText(child.text, 0, 0);
+        if (font) context.font = font;
+        if (fill) context.fillStyle = fill;
+        if (align) context.textAlign = align;
+        context.fillText(child.text, 0, 0);
       } else if (child.texture) {
         // can be a tilesprite...
         const { img } = child.texture;
         if (child.tileW && child.tileH) {
-          this.context.drawImage(
+          context.drawImage(
             img,
             child.frame.x * child.tileW,
             child.frame.y * child.tileH,
@@ -110,33 +111,50 @@ class CanvasRenderer {
           );
         } else {
           // ...or regular sprite
-          this.context.drawImage(img, 0, 0);
+          context.drawImage(img, 0, 0);
         }
-      } else if (child.width && child.height && child.style) {
-        // draw a rectangle
-        this.context.fillStyle = child.style.fill;
-        this.context.fillRect(0, 0, child.width, child.height);
+      } else if (child.style && child.width && child.height) {
+        // 'draw a rectangle'
+        context.fillStyle = child.style.fill;
+        context.fillRect(0, 0, child.width, child.height);
+      } else if (child.style && child.radius) {
+        // 'draw a circle'
+        const { style, radius } = child;
+        const { stroke, fill } = style;
+        context.strokeStyle = stroke || "transparent";
+        context.fillStyle = fill || "black";
+        context.beginPath();
+        context.arc(0, 0, radius, 0, Math.PI * 2, true);
+        context.fill();
+        context.stroke();
       } else if (child.style && child.path) {
-        // draw a path
-        // if (Array.isArray(child.path)) {
-        const [head, ...tail] = child.path;
-        const { style } = child;
-        this.context.fillStyle = style.fill || "red";
-        this.context.beginPath();
-        this.context.moveTo(head.x, head.y);
-        tail.forEach(({ x, y }) => {
-          this.context.lineTo(x, y);
-        });
-        this.context.closePath();
-        this.context.fill();
-        // }
+        // 'draw a path'
+        if (child.path.length) {
+          const [head, ...tail] = child.path;
+          const { style } = child;
+          context.fillStyle = style.fill || "black";
+          context.beginPath();
+          context.moveTo(head.x, head.y);
+          tail.forEach(({ x, y }) => {
+            context.lineTo(x, y);
+          });
+          if (tail.length === 1) {
+            // it's a line
+            context.strokeStyle = style.stroke || "black";
+            context.stroke();
+          } else {
+            // it's a polygon
+            context.closePath();
+            context.fill();
+          }
+        }
       }
 
       if (child.children) {
         this.#renderRecursive(child);
       }
 
-      this.context.restore();
+      context.restore();
     });
   }
 

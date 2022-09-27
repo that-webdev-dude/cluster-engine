@@ -10,7 +10,7 @@ class Vector {
 
   /**
    * computed
-   * vector magniture
+   * vector magnitude
    */
   get magnitude() {
     const { x, y } = this;
@@ -30,8 +30,8 @@ class Vector {
   }
 
   /**
-   * copy the x, y props of the passed object
-   * @param {{x: Number, y: Number}} param0
+   * copy the x, y props of the passed vector
+   * @param {{x: Number, y: Number}} vector
    * @returns this vector instance
    */
   copy({ x, y }) {
@@ -43,11 +43,22 @@ class Vector {
   /**
    * clone this vector
    * and returns a new instance of it
-   * @param {{x: Number, y: Number}} param0
-   * @returns this vector instance
+   * @returns Vector
    */
   clone() {
     return Vector.from(this);
+  }
+
+  /**
+   * computes the normal vector
+   * from this vector
+   * @returns Vector
+   */
+  normal() {
+    let x = -this.y;
+    let y = this.x;
+    let n = new Vector(x, y);
+    return n.normalize();
   }
 
   /**
@@ -110,6 +121,15 @@ class Vector {
       this.y /= magnitude;
     }
     return this;
+  }
+
+  /**
+   * alias to normalize()
+   * normalize this vector
+   * @returns this vector instance
+   */
+  unit() {
+    return this.normalize();
   }
 
   /**

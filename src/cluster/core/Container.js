@@ -1,8 +1,8 @@
 import Vector from "../utils/Vector";
 
 class Container {
-  constructor() {
-    this.position = new Vector();
+  constructor(position = new Vector()) {
+    this.position = position;
     this.children = [];
   }
 

@@ -3,8 +3,8 @@ import cluster from "./cluster";
 
 export default () => {
   const { Game, KeyControls, MouseControls } = cluster;
-  const w = 416;
-  const h = 832;
+  const w = 832;
+  const h = 640;
   const game = new Game({ width: w, height: h });
   const input = {
     key: new KeyControls(),
