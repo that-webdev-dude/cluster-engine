@@ -100,6 +100,15 @@ class Vector {
   }
 
   /**
+   * reverse the vector components
+   * by applying a scalar of -1
+   * @returns
+   */
+  reverse() {
+    return this.scale(-1);
+  }
+
+  /**
    * alias to scale()
    * scale this vector
    * by a scalar passed in as parameter
