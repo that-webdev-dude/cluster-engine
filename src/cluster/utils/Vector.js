@@ -21,7 +21,7 @@ class Vector {
    * setting x, y in one go
    * @param {Number} x
    * @param {Number} y
-   * @returns this vector instance
+   * @returns this
    */
   set(x, y) {
     this.x = x;
@@ -32,7 +32,7 @@ class Vector {
   /**
    * copy the x, y props of the passed vector
    * @param {{x: Number, y: Number}} vector
-   * @returns this vector instance
+   * @returns this
    */
   copy({ x, y }) {
     this.x = x;
@@ -50,23 +50,11 @@ class Vector {
   }
 
   /**
-   * computes the normal vector
-   * from this vector
-   * @returns Vector
-   */
-  normal() {
-    let x = -this.y;
-    let y = this.x;
-    let n = new Vector(x, y);
-    return n.normalize();
-  }
-
-  /**
    * adds to this vector
    * the vector (object with x, y)
    * passed in as parameter
    * @param {{x: Number, y: Number}} param0
-   * @returns this vector instance
+   * @returns this
    */
   add({ x, y }) {
     this.x += x;
@@ -79,7 +67,7 @@ class Vector {
    * the vector (object with x, y)
    * passed in as parameter
    * @param {{x: Number, y: Number}} param0
-   * @returns this vector instance
+   * @returns this
    */
   subtract({ x, y }) {
     this.x -= x;
@@ -91,7 +79,7 @@ class Vector {
    * scale this vector
    * by a scalar passed in as parameter
    * @param {Number} scalar
-   * @returns this vector instance
+   * @returns this
    */
   scale(scalar = 1) {
     this.x *= scalar;
@@ -100,28 +88,51 @@ class Vector {
   }
 
   /**
-   * reverse the vector components
-   * by applying a scalar of -1
-   * @returns
-   */
-  reverse() {
-    return this.scale(-1);
-  }
-
-  /**
    * alias to scale()
    * scale this vector
    * by a scalar passed in as parameter
    * @param {Number} scalar
-   * @returns this vector instance
+   * @returns this
    */
   multiply(scalar = 1) {
     return this.scale(scalar);
   }
 
   /**
+   * returns the normal
+   * direction to this vector
+   * @returns Vector
+   */
+  normal() {
+    let x = -this.y;
+    let y = this.x;
+    let n = new Vector(x, y);
+    return n.normalize();
+  }
+
+  /**
+   * reverse the vector components
+   * by applying a scalar of -1
+   * @returns this
+   */
+  reverse() {
+    return this.scale(-1);
+  }
+
+  // /**
+  //  * distance vector between
+  //  * this vector and the {x,y} vector
+  //  * passed in as parameter
+  //  * @param {*} param0
+  //  * @returns
+  //  */
+  // distance({ x, y }) {
+  //   return this.clone().subtract({ x, y });
+  // }
+
+  /**
    * normalize this vector
-   * @returns this vector instance
+   * @returns this
    */
   normalize() {
     let magnitude = this.magnitude;
@@ -135,7 +146,7 @@ class Vector {
   /**
    * alias to normalize()
    * normalize this vector
-   * @returns this vector instance
+   * @returns this
    */
   unit() {
     return this.normalize();
@@ -146,7 +157,7 @@ class Vector {
    * this vector and another vector
    * passed in as parameter
    * @param {{x: Number, y: Number}} param0
-   * @returns the dot product
+   * @returns number
    */
   dot({ x, y }) {
     return this.x * x + this.y * y;

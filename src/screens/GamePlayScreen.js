@@ -38,7 +38,7 @@ class Physics {
     let distanceVector = a.position.clone().subtract(b.position);
     let penetrationDepth = minDistance - distanceVector.magnitude;
     let penetrationResolution = distanceVector
-      .normalize()
+      .unit()
       .scale(penetrationDepth / (a.inverseMass + b.inverseMass));
 
     a.position.add(penetrationResolution.scale(a.inverseMass));
@@ -56,6 +56,7 @@ class Physics {
     let separatingVelocity = relativeVelocity.dot(collisionNormal);
     let separatingVelocityScaled = -separatingVelocity * Math.min(a.elasticity, b.elasticity);
     let separatingVelocityDifference = separatingVelocityScaled - separatingVelocity;
+
     let impulse = separatingVelocityDifference / (a.inverseMass + b.inverseMass);
     let impulseVector = collisionNormal.scale(impulse);
 
@@ -110,6 +111,23 @@ class Physics {
       .scale(c.radius - closestPoint.magnitude);
     c.position.add(resolutionVec);
   }
+
+  /**
+   * collisionResolution_cw
+   * @param {*} c
+   * @param {*} w
+   */
+  static collisionResolution_cw(c, w) {
+    let normalDirection = this.closestPoint_cw(c, w).unit();
+    let normalMagnitude = -c.velocity.dot(normalDirection) * c.elasticity;
+    let normalVelocity = normalDirection.scale(normalMagnitude);
+
+    let tangentDirection = w.end.clone().subtract(w.start).unit();
+    let tangentMagnitude = c.velocity.dot(tangentDirection);
+    let tangentVelocity = tangentDirection.scale(tangentMagnitude);
+
+    c.velocity.copy(normalVelocity.add(tangentVelocity));
+  }
 }
 
 class GamePlayScreen extends Container {
@@ -128,7 +146,6 @@ class GamePlayScreen extends Container {
       new Wall(0, gameH, 0, 0),
     ];
     edges.forEach((edge) => walls.add(edge));
-    const wall = walls.add(new Wall(100, 350, 600, 450));
 
     // add player & balls
     const balls = new Container();
@@ -143,7 +160,7 @@ class GamePlayScreen extends Container {
         mass: 1,
       })
     );
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 1; i++) {
       const bx = math.rand(0, gameW);
       const by = math.rand(0, gameH);
       const br = math.rand(16, 64);
@@ -160,6 +177,7 @@ class GamePlayScreen extends Container {
     this.player = player;
     this.balls = this.add(balls);
     this.walls = this.add(walls);
+    this.wall = walls.add(new Wall(100, 450, 600, 350));
 
     // DEBUG! ----------------------------------------------------------------------
     this.debugCircle = this.add(
@@ -212,6 +230,7 @@ class GamePlayScreen extends Container {
         const w = walls[k];
         if (Physics.collisionDetection_cw(a, w)) {
           Physics.penetrationResolution_cw(a, w);
+          Physics.collisionResolution_cw(a, w);
         }
       }
       // circle to circle collision detection and resolution
