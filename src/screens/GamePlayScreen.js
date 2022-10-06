@@ -44,38 +44,45 @@ class GamePlayScreen extends Container {
     const gameW = game.width;
     const gameH = game.height;
 
-    this.capsule = this.add(new Capsule());
+    // this.capsule = this.add(new Capsule());
+    this.line = this.add(
+      new Line({
+        start: new Vector(0, 0),
+        end: new Vector(100, 100),
+        style: { stroke: "blue" },
+        position: new Vector(0, 0),
+      })
+    );
 
     // DEBUG! ----------------------------------------------------------------------
-    this.add(
-      new Line({
-        start: new Vector(),
-        end: this.capsule.start,
-        style: { stroke: "green" },
-      })
-    );
-    this.add(
-      new Line({
-        start: new Vector(),
-        end: this.capsule.end,
-        style: { stroke: "blue" },
-      })
-    );
-    this.add(
-      new Line({
-        start: new Vector(),
-        end: this.capsule.position,
-        style: { stroke: "cyan" },
-      })
-    );
-    this.add(
-      new Line({
-        start: this.capsule.start,
-        end: this.capsule.end,
-        style: { stroke: "black" },
-      })
-    );
-
+    // this.add(
+    //   new Line({
+    //     start: new Vector(),
+    //     end: this.capsule.start,
+    //     style: { stroke: "green" },
+    //   })
+    // );
+    // this.add(
+    //   new Line({
+    //     start: new Vector(),
+    //     end: this.capsule.end,
+    //     style: { stroke: "blue" },
+    //   })
+    // );
+    // this.add(
+    //   new Line({
+    //     start: new Vector(),
+    //     end: this.capsule.position,
+    //     style: { stroke: "cyan" },
+    //   })
+    // );
+    // this.add(
+    //   new Line({
+    //     start: this.capsule.start,
+    //     end: this.capsule.end,
+    //     style: { stroke: "black" },
+    //   })
+    // );
     // END DEBUG! ------------------------------------------------------------------
 
     // add walls
