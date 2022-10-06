@@ -82,11 +82,26 @@ class CanvasRenderer {
       }
 
       if (child.angle) {
-        const { x: px, y: py } = child.pivot;
+        const { x: px, y: py } = child.pivot || { x: 0, y: 0 };
         context.translate(px, py);
-        context.rotate((Math.PI / 180) * child.angle);
+        context.rotate(child.angle);
         context.translate(-px, -py);
       }
+
+      /**
+       * Text:       .text
+       * -----------------------------------------
+       * Sprite:     .texture
+       * Tilesprite: .texture .tileW .tileH
+       * -----------------------------------------
+       * Rect:       .style .width .height
+       * -----------------------------------------
+       * Circle:     .style .radius
+       * Capsule:    .style .radius .length
+       * -----------------------------------------
+       * Polygon:    .style .path
+       * Line        .style .path (if tail.length === 1)
+       */
 
       if (child.text) {
         const { font, fill, align } = child.style;
@@ -94,6 +109,7 @@ class CanvasRenderer {
         if (fill) context.fillStyle = fill;
         if (align) context.textAlign = align;
         context.fillText(child.text, 0, 0);
+        // IMAGES
       } else if (child.texture) {
         // can be a tilesprite...
         const { img } = child.texture;
@@ -113,14 +129,25 @@ class CanvasRenderer {
           // ...or regular sprite
           context.drawImage(img, 0, 0);
         }
+        // SHAPES
       } else if (child.style && child.width && child.height) {
-        // 'draw a rectangle'
-        context.fillStyle = child.style.fill;
-        context.fillRect(0, 0, child.width, child.height);
+        const { stroke, fill } = child.style;
+        context.strokeStyle = stroke || "transparent";
+        context.fillStyle = fill || "black";
+        if (child.radius) {
+          // draw a capsule
+          context.beginPath();
+          context.roundRect(0, 0, child.width, child.height, child.radius);
+          context.fill();
+          context.stroke();
+        } else {
+          // draw a rectangle
+          context.fillRect(0, 0, child.width, child.height);
+        }
       } else if (child.style && child.radius) {
-        // 'draw a circle'
-        const { style, radius } = child;
-        const { stroke, fill } = style;
+        // draw a circle
+        const { stroke, fill } = child.style;
+        const { radius } = child;
         context.strokeStyle = stroke || "transparent";
         context.fillStyle = fill || "transparent";
         context.beginPath();
@@ -128,7 +155,7 @@ class CanvasRenderer {
         context.fill();
         context.stroke();
       } else if (child.style && child.path) {
-        // 'draw a path'
+        // draw a path
         if (child.path.length) {
           const [head, ...tail] = child.path;
           const { style } = child;
@@ -139,11 +166,11 @@ class CanvasRenderer {
             context.lineTo(x, y);
           });
           if (tail.length === 1) {
-            // it's a line
+            // as line
             context.strokeStyle = style.stroke || "black";
             context.stroke();
           } else {
-            // it's a polygon
+            // as polygon
             context.closePath();
             context.fill();
           }

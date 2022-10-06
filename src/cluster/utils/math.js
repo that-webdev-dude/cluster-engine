@@ -70,6 +70,26 @@ function angle(a, b) {
 }
 
 /**
+ * converts the angle value
+ * from degrees to radians
+ * @param {*} degrees
+ * @returns {number} angle in radians
+ */
+function deg2rad(degrees) {
+  return degrees * (Math.PI / 180);
+}
+
+/**
+ * converts the angle value
+ * from radians to degree
+ * @param {*} radians
+ * @returns {number} angle in radians
+ */
+function rad2deg(radians) {
+  return radians * (180 / Math.PI);
+}
+
+/**
  * Clamp the value to the provided min max limits
  * defined by min and max parameters
  * @param {number} value
@@ -88,5 +108,7 @@ export default {
   randOneFrom,
   distance,
   angle,
+  rad2deg,
+  deg2rad,
   clamp,
 };

@@ -107,7 +107,7 @@ class Vector {
     let x = -this.y;
     let y = this.x;
     let n = new Vector(x, y);
-    return n.normalize();
+    return n.unit();
   }
 
   /**
@@ -161,6 +161,23 @@ class Vector {
    */
   dot({ x, y }) {
     return this.x * x + this.y * y;
+  }
+
+  /**
+   * cross product
+   * negative if this gets to param vector faster clockwise
+   * positive if this gets to param vector faster counterclockwise
+   * @param {{x: Number, y: Number}} param0
+   * @returns number
+   */
+  cross({ x, y }) {
+    return this.x * y - this.y * x;
+  }
+
+  angle({ x, y }) {
+    // θ = cos-1 [ (a · b) / (|a| |b|) ]
+    const refVector = new Vector(x, y);
+    return Math.acos(this.dot(refVector) / (this.magnitude * refVector.magnitude));
   }
 }
 

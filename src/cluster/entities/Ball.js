@@ -1,6 +1,6 @@
-import Container from "../core/Container";
-import Vector from "../utils/Vector";
-import Text from "../core/Text";
+import cluster from "../index";
+
+const { Container, Vector, Text } = cluster;
 
 const ACCELERATION = 1;
 const FRICTION = 0.05;
@@ -34,27 +34,27 @@ class Ball extends Container {
     this.mass = mass;
 
     // DEBUG! ----------------------------------------------------------------------
-    this.velLog = this.add(
-      new Text(``, {
-        fill: "black",
-        align: "center",
-      })
-    );
-    this.velLog.anchor = { x: 0, y: -8 };
+    // this.velLog = this.add(
+    //   new Text(``, {
+    //     fill: "black",
+    //     align: "center",
+    //   })
+    // );
+    // this.velLog.anchor = { x: 0, y: -8 };
 
-    this.massLog = this.add(
-      new Text(``, {
-        fill: "black",
-        align: "center",
-      })
-    );
-    this.massLog.anchor = { x: 0, y: 4 };
+    // this.massLog = this.add(
+    //   new Text(``, {
+    //     fill: "black",
+    //     align: "center",
+    //   })
+    // );
+    // this.massLog.anchor = { x: 0, y: 4 };
     // END DEBUG! ------------------------------------------------------------------
   }
 
   updateDebug() {
-    this.velLog.text = `v: ${this.velocity.magnitude.toFixed(2)}`;
-    this.massLog.text = `m: ${this.mass.toFixed(2)}`;
+    // this.velLog.text = `v: ${this.velocity.magnitude.toFixed(2)}`;
+    // this.massLog.text = `m: ${this.mass.toFixed(2)}`;
   }
 
   get inverseMass() {
