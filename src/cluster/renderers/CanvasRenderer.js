@@ -1,5 +1,12 @@
 // ThatWebdevDude - 2022
 
+const DEFAULTS = {
+  strokeStyle: "transparent",
+  fillStyle: "#68c3d4",
+  textAlign: "center",
+  font: "16px Arial",
+};
+
 class CanvasRenderer {
   /**
    * Game Renderer model
@@ -88,30 +95,53 @@ class CanvasRenderer {
         context.translate(-px, -py);
       }
 
-      /**
-       * Text:       .text
-       * -----------------------------------------
-       * Sprite:     .texture
-       * Tilesprite: .texture .tileW .tileH
-       * -----------------------------------------
-       * Rect:       .style .width .height
-       * -----------------------------------------
-       * Circle:     .style .radius
-       * Capsule:    .style .radius .length
-       * -----------------------------------------
-       * Polygon:    .style .path
-       * Line        .style .path (if tail.length === 1)
-       */
-
-      if (child.text) {
-        const { font, fill, align } = child.style;
-        if (font) context.font = font;
-        if (fill) context.fillStyle = fill;
-        if (align) context.textAlign = align;
+      // DEBUG -------------------------------------------------------------
+      const drawText = (style) => {
+        const { font, align } = style;
+        context.textAlign = align || DEFAULTS.textAlign;
+        context.font = font || DEFAULTS.font;
         context.fillText(child.text, 0, 0);
-        // IMAGES
-      } else if (child.texture) {
-        // can be a tilesprite...
+      };
+
+      const drawCapsule = (style) => {
+        const { width, height, radius } = child;
+        const { stroke, fill } = style;
+        context.strokeStyle = stroke || DEFAULTS.strokeStyle;
+        context.fillStyle = fill || DEFAULTS.fillStyle;
+        if (radius !== 0) {
+          context.beginPath();
+          context.roundRect(0, 0, width, height, radius);
+          context.fill();
+          context.stroke();
+        } else {
+          context.fillRect(0, 0, width, height);
+        }
+      };
+
+      const drawPath = (style) => {
+        if (child.path.length) {
+          const [head, ...tail] = child.path;
+          const { fill } = style;
+          context.fillStyle = fill || DEFAULTS.fillStyle;
+          context.beginPath();
+          context.moveTo(head.x, head.y);
+          tail.forEach(({ x, y }) => {
+            context.lineTo(x, y);
+          });
+          if (tail.length === 1) {
+            const { stroke } = style;
+            context.strokeStyle = stroke || DEFAULTS.stroke;
+            context.stroke();
+          } else {
+            // as polygon
+            context.closePath();
+            context.fill();
+          }
+        }
+      };
+      // END DEBUG ---------------------------------------------------------
+
+      if (child.texture) {
         const { img } = child.texture;
         if (child.tileW && child.tileH) {
           context.drawImage(
@@ -126,56 +156,70 @@ class CanvasRenderer {
             child.tileH
           );
         } else {
-          // ...or regular sprite
           context.drawImage(img, 0, 0);
         }
-        // SHAPES
-      } else if (child.style && child.width && child.height) {
-        const { stroke, fill } = child.style;
-        context.strokeStyle = stroke || "transparent";
-        context.fillStyle = fill || "black";
-        if (child.radius) {
-          // draw a capsule
-          context.beginPath();
-          context.roundRect(0, 0, child.width, child.height, child.radius);
-          context.fill();
-          context.stroke();
-        } else {
-          // draw a rectangle
-          context.fillRect(0, 0, child.width, child.height);
-        }
-      } else if (child.style && child.radius) {
-        // draw a circle
-        const { stroke, fill } = child.style;
-        const { radius } = child;
-        context.strokeStyle = stroke || "transparent";
-        context.fillStyle = fill || "transparent";
-        context.beginPath();
-        context.arc(0, 0, radius, 0, Math.PI * 2, true);
-        context.fill();
-        context.stroke();
-      } else if (child.style && child.path) {
-        // draw a path
-        if (child.path.length) {
-          const [head, ...tail] = child.path;
-          const { style } = child;
-          context.fillStyle = style.fill || "black";
-          context.beginPath();
-          context.moveTo(head.x, head.y);
-          tail.forEach(({ x, y }) => {
-            context.lineTo(x, y);
-          });
-          if (tail.length === 1) {
-            // as line
-            context.strokeStyle = style.stroke || "black";
-            context.stroke();
-          } else {
-            // as polygon
-            context.closePath();
-            context.fill();
-          }
+      } else if (child.style) {
+        const { style } = child;
+        if (child.text) {
+          // ...text
+          drawText(style);
+        } else if (child.width && child.height) {
+          // ...rect ...capsule ...circle
+          drawCapsule(style);
+        } else if (child.path) {
+          // ...line ...polygon
+          drawPath(style);
         }
       }
+
+      // } else if (child.style && child.text) {
+      //   drawText();
+      // } else if (child.style && child.width && child.height) {
+      //   const { stroke, fill } = child.style;
+      //   context.strokeStyle = stroke || "transparent";
+      //   context.fillStyle = fill || "black";
+      //   if (child.radius) {
+      //     // draw a capsule
+      //     context.beginPath();
+      //     context.roundRect(0, 0, child.width, child.height, child.radius);
+      //     context.fill();
+      //     context.stroke();
+      //   } else {
+      //     // draw a rectangle
+      //     context.fillRect(0, 0, child.width, child.height);
+      //   }
+      // } else if (child.style && child.radius) {
+      //   // draw a circle
+      //   const { stroke, fill } = child.style;
+      //   const { radius } = child;
+      //   context.strokeStyle = stroke || "transparent";
+      //   context.fillStyle = fill || "transparent";
+      //   context.beginPath();
+      //   context.arc(0, 0, radius, 0, Math.PI * 2, true);
+      //   context.fill();
+      //   context.stroke();
+      // } else if (child.style && child.path) {
+      //   // draw a path
+      //   if (child.path.length) {
+      //     const [head, ...tail] = child.path;
+      //     const { style } = child;
+      //     context.fillStyle = style.fill || "black";
+      //     context.beginPath();
+      //     context.moveTo(head.x, head.y);
+      //     tail.forEach(({ x, y }) => {
+      //       context.lineTo(x, y);
+      //     });
+      //     if (tail.length === 1) {
+      //       // as line
+      //       context.strokeStyle = style.stroke || "black";
+      //       context.stroke();
+      //     } else {
+      //       // as polygon
+      //       context.closePath();
+      //       context.fill();
+      //     }
+      //   }
+      // }
 
       if (child.children) {
         this.#renderRecursive(child);

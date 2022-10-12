@@ -1,4 +1,4 @@
-import cluster from "../index";
+import cluster from "../cluster/index";
 
 const { Container, Vector, Text } = cluster;
 

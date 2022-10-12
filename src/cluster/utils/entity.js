@@ -1,4 +1,4 @@
-import Rect from "../core/Rect";
+import Rect from "../shapes/Rect";
 import math from "./math";
 
 /**

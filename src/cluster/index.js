@@ -6,9 +6,11 @@ import entity from "./utils/entity";
 import math from "./utils/math";
 
 // SHAPES
-import Polygon from "./core/Polygon";
-import Line from "./core/Line";
-import Rect from "./core/Rect";
+import Capsule from "./shapes/Capsule";
+import Circle from "./shapes/Circle";
+import Rect from "./shapes/Rect";
+import Line from "./shapes/Line";
+import Polygon from "./shapes/Polygon";
 
 import Game from "./core/Game";
 import Text from "./core/Text";
@@ -33,9 +35,11 @@ export default {
   math,
 
   // SHAPES
-  Polygon,
-  Line,
+  Capsule,
+  Circle,
   Rect,
+  Line,
+  Polygon,
 
   Game,
   Text,

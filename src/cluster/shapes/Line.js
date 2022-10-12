@@ -3,16 +3,10 @@ import Polygon from "./Polygon";
 
 class Line extends Polygon {
   constructor(
-    {
-      start = new Vector(),
-      end = new Vector(),
-      style = { stroke: "black" },
-      position = new Vector(),
-    } = {
+    { start = new Vector(), end = new Vector(), style = {} } = {
       start: new Vector(),
       end: new Vector(),
-      style: { stroke: "black" },
-      position: new Vector(),
+      style: {},
     }
   ) {
     super({ path: [start, end], style, position });

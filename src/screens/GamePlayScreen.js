@@ -1,41 +1,48 @@
-import Ball from "../cluster/entities/Ball";
-import Wall from "../cluster/entities/Wall";
+// import Ball from "../entities/Ball";
+// import Wall from "../entities/Wall";
 import cluster from "../cluster/index";
-import entity from "../cluster/utils/entity";
 // prettier-ignore
 const { 
   Container, 
   Physics, 
   Vector, 
-  Line, 
-  math 
+  math,
+  entity,
+
+  Text,
+
+  Capsule,
+  Circle,
+  Rect,
+  Line,
+  Polygon,
 } = cluster;
 
-class Capsule {
-  constructor(
-    { radius = 25, width = 100, height = 100, style = { fill: "red" }, position = new Vector() } = {
-      radius: 100,
-      width: 200,
-      height: 200,
-      style: { fill: "red" },
-      position: new Vector(),
-    }
-  ) {
-    this.radius = radius;
-    this.height = height;
-    this.width = width;
-    this.style = style;
-    this.position = position;
+// class Capsule {
+//   constructor(
+//     { radius = 25, width = 100, height = 100, style = { fill: "red" }, position = new Vector() } = {
+//       radius: 100,
+//       width: 200,
+//       height: 200,
+//       style: { fill: "red" },
+//       position: new Vector(),
+//     }
+//   ) {
+//     this.radius = radius;
+//     this.height = height;
+//     this.width = width;
+//     this.style = style;
+//     this.position = position;
 
-    this.center = entity.center(this);
-    console.log("file: GamePlayScreen.js ~ line 31 ~ Capsule ~ this.center", this.center);
-  }
+//     this.center = entity.center(this);
+//     console.log("file: GamePlayScreen.js ~ line 31 ~ Capsule ~ this.center", this.center);
+//   }
 
-  update(dt, t) {
-    // this.angle += 0.05;
-    // if (this.angle >= Math.PI * 2) this.angle = 0;
-  }
-}
+//   update(dt, t) {
+//     // this.angle += 0.05;
+//     // if (this.angle >= Math.PI * 2) this.angle = 0;
+//   }
+// }
 
 class GamePlayScreen extends Container {
   constructor(game, input, onRestart = () => {}) {
@@ -44,13 +51,36 @@ class GamePlayScreen extends Container {
     const gameW = game.width;
     const gameH = game.height;
 
-    // this.capsule = this.add(new Capsule());
-    this.line = this.add(
-      new Line({
-        start: new Vector(0, 0),
-        end: new Vector(100, 100),
-        style: { stroke: "blue" },
-        position: new Vector(0, 0),
+    this.capsule = this.add(new Capsule());
+    this.capsule.position = new Vector(0, 0);
+    // console.log(
+    //   "file: GamePlayScreen.js ~ line 54 ~ GamePlayScreen ~ constructor ~ this.capsule",
+    //   this.capsule
+    // );
+
+    this.rect = this.add(new Rect({ width: 64, height: 63 }));
+    this.rect.position = new Vector(100, 100);
+    // console.log(
+    //   "file: GamePlayScreen.js ~ line 57 ~ GamePlayScreen ~ constructor ~ this.rect",
+    //   this.rect
+    // );
+
+    this.circle = this.add(new Circle());
+    this.circle.position = new Vector(200, 200);
+    // console.log(
+    //   "file: GamePlayScreen.js ~ line 53 ~ GamePlayScreen ~ constructor ~ this.rect",
+    //   this.circle
+    // );
+
+    this.poly = this.add(
+      new Polygon({
+        path: [
+          { x: 0, y: 0 },
+          { x: 320, y: 64 },
+          { x: 0, y: 0 },
+          { x: 640, y: 32 },
+          { x: 0, y: 0 },
+        ],
       })
     );
 
