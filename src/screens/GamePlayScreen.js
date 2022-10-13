@@ -1,11 +1,11 @@
 // import Ball from "../entities/Ball";
 // import Wall from "../entities/Wall";
 import cluster from "../cluster/index";
-// prettier-ignore
-const { 
-  Container, 
-  Physics, 
-  Vector, 
+
+const {
+  Container,
+  Physics,
+  Vector,
   math,
   entity,
 
@@ -18,71 +18,12 @@ const {
   Polygon,
 } = cluster;
 
-// class Capsule {
-//   constructor(
-//     { radius = 25, width = 100, height = 100, style = { fill: "red" }, position = new Vector() } = {
-//       radius: 100,
-//       width: 200,
-//       height: 200,
-//       style: { fill: "red" },
-//       position: new Vector(),
-//     }
-//   ) {
-//     this.radius = radius;
-//     this.height = height;
-//     this.width = width;
-//     this.style = style;
-//     this.position = position;
-
-//     this.center = entity.center(this);
-//     console.log("file: GamePlayScreen.js ~ line 31 ~ Capsule ~ this.center", this.center);
-//   }
-
-//   update(dt, t) {
-//     // this.angle += 0.05;
-//     // if (this.angle >= Math.PI * 2) this.angle = 0;
-//   }
-// }
-
 class GamePlayScreen extends Container {
   constructor(game, input, onRestart = () => {}) {
     super();
 
     const gameW = game.width;
     const gameH = game.height;
-
-    this.capsule = this.add(new Capsule());
-    this.capsule.position = new Vector(0, 0);
-    // console.log(
-    //   "file: GamePlayScreen.js ~ line 54 ~ GamePlayScreen ~ constructor ~ this.capsule",
-    //   this.capsule
-    // );
-
-    this.rect = this.add(new Rect({ width: 64, height: 63 }));
-    this.rect.position = new Vector(100, 100);
-    // console.log(
-    //   "file: GamePlayScreen.js ~ line 57 ~ GamePlayScreen ~ constructor ~ this.rect",
-    //   this.rect
-    // );
-
-    this.circle = this.add(new Circle());
-    this.circle.position = new Vector(200, 200);
-    // console.log(
-    //   "file: GamePlayScreen.js ~ line 53 ~ GamePlayScreen ~ constructor ~ this.rect",
-    //   this.circle
-    // );
-
-    this.poly = this.add(
-      new Polygon({
-        path: [
-          { x: 0, y: 0 },
-          { x: 320, y: 64 },
-          { x: 0, y: 0 },
-          { x: 640, y: 32 },
-          { x: 0, y: 0 },
-        ],
-      })
-    );
 
     // DEBUG! ----------------------------------------------------------------------
     // this.add(

@@ -8,7 +8,7 @@ class Rect extends Capsule {
       style: {},
     }
   ) {
-    super({ width, height, radius: 0, style });
+    super({ width, height, radius: 0.001, style });
   }
 }
 

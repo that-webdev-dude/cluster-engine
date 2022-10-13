@@ -7,6 +7,55 @@ const DEFAULTS = {
   font: "16px Arial",
 };
 
+class CanvasArtist {
+  static drawText = (context, child) => {
+    const { text, style } = child;
+    const { fill, font, align } = style;
+    context.font = font || DEFAULTS.font;
+    context.fillStyle = fill || DEFAULTS.fillStyle;
+    context.textAlign = align || DEFAULTS.textAlign;
+    context.fillText(text, 0, 0);
+  };
+
+  static drawCapsule = (context, child) => {
+    const { style } = child;
+    const { stroke, fill } = style;
+    const { width, height, radius } = child;
+    context.fillStyle = fill || DEFAULTS.fillStyle;
+    context.strokeStyle = stroke || DEFAULTS.strokeStyle;
+    if (radius > 0.001) {
+      context.beginPath();
+      context.roundRect(0, 0, width, height, radius);
+      context.fill();
+      context.stroke();
+    } else {
+      context.fillRect(0, 0, width, height);
+    }
+  };
+
+  static drawPath = (context, child) => {
+    const { style } = child;
+    if (child.path.length) {
+      const [head, ...tail] = child.path;
+      const { fill } = style;
+      context.fillStyle = fill || DEFAULTS.fillStyle;
+      context.beginPath();
+      context.moveTo(head.x, head.y);
+      tail.forEach(({ x, y }) => {
+        context.lineTo(x, y);
+      });
+      if (tail.length === 1) {
+        const { stroke } = style;
+        context.strokeStyle = stroke || DEFAULTS.fillStyle;
+        context.stroke();
+      } else {
+        context.closePath();
+        context.fill();
+      }
+    }
+  };
+}
+
 class CanvasRenderer {
   /**
    * Game Renderer model
@@ -95,52 +144,6 @@ class CanvasRenderer {
         context.translate(-px, -py);
       }
 
-      // DEBUG -------------------------------------------------------------
-      const drawText = (style) => {
-        const { font, align } = style;
-        context.textAlign = align || DEFAULTS.textAlign;
-        context.font = font || DEFAULTS.font;
-        context.fillText(child.text, 0, 0);
-      };
-
-      const drawCapsule = (style) => {
-        const { width, height, radius } = child;
-        const { stroke, fill } = style;
-        context.strokeStyle = stroke || DEFAULTS.strokeStyle;
-        context.fillStyle = fill || DEFAULTS.fillStyle;
-        if (radius !== 0) {
-          context.beginPath();
-          context.roundRect(0, 0, width, height, radius);
-          context.fill();
-          context.stroke();
-        } else {
-          context.fillRect(0, 0, width, height);
-        }
-      };
-
-      const drawPath = (style) => {
-        if (child.path.length) {
-          const [head, ...tail] = child.path;
-          const { fill } = style;
-          context.fillStyle = fill || DEFAULTS.fillStyle;
-          context.beginPath();
-          context.moveTo(head.x, head.y);
-          tail.forEach(({ x, y }) => {
-            context.lineTo(x, y);
-          });
-          if (tail.length === 1) {
-            const { stroke } = style;
-            context.strokeStyle = stroke || DEFAULTS.stroke;
-            context.stroke();
-          } else {
-            // as polygon
-            context.closePath();
-            context.fill();
-          }
-        }
-      };
-      // END DEBUG ---------------------------------------------------------
-
       if (child.texture) {
         const { img } = child.texture;
         if (child.tileW && child.tileH) {
@@ -159,67 +162,14 @@ class CanvasRenderer {
           context.drawImage(img, 0, 0);
         }
       } else if (child.style) {
-        const { style } = child;
         if (child.text) {
-          // ...text
-          drawText(style);
-        } else if (child.width && child.height) {
-          // ...rect ...capsule ...circle
-          drawCapsule(style);
+          CanvasArtist.drawText(context, child);
+        } else if (child.width && child.height && child.radius) {
+          CanvasArtist.drawCapsule(context, child);
         } else if (child.path) {
-          // ...line ...polygon
-          drawPath(style);
+          CanvasArtist.drawPath(context, child);
         }
       }
-
-      // } else if (child.style && child.text) {
-      //   drawText();
-      // } else if (child.style && child.width && child.height) {
-      //   const { stroke, fill } = child.style;
-      //   context.strokeStyle = stroke || "transparent";
-      //   context.fillStyle = fill || "black";
-      //   if (child.radius) {
-      //     // draw a capsule
-      //     context.beginPath();
-      //     context.roundRect(0, 0, child.width, child.height, child.radius);
-      //     context.fill();
-      //     context.stroke();
-      //   } else {
-      //     // draw a rectangle
-      //     context.fillRect(0, 0, child.width, child.height);
-      //   }
-      // } else if (child.style && child.radius) {
-      //   // draw a circle
-      //   const { stroke, fill } = child.style;
-      //   const { radius } = child;
-      //   context.strokeStyle = stroke || "transparent";
-      //   context.fillStyle = fill || "transparent";
-      //   context.beginPath();
-      //   context.arc(0, 0, radius, 0, Math.PI * 2, true);
-      //   context.fill();
-      //   context.stroke();
-      // } else if (child.style && child.path) {
-      //   // draw a path
-      //   if (child.path.length) {
-      //     const [head, ...tail] = child.path;
-      //     const { style } = child;
-      //     context.fillStyle = style.fill || "black";
-      //     context.beginPath();
-      //     context.moveTo(head.x, head.y);
-      //     tail.forEach(({ x, y }) => {
-      //       context.lineTo(x, y);
-      //     });
-      //     if (tail.length === 1) {
-      //       // as line
-      //       context.strokeStyle = style.stroke || "black";
-      //       context.stroke();
-      //     } else {
-      //       // as polygon
-      //       context.closePath();
-      //       context.fill();
-      //     }
-      //   }
-      // }
 
       if (child.children) {
         this.#renderRecursive(child);
