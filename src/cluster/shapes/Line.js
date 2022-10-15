@@ -9,7 +9,7 @@ class Line extends Polygon {
       style: {},
     }
   ) {
-    super({ path: [start, end], style, position });
+    super({ path: [start, end], style });
     this.start = start;
     this.end = end;
   }

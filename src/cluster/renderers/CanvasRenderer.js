@@ -1,5 +1,8 @@
 // ThatWebdevDude - 2022
 
+/**
+ * canvas defaults styles
+ */
 const DEFAULTS = {
   strokeStyle: "transparent",
   fillStyle: "#68c3d4",
@@ -7,6 +10,9 @@ const DEFAULTS = {
   font: "16px Arial",
 };
 
+/**
+ * static collection draw functions
+ */
 class CanvasArtist {
   static drawText = (context, child) => {
     const { text, style } = child;
@@ -87,6 +93,9 @@ class CanvasRenderer {
     }
   }
 
+  /**
+   * setup the output canvas
+   */
   #init() {
     this.context.textBaseline = "top";
     this.context.imageSmoothingEnabled = false;
