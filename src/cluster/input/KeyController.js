@@ -76,5 +76,11 @@ class KeyController {
       this[action].getInput(isDown);
     }
   }
+
+  reset() {
+    this.#keyMap.forEach((item) => {
+      this[item.action].isActive = false;
+    });
+  }
 }
 export default KeyController;

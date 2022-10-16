@@ -47,7 +47,7 @@ class KeyControls {
   }
 
   reset() {
-    return this;
+    this.#controller.reset();
   }
 }
 

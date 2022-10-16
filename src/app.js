@@ -1,4 +1,6 @@
-import GamePlayScreen from "./screens/GamePlayScreen";
+import GamePlay from "./screens/GamePlay";
+import GameOver from "./screens/GameOver";
+import GameTitle from "./screens/GameTitle";
 import cluster from "./cluster";
 
 export default () => {
@@ -12,11 +14,31 @@ export default () => {
   };
 
   // screens
+  const gameTitle = () => {
+    return new GameTitle(game, input, {
+      onExit: () => {
+        game.scene = gamePLay();
+      },
+    });
+  };
+
   const gamePLay = () => {
-    game.scene = new GamePlayScreen(game, input, gamePLay);
+    return new GamePlay(game, input, {
+      onExit: () => {
+        game.scene = gameOver();
+      },
+    });
+  };
+
+  const gameOver = () => {
+    return new GameOver(game, input, {
+      onExit: () => {
+        game.scene = gameTitle();
+      },
+    });
   };
 
   // start
-  game.scene = new GamePlayScreen(game, input, gamePLay);
+  game.scene = gameTitle();
   game.run();
 };
