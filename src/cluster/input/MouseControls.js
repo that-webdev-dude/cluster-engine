@@ -1,3 +1,5 @@
+import Vector from "../utils/Vector";
+
 class MouseControls {
   constructor(container = document.body) {
     // state
@@ -7,7 +9,7 @@ class MouseControls {
     // pressed: true on the first frame only then pressed
     // down: true on mouse held down
     this.element = container;
-    this.position = { x: 0, y: 0 };
+    this.position = new Vector();
     this.isDown = false;
     this.isPressed = false;
     this.isReleased = false;

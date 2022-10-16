@@ -183,7 +183,7 @@ class Vector {
    * @returns Vector
    */
   distance({ x, y }) {
-    return this.clone().subtract({ x, y });
+    return Vector.from(this).subtract({ x, y }).reverse();
   }
 
   /**
@@ -195,7 +195,8 @@ class Vector {
    * @returns Vector
    */
   to({ x, y }) {
-    return this.clone().subtract({ x, y });
+    // return this.clone().subtract({ x, y }).reverse();
+    return Vector.from(this).subtract({ x, y }).reverse();
   }
 }
 
