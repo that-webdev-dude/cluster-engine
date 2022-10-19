@@ -2,6 +2,45 @@ import math from "./math";
 
 class Physics {
   /**
+   * apply a force to entity
+   * @param {*} entity
+   * @param {*} force
+   */
+  static applyForce(entity, force) {
+    const { acceleration: acc, mass = 1 } = entity;
+    acc.x += force.x / mass;
+    acc.y += force.y / mass;
+  }
+
+  /**
+   * apply an impulse (a one-off) to this entity
+   * @param {*} entity
+   * @param {*} force
+   * @param {*} dt
+   */
+  static applyImpulse(entity, force, dt) {
+    this.applyForce(entity, { x: force.x / dt, y: force.y / dt });
+  }
+
+  /**
+   * reposition the entity based on acceleration and velocity
+   * (velocity vertlet intagration)
+   * @param {*} entity
+   * @param {*} dt
+   * @returns
+   */
+  static reposition(entity, dt) {
+    const { position: pos, velocity: vel, acceleration: acc } = entity;
+    const vx = vel.x + acc.x * dt;
+    const vy = vel.y + acc.y * dt;
+    const x = ((vel.x + vx) / 2) * dt;
+    const y = ((vel.y + vy) / 2) * dt;
+    vel.set(vx, vy);
+    acc.set(0, 0);
+    return { x, y };
+  }
+
+  /**
    * collisionDetection_cc
    * @param {*} a
    * @param {*} b

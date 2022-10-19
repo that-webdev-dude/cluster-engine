@@ -1,3 +1,5 @@
+import Container from "../core/Container";
+
 class Capsule {
   constructor(
     { width = 64, height = 32, radius = 32, style = {} } = {

@@ -13,7 +13,7 @@ function applyImpulse(entity, force, dt) {
 
 function integrate(entity, dt) {
   const { position: pos, velocity: vel, acceleration: acc } = entity;
-  // velocity vertlex intagration
+  // velocity vertlet intagration
   const vx = vel.x + acc.x * dt;
   const vy = vel.y + acc.y * dt;
   const x = ((vel.x + vx) / 2) * dt;
