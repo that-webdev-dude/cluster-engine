@@ -1,4 +1,4 @@
-import Vector from "./Vector";
+import Vector from "../utils/Vector";
 import Text from "../core/Text";
 
 class Logger extends Text {

@@ -6,7 +6,7 @@ const GRAVITY = 500;
 const FRICTION = 100;
 
 class Bullet extends Circle {
-  constructor(position = new Vector(), angle = 0) {
+  constructor(position = new Vector(), angle = 0, force) {
     super({
       radius: RADIUS,
       style: { fill: "red" },
@@ -19,13 +19,19 @@ class Bullet extends Circle {
     this.pivot = this.anchor.clone().reverse();
     this.dead = false;
     this.mass = 1.25;
+    this.first = true;
+    this.force = force;
   }
 
   update(dt, t) {
+    if (this.first) {
+      Physics.applyImpulse(this, this.force, dt);
+      this.first = false;
+    }
+
     if (!this.dead) {
       Physics.applyForce(this, { x: 0, y: GRAVITY });
       Physics.applyForce(this, this.velocity.clone().unit().reverse().scale(FRICTION));
-
       this.position.add(Physics.reposition(this, dt));
     }
   }

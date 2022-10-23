@@ -1,5 +1,4 @@
 // TOOLS
-// import { Matrix, RotationMatrix } from "./utils/Matrix";
 import Vector from "./utils/Vector";
 import Physics from "./utils/Physics";
 import entity from "./utils/entity";
@@ -12,6 +11,9 @@ import Rect from "./shapes/Rect";
 import Line from "./shapes/Line";
 import Polygon from "./shapes/Polygon";
 
+// CORE
+import Camera from "./core/Camera";
+import State from "./core/State";
 import Game from "./core/Game";
 import Text from "./core/Text";
 import Sprite from "./core/Sprite";
@@ -22,15 +24,14 @@ import TileSprite from "./core/TileSprite";
 import KeyControls from "./input/KeyControls";
 import MouseControls from "./input/MouseControls";
 import CanvasRenderer from "./renderers/CanvasRenderer";
-import Camera from "./core/Camera";
-import State from "./core/State";
+
+// DEBUG
+import Logger from "./debug/Logger";
 
 export default {
   // TOOLS
   Vector,
   Physics,
-  // Matrix,
-  // RotationMatrix,
   entity,
   math,
 
@@ -41,6 +42,9 @@ export default {
   Line,
   Polygon,
 
+  // CORE
+  Camera,
+  State,
   Game,
   Text,
   Sprite,
@@ -51,6 +55,7 @@ export default {
   KeyControls,
   MouseControls,
   CanvasRenderer,
-  Camera,
-  State,
+
+  // DEBUG
+  Logger,
 };
