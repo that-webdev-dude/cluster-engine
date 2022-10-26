@@ -1,37 +1,8 @@
-import Circle from "../shapes/Circle";
 import math from "./math";
 // TODO
 // - applyGravity
 // - add world friction & gravity constants
 // - rotational forces?
-
-class PhysicsMath {
-  /**
-   * point to point distance data
-   * @param {Vector} sourcePoint source vector
-   * @param {Vector} targetPoint target vector
-   * @returns {{source: Vector, target: Vector, distance: Vector}} data object including references to the source, target object and the distance vector between them
-   */
-  static distance_pp(sourcePoint, targetPoint) {
-    return {
-      source: sourcePoint,
-      target: targetPoint,
-      distance: sourcePoint.to(targetPoint),
-    };
-  }
-}
-
-class PhysicCollision {
-  static detect_cc(sourceCircle, targetCircle) {
-    let data = this.Math.distance_pp(sourceCircle.position, targetCircle.position);
-    let collision = data.distance.magnitude <= sourceCircle.radius + targetCircle.radius;
-    if (collision) {
-      return { ...data, collision };
-    } else {
-      return false;
-    }
-  }
-}
 
 class PhysicsWorld {
   /**
@@ -102,23 +73,33 @@ class Physics {
    */
   static distance_pp(sourcePoint, targetPoint) {
     return {
-      distanceStart: sourcePoint,
-      distanceEnd: targetPoint,
-      distance: targetPoint.to(sourcePoint),
+      // distanceStart: sourcePoint,
+      // distanceEnd: targetPoint,
+      distance: sourcePoint.to(targetPoint),
     };
   }
 
   /**
    * circle to circle collision detection
-   * @param {Circle} sourceCircle source circle
-   * @param {Circle} targetCircle target circle
+   * @param {Circle} source source circle
+   * @param {Circle} target target circle
    * @returns {{distanceStart: Vector, distanceEnd: Vector, distance: Vector, collision: Boolean, source: Circle, target: Circle}} data object
    */
-  static detectCollision_cc(sourceCircle, targetCircle) {
-    let data = this.distance_pp(sourceCircle.position, targetCircle.position);
-    let collision = data.distance.magnitude <= sourceCircle.radius + targetCircle.radius;
+  static detectCollision_cc(source, target) {
+    let { distance } = this.distance_pp(source.position, target.position);
+    let minDistance = source.radius + target.radius;
+    let collision = distance.magnitude <= minDistance;
     if (collision) {
-      return { ...data, collision, source: sourceCircle, target: targetCircle };
+      // return { ...data, collision, source: source, target: target };
+      // need to return
+      // collisionPoint
+      // collisionNormal
+      // penetrationDistance
+      let penetrationDepth = minDistance - distance.magnitude;
+      let collisionNormal = distance.clone().unit();
+      let collisionPointSource = 0;
+      let collisionPointTarget = 0;
+      return { collision, penetrationDepth, collisionNormal, collisionPoint };
     } else {
       return false;
     }
@@ -141,6 +122,11 @@ class Physics {
     target.position.add(penetrationResolution.scale(-target.inverseMass));
   }
 
+  /**
+   * resolveCollision_cc
+   * @param {*} collisionData_cc
+   * @param {*} dt
+   */
   static resolveCollision_cc(collisionData_cc, dt) {
     let { source, target } = collisionData_cc;
 

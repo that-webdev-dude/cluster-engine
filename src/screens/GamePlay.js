@@ -7,136 +7,6 @@ const PLAYER_MAXVEL = 400;
 const PLAYER_ANGULAR_MAXVEL = 5;
 const PLAYER_ANGULAR_VELOCITY = 0.5;
 const PLAYER_ANGULAR_FRICTION = 0.9;
-class Player extends Capsule {
-  constructor(input) {
-    super({
-      width: 100,
-      height: 50,
-      radius: 25,
-      style: { fill: "transparent", stroke: "black" },
-    });
-
-    const { key } = input;
-    this.keyInput = key;
-    this.angle = 0;
-    this.position = new Vector(100, 200);
-    this.velocity = new Vector();
-    this.acceleration = new Vector();
-    this.angularVelocity = 0;
-    this.mass = 1;
-  }
-
-  get center() {
-    return new Vector(this.width / 2, this.height / 2);
-  }
-
-  get pivot() {
-    return this.center;
-  }
-
-  get anchor() {
-    return this.center.clone().reverse();
-  }
-
-  get length() {
-    return this.width - 2 * this.radius;
-  }
-
-  get direction() {
-    return new Vector(Math.cos(this.angle), Math.sin(this.angle));
-  }
-
-  get start() {
-    let offset = this.direction.clone().scale(this.length / 2);
-    return this.position.clone().subtract(offset);
-  }
-
-  get end() {
-    let offset = this.direction.clone().scale(this.length / 2);
-    return this.position.clone().add(offset);
-  }
-
-  get inverseMass() {
-    return this.mass === 0 ? 0 : 1 / this.mass;
-  }
-
-  update(dt, t) {
-    // const { keyInput, velocity, position, direction } = this;
-    // // up & down movement
-    // if (keyInput.y && velocity.magnitude < PLAYER_MAXVEL) {
-    //   let force = direction.clone().scale(PLAYER_ACCELERATION);
-    //   Physics.World.applyForce(this, force);
-    // }
-    // // rotation
-    // if (keyInput.x && Math.abs(this.angularVelocity) < PLAYER_ANGULAR_MAXVEL) {
-    //   this.angularVelocity += PLAYER_ANGULAR_VELOCITY * keyInput.x * dt;
-    // }
-    // if (!keyInput.x && Math.abs(this.angularVelocity) <= 0.0001) {
-    //   this.angularVelocity = 0;
-    // }
-    // // friction
-    // Physics.World.applyFriction(this, PLAYER_FRICTION);
-    // // angularFriction
-    // this.angularVelocity *= PLAYER_ANGULAR_FRICTION;
-    // // reposition
-    // this.position.add(Physics.World.getDisplacement(this, dt));
-    // this.angle += this.angularVelocity;
-    // if (this.angle >= math.deg2rad(359)) {
-    //   this.angle = 0;
-    // }
-    // // avoid sliding effect
-    // if (velocity.magnitude < 10) velocity.set(0, 0);
-  }
-}
-
-// class Enemy extends Capsule {
-//   constructor() {
-//     super({
-//       width: 200,
-//       height: 50,
-//       radius: 25,
-//       style: { fill: "transparent", stroke: "red" },
-//     });
-
-//     this.angle = math.deg2rad(0);
-//     this.position = new Vector(400, 100);
-//     this.mass = 10;
-//   }
-
-//   get center() {
-//     return new Vector(this.width / 2, this.height / 2);
-//   }
-
-//   get pivot() {
-//     return this.center;
-//   }
-
-//   get anchor() {
-//     return this.center.clone().reverse();
-//   }
-
-//   get length() {
-//     return this.width - 2 * this.radius;
-//   }
-
-//   get direction() {
-//     return new Vector(Math.cos(this.angle), Math.sin(this.angle));
-//   }
-
-//   get start() {
-//     let offset = this.direction.clone().scale(this.length / 2);
-//     return this.position.clone().subtract(offset);
-//   }
-
-//   get end() {
-//     let offset = this.direction.clone().scale(this.length / 2);
-//     return this.position.clone().add(offset);
-//   }
-
-//   get inverseMass() {
-//     return this.mass === 0 ? 0 : 1 / this.mass;
-//   }
-// }
 
 class Ball extends Circle {
   constructor(radius, input = null) {
@@ -179,6 +49,7 @@ class Ball extends Circle {
 class GamePlay extends Container {
   constructor(game, input, transitions = { onEnter: () => {}, onExit: () => {} }) {
     super();
+    this.updates = 0;
     this.game = game;
     this.input = input;
     this.updates = 0;
@@ -201,6 +72,14 @@ class GamePlay extends Container {
         start: new Vector(),
         end: new Vector(),
         style: { stroke: "red" },
+      })
+    );
+
+    this.__playerDistance = this.add(
+      new Line({
+        start: new Vector(),
+        end: new Vector(),
+        style: { stroke: "blue" },
       })
     );
 
@@ -243,6 +122,12 @@ class GamePlay extends Container {
           .scale(this.player.radius * 2)
       )
     );
+
+    // this should go away from player and towards the target
+    const distanceData = Physics.distance_pp(this.player.position, this.target.position);
+    this.__playerDistance.start.copy(this.player.position);
+    this.__playerDistance.end.copy(this.__playerDistance.start.clone().add(distanceData.distance));
+
     // closest to wall line
     // let closestToWallData = Physics.closestPoint_pl(this.ball.position, this.wall);
     // this.__closestToWall.start.copy(closestToWallData.start);
@@ -267,20 +152,14 @@ class GamePlay extends Container {
 
   update(dt, t) {
     super.update(dt, t);
-    // // control the ball
-    // const { key } = this.input;
-    // if ((key.x || key.y) && this.ball.velocity.magnitude < PLAYER_MAXVEL) {
-    //   Physics.World.applyForce(this.ball, {
-    //     x: key.x * PLAYER_ACCELERATION,
-    //     y: key.y * PLAYER_ACCELERATION,
-    //   });
-    // }
 
-    // Physics.World.applyFriction(this.ball, PLAYER_FRICTION);
-    // this.ball.position.add(Physics.World.getDisplacement(this.ball, dt));
-    // if (this.ball.velocity.magnitude < 10) {
-    //   this.ball.velocity.set(0, 0);
-    // }
+    let collisionData = Physics.detectCollision_cc(this.player, this.target);
+    if (collisionData) {
+      console.log(
+        "file: GamePlay.js ~ line 157 ~ GamePlay ~ update ~ collisionData",
+        collisionData
+      );
+    }
 
     this.updateDebug(dt, t);
   }
