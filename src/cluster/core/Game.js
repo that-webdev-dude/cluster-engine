@@ -40,6 +40,10 @@ class Game {
     return this.#renderer.view;
   }
 
+  get ctx() {
+    return this.#renderer.context;
+  }
+
   run(gameUpdate = () => {}) {
     let t = 0;
     let dt = 0;

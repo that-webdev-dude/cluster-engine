@@ -200,17 +200,4 @@ class Vector {
   }
 }
 
-Vector.prototype.display = function (container, color = "red", start = new Vector()) {
-  const vectorContainer = new Container();
-  const vectorLine = vectorContainer.add(
-    new Line({
-      start: new Vector(),
-      end: this,
-      style: { stroke: color },
-    })
-  );
-  vectorLine.anchor = start;
-  container.add(vectorContainer);
-};
-
 export default Vector;
