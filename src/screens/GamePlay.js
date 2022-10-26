@@ -9,12 +9,12 @@ const PLAYER_ANGULAR_VELOCITY = 0.5;
 const PLAYER_ANGULAR_FRICTION = 0.9;
 
 class Ball extends Circle {
-  constructor(radius, input = null) {
+  constructor(radius, input = null, mass = 1) {
     super({
       radius,
-      style: { fill: "transparent", stroke: "black" },
+      style: { fill: "cyan", stroke: "black" },
     });
-    this.mass = 1;
+    this.mass = mass;
     this.elasticity = 1;
     this.acceleration = new Vector();
     this.velocity = new Vector();
@@ -57,8 +57,8 @@ class GamePlay extends Container {
     this.onExit = transitions?.onExit || function () {};
 
     this.balls = this.add(new Container());
-    this.player = new Ball(50, input);
-    this.target = new Ball(100);
+    this.player = new Ball(50, input, 2);
+    this.target = new Ball(100, null);
 
     this.player.position.set(100, 100);
     this.target.position.set(300, 400);
@@ -83,31 +83,21 @@ class GamePlay extends Container {
       })
     );
 
-    // this.__closestToBall = this.add(
-    //   new Line({
-    //     start: new Vector(),
-    //     end: new Vector(),
-    //     style: { stroke: "cyan" },
-    //   })
-    // );
+    this.__sourceCollisionPoint = this.add(
+      new Line({
+        start: new Vector(),
+        end: new Vector(),
+        style: { stroke: "cyan" },
+      })
+    );
 
-    // this.__closestToWall = this.add(
-    //   new Line({
-    //     start: new Vector(),
-    //     end: new Vector(),
-    //     style: { stroke: "blue" },
-    //   })
-    // );
-
-    // this.__playerToWall = this.add(
-    //   new Line({
-    //     start: new Vector(),
-    //     end: new Vector(),
-    //     style: { stroke: "green" },
-    //   })
-    // );
-
-    // this.__logger = this.add(new Logger(new Vector(10, 10), ""));
+    this.__targetCollisionPoint = this.add(
+      new Line({
+        start: new Vector(),
+        end: new Vector(),
+        style: { stroke: "green" },
+      })
+    );
     // DEBUG
   }
 
@@ -127,27 +117,6 @@ class GamePlay extends Container {
     const distanceData = Physics.distance_pp(this.player.position, this.target.position);
     this.__playerDistance.start.copy(this.player.position);
     this.__playerDistance.end.copy(this.__playerDistance.start.clone().add(distanceData.distance));
-
-    // closest to wall line
-    // let closestToWallData = Physics.closestPoint_pl(this.ball.position, this.wall);
-    // this.__closestToWall.start.copy(closestToWallData.start);
-    // this.__closestToWall.end.copy(closestToWallData.start.clone().add(closestToWallData.end));
-    // closest to staticBall
-    // let closestToBallData = Physics.closestPoint_pp(this.ball.position, this.staticBall.position);
-    // this.__closestToBall.start.copy(closestToBallData.start);
-    // this.__closestToBall.end.copy(closestToBallData.start.clone().add(closestToBallData.end));
-    // player to wall
-    // let playerToWallData = Physics.closestPoint_ll(this.player, this.wall);
-    // this.__playerToWall.start.copy(playerToWallData.start);
-    // this.__playerToWall.end.copy(playerToWallData.start.clone().add(playerToWallData.end));
-    // let collisionData = Physics.detectCollision_cc(this.ball, this.staticBall);
-    // if (collisionData) {
-    //   this.__logger.text = "collision!";
-    //   Physics.resolvePenetration_cc(collisionData);
-    //   Physics.resolveCollision_cc(collisionData);
-    // } else {
-    //   this.__logger.text = "";
-    // }
   }
 
   update(dt, t) {
@@ -155,10 +124,8 @@ class GamePlay extends Container {
 
     let collisionData = Physics.detectCollision_cc(this.player, this.target);
     if (collisionData) {
-      console.log(
-        "file: GamePlay.js ~ line 157 ~ GamePlay ~ update ~ collisionData",
-        collisionData
-      );
+      Physics.resolvePenetration_cc(collisionData);
+      Physics.resolveCollision_cc(collisionData);
     }
 
     this.updateDebug(dt, t);
