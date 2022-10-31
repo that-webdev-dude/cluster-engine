@@ -1,5 +1,5 @@
 import cluster from "../cluster/index";
-const { Container, VectorViewer, math, Vector } = cluster;
+const { Container, VectorViewer, math, Vector, Physics } = cluster;
 
 class GamePlay extends Container {
   constructor(game, input, transitions = { onEnter: () => {}, onExit: () => {} }) {

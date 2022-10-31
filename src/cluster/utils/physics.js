@@ -1,4 +1,4 @@
-import math from "./math";
+// import math from "./math";
 
 class PhysicsWorld {
   // TODO
