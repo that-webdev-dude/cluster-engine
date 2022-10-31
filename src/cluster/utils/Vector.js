@@ -150,7 +150,7 @@ class Vector {
    * @param {*} param0
    * @returns
    */
-  angle({ x, y }) {
+  angleTo({ x, y }) {
     const refVector = new Vector(x, y);
     return Math.acos(this.dot(refVector) / (this.magnitude * refVector.magnitude));
   }

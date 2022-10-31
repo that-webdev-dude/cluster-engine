@@ -64,6 +64,9 @@ class PhysicsWorld {
 }
 
 class Physics {
+  /**
+   * World
+   */
   static World = PhysicsWorld;
 
   /**
@@ -131,7 +134,6 @@ class Physics {
    */
   static resolveCollision_cc(collisionData) {
     let { source, target, collisionNormal } = collisionData;
-    // let relativeVelocity = source.velocity.to(target.velocity);
     let relativeVelocity = target.velocity.to(source.velocity);
     let separatingVelocity = relativeVelocity.dot(collisionNormal);
     let separatingVelocityScaled =
@@ -143,50 +145,18 @@ class Physics {
 
     source.velocity.add(impulseVector.clone().scale(source.inverseMass));
     target.velocity.add(impulseVector.clone().scale(-target.inverseMass));
+
+    // my
+    // let resolutionVelocity = collisionNormal.clone().scale(separatingVelocity);
+    // source.velocity.subtract(resolutionVelocity);
+    // target.velocity.add(resolutionVelocity);
   }
-
-  // /**
-  //  * resolveCollision_cc
-  //  * @param {*} collisionData_cc
-  //  * @param {*} dt
-  //  */
-  // static resolveCollision_cc(collisionData_cc, dt) {
-  //   let { source, target } = collisionData_cc;
-
-  //   let collisionNormal = source.position.clone().subtract(target.position).unit();
-  //   let relativeVelocity = source.velocity.clone().subtract(target.velocity);
-  //   let separatingVelocity = relativeVelocity.dot(collisionNormal);
-  //   let separatingVelocityScaled =
-  //     -separatingVelocity * Math.min(source.elasticity, target.elasticity);
-  //   let separatingVelocityDifference = separatingVelocityScaled - separatingVelocity;
-
-  //   let impulse = separatingVelocityDifference / (source.inverseMass + target.inverseMass);
-  //   let impulseVector = collisionNormal.scale(impulse);
-
-  //   source.velocity.add(impulseVector.clone().scale(source.inverseMass));
-  //   target.velocity.add(impulseVector.clone().scale(-target.inverseMass));
-  // }
 
   // /**
   //  *
   //  *
   //  * physics math utilities
   //  */
-
-  // /**
-  //  * closestPoint_pp - point to point closest distance
-  //  * @param {Vector} sourcePoint point 1
-  //  * @param {Vector} targetPoint point 2
-  //  * @returns {{start: Vector, end: Vector}} closest point data object
-  //  */
-  // static closestPoint_pp(sourcePoint, targetPoint) {
-  //   /** info
-  //    *
-  //    */
-  //   let closestData = { start: sourcePoint, end: null };
-  //   closestData.end = sourcePoint.to(targetPoint);
-  //   return closestData;
-  // }
 
   // /**
   //  * closestPoint_pl - point to line closest distance
@@ -252,71 +222,6 @@ class Physics {
   //   });
 
   //   return data;
-  // }
-
-  // /**
-  //  *
-  //  *
-  //  * collision circle → circle
-  //  */
-
-  // /**
-  //  * collisionDetection_cc
-  //  * @param {*} a
-  //  * @param {*} b
-  //  * @returns
-  //  */
-  // static collisionDetection_cc(sourceCircle, targetCircle) {
-  //   let minDistance = sourceCircle.radius + targetCircle.radius;
-  //   let sourceToTargetData = this.closestPoint_pp(sourceCircle.position, targetCircle.position);
-  //   return sourceToTargetData.end.magnitude <= minDistance;
-  // }
-
-  // /**
-  //  * penetrationResolution_cc
-  //  * @param {*} a
-  //  * @param {*} b
-  //  */
-  // // static penetrationResolution_cc(a, b) {
-  // //   let minDistance = a.radius + b.radius;
-  // //   let distanceVector = a.position.clone().subtract(b.position);
-  // //   let penetrationDepth = minDistance - distanceVector.magnitude;
-  // //   let penetrationResolution = distanceVector
-  // //     .unit()
-  // //     .scale(penetrationDepth / (a.inverseMass + b.inverseMass));
-
-  // //   a.position.add(penetrationResolution.scale(a.inverseMass));
-  // //   b.position.add(penetrationResolution.scale(-b.inverseMass));
-  // // }
-  // static penetrationResolution_cc(a, b) {
-  //   let minDistance = a.radius + b.radius;
-  //   let distanceVector = a.position.clone().subtract(b.position);
-  //   let penetrationDepth = minDistance - distanceVector.magnitude;
-  //   let penetrationResolution = distanceVector
-  //     .unit()
-  //     .scale(penetrationDepth / (a.inverseMass + b.inverseMass));
-
-  //   a.position.add(penetrationResolution.scale(a.inverseMass));
-  //   b.position.add(penetrationResolution.scale(-b.inverseMass));
-  // }
-
-  // /**
-  //  * collisionResolution_cc
-  //  * @param {*} a
-  //  * @param {*} b
-  //  */
-  // static collisionResolution_cc(a, b) {
-  //   let collisionNormal = a.position.clone().subtract(b.position).unit();
-  //   let relativeVelocity = a.velocity.clone().subtract(b.velocity);
-  //   let separatingVelocity = relativeVelocity.dot(collisionNormal);
-  //   let separatingVelocityScaled = -separatingVelocity * Math.min(a.elasticity, b.elasticity);
-  //   let separatingVelocityDifference = separatingVelocityScaled - separatingVelocity;
-
-  //   let impulse = separatingVelocityDifference / (a.inverseMass + b.inverseMass);
-  //   let impulseVector = collisionNormal.scale(impulse);
-
-  //   a.velocity.add(impulseVector.scale(a.inverseMass));
-  //   b.velocity.add(impulseVector.scale(-b.inverseMass));
   // }
 
   // /**

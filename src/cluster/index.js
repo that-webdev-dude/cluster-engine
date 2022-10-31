@@ -27,6 +27,7 @@ import CanvasRenderer from "./renderers/CanvasRenderer";
 
 // DEBUG
 import Logger from "./debug/Logger";
+import VectorViewer from "./debug/VectorViewer";
 
 export default {
   // TOOLS
@@ -58,4 +59,5 @@ export default {
 
   // DEBUG
   Logger,
+  VectorViewer,
 };
