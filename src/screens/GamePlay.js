@@ -1,5 +1,4 @@
 import cluster from "../cluster/index";
-
 const { Container, VectorViewer, math, Vector } = cluster;
 
 class GamePlay extends Container {
