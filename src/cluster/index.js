@@ -1,6 +1,6 @@
 // TOOLS
 import Vector from "./utils/Vector";
-// import Physics from "./utils/Physics";
+import Physics from "./utils/Physics";
 import entity from "./utils/entity";
 import math from "./utils/math";
 
@@ -32,7 +32,7 @@ import VectorViewer from "./debug/VectorViewer";
 export default {
   // TOOLS
   Vector,
-  // Physics,
+  Physics,
   entity,
   math,
 
