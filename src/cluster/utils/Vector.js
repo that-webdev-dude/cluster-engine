@@ -1,6 +1,3 @@
-import Container from "../core/Container";
-import Line from "../shapes/Line";
-
 class Vector {
   static from(v) {
     return new Vector().copy(v);
