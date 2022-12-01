@@ -13,6 +13,13 @@ class GamePlay extends Container {
 
   update(dt, t) {
     super.update(dt, t);
+    console.log("... game play");
+
+    if (this.input.mouse.isPressed) {
+      this.onExit();
+    }
+
+    this.input.mouse.update();
   }
 }
 

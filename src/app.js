@@ -39,7 +39,7 @@ export default () => {
   };
 
   // start
-  // game.scene = gameTitle();
-  game.scene = new GamePlay(game, input);
+  game.scene = gameTitle();
+  // game.scene = new GamePlay(game, input);
   game.run();
 };

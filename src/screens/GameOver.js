@@ -13,6 +13,13 @@ class GameOver extends Container {
 
   update(dt, t) {
     super.update(dt, t);
+    console.log("... game over");
+
+    if (this.input.mouse.isPressed) {
+      this.onExit();
+    }
+
+    this.input.mouse.update();
   }
 }
 
