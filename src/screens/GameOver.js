@@ -1,5 +1,5 @@
 import cluster from "../cluster/index";
-const { Container, Text, Vector } = cluster;
+const { Container } = cluster;
 
 class GameOver extends Container {
   constructor(game, input, transitions = { onEnter: () => {}, onExit: () => {} }) {
