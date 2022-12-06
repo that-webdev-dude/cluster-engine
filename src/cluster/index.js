@@ -29,6 +29,9 @@ import CanvasRenderer from "./renderers/CanvasRenderer";
 import Logger from "./debug/Logger";
 import VectorViewer from "./debug/VectorViewer";
 
+// SOUND
+import Sound from "./sound/Sound";
+
 export default {
   // TOOLS
   Vector,
@@ -60,4 +63,7 @@ export default {
   // DEBUG
   Logger,
   VectorViewer,
+
+  // SOUND
+  Sound,
 };
