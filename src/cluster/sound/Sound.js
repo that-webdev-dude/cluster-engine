@@ -1,7 +1,14 @@
 class Sound {
   constructor(src, options = {}) {
     this.src = src;
-    this.options = Object.assign({ volume: 1 }, options);
+    this.options = Object.assign(
+      {
+        volume: 1,
+        time: 0,
+        loop: false,
+      },
+      options
+    );
     this.playing = false;
 
     // config audio element
@@ -19,7 +26,7 @@ class Sound {
     this.audio.addEventListener(
       "ended",
       () => {
-        console.log(this.playing);
+        this.playing = false;
       },
       false
     );
@@ -47,9 +54,10 @@ class Sound {
    */
   play(overrides = {}) {
     const { audio, options } = this;
-    const opts = Object.assign({ time: 0 }, options, overrides);
+    const opts = Object.assign(options, overrides);
     audio.volume = opts.volume;
     audio.time = opts.time;
+    audio.loop = opts.loop;
     audio.play();
     this.playing = true;
   }

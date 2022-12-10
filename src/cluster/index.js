@@ -31,6 +31,7 @@ import VectorViewer from "./debug/VectorViewer";
 
 // SOUND
 import Sound from "./sound/Sound";
+import SoundPool from "./sound/SoundPool";
 
 export default {
   // TOOLS
@@ -66,4 +67,5 @@ export default {
 
   // SOUND
   Sound,
+  SoundPool,
 };

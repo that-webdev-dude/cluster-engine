@@ -40,6 +40,6 @@ export default () => {
 
   // start
   game.scene = gameTitle();
-  // game.scene = new GamePlay(game, input);
-  game.run();
+
+  game.run((dt, t) => {});
 };
