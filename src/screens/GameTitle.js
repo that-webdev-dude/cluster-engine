@@ -1,7 +1,13 @@
 import soundThemeURL from "../sounds/theme.mp3";
+import soundSquawk1URL from "../sounds/squawk1.mp3";
+import soundSquawk2URL from "../sounds/squawk2.mp3";
+import soundSquawk3URL from "../sounds/squawk3.mp3";
+import soundSquawk4URL from "../sounds/squawk4.mp3";
+import soundSquawk5URL from "../sounds/squawk5.mp3";
 import soundPlopURL from "../sounds/plop.mp3";
+
 import cluster from "../cluster/index";
-const { Container, Sound, SoundPool, Text } = cluster;
+const { Container, Text, Sound, SoundPool, SoundGroup } = cluster;
 
 class GameTitle extends Container {
   constructor(game, input, transitions = { onEnter: () => {}, onExit: () => {} }) {
@@ -24,15 +30,26 @@ class GameTitle extends Container {
     const textActionH = this.game.height / 2;
     textAction.position = { x: textActionX, y: textActionH };
 
-    // theme sound
-    this.soundTheme = new Sound(soundThemeURL);
-    if (!this.soundTheme.playing) {
-      this.soundTheme.play({ loop: true, volume: 0.1 });
-    }
+    // theme sound in loop
+    // this.soundTheme = new Sound(soundThemeURL);
+    // if (!this.soundTheme.playing) {
+    //   this.soundTheme.play({ loop: true, volume: 0.1 });
+    // }
 
-    // plop sound
-    this.soundPlops = new SoundPool(soundPlopURL, {}, 3);
-    this.soundRate = 0.3;
+    // plop sound as a pool
+    // this.soundPlops = new SoundPool(soundPlopURL, {}, 3);
+    // this.soundRate = 0.3;
+    // this.soundNext = this.soundRate;
+
+    // some sound as a group played randomly
+    this.soundSquawks = new SoundGroup([
+      new Sound(soundSquawk1URL),
+      new Sound(soundSquawk2URL),
+      new Sound(soundSquawk3URL),
+      new Sound(soundSquawk4URL),
+      new Sound(soundSquawk5URL),
+    ]);
+    this.soundRate = 0.5;
     this.soundNext = this.soundRate;
 
     // populate scene
@@ -43,16 +60,10 @@ class GameTitle extends Container {
   update(dt, t) {
     super.update(dt, t);
 
-    // exit the gameplay on action
-    // if (this.input.key.action) {
-    //   this.soundTheme.stop();
-    //   this.onExit();
-    // }
-
     // play polyphonic sound
     if (t > this.soundNext) {
       this.soundNext = t + this.soundRate;
-      this.soundPlops.play();
+      // this.soundSquawks.play();
     }
 
     this.input.mouse.update();
