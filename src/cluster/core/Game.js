@@ -1,6 +1,8 @@
 import CanvasRenderer from "../renderers/CanvasRenderer";
 import Container from "./Container";
 
+import Assets from "./Assets";
+
 const STEP = 1 / 60;
 const MULTIPLIER = 1;
 const MAX_FRAME = STEP * 5;
@@ -45,34 +47,33 @@ class Game {
   }
 
   run(gameUpdate = () => {}) {
-    let t = 0;
-    let dt = 0;
-    let last = 0;
+    Assets.onReady(() => {
+      let t = 0;
+      let dt = 0;
+      let last = 0;
 
-    const loop = (ms) => {
-      requestAnimationFrame(loop);
-      t = ms / 1000;
-      dt += Math.min(t - last, MAX_FRAME * 5);
-      last = t;
+      const loop = (ms) => {
+        requestAnimationFrame(loop);
+        t = ms / 1000;
+        dt += Math.min(t - last, MAX_FRAME * 5);
+        last = t;
 
-      while (dt >= SPEED) {
-        this.scene.update(STEP, t / MULTIPLIER);
-        gameUpdate(STEP, t / MULTIPLIER);
-        dt -= SPEED;
-        // this.debug_updates++;
-      }
+        while (dt >= SPEED) {
+          this.scene.update(STEP, t / MULTIPLIER);
+          gameUpdate(STEP, t / MULTIPLIER);
+          dt -= SPEED;
+        }
 
-      // console.log("file: Game.js ~ line 58 ~ Game ~ loop ~ this.debug_updates", this.debug_updates);
-      this.#renderer.render(this.scene);
-      // this.debug_updates = 0;
-    };
+        this.#renderer.render(this.scene);
+      };
 
-    const init = (ms) => {
-      last = ms / 1000;
-      requestAnimationFrame(loop);
-    };
+      const init = (ms) => {
+        last = ms / 1000;
+        requestAnimationFrame(loop);
+      };
 
-    requestAnimationFrame(init);
+      requestAnimationFrame(init);
+    });
   }
 }
 

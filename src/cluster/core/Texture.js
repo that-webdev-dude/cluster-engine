@@ -1,7 +1,10 @@
+import Assets from "./Assets";
+
 class Texture {
   constructor(url) {
-    this.img = new Image();
-    this.img.src = url;
+    // this.img = new Image();
+    // this.img.src = url;
+    this.img = Assets.image(url);
   }
 
   get width() {

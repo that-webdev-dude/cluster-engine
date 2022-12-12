@@ -1,6 +1,8 @@
+import Assets from "../core/Assets";
+
 class Sound {
-  constructor(src, options = {}) {
-    this.src = src;
+  constructor(url, options = {}) {
+    this.url = url;
     this.options = Object.assign(
       {
         volume: 1,
@@ -12,14 +14,15 @@ class Sound {
     this.playing = false;
 
     // config audio element
-    this.audio = new Audio();
-    this.audio.src = src;
+    // this.audio = new Audio();
+    // this.audio.url = url;
+    this.audio = Assets.sound(url);
 
     // audio element listeners
     this.audio.addEventListener(
       "error",
       () => {
-        throw new Error(`Error loading audio asset from src ${src}`);
+        throw new Error(`Error loading audio asset from url ${url}`);
       },
       false
     );
