@@ -47,33 +47,33 @@ class Game {
   }
 
   run(gameUpdate = () => {}) {
-    Assets.onReady(() => {
-      let t = 0;
-      let dt = 0;
-      let last = 0;
+    // Assets.onReady(() => {
+    let t = 0;
+    let dt = 0;
+    let last = 0;
 
-      const loop = (ms) => {
-        requestAnimationFrame(loop);
-        t = ms / 1000;
-        dt += Math.min(t - last, MAX_FRAME * 5);
-        last = t;
+    const loop = (ms) => {
+      requestAnimationFrame(loop);
+      t = ms / 1000;
+      dt += Math.min(t - last, MAX_FRAME * 5);
+      last = t;
 
-        while (dt >= SPEED) {
-          this.scene.update(STEP, t / MULTIPLIER);
-          gameUpdate(STEP, t / MULTIPLIER);
-          dt -= SPEED;
-        }
+      while (dt >= SPEED) {
+        this.scene.update(STEP, t / MULTIPLIER);
+        gameUpdate(STEP, t / MULTIPLIER);
+        dt -= SPEED;
+      }
 
-        this.#renderer.render(this.scene);
-      };
+      this.#renderer.render(this.scene);
+    };
 
-      const init = (ms) => {
-        last = ms / 1000;
-        requestAnimationFrame(loop);
-      };
+    const init = (ms) => {
+      last = ms / 1000;
+      requestAnimationFrame(loop);
+    };
 
-      requestAnimationFrame(init);
-    });
+    requestAnimationFrame(init);
+    // });
   }
 }
 

@@ -38,7 +38,13 @@ function done() {
 
 const Assets = {
   onReady(cb) {
-    readyListeners.push(cb);
+    if (remaining === 0) {
+      readyListeners.push(cb);
+      done();
+    } else {
+      readyListeners.push(cb);
+    }
+    // readyListeners.push(cb);
     // if (remaining === 0) {
     //   done();
     // }
