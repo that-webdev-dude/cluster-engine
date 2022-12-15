@@ -4,10 +4,10 @@
 // import Assets from "./cluster/core/Assets";
 import cluster from "./cluster";
 import Assets from "./cluster/core/Assets";
-import Container from "./cluster/core/Container";
+import plopSoundURL from "./sounds/plop.mp3";
 
 export default () => {
-  const { Game, KeyControls, MouseControls } = cluster;
+  const { Game, KeyControls, MouseControls, Audio, Sound } = cluster;
   const w = 832;
   const h = 640;
   const game = new Game({ width: w, height: h });
@@ -16,41 +16,43 @@ export default () => {
     mouse: new MouseControls(game.view),
   };
 
-  let actxActive = false;
-  let oscillatorNode1 = null;
-  let oscillatorNode2 = null;
-  window.addEventListener(
-    "click",
-    () => {
-      if (!actxActive) {
-        const actx = new AudioContext();
+  const plopSound = new Sound(plopSoundURL);
 
-        // gain node
-        const master = actx.createGain();
-        master.gain.value = 0.1;
-        master.connect(actx.destination);
+  // let actxActive = false;
+  // let oscillatorNode1 = null;
+  // let oscillatorNode2 = null;
+  // window.addEventListener(
+  //   "click",
+  //   () => {
+  //     if (!actxActive) {
+  //       const actx = new AudioContext();
 
-        // oscillator1 node
-        const oscillator1 = actx.createOscillator();
-        oscillator1.type = "sine";
-        oscillator1.frequency.value = 440;
-        oscillator1.start();
-        oscillator1.connect(master);
+  //       // gain node
+  //       const master = actx.createGain();
+  //       master.gain.value = 0.1;
+  //       master.connect(actx.destination);
 
-        // oscillator2 node
-        const oscillator2 = actx.createOscillator();
-        oscillator2.type = "square";
-        oscillator2.frequency.value = 440 * 1.25;
-        oscillator2.start();
-        oscillator2.connect(master);
+  //       // oscillator1 node
+  //       const oscillator1 = actx.createOscillator();
+  //       oscillator1.type = "sine";
+  //       oscillator1.frequency.value = 440;
+  //       oscillator1.start();
+  //       oscillator1.connect(master);
 
-        actxActive = true;
-        oscillatorNode1 = oscillator1;
-        oscillatorNode2 = oscillator2;
-      }
-    },
-    false
-  );
+  //       // oscillator2 node
+  //       const oscillator2 = actx.createOscillator();
+  //       oscillator2.type = "square";
+  //       oscillator2.frequency.value = 440 * 1.25;
+  //       oscillator2.start();
+  //       oscillator2.connect(master);
+
+  //       actxActive = true;
+  //       oscillatorNode1 = oscillator1;
+  //       oscillatorNode2 = oscillator2;
+  //     }
+  //   },
+  //   false
+  // );
 
   // screens
   // const gameTitle = () => {
@@ -88,11 +90,14 @@ export default () => {
   // // start
   // game.scene = gameTitle();
   Assets.onReady(() => {
+    const { context, master } = Audio;
+    const plopNode = context.createMediaElementSource(plopSound.audio);
+
     game.run((dt, t) => {
-      if (input.key.action) {
-        oscillatorNode1.stop();
-        oscillatorNode2.stop();
-      }
+      // if (input.key.action) {
+      //   oscillatorNode1.stop();
+      //   oscillatorNode2.stop();
+      // }
     });
   });
 };

@@ -30,6 +30,7 @@ import Logger from "./debug/Logger";
 import VectorViewer from "./debug/VectorViewer";
 
 // SOUND
+import Audio from "./sound/Audio";
 import Sound from "./sound/Sound";
 import SoundPool from "./sound/SoundPool";
 import SoundGroup from "./sound/SoundGroup";
@@ -67,6 +68,7 @@ export default {
   VectorViewer,
 
   // SOUND
+  Audio,
   Sound,
   SoundPool,
   SoundGroup,
