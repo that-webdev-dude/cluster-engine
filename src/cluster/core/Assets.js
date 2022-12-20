@@ -77,6 +77,27 @@ const Assets = {
       return audio;
     }).cloneNode();
   },
+
+  // load a sound buffer
+  soundBuffer(url, audioContext) {
+    return load(url, async (url, onAssetLoad) => {
+      const response = await fetch(url);
+      const arrayBuffer = await response.arrayBuffer();
+      const soundBuffer = await audioContext.decodeAudioData(arrayBuffer);
+      onAssetLoad(url);
+      return soundBuffer;
+      // fetch(url)
+      //   .then((res) => res.arrayBuffer())
+      //   .then((ab) => {
+      //     return new Promise((resolve, reject) => {
+      //       audioContext.decodeAudioData(ab, (buffer) => {
+      //         onAssetLoad(url);
+      //         resolve(buffer);
+      //       });
+      //     });
+      //   });
+    });
+  },
 };
 
 export default Assets;

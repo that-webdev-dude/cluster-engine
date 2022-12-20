@@ -24,5 +24,6 @@ export default {
       master.gain.value = 1;
       master.connect(context.destination);
     }
+    return context;
   },
 };

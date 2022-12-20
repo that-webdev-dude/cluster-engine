@@ -14,8 +14,6 @@ class Sound {
     this.playing = false;
 
     // config audio element
-    // this.audio = new Audio();
-    // this.audio.url = url;
     this.audio = Assets.sound(url);
 
     // audio element listeners
@@ -56,13 +54,15 @@ class Sound {
    * @return void
    */
   play(overrides = {}) {
-    const { audio, options } = this;
-    const opts = Object.assign(options, overrides);
-    audio.volume = opts.volume;
-    audio.time = opts.time;
-    audio.loop = opts.loop;
-    audio.play();
-    this.playing = true;
+    if (!this.playing) {
+      const { audio, options } = this;
+      const opts = Object.assign(options, overrides);
+      audio.volume = opts.volume;
+      audio.time = opts.time;
+      audio.loop = opts.loop;
+      audio.play();
+      this.playing = true;
+    }
   }
 
   /**

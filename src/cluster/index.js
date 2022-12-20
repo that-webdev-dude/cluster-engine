@@ -34,6 +34,7 @@ import Audio from "./sound/Audio";
 import Sound from "./sound/Sound";
 import SoundPool from "./sound/SoundPool";
 import SoundGroup from "./sound/SoundGroup";
+import SoundBuffer from "./sound/SoundBuffer";
 
 export default {
   // TOOLS
@@ -72,4 +73,5 @@ export default {
   Sound,
   SoundPool,
   SoundGroup,
+  SoundBuffer,
 };
