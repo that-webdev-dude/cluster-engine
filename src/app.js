@@ -27,7 +27,7 @@ export default () => {
   Assets.onReady(() => {
     game.run((dt, t) => {
       if (input.key.action) {
-        sound.play({ speed: 1, filter: highpass });
+        sound.play({ speed: 1, filter: highpass, delay: 2 });
       }
     });
   });

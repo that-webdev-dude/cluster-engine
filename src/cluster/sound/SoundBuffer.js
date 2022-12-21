@@ -11,6 +11,7 @@ class SoundBuffer {
         volume: 1,
         time: 0,
         speed: 1,
+        delay: 1,
         filter: null,
       },
       options
@@ -38,7 +39,8 @@ class SoundBuffer {
           this.playing = false;
         };
 
-        source.start(0, opts.time);
+        source.start(Audio.context.currentTime + opts.delay);
+        // source.start(0, opts.time);
         this.playing = true;
       });
     }
