@@ -29,13 +29,17 @@ class CanvasArtist {
     const { width, height, radius } = child;
     context.fillStyle = fill || DEFAULTS.fillStyle;
     context.strokeStyle = stroke || DEFAULTS.strokeStyle;
+
     if (radius > 0.001) {
       context.beginPath();
       context.roundRect(0, 0, width, height, radius);
-      context.fill();
       context.stroke();
+      context.fill();
     } else {
-      context.fillRect(0, 0, width, height);
+      context.beginPath();
+      context.rect(0, 0, width, height);
+      context.stroke();
+      context.fill();
     }
   };
 

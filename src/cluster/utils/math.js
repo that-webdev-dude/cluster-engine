@@ -64,8 +64,8 @@ function distance(a, b) {
  * @returns {number} angle between a & b in radians
  */
 function angle(a, b) {
-  let dx = a.x - b.x;
-  let dy = a.y - b.y;
+  let dx = b.x - a.x;
+  let dy = b.y - a.y;
   return Math.atan2(dx, dy);
 }
 

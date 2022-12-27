@@ -9,6 +9,10 @@ class KeyControls {
       { code: "ArrowDown", action: "moveDown" },
       { code: "ArrowLeft", action: "moveLeft" },
       { code: "ArrowRight", action: "moveRight" },
+      { code: "KeyW", action: "moveUp" },
+      { code: "KeyS", action: "moveDown" },
+      { code: "KeyA", action: "moveLeft" },
+      { code: "KeyD", action: "moveRight" },
       { code: "Space", action: "action" },
     ]);
   }
