@@ -5,6 +5,7 @@
  */
 const DEFAULTS = {
   strokeStyle: "transparent",
+  lineWidth: 14,
   fillStyle: "#68c3d4",
   textAlign: "center",
   font: "16px PressStart2P",
@@ -25,9 +26,10 @@ class CanvasArtist {
 
   static drawCapsule = (context, child) => {
     const { style } = child;
-    const { stroke, fill } = style;
+    const { stroke, fill, lineWidth } = style;
     const { width, height, radius } = child;
     context.fillStyle = fill || DEFAULTS.fillStyle;
+    context.lineWidth = lineWidth || DEFAULTS.lineWidth;
     context.strokeStyle = stroke || DEFAULTS.strokeStyle;
 
     if (radius > 0.001) {
@@ -55,7 +57,8 @@ class CanvasArtist {
         context.lineTo(x, y);
       });
       if (tail.length === 1) {
-        const { stroke } = style;
+        const { stroke, lineWidth } = style;
+        context.lineWidth = lineWidth || DEFAULTS.lineWidth;
         context.strokeStyle = stroke || DEFAULTS.fillStyle;
         context.stroke();
       } else {

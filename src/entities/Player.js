@@ -1,5 +1,7 @@
 import charactersImageURL from "../images/characters.png";
-import weaponImageURL from "../images/weapon.png";
+import Progress from "./Progress";
+import Weapon from "./Weapon";
+
 import cluster from "../cluster";
 const { Container, Texture, Sprite, TileSprite, Vector, Rect } = cluster;
 
@@ -30,58 +32,35 @@ class PlayerCharacter extends TileSprite {
   }
 }
 
-class PlayerWeapon extends Sprite {
-  constructor() {
-    super(new Texture(weaponImageURL));
-    this.pivot = new Vector(6, 6);
-    this.anchor = new Vector(-3, -3);
-    this.position = new Vector(16, 16);
-  }
-}
-
-class PlayerHealth extends Container {
-  constructor() {
-    super();
-    this.indicator = this.add(
-      new Rect({
-        width: 32,
-        height: 8,
-        style: {
-          fill: "green",
-        },
-      })
-    );
-    this.indicator.position = new Vector(0, 0);
-    this.position = new Vector(0, 36);
-    this.value = 100;
-  }
-}
-
-class PlayerReload extends Container {
-  constructor() {
-    super();
-    this.indicator = this.add(
-      new Rect({
-        width: 32,
-        height: 4,
-        style: {
-          fill: "orange",
-        },
-      })
-    );
-    this.indicator.position = new Vector(0, 0);
-    this.position = new Vector(0, 44);
-    this.value = 100;
-  }
-}
-
 class Player extends Container {
   constructor(input) {
     super();
     this.character = this.add(new PlayerCharacter(input));
-    this.health = this.add(new PlayerHealth());
-    this.reload = this.add(new PlayerReload());
-    this.weapon = this.add(new PlayerWeapon());
+    this.weapon = this.add(new Weapon());
+    this.health = this.add(
+      new Progress({
+        min: 0,
+        max: 100,
+        position: new Vector(-16, 50),
+        indicator: {
+          width: 64,
+          height: 8,
+          style: { fill: "green", stroke: "black", lineWidth: 4 },
+        },
+      })
+    );
+    this.reloadBar = this.add(
+      new Progress({
+        min: 0,
+        max: 100,
+        position: new Vector(-16, 60),
+        indicator: {
+          width: 64,
+          height: 4,
+          style: { fill: "orange", stroke: "black", lineWidth: 4 },
+        },
+      })
+    );
 
     this.input = input;
     this.speed = new Vector(175, 175);
@@ -107,7 +86,7 @@ class Player extends Container {
 
   update(dt, t) {
     super.update(dt, t);
-    const { input, character, speed, position, direction, reload } = this;
+    const { input, character, weapon, speed, position, direction, reloadBar } = this;
 
     // player animation based on keypress
     // ----------------------------------
@@ -144,14 +123,14 @@ class Player extends Container {
 
     // shoot allowed when fully reloaded
     // ---------------------------------
-    if (input.mouse.isPressed && reload.value === 100) {
-      console.log("shoot!");
-      reload.value = 0;
-      reload.indicator.width = 0;
+    if (input.mouse.isPressed && weapon.loaded) {
+      weapon.fire(() => {
+        console.log("shoot!");
+        reloadBar.value = 0;
+      });
     }
-    if (reload.value < 100) {
-      reload.value += 75 * dt;
-      reload.indicator.width = (reload.value * 32) / 100;
+    if (!weapon.loaded) {
+      // reloadBar.value = weapon.reloadProgress;
     }
 
     this.input.mouse.update();
