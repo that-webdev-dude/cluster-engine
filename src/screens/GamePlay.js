@@ -1,3 +1,4 @@
+import Level from "../levels/Level";
 import Player from "../entities/Player";
 import cluster from "../cluster/index";
 const { Container } = cluster;
@@ -9,11 +10,9 @@ class GamePlay extends Container {
     this.input = input;
     this.onExit = transitions?.onExit || function () {};
     this.onEnter = transitions?.onEnter || function () {};
-    this.updates = 0;
 
-    this.player = new Player(input);
-
-    this.add(this.player);
+    // level
+    this.level = this.add(new Level(game.width * 3, game.height));
   }
 
   update(dt, t) {
