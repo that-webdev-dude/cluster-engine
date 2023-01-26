@@ -46,7 +46,6 @@ class Level extends TileMap {
     for (let row = 0; row < mapH; row++) {
       for (let col = 0; col < mapW; col++) {
         if (row === mapH - 3) {
-          console.log("floor");
           tiles[row * mapW + col] = TILE_INDEXES[math.rand(0, 3)];
         } else {
           tiles[row * mapW + col] = TILE_INDEXES[3];

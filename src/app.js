@@ -16,7 +16,6 @@ export default () => {
 
   game.scene = gamePlay;
   Assets.onReady(() => {
-    console.log("ready!");
     game.run((dt, t) => {
       // ...
     });

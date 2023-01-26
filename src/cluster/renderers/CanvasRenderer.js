@@ -7,8 +7,8 @@ const DEFAULTS = {
   strokeStyle: "transparent",
   lineWidth: 14,
   fillStyle: "#68c3d4",
-  textAlign: "center",
-  font: "16px PressStart2P",
+  textAlign: "left",
+  font: '10px "Press Start 2P"',
 };
 
 /**

@@ -1,9 +1,12 @@
 import charactersImageURL from "../images/characters.png";
-import Progress from "./Progress";
 import Weapon from "./Weapon";
-
 import cluster from "../cluster";
-const { Container, Texture, TileSprite, Vector } = cluster;
+
+const { Container, Texture, TileSprite, Vector, Physics } = cluster;
+const PLAYER_ACCELERATION = 2500;
+const PLAYER_FRICTION = PLAYER_ACCELERATION / 2;
+const PLAYER_VELOCITY = PLAYER_ACCELERATION / 6;
+const GRAVITY = 4800;
 
 class PlayerSkin extends TileSprite {
   constructor(input) {
@@ -27,7 +30,7 @@ class PlayerSkin extends TileSprite {
         { x: 0, y: 1 },
         { x: 1, y: 1 },
       ],
-      0.075
+      0.05
     );
   }
 }
@@ -39,51 +42,56 @@ class Player extends Container {
     this.weapon = this.add(new Weapon());
 
     this.input = input;
-    this.speed = new Vector(175, 175);
     this.scale = new Vector(1, 1);
-    this.anchor = new Vector(-16, -16);
-    this.position = new Vector(0, 0);
-    this.direction = new Vector(1, 0);
+    // this.anchor = new Vector(-16, -16);
+    this.position = new Vector(100, 100);
+    this.velocity = new Vector();
+    this.acceleration = new Vector();
   }
 
   lookRight() {
     const { scale, anchor, direction } = this;
     scale.set(1, 1);
-    anchor.set(-16, -16);
-    direction.set(1, 0);
+    // anchor.set(-16, -16);
   }
 
   lookLeft() {
     const { scale, anchor, direction } = this;
     scale.set(-1, 1);
-    anchor.set(16, -16);
-    direction.set(-1, 0);
+    // anchor.set(16, -16);
   }
 
   update(dt, t) {
     super.update(dt, t);
-    const { input, character, weapon, speed, position, direction, reloadBar } = this;
+    const { input, velocity } = this;
 
-    // player animation based on keypress
+    // player movement based on keypress
     // ----------------------------------
     if (input.key.x) {
-      character.animation.play("walk");
+      if (input.key.x > 0) this.lookRight();
+      if (input.key.x < 0) this.lookLeft();
+      if (Math.abs(velocity.x) < PLAYER_VELOCITY) {
+        Physics.World.applyForce(this, { x: input.key.x * PLAYER_ACCELERATION, y: 0 });
+      }
+    }
+
+    if (input.key.y) {
+      if (Math.abs(velocity.y) < PLAYER_VELOCITY) {
+        Physics.World.applyForce(this, { y: input.key.y * PLAYER_ACCELERATION, x: 0 });
+      }
+    }
+
+    // world friction handling
+    // ----------------------------------
+    if (this.velocity.magnitude >= 10) {
+      Physics.World.applyFriction(this, PLAYER_FRICTION);
     } else {
-      character.animation.play("idle");
+      velocity.set(0, 0);
     }
 
-    // player facing direction based on mouse position
-    // -----------------------------------------------
-    if (input.mouse.position.x <= position.x) {
-      this.lookLeft();
-    } else if (input.mouse.position.x > position.x) {
-      this.lookRight();
-    }
-
-    // player position based on keypress
-    // ---------------------------------
-    position.x += speed.x * dt * input.key.x;
-    position.y += speed.y * dt * input.key.y;
+    // update position
+    // ----------------------------------
+    Physics.World.reposition(this, dt);
 
     this.input.mouse.update();
   }
