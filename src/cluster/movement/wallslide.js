@@ -19,6 +19,7 @@ const wallslide = (targetEntity, level, dx, dy) => {
   };
   let xo = dx;
   let yo = dy;
+  let hit = false;
 
   // vertical check
   if (dy !== 0) {
@@ -27,6 +28,7 @@ const wallslide = (targetEntity, level, dx, dy) => {
     if (dy < 0 && !(tl && tr)) {
       // hit your head if (tl & tr) are not walkable
       // compute the exact distance between the targetEntity top bound and the bottom edge of the tile
+      hit = true;
       hits.up = true;
       const tileEdge = tiles[0].position.y + tiles[0].height;
       yo = tileEdge - bounds.y;
@@ -35,6 +37,7 @@ const wallslide = (targetEntity, level, dx, dy) => {
     if (dy > 0 && !(bl && br)) {
       // hit your feet if (bl & br) are not walkable
       // compute the exact distance between the targetEntity bottom bound and the top edge of the tile
+      hit = true;
       hits.down = true;
       const tileEdge = tiles[2].position.y - 1;
       yo = tileEdge - (bounds.y + bounds.height);
@@ -48,6 +51,7 @@ const wallslide = (targetEntity, level, dx, dy) => {
     if (dx < 0 && !(tl && bl)) {
       // hit your left
       // compute the exact distance between the targetEntity left bound and the right edge of the tile
+      hit = true;
       hits.left = true;
       const tileEdge = tiles[0].position.x + tiles[0].width;
       xo = tileEdge - bounds.x;
@@ -56,13 +60,14 @@ const wallslide = (targetEntity, level, dx, dy) => {
     if (dx > 0 && !(tr && br)) {
       // hit your right
       // compute the exact distance between the targetEntity right bound and the left edge of the tile
+      hit = true;
       hits.right = true;
       const tileEdge = tiles[1].position.x - 1;
       xo = tileEdge - (bounds.x + bounds.width);
     }
   }
 
-  return { x: xo, y: yo, hits };
+  return { x: xo, y: yo, hits, hit };
 };
 
 export default wallslide;

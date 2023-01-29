@@ -16,10 +16,6 @@ class Weapon extends Sprite {
     // ...
     done();
   }
-
-  update(dt, t) {
-    // ...
-  }
 }
 
 export default Weapon;

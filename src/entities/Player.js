@@ -1,18 +1,24 @@
 import charactersImageURL from "../images/characters.png";
+import wallslide from "../cluster/movement/wallslide";
 import Weapon from "./Weapon";
 import cluster from "../cluster";
 
-const { Container, Texture, TileSprite, Vector, Physics } = cluster;
 const PLAYER_ACCELERATION = 2500;
 const PLAYER_FRICTION = PLAYER_ACCELERATION / 2;
 const PLAYER_VELOCITY = PLAYER_ACCELERATION / 6;
-const GRAVITY = 4800;
+const PLAYER_GRAVITY = 2800;
+
+const states = {
+  SLEEPING: 1,
+  WALKING: 2,
+  JUMPING: 3,
+};
+
+const { Container, Texture, TileSprite, Vector, Physics, State } = cluster;
 
 class PlayerSkin extends TileSprite {
-  constructor(input) {
+  constructor() {
     super(new Texture(charactersImageURL), 32, 32);
-    this.input = input;
-    this.position = new Vector(0, 0);
     this.animation.add(
       "idle",
       [
@@ -36,64 +42,129 @@ class PlayerSkin extends TileSprite {
 }
 
 class Player extends Container {
-  constructor(input) {
+  constructor(input, level) {
     super();
     this.character = this.add(new PlayerSkin(input));
     this.weapon = this.add(new Weapon());
-
+    this.level = level;
     this.input = input;
     this.scale = new Vector(1, 1);
-    // this.anchor = new Vector(-16, -16);
-    this.position = new Vector(100, 100);
+    this.anchor = new Vector(-16, -16);
+    this.hitbox = {
+      x: -16,
+      y: -16,
+      width: 32,
+      height: 31,
+    };
+    this.position = new Vector(100, 150);
     this.velocity = new Vector();
     this.acceleration = new Vector();
+    this.state = new State(states.JUMPING);
   }
 
   lookRight() {
-    const { scale, anchor, direction } = this;
+    const { scale, anchor } = this;
     scale.set(1, 1);
-    // anchor.set(-16, -16);
+    anchor.set(-16, -16);
   }
 
   lookLeft() {
-    const { scale, anchor, direction } = this;
+    const { scale, anchor } = this;
     scale.set(-1, 1);
-    // anchor.set(16, -16);
+    anchor.set(16, -16);
+  }
+
+  walk(direction) {
+    const { velocity } = this;
+    if (Math.abs(velocity.x) < PLAYER_VELOCITY) {
+      Physics.World.applyForce(this, { x: direction * PLAYER_ACCELERATION, y: 0 });
+    }
+  }
+
+  jump(dt) {
+    Physics.World.applyImpulse(this, { x: 0, y: -1000 }, dt);
   }
 
   update(dt, t) {
     super.update(dt, t);
-    const { input, velocity } = this;
+
+    // prettier-ignore
+    const { 
+      state, 
+      input, 
+      level, 
+      velocity, 
+      position, 
+    } = this;
 
     // player movement based on keypress
     // ----------------------------------
     if (input.key.x) {
       if (input.key.x > 0) this.lookRight();
       if (input.key.x < 0) this.lookLeft();
-      if (Math.abs(velocity.x) < PLAYER_VELOCITY) {
-        Physics.World.applyForce(this, { x: input.key.x * PLAYER_ACCELERATION, y: 0 });
-      }
+      this.walk(input.key.x);
     }
 
-    if (input.key.y) {
-      if (Math.abs(velocity.y) < PLAYER_VELOCITY) {
-        Physics.World.applyForce(this, { y: input.key.y * PLAYER_ACCELERATION, x: 0 });
-      }
-    }
+    Physics.World.applyFriction(this, PLAYER_FRICTION);
+    Physics.World.applyGravity(this, PLAYER_GRAVITY);
 
-    // world friction handling
-    // ----------------------------------
-    if (this.velocity.magnitude >= 10) {
-      Physics.World.applyFriction(this, PLAYER_FRICTION);
-    } else {
+    const { x: dx, y: dy } = Physics.World.getDisplacement(this, dt);
+    const r = wallslide(this, level, dx, dy);
+    if (r.hits.down || r.hits.up) {
+      velocity.set(velocity.x, 0);
+    }
+    if (this.velocity.magnitude <= 10) {
       velocity.set(0, 0);
     }
+    position.add(r);
 
-    // update position
-    // ----------------------------------
-    Physics.World.reposition(this, dt);
+    switch (state.get()) {
+      case states.SLEEPING:
+        // animation
+        this.character.animation.play("idle");
 
-    this.input.mouse.update();
+        // transition to walking
+        if (input.key.x) {
+          state.set(states.WALKING);
+        }
+
+        // transition to jumping
+        if (input.key.action) {
+          this.jump(dt);
+          state.set(states.JUMPING);
+        }
+        break;
+
+      case states.JUMPING:
+        // animation
+        this.character.animation.play("walk");
+
+        // transition to sleeping
+        if (r.hits.down) {
+          state.set(states.SLEEPING);
+        }
+        break;
+
+      case states.WALKING:
+        // animation
+        this.character.animation.play("walk");
+
+        // transition to sleeping
+        if (!input.key.x) {
+          state.set(states.SLEEPING);
+        }
+
+        // transition to jumping
+        if (input.key.action) {
+          this.jump(dt);
+          state.set(states.JUMPING);
+        }
+        break;
+
+      default:
+        console.warn("Player needs another state?");
+        break;
+    }
   }
 }
 

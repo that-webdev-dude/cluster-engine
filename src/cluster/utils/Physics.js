@@ -18,12 +18,21 @@ class PhysicsWorld {
   }
 
   /**
+   * apply gravity to entity
+   * @param {*} entity
+   * @param {*} gravityValue
+   */
+  static applyGravity(entity, gravityValue) {
+    this.applyForce(entity, { x: 0, y: gravityValue });
+  }
+
+  /**
    * apply friction to entity
    * @param {Entity} entity
-   * @param {Number} friction
+   * @param {Number} frictionValue
    */
-  static applyFriction(entity, friction) {
-    this.applyForce(entity, entity.velocity.clone().unit().reverse().scale(friction));
+  static applyFriction(entity, frictionValue) {
+    this.applyForce(entity, entity.velocity.clone().unit().reverse().scale(frictionValue));
   }
 
   /**
@@ -43,7 +52,7 @@ class PhysicsWorld {
    * @returns
    */
   static getDisplacement(entity, dt) {
-    const { position: pos, velocity: vel, acceleration: acc } = entity;
+    const { velocity: vel, acceleration: acc } = entity;
     const vx = vel.x + acc.x * dt;
     const vy = vel.y + acc.y * dt;
     const x = ((vel.x + vx) / 2) * dt;
