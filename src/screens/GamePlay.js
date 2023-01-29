@@ -10,6 +10,7 @@ class GamePlay extends Container {
     const gameH = game.height;
     const level = new Level(gameW * 2, gameH);
     const player = new Player(input, level);
+    const enemies = new Container();
     const camera = new Camera(
       player,
       { width: game.width, height: game.height },
@@ -18,6 +19,7 @@ class GamePlay extends Container {
 
     camera.add(level);
     camera.add(player);
+    camera.add(enemies);
     this.add(camera);
 
     this.onEnter = transitions?.onEnter || function () {};
@@ -25,8 +27,9 @@ class GamePlay extends Container {
     this.input = input;
     this.game = game;
     this.level = level;
-    this.player = player;
     this.camera = camera;
+    this.player = player;
+    this.enemies = enemies;
 
     // debug
     // this.playerVel = this.add(new Text("", { fill: "black" }));
