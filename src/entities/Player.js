@@ -3,6 +3,8 @@ import wallslide from "../cluster/movement/wallslide";
 import Weapon from "./Weapon";
 import cluster from "../cluster";
 
+// const { wallslide } = cluster; ?
+
 const PLAYER_ACCELERATION = 2500;
 const PLAYER_FRICTION = PLAYER_ACCELERATION / 2;
 const PLAYER_VELOCITY = PLAYER_ACCELERATION / 6;
@@ -59,6 +61,7 @@ class Player extends Container {
     this.position = new Vector(100, 150);
     this.velocity = new Vector();
     this.acceleration = new Vector();
+    this.direction = 1;
     this.state = new State(states.JUMPING);
   }
 
@@ -66,12 +69,14 @@ class Player extends Container {
     const { scale, anchor } = this;
     scale.set(1, 1);
     anchor.set(-16, -16);
+    this.direction = 1;
   }
 
   lookLeft() {
     const { scale, anchor } = this;
     scale.set(-1, 1);
     anchor.set(16, -16);
+    this.direction = -1;
   }
 
   walk(direction) {
@@ -83,6 +88,11 @@ class Player extends Container {
 
   jump(dt) {
     Physics.World.applyImpulse(this, { x: 0, y: -1000 }, dt);
+  }
+
+  fire(dt) {
+    const { weapon, position, direction } = this;
+    return weapon.fire(position, direction, dt);
   }
 
   update(dt, t) {
@@ -129,7 +139,7 @@ class Player extends Container {
         }
 
         // transition to jumping
-        if (input.key.action) {
+        if (input.key.y === -1) {
           this.jump(dt);
           state.set(states.JUMPING);
         }
@@ -155,7 +165,7 @@ class Player extends Container {
         }
 
         // transition to jumping
-        if (input.key.action) {
+        if (input.key.y === -1) {
           this.jump(dt);
           state.set(states.JUMPING);
         }

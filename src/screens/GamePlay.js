@@ -1,6 +1,8 @@
 import Level from "../levels/Level";
+import Enemy from "../entities/Enemy";
 import Player from "../entities/Player";
 import cluster from "../cluster/index";
+import Bullet from "../entities/Bullet";
 const { Container, Camera, Vector, Text } = cluster;
 
 class GamePlay extends Container {
@@ -11,6 +13,7 @@ class GamePlay extends Container {
     const level = new Level(gameW * 2, gameH);
     const player = new Player(input, level);
     const enemies = new Container();
+    const bullets = new Container();
     const camera = new Camera(
       player,
       { width: game.width, height: game.height },
@@ -20,6 +23,7 @@ class GamePlay extends Container {
     camera.add(level);
     camera.add(player);
     camera.add(enemies);
+    camera.add(bullets);
     this.add(camera);
 
     this.onEnter = transitions?.onEnter || function () {};
@@ -29,7 +33,10 @@ class GamePlay extends Container {
     this.level = level;
     this.camera = camera;
     this.player = player;
+    this.bullets = bullets;
     this.enemies = enemies;
+
+    this.initialize();
 
     // debug
     // this.playerVel = this.add(new Text("", { fill: "black" }));
@@ -38,8 +45,28 @@ class GamePlay extends Container {
     // this.playerPos.position = new Vector(25, game.height - 25);
   }
 
+  initialize() {
+    for (let i = 0; i < 1; i++) {
+      this.enemies.add(new Enemy(this.player, { x: 0, y: 0 }));
+    }
+  }
+
   update(dt, t) {
     super.update(dt, t);
+
+    // prettier-ignore
+    const {
+      input,
+      player,
+      bullets,
+    } = this
+
+    if (input.key.action) {
+      const bullet = player.fire(dt);
+      if (bullet) {
+        bullets.add(bullet);
+      }
+    }
 
     // debug
     // if (this.playerVel) {

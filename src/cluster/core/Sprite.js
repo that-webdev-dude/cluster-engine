@@ -9,6 +9,14 @@ class Sprite {
     this.pivot = { x: 0, y: 0 };
     this.angle = 0;
   }
+
+  get width() {
+    return this.texture.width;
+  }
+
+  get height() {
+    return this.texture.height;
+  }
 }
 
 export default Sprite;
