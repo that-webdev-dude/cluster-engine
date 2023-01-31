@@ -47,7 +47,8 @@ class Player extends Container {
   constructor(input, level) {
     super();
     this.character = this.add(new PlayerSkin(input));
-    this.weapon = this.add(new Weapon());
+    this.weapon = this.add(new Weapon(new Vector(32, 18)));
+    this.state = new State(states.JUMPING);
     this.level = level;
     this.input = input;
     this.scale = new Vector(1, 1);
@@ -58,11 +59,11 @@ class Player extends Container {
       width: 32,
       height: 31,
     };
+
+    this.direction = 1;
     this.position = new Vector(100, 150);
     this.velocity = new Vector();
     this.acceleration = new Vector();
-    this.direction = 1;
-    this.state = new State(states.JUMPING);
   }
 
   lookRight() {
@@ -110,8 +111,8 @@ class Player extends Container {
     // player movement based on keypress
     // ----------------------------------
     if (input.key.x) {
-      if (input.key.x > 0) this.lookRight();
-      if (input.key.x < 0) this.lookLeft();
+      if (input.key.x === 1) this.lookRight();
+      if (input.key.x === -1) this.lookLeft();
       this.walk(input.key.x);
     }
 
@@ -132,12 +133,10 @@ class Player extends Container {
       case states.SLEEPING:
         // animation
         this.character.animation.play("idle");
-
         // transition to walking
         if (input.key.x) {
           state.set(states.WALKING);
         }
-
         // transition to jumping
         if (input.key.y === -1) {
           this.jump(dt);
@@ -148,7 +147,6 @@ class Player extends Container {
       case states.JUMPING:
         // animation
         this.character.animation.play("walk");
-
         // transition to sleeping
         if (r.hits.down) {
           state.set(states.SLEEPING);
@@ -158,12 +156,10 @@ class Player extends Container {
       case states.WALKING:
         // animation
         this.character.animation.play("walk");
-
         // transition to sleeping
         if (!input.key.x) {
           state.set(states.SLEEPING);
         }
-
         // transition to jumping
         if (input.key.y === -1) {
           this.jump(dt);

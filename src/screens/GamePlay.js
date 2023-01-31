@@ -2,7 +2,6 @@ import Level from "../levels/Level";
 import Enemy from "../entities/Enemy";
 import Player from "../entities/Player";
 import cluster from "../cluster/index";
-import Bullet from "../entities/Bullet";
 const { Container, Camera, Vector, Text } = cluster;
 
 class GamePlay extends Container {
