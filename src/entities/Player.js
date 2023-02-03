@@ -14,6 +14,7 @@ const states = {
   SLEEPING: 1,
   WALKING: 2,
   JUMPING: 3,
+  FALLING: 4,
 };
 
 const { Container, Texture, TileSprite, Vector, Physics, State } = cluster;
@@ -48,7 +49,7 @@ class Player extends Container {
     super();
     this.character = this.add(new PlayerSkin(input));
     this.weapon = this.add(new Weapon(new Vector(32, 18)));
-    this.state = new State(states.JUMPING);
+    this.state = new State(states.FALLING);
     this.level = level;
     this.input = input;
     this.scale = new Vector(1, 1);
@@ -82,6 +83,8 @@ class Player extends Container {
 
   walk(direction) {
     const { velocity } = this;
+    if (direction === 1) this.lookRight();
+    if (direction === -1) this.lookLeft();
     if (Math.abs(velocity.x) < PLAYER_VELOCITY) {
       Physics.World.applyForce(this, { x: direction * PLAYER_ACCELERATION, y: 0 });
     }
@@ -111,8 +114,6 @@ class Player extends Container {
     // player movement based on keypress
     // ----------------------------------
     if (input.key.x) {
-      if (input.key.x === 1) this.lookRight();
-      if (input.key.x === -1) this.lookLeft();
       this.walk(input.key.x);
     }
 
@@ -124,20 +125,17 @@ class Player extends Container {
     if (r.hits.down || r.hits.up) {
       velocity.set(velocity.x, 0);
     }
-    if (this.velocity.magnitude <= 10) {
-      velocity.set(0, 0);
-    }
     position.add(r);
 
     switch (state.get()) {
       case states.SLEEPING:
         // animation
-        this.character.animation.play("idle");
         // transition to walking
+        // transition to jumping
+        this.character.animation.play("idle");
         if (input.key.x) {
           state.set(states.WALKING);
         }
-        // transition to jumping
         if (input.key.y === -1) {
           this.jump(dt);
           state.set(states.JUMPING);
@@ -146,8 +144,8 @@ class Player extends Container {
 
       case states.JUMPING:
         // animation
-        this.character.animation.play("walk");
         // transition to sleeping
+        this.character.animation.play("walk");
         if (r.hits.down) {
           state.set(states.SLEEPING);
         }
@@ -155,21 +153,35 @@ class Player extends Container {
 
       case states.WALKING:
         // animation
-        this.character.animation.play("walk");
         // transition to sleeping
+        // transition to jumping
+        this.character.animation.play("walk");
         if (!input.key.x) {
           state.set(states.SLEEPING);
         }
-        // transition to jumping
         if (input.key.y === -1) {
           this.jump(dt);
           state.set(states.JUMPING);
         }
         break;
 
+      case states.FALLING:
+        // animation
+        // transition to sleeping
+        // transition to jumping
+        this.character.animation.play("walk");
+        if (r.hits.down) {
+          state.set(states.SLEEPING);
+        }
+        break;
+
       default:
         console.warn("Player needs another state?");
         break;
+    }
+
+    if (this.velocity.magnitude <= 10) {
+      velocity.set(0, 0);
     }
   }
 }

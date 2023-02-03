@@ -14,6 +14,7 @@ class KeyControls {
       { code: "KeyA", action: "moveLeft" },
       { code: "KeyD", action: "moveRight" },
       { code: "Space", action: "action" },
+      { code: "KeyX", action: "action" },
     ]);
   }
 
