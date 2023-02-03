@@ -2,7 +2,7 @@ import Level from "../levels/Level";
 import Enemy from "../entities/Enemy";
 import Player from "../entities/Player";
 import cluster from "../cluster/index";
-const { Container, Camera, Vector, Text } = cluster;
+const { Container, Camera, Vector, Text, entity } = cluster;
 
 class GamePlay extends Container {
   constructor(game, input, transitions = { onEnter: () => {}, onExit: () => {} }) {
@@ -58,6 +58,7 @@ class GamePlay extends Container {
       input,
       player,
       bullets,
+      level,
     } = this
 
     if (input.key.action) {
@@ -66,6 +67,23 @@ class GamePlay extends Container {
         bullets.add(bullet);
       }
     }
+
+    // console.log(bullets.children);
+    bullets.children.forEach((bullet) => {
+      const { width, height, position } = bullet;
+      const { x, y } = position;
+
+      // bullets out of bounds
+      if (
+        x >= level.width + width * 2 ||
+        x <= -width * 2 ||
+        y >= level.height + height * 2 ||
+        y <= -height * 2
+      ) {
+        bullet.dead = true;
+        return;
+      }
+    });
 
     // debug
     // if (this.playerVel) {

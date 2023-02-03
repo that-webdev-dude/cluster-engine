@@ -110,67 +110,81 @@ class Player extends Container {
       velocity, 
       position, 
     } = this;
-
-    // player movement based on keypress
-    // ----------------------------------
-    if (input.key.x) {
-      this.walk(input.key.x);
-    }
+    state.update(dt, t);
 
     Physics.World.applyFriction(this, PLAYER_FRICTION);
     Physics.World.applyGravity(this, PLAYER_GRAVITY);
 
-    const { x: dx, y: dy } = Physics.World.getDisplacement(this, dt);
-    const r = wallslide(this, level, dx, dy);
-    if (r.hits.down || r.hits.up) {
-      velocity.set(velocity.x, 0);
-    }
-    position.add(r);
-
     switch (state.get()) {
       case states.SLEEPING:
-        // animation
-        // transition to walking
-        // transition to jumping
-        this.character.animation.play("idle");
-        if (input.key.x) {
+        // init
+        if (state.first) {
+          // console.log("SLEEPING");
+          this.character.animation.play("idle");
+        }
+        // → transition walking
+        if (input.key.x !== 0) {
           state.set(states.WALKING);
         }
+        // → transition jumping
         if (input.key.y === -1) {
-          this.jump(dt);
           state.set(states.JUMPING);
         }
         break;
 
       case states.JUMPING:
-        // animation
-        // transition to sleeping
-        this.character.animation.play("walk");
-        if (r.hits.down) {
-          state.set(states.SLEEPING);
+        // init
+        if (state.first) {
+          // console.log("JUMPING");
+          this.jump(dt);
+          this.character.animation.play("walk");
+        }
+        // action
+        if (input.key.x !== 0) {
+          this.walk(input.key.x);
+        }
+        // → falling
+        if (velocity.y > 0) {
+          state.set(states.FALLING);
         }
         break;
 
       case states.WALKING:
-        // animation
-        // transition to sleeping
-        // transition to jumping
-        this.character.animation.play("walk");
-        if (!input.key.x) {
-          state.set(states.SLEEPING);
+        // init
+        if (state.first) {
+          // console.log("WALKING");
+          this.character.animation.play("walk");
         }
+        // action
+        if (input.key.x !== 0) {
+          this.walk(input.key.x);
+        }
+        // → transition jumping
         if (input.key.y === -1) {
-          this.jump(dt);
           state.set(states.JUMPING);
+        }
+        // → transition falling
+        if (velocity.y > 50) {
+          state.set(states.FALLING);
+        }
+        // → transition sleeping
+        if (!input.key.x && velocity.x === 0) {
+          state.set(states.SLEEPING);
         }
         break;
 
       case states.FALLING:
-        // animation
-        // transition to sleeping
-        // transition to jumping
-        this.character.animation.play("walk");
-        if (r.hits.down) {
+        // init
+        if (state.first) {
+          // console.log("FALLING");
+          this.character.animation.play("walk");
+        }
+        // action
+        if (input.key.x !== 0) {
+          this.walk(input.key.x);
+        }
+        // → transition sleeping
+        if (velocity.y === 0) {
           state.set(states.SLEEPING);
         }
         break;
@@ -180,9 +194,18 @@ class Player extends Container {
         break;
     }
 
+    const { x: dx, y: dy } = Physics.World.getDisplacement(this, dt);
+    const r = wallslide(this, level, dx, dy);
+    if (r.hits.down || r.hits.up) {
+      velocity.set(velocity.x, 0);
+    }
+    if (r.hits.left || r.hits.right) {
+      velocity.set(0, velocity.y);
+    }
     if (this.velocity.magnitude <= 10) {
       velocity.set(0, 0);
     }
+    position.add(r);
   }
 }
 

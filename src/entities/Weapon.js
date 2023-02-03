@@ -18,7 +18,7 @@ class Weapon extends Sprite {
     if (this.fireRate < 0) {
       this.fireRate = 0.1;
       return new Bullet(
-        Vector.from(position).add(new Vector(this.width * direction + 12, 0)),
+        Vector.from(position).add(new Vector(this.width * direction + 8, 0)),
         direction
       );
     } else {
