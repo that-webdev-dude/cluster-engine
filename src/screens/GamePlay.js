@@ -46,7 +46,7 @@ class GamePlay extends Container {
 
   initialize() {
     for (let i = 0; i < 1; i++) {
-      this.enemies.add(new Enemy(this.player, { x: 0, y: 0 }));
+      this.enemies.add(new Enemy(this.player, this.level));
     }
   }
 

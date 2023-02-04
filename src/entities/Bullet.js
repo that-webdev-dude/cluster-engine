@@ -7,7 +7,7 @@ class Bullet extends Sprite {
   constructor(position, direction) {
     super(new Texture(bulletImageURL));
     this.speed = 1500;
-    this.anchor = new Vector(-this.width / 2, -this.height / 2);
+    this.anchor = new Vector(-this.width / 2, 0);
     this.scale = new Vector(direction, 1);
     this.position = position;
     this.direction = direction;

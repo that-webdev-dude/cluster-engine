@@ -1,5 +1,6 @@
 import Rect from "../shapes/Rect";
 import math from "./math";
+import Vector from "./Vector";
 
 /**
  * Computes the center's coordinate
@@ -92,23 +93,16 @@ function hits(mainEntity, targetEntities, hitCallback) {
  * @returns
  */
 function debug(entity) {
-  entity.children = entity.children || [];
-  const boundingbox = new Rect({
-    height: entity.height,
-    width: entity.width,
-    style: { fill: "rgba(255,255,0,0.25)" },
-  });
-
-  const hitbox = new Rect({
+  const hitboxRect = new Rect({
+    style: { fill: "rgba(255,0,0,0.25)" },
     width: entity.hitbox.width,
     height: entity.hitbox.height,
-    style: { fill: "rgba(255,0,0,0.25)" },
   });
-  hitbox.position.x = entity.hitbox.x;
-  hitbox.position.y = entity.hitbox.y;
+  hitboxRect.position = new Vector(entity.hitbox.x, entity.hitbox.y);
 
-  entity.children.push(boundingbox);
-  entity.children.push(hitbox);
+  entity.children = entity.children || [];
+  entity.children.push(hitboxRect);
+
   return entity;
 }
 

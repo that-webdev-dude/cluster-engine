@@ -3,8 +3,6 @@ import wallslide from "../cluster/movement/wallslide";
 import Weapon from "./Weapon";
 import cluster from "../cluster";
 
-// const { wallslide } = cluster; ?
-
 const PLAYER_ACCELERATION = 2500;
 const PLAYER_FRICTION = PLAYER_ACCELERATION / 2;
 const PLAYER_VELOCITY = PLAYER_ACCELERATION / 6;
@@ -21,7 +19,11 @@ const { Container, Texture, TileSprite, Vector, Physics, State } = cluster;
 
 class PlayerSkin extends TileSprite {
   constructor() {
-    super(new Texture(charactersImageURL), 32, 32);
+    const width = 32;
+    const height = 32;
+
+    super(new Texture(charactersImageURL), width, height);
+
     this.animation.add(
       "idle",
       [
@@ -48,15 +50,15 @@ class Player extends Container {
   constructor(input, level) {
     super();
     this.character = this.add(new PlayerSkin(input));
-    this.weapon = this.add(new Weapon(new Vector(32, 18)));
+    this.weapon = this.add(new Weapon(new Vector(32, 14)));
     this.state = new State(states.FALLING);
     this.level = level;
     this.input = input;
     this.scale = new Vector(1, 1);
-    this.anchor = new Vector(-16, -16);
+    this.anchor = new Vector(-16, 0);
     this.hitbox = {
-      x: -16,
-      y: -16,
+      x: 0,
+      y: 0,
       width: 32,
       height: 31,
     };
@@ -70,14 +72,14 @@ class Player extends Container {
   lookRight() {
     const { scale, anchor } = this;
     scale.set(1, 1);
-    anchor.set(-16, -16);
+    anchor.set(-16, 0);
     this.direction = 1;
   }
 
   lookLeft() {
     const { scale, anchor } = this;
     scale.set(-1, 1);
-    anchor.set(16, -16);
+    anchor.set(16, 0);
     this.direction = -1;
   }
 
