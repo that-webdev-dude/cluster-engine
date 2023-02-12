@@ -21,7 +21,6 @@ class PlayerSkin extends TileSprite {
   constructor() {
     const width = 32;
     const height = 32;
-
     super(new Texture(charactersImageURL), width, height);
 
     this.animation.add(
@@ -50,12 +49,12 @@ class Player extends Container {
   constructor(input, level) {
     super();
     this.character = this.add(new PlayerSkin(input));
-    this.weapon = this.add(new Weapon(new Vector(32, 14)));
+    this.weapon = this.add(new Weapon(new Vector(14, 14)));
     this.state = new State(states.FALLING);
     this.level = level;
     this.input = input;
     this.scale = new Vector(1, 1);
-    this.anchor = new Vector(-16, 0);
+    this.anchor = new Vector(0, 0);
     this.hitbox = {
       x: 0,
       y: 0,
@@ -72,14 +71,14 @@ class Player extends Container {
   lookRight() {
     const { scale, anchor } = this;
     scale.set(1, 1);
-    anchor.set(-16, 0);
+    anchor.set(0, 0);
     this.direction = 1;
   }
 
   lookLeft() {
     const { scale, anchor } = this;
     scale.set(-1, 1);
-    anchor.set(16, 0);
+    anchor.set(0, 0);
     this.direction = -1;
   }
 
@@ -98,7 +97,8 @@ class Player extends Container {
 
   fire(dt) {
     const { weapon, position, direction } = this;
-    return weapon.fire(position, direction, dt);
+    const { x, y } = position;
+    return weapon.fire(new Vector(x + 52 * direction, y + 10), direction, dt);
   }
 
   update(dt, t) {

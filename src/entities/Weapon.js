@@ -8,7 +8,7 @@ class Weapon extends Sprite {
   constructor(position) {
     super(new Texture(weaponImageURL));
     this.loaded = true;
-    this.anchor = new Vector(-this.width / 2, 0);
+    this.anchor = new Vector(0, 0);
     this.position = position;
     this.fireRate = 0.1;
   }
@@ -17,10 +17,7 @@ class Weapon extends Sprite {
     this.fireRate -= dt;
     if (this.fireRate < 0) {
       this.fireRate = 0.1;
-      return new Bullet(
-        Vector.from(position).add(new Vector(this.width * direction + 8, 0)),
-        direction
-      );
+      return new Bullet(position, direction);
     } else {
       return null;
     }

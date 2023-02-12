@@ -1,3 +1,5 @@
+import Rect from "../shapes/Rect";
+import Vector from "../utils/Vector";
 import Container from "./Container";
 import TileSprite from "./TileSprite";
 
@@ -11,7 +13,7 @@ class TileMap extends Container {
    * @param {number} tileH height of a single tile
    * @param {Texture} texture image source
    */
-  constructor(tiles, mapW, mapH, tileW, tileH, texture) {
+  constructor(tiles, mapW, mapH, tileW, tileH, texture = null) {
     super();
     this.mapW = mapW;
     this.mapH = mapH;
@@ -20,10 +22,15 @@ class TileMap extends Container {
     this.children = tiles.map((frame, index) => {
       const column = index % mapW;
       const row = Math.floor(index / mapW);
-      const s = new TileSprite(texture, tileW, tileH);
+
+      // const s = texture ? new TileSprite(texture, tileW, tileH) : frame;
+      // s.position = new Vector(column * tileW, row * tileH);
+      // return s;
+      const s = texture ? new TileSprite(texture, tileW, tileH) : frame;
+      s.position = new Vector(column * tileW, row * tileH);
       s.frame = frame;
-      s.position.x = column * tileW;
-      s.position.y = row * tileH;
+      // s.position.x = column * tileW;
+      // s.position.y = row * tileH;
       return s;
     });
   }

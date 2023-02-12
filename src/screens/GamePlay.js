@@ -55,10 +55,10 @@ class GamePlay extends Container {
 
     // prettier-ignore
     const {
+      level,
       input,
       player,
       bullets,
-      level,
     } = this
 
     if (input.key.action) {
@@ -73,7 +73,23 @@ class GamePlay extends Container {
       const { width, height, position } = bullet;
       const { x, y } = position;
 
-      // bullets out of bounds
+      // bullet hitting a wall
+      const tilesAtBulletCorners = level.tilesAtCorners(bullet.bounds);
+      for (const tile of tilesAtBulletCorners) {
+        if (!tile.walkable) {
+          // tile.hitbox = {
+          //   x: 0,
+          //   y: 0,
+          //   width: tile.width,
+          //   height: tile.height,
+          // };
+          // entity.hit(bullet, tile, () => {
+          //   bullet.dead = true;
+          // });
+        }
+      }
+
+      // bullet out of bounds
       if (
         x >= level.width + width * 2 ||
         x <= -width * 2 ||

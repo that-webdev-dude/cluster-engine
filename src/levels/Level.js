@@ -37,15 +37,12 @@ class Level extends TileMap {
       const tile = {};
       switch (symbol) {
         case "#": // block tile
-          tile.hitbox = { x: 0, y: 0, width: tileSize, height: tileSize };
           tile.walkable = false;
-          tile.name = "block";
           tile.x = math.rand(0, 3);
           tile.y = 4;
           break;
         default: // walkable tile
           tile.walkable = true;
-          tile.name = "sky";
           tile.x = 0;
           tile.y = 5;
           break;
