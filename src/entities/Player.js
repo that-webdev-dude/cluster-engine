@@ -2,6 +2,7 @@ import charactersImageURL from "../images/characters.png";
 import wallslide from "../cluster/movement/wallslide";
 import Weapon from "./Weapon";
 import cluster from "../cluster";
+import Rect from "../cluster/shapes/Rect";
 
 const PLAYER_ACCELERATION = 2500;
 const PLAYER_FRICTION = PLAYER_ACCELERATION / 2;
@@ -58,7 +59,7 @@ class Player extends Container {
     this.hitbox = {
       x: 0,
       y: 0,
-      width: 32,
+      width: 31,
       height: 31,
     };
 
@@ -66,6 +67,15 @@ class Player extends Container {
     this.position = new Vector(100, 150);
     this.velocity = new Vector();
     this.acceleration = new Vector();
+
+    // DEBUG
+    // this.add(
+    //   new Rect({
+    //     width: this.hitbox.width,
+    //     height: this.hitbox.height,
+    //     style: { fill: "red" },
+    //   })
+    // );
   }
 
   lookRight() {
@@ -76,9 +86,9 @@ class Player extends Container {
   }
 
   lookLeft() {
-    const { scale, anchor } = this;
+    const { scale, anchor, width } = this;
     scale.set(-1, 1);
-    anchor.set(0, 0);
+    anchor.set(32, 0);
     this.direction = -1;
   }
 
@@ -96,9 +106,9 @@ class Player extends Container {
   }
 
   fire(dt) {
-    const { weapon, position, direction } = this;
+    const { weapon, position, direction, anchor } = this;
     const { x, y } = position;
-    return weapon.fire(new Vector(x + 52 * direction, y + 10), direction, dt);
+    return weapon.fire(new Vector(x + 52 + anchor.x * 2 * direction, y + 10), direction, dt);
   }
 
   update(dt, t) {

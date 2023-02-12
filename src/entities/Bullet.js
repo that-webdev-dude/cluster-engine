@@ -7,16 +7,16 @@ const { Sprite, Texture, Vector } = cluster;
 class Bullet extends Sprite {
   constructor(position, direction) {
     super(new Texture(bulletImageURL));
-    this.speed = 1500;
-    // this.anchor = new Vector(-this.width / 2, 0);
+    this.speed = 100;
+    this.anchor = new Vector(0, 0);
     this.scale = new Vector(direction, 1);
     this.position = position;
     this.direction = direction;
     this.hitbox = {
       x: 0,
       y: 0,
-      width: this.width / 2,
-      height: this.height / 2,
+      width: this.width,
+      height: this.height,
     };
 
     // const debugHitbox = new Rect({
@@ -26,13 +26,23 @@ class Bullet extends Sprite {
     // });
     // debugHitbox.position = new Vector();
     // this.children = [debugHitbox];
+
+    // const debugBounds = new Rect({
+    //   width: this.bounds.width,
+    //   height: this.bounds.height,
+    //   style: { fill: "red" },
+    // });
+    // debugBounds.position = new Vector();
+    // this.children = [debugBounds];
   }
 
   get bounds() {
     const { position, width, height } = this;
     return {
-      x: position.x,
-      y: position.y,
+      x: 0,
+      y: 0,
+      // x: position.x,
+      // y: position.y,
       width,
       height,
     };

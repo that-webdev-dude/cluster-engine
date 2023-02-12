@@ -76,16 +76,16 @@ class GamePlay extends Container {
       // bullet hitting a wall
       const tilesAtBulletCorners = level.tilesAtCorners(bullet.bounds);
       for (const tile of tilesAtBulletCorners) {
-        if (!tile.walkable) {
-          // tile.hitbox = {
-          //   x: 0,
-          //   y: 0,
-          //   width: tile.width,
-          //   height: tile.height,
-          // };
-          // entity.hit(bullet, tile, () => {
-          //   bullet.dead = true;
-          // });
+        if (!tile.frame.walkable) {
+          tile.hitbox = {
+            x: 0,
+            y: 0,
+            width: tile.width,
+            height: tile.height,
+          };
+          entity.hit(bullet, tile, () => {
+            bullet.dead = true;
+          });
         }
       }
 
@@ -100,16 +100,6 @@ class GamePlay extends Container {
         return;
       }
     });
-
-    // debug
-    // if (this.playerVel) {
-    //   let velx = Math.floor(this.player.velocity.x);
-    //   let vely = Math.floor(this.player.velocity.y);
-    // this.playerVel.text = `velx: ${velx} - vely: ${vely}`;
-    // let posx = Math.floor(this.player.position.x);
-    // let posy = Math.floor(this.player.position.y);
-    // this.playerPos.text = `posx: ${posx} - posy: ${posy}`;
-    // }
   }
 }
 
