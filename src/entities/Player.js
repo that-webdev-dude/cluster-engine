@@ -128,7 +128,7 @@ class Player extends TileSprite {
       this.fireRate = 0.1;
       const bulletPos = position
         .clone()
-        .add(weapon.position.clone().add(new Vector(direction * weapon.width, 0)));
+        .add(weapon.position.clone().add(new Vector(direction * weapon.width, -4)));
       return new Bullet(bulletPos, direction);
     } else {
       return null;

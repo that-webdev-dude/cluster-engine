@@ -1,9 +1,8 @@
 import Level from "../levels/Level";
 import Enemy from "../entities/Enemy";
 import Player from "../entities/Player";
-import Bullet from "../entities/Bullet";
 import cluster from "../cluster/index";
-const { Container, Camera, Vector, entity } = cluster;
+const { Container, Camera, entity } = cluster;
 
 class GamePlay extends Container {
   constructor(game, input, transitions = { onEnter: () => {}, onExit: () => {} }) {
@@ -57,8 +56,8 @@ class GamePlay extends Container {
       }
     }
 
-    // bullet level collision
     bullets.children.forEach((bullet) => {
+      // bullet to wall collision
       const tilesAtBulletCorners = level.tilesAtCorners(bullet.bounds);
       for (const tile of tilesAtBulletCorners) {
         let hit = false;
@@ -69,6 +68,11 @@ class GamePlay extends Container {
           });
         }
         if (hit) break;
+      }
+
+      // bullet out of screen
+      if (bullet.position.x < -64 || bullet.position.x > level.width + 64) {
+        bullet.dead = true;
       }
     });
 
