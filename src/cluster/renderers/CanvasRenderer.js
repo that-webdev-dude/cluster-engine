@@ -5,7 +5,7 @@
  */
 const DEFAULTS = {
   strokeStyle: "transparent",
-  lineWidth: 14,
+  lineWidth: 1,
   fillStyle: "#68c3d4",
   textAlign: "left",
   font: '10px "Press Start 2P"',

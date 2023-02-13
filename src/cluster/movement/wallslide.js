@@ -7,7 +7,7 @@ import entity from "../utils/entity";
  * @param {TileMap} level - the tilemap describing the environment
  * @param {Number} dx - intentional amount of x movement
  * @param {Number} dy - intentional amount of y movement
- * @returns {Object} thie amount of x & y the targetEntity is allowed to move
+ * @returns {Object} the amount of x & y the targetEntity is allowed to move
  */
 const wallslide = (targetEntity, level, dx, dy) => {
   const bounds = entity.hitBounds(targetEntity);

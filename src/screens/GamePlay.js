@@ -1,8 +1,9 @@
 import Level from "../levels/Level";
 import Enemy from "../entities/Enemy";
 import Player from "../entities/Player";
+import Bullet from "../entities/Bullet";
 import cluster from "../cluster/index";
-const { Container, Camera, Vector, Text, entity } = cluster;
+const { Container, Camera, Vector, entity } = cluster;
 
 class GamePlay extends Container {
   constructor(game, input, transitions = { onEnter: () => {}, onExit: () => {} }) {
@@ -11,7 +12,6 @@ class GamePlay extends Container {
     const gameH = game.height;
     const level = new Level(gameW * 2, gameH);
     const player = new Player(input, level);
-    const enemies = new Container();
     const bullets = new Container();
     const camera = new Camera(
       player,
@@ -21,46 +21,35 @@ class GamePlay extends Container {
 
     camera.add(level);
     camera.add(player);
-    camera.add(enemies);
     camera.add(bullets);
     this.add(camera);
 
+    this.firstUpdate = true;
     this.onEnter = transitions?.onEnter || function () {};
     this.onExit = transitions?.onExit || function () {};
     this.input = input;
     this.game = game;
     this.level = level;
+
+    this.level = level;
     this.camera = camera;
     this.player = player;
     this.bullets = bullets;
-    this.enemies = enemies;
 
-    this.initialize();
-
-    // debug
-    // this.playerVel = this.add(new Text("", { fill: "black" }));
-    // this.playerVel.position = new Vector(25, game.height - 50);
-    // this.playerPos = this.add(new Text("", { fill: "black" }));
-    // this.playerPos.position = new Vector(25, game.height - 25);
-  }
-
-  initialize() {
-    for (let i = 0; i < 1; i++) {
-      this.enemies.add(new Enemy(this.player, this.level));
-    }
+    // DEBUG
+    // const weaponA = new Line({
+    //   start: new Vector(),
+    //   end: this.player.position.clone().add(this.player.weapon.position),
+    //   style: { stroke: "black" },
+    // });
+    // this.add(weaponA);
   }
 
   update(dt, t) {
     super.update(dt, t);
+    const { input, level, player, bullets } = this;
 
-    // prettier-ignore
-    const {
-      level,
-      input,
-      player,
-      bullets,
-    } = this
-
+    // bullet spawn
     if (input.key.action) {
       const bullet = player.fire(dt);
       if (bullet) {
@@ -68,38 +57,25 @@ class GamePlay extends Container {
       }
     }
 
-    // console.log(bullets.children);
+    // bullet level collision
     bullets.children.forEach((bullet) => {
-      const { width, height, position } = bullet;
-      const { x, y } = position;
-
-      // bullet hitting a wall
       const tilesAtBulletCorners = level.tilesAtCorners(bullet.bounds);
       for (const tile of tilesAtBulletCorners) {
+        let hit = false;
         if (!tile.frame.walkable) {
-          tile.hitbox = {
-            x: 0,
-            y: 0,
-            width: tile.width,
-            height: tile.height,
-          };
           entity.hit(bullet, tile, () => {
             bullet.dead = true;
+            hit = true;
           });
         }
-      }
-
-      // bullet out of bounds
-      if (
-        x >= level.width + width * 2 ||
-        x <= -width * 2 ||
-        y >= level.height + height * 2 ||
-        y <= -height * 2
-      ) {
-        bullet.dead = true;
-        return;
+        if (hit) break;
       }
     });
+
+    // FIRST UPDATE ONLY
+    if (this.firstUpdate) {
+      this.firstUpdate = false;
+    }
   }
 }
 

@@ -23,14 +23,15 @@ class TileMap extends Container {
       const column = index % mapW;
       const row = Math.floor(index / mapW);
 
-      // const s = texture ? new TileSprite(texture, tileW, tileH) : frame;
-      // s.position = new Vector(column * tileW, row * tileH);
-      // return s;
       const s = texture ? new TileSprite(texture, tileW, tileH) : frame;
       s.position = new Vector(column * tileW, row * tileH);
       s.frame = frame;
-      // s.position.x = column * tileW;
-      // s.position.y = row * tileH;
+      s.hitbox = {
+        x: 0,
+        y: 0,
+        width: tileW,
+        height: tileH,
+      };
       return s;
     });
   }

@@ -1,13 +1,16 @@
 import charactersImageURL from "../images/characters.png";
 import wallslide from "../cluster/movement/wallslide";
+import cluster from "../cluster/index";
 import Weapon from "./Weapon";
-import cluster from "../cluster";
-import Rect from "../cluster/shapes/Rect";
-
-const PLAYER_ACCELERATION = 2500;
-const PLAYER_FRICTION = PLAYER_ACCELERATION / 2;
-const PLAYER_VELOCITY = PLAYER_ACCELERATION / 6;
-const PLAYER_GRAVITY = 2800;
+import Bullet from "./Bullet";
+// prettier-ignore
+const { 
+  TileSprite, 
+  Texture, 
+  Physics, 
+  Vector, 
+  State 
+} = cluster;
 
 const states = {
   SLEEPING: 1,
@@ -16,14 +19,24 @@ const states = {
   FALLING: 4,
 };
 
-const { Container, Texture, TileSprite, Vector, Physics, State } = cluster;
+const world = {
+  FRICTION: 1250, // ACC/2
+  GRAVITY: 2800,
+};
 
-class PlayerSkin extends TileSprite {
-  constructor() {
+const attributes = {
+  ACCELERATION: 2500,
+  SPEED: 400, // ACC/6
+};
+
+class Player extends TileSprite {
+  constructor(input, level) {
     const width = 32;
     const height = 32;
     super(new Texture(charactersImageURL), width, height);
-
+    this.state = new State(states.FALLING);
+    this.input = input;
+    this.level = level;
     this.animation.add(
       "idle",
       [
@@ -43,39 +56,42 @@ class PlayerSkin extends TileSprite {
       ],
       0.05
     );
-  }
-}
 
-class Player extends Container {
-  constructor(input, level) {
-    super();
-    this.character = this.add(new PlayerSkin(input));
-    this.weapon = this.add(new Weapon(new Vector(14, 14)));
-    this.state = new State(states.FALLING);
-    this.level = level;
-    this.input = input;
     this.scale = new Vector(1, 1);
     this.anchor = new Vector(0, 0);
+    this.direction = 1;
+    this.position = new Vector(32 * 8, 224);
+    this.velocity = new Vector();
+    this.acceleration = new Vector();
     this.hitbox = {
       x: 0,
       y: 0,
-      width: 31,
-      height: 31,
+      width,
+      height,
     };
 
-    this.direction = 1;
-    this.position = new Vector(100, 150);
-    this.velocity = new Vector();
-    this.acceleration = new Vector();
+    this.weapon = new Weapon(new Vector(12, 14));
+    this.fireRate = 0.1;
+    this.children = [this.weapon];
 
     // DEBUG
-    // this.add(
-    //   new Rect({
-    //     width: this.hitbox.width,
-    //     height: this.hitbox.height,
-    //     style: { fill: "red" },
-    //   })
-    // );
+    // const debugHitbox = new Rect({
+    //   width: this.hitbox.width,
+    //   height: this.hitbox.height,
+    //   style: { fill: "red" },
+    // });
+    // debugHitbox.position = new Vector(this.hitbox.x, this.hitbox.y);
+    // this.children = [debugHitbox];
+  }
+
+  get bounds() {
+    const { position, width, height } = this;
+    return {
+      x: position.x,
+      y: position.y,
+      width,
+      height,
+    };
   }
 
   lookRight() {
@@ -88,7 +104,7 @@ class Player extends Container {
   lookLeft() {
     const { scale, anchor, width } = this;
     scale.set(-1, 1);
-    anchor.set(32, 0);
+    anchor.set(width, 0);
     this.direction = -1;
   }
 
@@ -96,8 +112,8 @@ class Player extends Container {
     const { velocity } = this;
     if (direction === 1) this.lookRight();
     if (direction === -1) this.lookLeft();
-    if (Math.abs(velocity.x) < PLAYER_VELOCITY) {
-      Physics.World.applyForce(this, { x: direction * PLAYER_ACCELERATION, y: 0 });
+    if (Math.abs(velocity.x) < attributes.SPEED) {
+      Physics.World.applyForce(this, { x: direction * attributes.ACCELERATION, y: 0 });
     }
   }
 
@@ -106,14 +122,21 @@ class Player extends Container {
   }
 
   fire(dt) {
-    const { weapon, position, direction, anchor } = this;
-    const { x, y } = position;
-    return weapon.fire(new Vector(x + 52 + anchor.x * 2 * direction, y + 10), direction, dt);
+    const { position, direction, weapon } = this;
+    this.fireRate -= dt;
+    if (this.fireRate < 0) {
+      this.fireRate = 0.1;
+      const bulletPos = position
+        .clone()
+        .add(weapon.position.clone().add(new Vector(direction * weapon.width, 0)));
+      return new Bullet(bulletPos, direction);
+    } else {
+      return null;
+    }
   }
 
   update(dt, t) {
     super.update(dt, t);
-
     // prettier-ignore
     const { 
       state, 
@@ -124,15 +147,15 @@ class Player extends Container {
     } = this;
     state.update(dt, t);
 
-    Physics.World.applyFriction(this, PLAYER_FRICTION);
-    Physics.World.applyGravity(this, PLAYER_GRAVITY);
+    Physics.World.applyFriction(this, world.FRICTION);
+    Physics.World.applyGravity(this, world.GRAVITY);
 
     switch (state.get()) {
       case states.SLEEPING:
         // init
         if (state.first) {
           // console.log("SLEEPING");
-          this.character.animation.play("idle");
+          this.animation.play("idle");
         }
         // → transition walking
         if (input.key.x !== 0) {
@@ -147,9 +170,8 @@ class Player extends Container {
       case states.JUMPING:
         // init
         if (state.first) {
-          // console.log("JUMPING");
           this.jump(dt);
-          this.character.animation.play("walk");
+          this.animation.play("walk");
         }
         // action
         if (input.key.x !== 0) {
@@ -164,8 +186,7 @@ class Player extends Container {
       case states.WALKING:
         // init
         if (state.first) {
-          // console.log("WALKING");
-          this.character.animation.play("walk");
+          this.animation.play("walk");
         }
         // action
         if (input.key.x !== 0) {
@@ -188,8 +209,7 @@ class Player extends Container {
       case states.FALLING:
         // init
         if (state.first) {
-          // console.log("FALLING");
-          this.character.animation.play("walk");
+          this.animation.play("walk");
         }
         // action
         if (input.key.x !== 0) {
