@@ -2,7 +2,6 @@ import charactersImageURL from "../images/characters.png";
 import wallslide from "../cluster/movement/wallslide";
 import cluster from "../cluster/index";
 import Weapon from "./Weapon";
-import Bullet from "./Bullet";
 // prettier-ignore
 const { 
   TileSprite, 
@@ -70,8 +69,7 @@ class Player extends TileSprite {
       height,
     };
 
-    this.weapon = new Weapon(new Vector(12, 14));
-    this.fireRate = 0.1;
+    this.weapon = new Weapon(level, new Vector(8, 14));
     this.children = [this.weapon];
 
     // DEBUG
@@ -123,16 +121,7 @@ class Player extends TileSprite {
 
   fire(dt) {
     const { position, direction, weapon } = this;
-    this.fireRate -= dt;
-    if (this.fireRate < 0) {
-      this.fireRate = 0.1;
-      const bulletPos = position
-        .clone()
-        .add(weapon.position.clone().add(new Vector(direction * weapon.width, -4)));
-      return new Bullet(bulletPos, direction);
-    } else {
-      return null;
-    }
+    return weapon.fire(dt, position, direction);
   }
 
   update(dt, t) {
@@ -154,7 +143,6 @@ class Player extends TileSprite {
       case states.SLEEPING:
         // init
         if (state.first) {
-          // console.log("SLEEPING");
           this.animation.play("idle");
         }
         // → transition walking
@@ -177,7 +165,7 @@ class Player extends TileSprite {
         if (input.key.x !== 0) {
           this.walk(input.key.x);
         }
-        // → falling
+        // → transition falling
         if (velocity.y > 0) {
           state.set(states.FALLING);
         }

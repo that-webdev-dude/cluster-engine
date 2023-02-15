@@ -1,8 +1,8 @@
 import Level from "../levels/Level";
-import Enemy from "../entities/Enemy";
+import Zombie from "../entities/Zombie";
 import Player from "../entities/Player";
 import cluster from "../cluster/index";
-const { Container, Camera, entity } = cluster;
+const { Container, Camera } = cluster;
 
 class GamePlay extends Container {
   constructor(game, input, transitions = { onEnter: () => {}, onExit: () => {} }) {
@@ -36,6 +36,7 @@ class GamePlay extends Container {
     this.bullets = bullets;
 
     // DEBUG
+    this.zombie = camera.add(new Zombie(player, level));
     // const weaponA = new Line({
     //   start: new Vector(),
     //   end: this.player.position.clone().add(this.player.weapon.position),
@@ -55,26 +56,6 @@ class GamePlay extends Container {
         bullets.add(bullet);
       }
     }
-
-    bullets.children.forEach((bullet) => {
-      // bullet to wall collision
-      const tilesAtBulletCorners = level.tilesAtCorners(bullet.bounds);
-      for (const tile of tilesAtBulletCorners) {
-        let hit = false;
-        if (!tile.frame.walkable) {
-          entity.hit(bullet, tile, () => {
-            bullet.dead = true;
-            hit = true;
-          });
-        }
-        if (hit) break;
-      }
-
-      // bullet out of screen
-      if (bullet.position.x < -64 || bullet.position.x > level.width + 64) {
-        bullet.dead = true;
-      }
-    });
 
     // FIRST UPDATE ONLY
     if (this.firstUpdate) {

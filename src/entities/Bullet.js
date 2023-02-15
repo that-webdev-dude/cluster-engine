@@ -1,11 +1,13 @@
 import bulletImageURL from "../images/bullet.png";
 import cluster from "../cluster";
+import wallslide from "../cluster/movement/wallslide";
 const { Rect, Sprite, Texture, Vector } = cluster;
 
 class Bullet extends Sprite {
-  constructor(position, direction = 1) {
+  constructor(level, position = new Vector(), direction = 1) {
     super(new Texture(bulletImageURL));
 
+    this.level = level;
     this.scale = new Vector(1, 1);
     this.anchor = new Vector(0, 0);
     this.position = position;
@@ -47,51 +49,17 @@ class Bullet extends Sprite {
   }
 
   update(dt, t) {
-    const { direction, position, speed } = this;
-    const displacement = new Vector(speed * dt * direction, 0);
-    position.add(displacement);
+    const { level, direction, position, speed } = this;
+    const { x: dx, y: dy } = new Vector(speed * dt * direction, 0);
+    const r = wallslide(this, level, dx, dy);
+    if (r.hits.left || r.hits.right) {
+      this.dead = true;
+    }
+    if (position.x < -64 || position.x > level.width + 64) {
+      this.dead = true;
+    }
+    position.add(r);
   }
 }
-
-// class Bullet extends Rect {
-//   constructor(position, direction = 1) {
-//     const fill = "red";
-//     const width = 16;
-//     const height = 8;
-//     super({
-//       width: width,
-//       height: height,
-//       style: { fill: fill },
-//     });
-
-//     this.scale = new Vector(1, 1);
-//     this.anchor = new Vector(0, 0);
-//     this.position = position;
-//     this.direction = direction;
-//     this.speed = 800;
-//     this.hitbox = {
-//       x: 0,
-//       y: 0,
-//       width,
-//       height,
-//     };
-//   }
-
-//   get bounds() {
-//     const { position, width, height } = this;
-//     return {
-//       x: position.x,
-//       y: position.y,
-//       width,
-//       height,
-//     };
-//   }
-
-//   update(dt, t) {
-//     const { direction, position, speed } = this;
-//     const displacement = new Vector(speed * dt * direction, 0);
-//     position.add(displacement);
-//   }
-// }
 
 export default Bullet;
