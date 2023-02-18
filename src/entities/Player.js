@@ -25,7 +25,8 @@ const world = {
 
 const attributes = {
   ACCELERATION: 2500,
-  SPEED: 400, // ACC/6
+  MIN_VELOCITY: 10,
+  MAX_VELOCITY: 400, // ACC/6
 };
 
 class Player extends TileSprite {
@@ -80,6 +81,9 @@ class Player extends TileSprite {
     // });
     // debugHitbox.position = new Vector(this.hitbox.x, this.hitbox.y);
     // this.children = [debugHitbox];
+
+    // ...
+    this.firstUpdate = true;
   }
 
   get bounds() {
@@ -106,11 +110,9 @@ class Player extends TileSprite {
     this.direction = -1;
   }
 
-  walk(direction) {
-    const { velocity } = this;
-    if (direction === 1) this.lookRight();
-    if (direction === -1) this.lookLeft();
-    if (Math.abs(velocity.x) < attributes.SPEED) {
+  walk() {
+    const { velocity, direction } = this;
+    if (Math.abs(velocity.x) < attributes.MAX_VELOCITY) {
       Physics.World.applyForce(this, { x: direction * attributes.ACCELERATION, y: 0 });
     }
   }
@@ -136,9 +138,14 @@ class Player extends TileSprite {
     } = this;
     state.update(dt, t);
 
+    // apply word forces
     Physics.World.applyFriction(this, world.FRICTION);
     Physics.World.applyGravity(this, world.GRAVITY);
 
+    if (input.key.x === 1) this.lookRight();
+    if (input.key.x === -1) this.lookLeft();
+
+    // set the state
     switch (state.get()) {
       case states.SLEEPING:
         // init
@@ -214,6 +221,7 @@ class Player extends TileSprite {
         break;
     }
 
+    // update position
     const { x: dx, y: dy } = Physics.World.getDisplacement(this, dt);
     const r = wallslide(this, level, dx, dy);
     if (r.hits.down || r.hits.up) {
@@ -222,10 +230,15 @@ class Player extends TileSprite {
     if (r.hits.left || r.hits.right) {
       velocity.set(0, velocity.y);
     }
-    if (this.velocity.magnitude <= 10) {
+    if (this.velocity.magnitude <= attributes.MIN_VELOCITY) {
       velocity.set(0, 0);
     }
     position.add(r);
+
+    // FIRST UPDATE ONLY
+    if (this.firstUpdate) {
+      this.firstUpdate = false;
+    }
   }
 }
 
