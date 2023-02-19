@@ -7,7 +7,8 @@ const {
   Texture,
   Physics,
   Vector,
-  State
+  State,
+  math
 } = cluster;
 
 const states = {
@@ -23,7 +24,7 @@ const world = {
 const attributes = {
   ACCELERATION: 1250,
   MIN_VELOCITY: 2,
-  MAX_VELOCITY: 64,
+  MAX_VELOCITY: math.rand(32, 64),
 };
 
 class Zombie extends TileSprite {
@@ -58,11 +59,11 @@ class Zombie extends TileSprite {
 
     this.scale = new Vector(1, 1);
     this.anchor = new Vector(0, 0);
-    this.direction = 1;
     this.position = position;
     this.velocity = new Vector();
     this.acceleration = new Vector();
-    this.health = health;
+    this.direction = 1;
+    this.health = math.rand(15, 20);
     this.hitbox = {
       x: 0,
       y: 0,
@@ -114,7 +115,7 @@ class Zombie extends TileSprite {
   }
 
   walk() {
-    const { velocity, direction } = this;
+    const { velocity, direction, speed } = this;
     if (Math.abs(velocity.x) < attributes.MAX_VELOCITY) {
       Physics.World.applyForce(this, { x: direction * attributes.ACCELERATION, y: 0 });
     }
@@ -138,8 +139,8 @@ class Zombie extends TileSprite {
 
     // face the player
     const zombieToPlayerVector = this.position.clone().to(player.position);
-    if (zombieToPlayerVector.x < 0 && Math.abs(zombieToPlayerVector.x) > 32) this.lookLeft();
-    if (zombieToPlayerVector.x > -1 && Math.abs(zombieToPlayerVector.y) < 32) this.lookRight();
+    if (zombieToPlayerVector.x < 0 && Math.abs(zombieToPlayerVector.x) > -32) this.lookLeft();
+    if (zombieToPlayerVector.x > -1 && Math.abs(zombieToPlayerVector.x) < 32) this.lookRight();
 
     // set the state
     switch (state.get()) {

@@ -24,6 +24,8 @@ class GamePlay extends Container {
     camera.add(level);
     camera.add(player);
     camera.add(bullets);
+    camera.add(zombies);
+    camera.add(barrels);
     this.add(camera);
 
     this.firstUpdate = true;
@@ -37,20 +39,19 @@ class GamePlay extends Container {
     this.camera = camera;
     this.player = player;
     this.bullets = bullets;
-
-    // DEBUG
-    // this.barrel = camera.add(new Barrel(new Vector(32 * 20, 32 * 7 + 2)));
-    this.zombies = camera.add(zombies);
+    this.zombies = zombies;
+    this.barrels = barrels;
 
     this.initialize();
   }
 
   initialize() {
-    const { player, level } = this;
+    const { player, level, zombies, barrels } = this;
 
+    // zombies spawn
     // just if the tile is walkable
     // no need to go crazy here
-    const nZombies = 5;
+    const nZombies = 0;
     for (let z = 0; z < nZombies; z++) {
       let testPosition = null;
       const { tileW, tileH, width, height } = level;
@@ -60,19 +61,19 @@ class GamePlay extends Container {
         const targetTile = level.tileAtPixelPosition(new Vector(x, y + tileH));
         if (!targetTile.frame.walkable) {
           const zombiePosition = new Vector(Math.floor(x), Math.floor(y) - 32);
-          const zombieHealth = math.rand(15, 20);
-          // ghive this a variable speed FFS
-          const zombieSpeed = math.rand(32, 64);
-          this.zombies.add(new Zombie(player, level, zombiePosition, zombieHealth));
+          zombies.add(new Zombie(player, level, zombiePosition));
           testPosition = true;
         }
       }
     }
+
+    // barrels spawn
+    this.barrel = barrels.add(new Barrel(new Vector(32 * 20, 32 * 7 + 2)));
   }
 
   update(dt, t) {
     super.update(dt, t);
-    const { input, player, bullets, zombies } = this;
+    const { input, player, bullets, zombies, barrels } = this;
 
     // bullet spawn
     if (input.key.action) {
@@ -82,8 +83,9 @@ class GamePlay extends Container {
       }
     }
 
-    // bullet hits zombie
+    // collisions
     bullets.children.forEach((bullet) => {
+      // bullet hits zombie
       zombies.children.forEach((zombie) => {
         entity.hit(bullet, zombie, () => {
           const { x: zx, y: zy } = zombie.position;
@@ -91,20 +93,21 @@ class GamePlay extends Container {
           zombie.position.set(zx + 2 * direction, zy);
           zombie.damage(1);
           bullet.dead = true;
-          // zombie loose health
+        });
+      });
+
+      // bullet hits barrel
+      barrels.children.forEach((barrel) => {
+        entity.hit(bullet, barrel, () => {
+          barrel.damage(1);
+          if (barrel.health === 0) {
+            // explosion
+            // screen skake
+          }
+          bullet.dead = true;
         });
       });
     });
-
-    // bullets.children.forEach((bullet) => {
-    //   entity.hit(bullet, zombie, () => {
-    //     const { x: zx, y: zy } = zombie.position;
-    //     const { direction } = player;
-    //     zombie.position.set(zx + 2 * direction, zy);
-    //     bullet.dead = true;
-    //     // zombie loose health
-    //   });
-    // });
 
     // FIRST UPDATE ONLY
     if (this.firstUpdate) {
