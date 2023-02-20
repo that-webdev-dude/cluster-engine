@@ -20,7 +20,37 @@ class Camera extends Container {
     this.subject = null;
     this.worldSize = worldSize;
 
+    this.shakePower = 0;
+    this.shakeDecay = 0;
+    this.shakeLast = new Vector();
+
     this.setSubject(subject);
+  }
+
+  shake(power = 8, length = 0.5) {
+    this.shakePower = power;
+    this.shakeDecay = power / length;
+  }
+
+  _shake(dt) {
+    const { position, shakePower, shakeLast } = this;
+    if (shakePower <= 0) {
+      return;
+    }
+    // do shake!
+    // prettier-ignore
+    shakeLast.set(
+      math.randf(-shakePower, shakePower), 
+      math.randf(-shakePower, shakePower)
+    );
+
+    position.add(shakeLast);
+    this.shakePower -= this.shakeDecay * dt;
+  }
+
+  _unshake() {
+    const { position, shakeLast } = this;
+    position.subtract(shakeLast);
   }
 
   setSubject(entity) {
@@ -51,10 +81,12 @@ class Camera extends Container {
   }
 
   update(dt, t) {
+    this._unshake();
     super.update(dt, t);
     if (this.subject) {
       this.focus();
     }
+    this._shake(dt);
   }
 }
 

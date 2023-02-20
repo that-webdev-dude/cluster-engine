@@ -51,7 +51,7 @@ class GamePlay extends Container {
     // zombies spawn
     // just if the tile is walkable
     // no need to go crazy here
-    const nZombies = 0;
+    const nZombies = 12;
     for (let z = 0; z < nZombies; z++) {
       let testPosition = null;
       const { tileW, tileH, width, height } = level;
@@ -73,7 +73,7 @@ class GamePlay extends Container {
 
   update(dt, t) {
     super.update(dt, t);
-    const { input, player, bullets, zombies, barrels } = this;
+    const { input, player, camera, bullets, zombies, barrels } = this;
 
     // bullet spawn
     if (input.key.action) {
@@ -92,6 +92,11 @@ class GamePlay extends Container {
           const { direction } = player;
           zombie.position.set(zx + 2 * direction, zy);
           zombie.damage(1);
+          if (zombie.health === 0) {
+            // explosion
+            // screen skake
+            camera.shake();
+          }
           bullet.dead = true;
         });
       });
@@ -103,6 +108,7 @@ class GamePlay extends Container {
           if (barrel.health === 0) {
             // explosion
             // screen skake
+            camera.shake();
           }
           bullet.dead = true;
         });
