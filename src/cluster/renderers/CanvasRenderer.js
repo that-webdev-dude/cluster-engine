@@ -135,11 +135,24 @@ class CanvasRenderer {
    * @param {Container} container
    */
   #renderRecursive(container) {
+    // exit immediately if the whole container is transparent
+    if (container.visible === false || container.alpha === 0) return;
+
     const { context } = this;
+    if (container.alpha) {
+      context.save();
+      context.globalAlpha = container.alpha;
+    }
+
     container.children.forEach((child) => {
-      if (child.visible == false) return;
+      // exit immediately if the child is transparent
+      if (child.visible == false || child.alpha === 0) return;
 
       context.save();
+
+      if (child.alpha) {
+        context.globalAlpha = child.alpha;
+      }
 
       if (child.position) {
         context.translate(Math.round(child.position.x), Math.round(child.position.y));
@@ -193,6 +206,10 @@ class CanvasRenderer {
 
       context.restore();
     });
+
+    if (container.alpha) {
+      context.restore();
+    }
   }
 
   /**

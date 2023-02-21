@@ -73,6 +73,7 @@ class Zombie extends TileSprite {
 
     // ...
     this.firstUpdate = true;
+    // this.alpha = 0.5;
   }
 
   get bounds() {

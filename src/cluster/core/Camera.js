@@ -1,6 +1,7 @@
 import math from "../utils/math";
 import Vector from "../utils/Vector";
 import Container from "./Container";
+import Rect from "../shapes/Rect";
 
 class Camera extends Container {
   /**
@@ -20,18 +21,26 @@ class Camera extends Container {
     this.subject = null;
     this.worldSize = worldSize;
 
+    // EFFECT: SHAKE
     this.shakePower = 0;
     this.shakeDecay = 0;
     this.shakeLast = new Vector();
 
+    // EFFECT: FLASH
+    this.flashTime = 0;
+    this.flashDuration = 0;
+    this.flashRect = null;
+
     this.setSubject(subject);
   }
 
+  // EFFECT: SHAKE
   shake(power = 8, length = 0.5) {
     this.shakePower = power;
     this.shakeDecay = power / length;
   }
 
+  // EFFECT: SHAKE
   _shake(dt) {
     const { position, shakePower, shakeLast } = this;
     if (shakePower <= 0) {
@@ -48,9 +57,39 @@ class Camera extends Container {
     this.shakePower -= this.shakeDecay * dt;
   }
 
+  // EFFECT: SHAKE
   _unshake() {
     const { position, shakeLast } = this;
     position.subtract(shakeLast);
+  }
+
+  // EFFECT: FLASH
+  flash(duration = 0.5, color = "white") {
+    if (!this.flashRect) {
+      const { width, height } = this;
+      this.flashRect = this.add(
+        new Rect({
+          width,
+          height,
+          style: { fill: color },
+        })
+      );
+    }
+    this.flashTime = duration;
+    this.flashDuration = duration;
+  }
+
+  _flash(dt) {
+    const { flashRect, flashDuration, position } = this;
+    if (!flashRect) return;
+    const time = (this.flashTime -= dt);
+    if (time <= 0) {
+      this.remove(flashRect);
+      this.flashRect = null;
+    } else {
+      flashRect.alpha = time / flashDuration;
+      flashRect.position = Vector.from(position).multiply(-1);
+    }
   }
 
   setSubject(entity) {
@@ -87,6 +126,7 @@ class Camera extends Container {
       this.focus();
     }
     this._shake(dt);
+    this._flash(dt);
   }
 }
 

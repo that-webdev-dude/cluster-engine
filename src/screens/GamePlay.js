@@ -42,6 +42,8 @@ class GamePlay extends Container {
     this.zombies = zombies;
     this.barrels = barrels;
 
+    // this.alpha = 0.5;
+
     this.initialize();
   }
 
@@ -51,7 +53,7 @@ class GamePlay extends Container {
     // zombies spawn
     // just if the tile is walkable
     // no need to go crazy here
-    const nZombies = 12;
+    const nZombies = 0;
     for (let z = 0; z < nZombies; z++) {
       let testPosition = null;
       const { tileW, tileH, width, height } = level;
@@ -108,7 +110,8 @@ class GamePlay extends Container {
           if (barrel.health === 0) {
             // explosion
             // screen skake
-            camera.shake();
+            // camera.shake();
+            camera.flash(2);
           }
           bullet.dead = true;
         });
