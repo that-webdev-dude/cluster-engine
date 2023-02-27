@@ -1,12 +1,12 @@
 import CanvasRenderer from "../renderers/CanvasRenderer";
 import Container from "./Container";
 
-import Assets from "./Assets";
+// import Assets from "./Assets";
 
-const STEP = 1 / 60;
-const MULTIPLIER = 1;
-const MAX_FRAME = STEP * 5;
-const SPEED = STEP * MULTIPLIER;
+let STEP = 1 / 60;
+let MULTIPLIER = 1;
+let MAX_FRAME = STEP * 5;
+let SPEED = STEP * MULTIPLIER;
 
 class Game {
   #renderer;
@@ -28,6 +28,15 @@ class Game {
 
     // initialize
     document.querySelector(parent).appendChild(this.#renderer.view);
+  }
+
+  get speed() {
+    return MULTIPLIER;
+  }
+
+  set speed(speed) {
+    MULTIPLIER = speed;
+    SPEED = STEP * MULTIPLIER;
   }
 
   get height() {
