@@ -16,6 +16,7 @@ import Camera from "./core/Camera";
 import State from "./core/State";
 import Game from "./core/Game";
 import Text from "./core/Text";
+import Timer from "./core/Timer";
 import Sprite from "./core/Sprite";
 import Texture from "./core/Texture";
 import TileMap from "./core/TileMap";
@@ -55,6 +56,7 @@ export default {
   State,
   Game,
   Text,
+  Timer,
   Sprite,
   Texture,
   Container,

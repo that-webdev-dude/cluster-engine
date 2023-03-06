@@ -84,6 +84,7 @@ class Player extends TileSprite {
 
     // ...
     this.firstUpdate = true;
+    this.alpha = 1;
   }
 
   get bounds() {

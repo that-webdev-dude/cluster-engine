@@ -3,6 +3,7 @@ import Zombie from "../entities/Zombie";
 import Player from "../entities/Player";
 import Barrel from "../entities/Barrel";
 import cluster from "../cluster/index";
+import Timer from "../cluster/core/Timer";
 const { Container, Camera, Vector, entity, math } = cluster;
 
 class GamePlay extends Container {
@@ -110,8 +111,20 @@ class GamePlay extends Container {
           if (barrel.health === 0) {
             // explosion
             // screen skake
-            // camera.shake();
-            camera.flash(2);
+            camera.shake();
+            // camera.flash(2);
+            this.add(
+              new Timer(
+                2,
+                (p) => {
+                  player.alpha = p;
+                },
+                () => {
+                  console.log("done!");
+                },
+                2
+              )
+            );
           }
           bullet.dead = true;
         });
@@ -120,6 +133,8 @@ class GamePlay extends Container {
 
     // FIRST UPDATE ONLY
     if (this.firstUpdate) {
+      // const test = math.clamp(math.lerp(50, 0, 100), 0, 1);
+      // console.log("file: GamePlay.js:124 ~ GamePlay ~ update ~ test:", test);
       this.firstUpdate = false;
     }
   }

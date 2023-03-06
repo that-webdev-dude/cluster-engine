@@ -101,6 +101,28 @@ function clamp(value, min, max) {
   return Math.max(min, Math.min(value, max));
 }
 
+/**
+ * lerp - normalize the x parameter
+ * between the min, max values
+ * @param {number} x
+ * @param {number} min
+ * @param {number} max
+ */
+function lerp(x, min = 0, max = 1) {
+  return (x - min) / (max - min);
+}
+
+/**
+ * normalize - normalize the x parameter
+ * between the min, max values
+ * @param {number} x
+ * @param {number} min
+ * @param {number} max
+ */
+function normalize(x, min = 0, max = 1) {
+  return lerp(x, min, max);
+}
+
 export default {
   rand,
   randf,
@@ -111,4 +133,6 @@ export default {
   rad2deg,
   deg2rad,
   clamp,
+  lerp,
+  normalize,
 };
