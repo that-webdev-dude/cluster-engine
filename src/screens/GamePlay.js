@@ -3,8 +3,39 @@ import Zombie from "../entities/Zombie";
 import Player from "../entities/Player";
 import Barrel from "../entities/Barrel";
 import cluster from "../cluster/index";
-import Timer from "../cluster/core/Timer";
+import Rect from "../cluster/shapes/Rect";
+// import Timer from "../cluster/core/Timer";
 const { Container, Camera, Vector, entity, math } = cluster;
+
+class OneUp extends Container {
+  constructor(renderable, speed = 1, duration = 2) {
+    super();
+    // this.renderable = renderable;
+    this.add(renderable || new Rect({ width: 32, height: 32, style: { fill: "yellow" } }));
+    this.duration = duration;
+    this.elapsed = duration;
+    // this.speed = speed;
+
+    this.position = new Vector();
+    this.velocity = new Vector(0, -speed);
+    this.alpha = 1;
+    this.firstUpdate = true;
+  }
+
+  update(dt, t) {
+    this.position.add(this.velocity);
+    this.alpha = this.elapsed / this.duration;
+    this.elapsed -= dt;
+    if (this.elapsed <= 0) {
+      this.dead = true;
+    }
+
+    // FIRST UPDATE ONLY
+    if (this.firstUpdate) {
+      this.firstUpdate = false;
+    }
+  }
+}
 
 class GamePlay extends Container {
   constructor(game, input, transitions = { onEnter: () => {}, onExit: () => {} }) {
@@ -34,7 +65,6 @@ class GamePlay extends Container {
     this.onExit = transitions?.onExit || function () {};
     this.input = input;
     this.game = game;
-    this.level = level;
 
     this.level = level;
     this.camera = camera;
@@ -113,18 +143,8 @@ class GamePlay extends Container {
             // screen skake
             camera.shake();
             // camera.flash(2);
-            this.add(
-              new Timer(
-                2,
-                (p) => {
-                  player.alpha = p;
-                },
-                () => {
-                  console.log("done!");
-                },
-                2
-              )
-            );
+            const oneUp = this.add(new OneUp());
+            oneUp.position.copy(player.position);
           }
           bullet.dead = true;
         });
@@ -133,8 +153,6 @@ class GamePlay extends Container {
 
     // FIRST UPDATE ONLY
     if (this.firstUpdate) {
-      // const test = math.clamp(math.lerp(50, 0, 100), 0, 1);
-      // console.log("file: GamePlay.js:124 ~ GamePlay ~ update ~ test:", test);
       this.firstUpdate = false;
     }
   }

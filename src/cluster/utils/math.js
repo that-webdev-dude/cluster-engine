@@ -123,6 +123,49 @@ function normalize(x, min = 0, max = 1) {
   return lerp(x, min, max);
 }
 
+/**
+ * easing functions collection
+ */
+const ease = {
+  in(x, power) {
+    if (power !== 1) {
+      return Math.pow(x, power);
+    } else {
+      return x;
+    }
+  },
+
+  out(x, power) {
+    return 1 - this.in(1 - x, power);
+  },
+
+  quadIn(x) {
+    return Math.pow(x, 2);
+  },
+
+  quadOut(x) {
+    return 1 - this.quadIn(1 - x);
+  },
+
+  cubicIn(x) {
+    return Math.pow(x, 3);
+  },
+
+  cubicOut(x) {
+    return 1 - this.cubicIn(1 - x);
+  },
+
+  elasticOut(x) {
+    // const c4 = (2 * Math.PI) / 3;
+    // return x === 0 ? 0 : x === 1 ? 1 : Math.pow(2, -10 * x) * Math.sin((x * 10 - 0.75) * c4) + 1;
+    // -----
+    const p = 0.4;
+    return Math.pow(2, -10 * x) * Math.sin(((x - p / 4) * (Math.PI * 2)) / p) + 1;
+    // -----
+    // return -1 * Math.pow(4, -8 * x) * Math.sin(((x * 6 - 1) * (2 * Math.PI)) / 2) + 1;
+  },
+};
+
 export default {
   rand,
   randf,
@@ -135,4 +178,5 @@ export default {
   clamp,
   lerp,
   normalize,
+  ease,
 };

@@ -1,7 +1,7 @@
 import cluster from "./cluster";
 import Assets from "./cluster/core/Assets";
 import GamePlay from "./screens/GamePlay";
-import GameTest from "./screens/GameTest";
+import GameTitle from "./screens/GameTitle";
 
 export default () => {
   const { Game, KeyControls, MouseControls } = cluster;
@@ -13,9 +13,15 @@ export default () => {
     mouse: new MouseControls(game.view),
   };
 
+  const gameTitle = new GameTitle(game, input, {
+    onExit: () => {
+      game.scene = gamePlay;
+    },
+  });
+
   const gamePlay = new GamePlay(game, input);
 
-  game.scene = gamePlay;
+  game.scene = gameTitle;
   Assets.onReady(() => {
     game.run((dt, t) => {
       // ...

@@ -13,8 +13,8 @@ class KeyControls {
       { code: "KeyS", action: "moveDown" },
       { code: "KeyA", action: "moveLeft" },
       { code: "KeyD", action: "moveRight" },
-      { code: "Space", action: "action" },
       { code: "KeyX", action: "action" },
+      { code: "Enter", action: "start" },
     ]);
   }
 
@@ -49,6 +49,10 @@ class KeyControls {
 
   get action() {
     return this.#controller.action.isActive;
+  }
+
+  get start() {
+    return this.#controller.start.isActive;
   }
 
   reset() {
