@@ -5,13 +5,13 @@ import Barrel from "../entities/Barrel";
 import cluster from "../cluster/index";
 import Rect from "../cluster/shapes/Rect";
 // import Timer from "../cluster/core/Timer";
-const { Container, Camera, Vector, entity, math } = cluster;
+const { Container, Camera, Vector, entity, math, Circle } = cluster;
 
 class OneUp extends Container {
   constructor(renderable, speed = 1, duration = 2) {
     super();
     // this.renderable = renderable;
-    this.add(renderable || new Rect({ width: 32, height: 32, style: { fill: "yellow" } }));
+    this.add(renderable || new Rect({ width: 16, height: 16, style: { fill: "yellow" } }));
     this.duration = duration;
     this.elapsed = duration;
     // this.speed = speed;
@@ -143,8 +143,8 @@ class GamePlay extends Container {
             // screen skake
             camera.shake();
             // camera.flash(2);
-            const oneUp = this.add(new OneUp());
-            oneUp.position.copy(player.position);
+            const oneUp = this.add(new OneUp(new Circle({ radius: 10, style: { fill: "blue" } })));
+            oneUp.position.copy(player.position.clone().add(new Vector(16 - 10, 16 - 10)));
           }
           bullet.dead = true;
         });
