@@ -3,37 +3,23 @@ import Zombie from "../entities/Zombie";
 import Player from "../entities/Player";
 import Barrel from "../entities/Barrel";
 import cluster from "../cluster/index";
+import Circle from "../cluster/shapes/Circle";
 import Rect from "../cluster/shapes/Rect";
-// import Timer from "../cluster/core/Timer";
-const { Container, Camera, Vector, entity, math, Circle } = cluster;
 
-class OneUp extends Container {
-  constructor(renderable, speed = 1, duration = 2) {
-    super();
-    // this.renderable = renderable;
-    this.add(renderable || new Rect({ width: 16, height: 16, style: { fill: "yellow" } }));
-    this.duration = duration;
-    this.elapsed = duration;
-    // this.speed = speed;
+const { Container, Camera, Vector, ParticleEmitter, Particle, entity, math } = cluster;
 
-    this.position = new Vector();
-    this.velocity = new Vector(0, -speed);
-    this.alpha = 1;
-    this.firstUpdate = true;
-  }
-
-  update(dt, t) {
-    this.position.add(this.velocity);
-    this.alpha = this.elapsed / this.duration;
-    this.elapsed -= dt;
-    if (this.elapsed <= 0) {
-      this.dead = true;
-    }
-
-    // FIRST UPDATE ONLY
-    if (this.firstUpdate) {
-      this.firstUpdate = false;
-    }
+class BloodParticle extends Particle {
+  constructor(direction) {
+    super({
+      alpha: 1,
+      lifeSpan: 2,
+      velocity: new Vector(math.randf(direction * 1, direction * 10), math.randf(-15, -2.5)),
+      gravity: true,
+      renderable: new Circle({
+        radius: math.randf(1.5, 5.5),
+        style: { fill: "red" },
+      }),
+    });
   }
 }
 
@@ -73,18 +59,14 @@ class GamePlay extends Container {
     this.zombies = zombies;
     this.barrels = barrels;
 
-    // this.alpha = 0.5;
-
     this.initialize();
   }
 
   initialize() {
     const { player, level, zombies, barrels } = this;
 
-    // zombies spawn
-    // just if the tile is walkable
-    // no need to go crazy here
-    const nZombies = 0;
+    // zombies spawn only on walkable tiles
+    const nZombies = 10;
     for (let z = 0; z < nZombies; z++) {
       let testPosition = null;
       const { tileW, tileH, width, height } = level;
@@ -128,7 +110,14 @@ class GamePlay extends Container {
           if (zombie.health === 0) {
             // explosion
             // screen skake
-            camera.shake();
+            // camera.shake();
+            const particleEmitter = camera.add(
+              new ParticleEmitter(
+                [...Array(20)].map(() => new BloodParticle(player.direction)),
+                Vector.from(zombie.position)
+              )
+            );
+            particleEmitter.play();
           }
           bullet.dead = true;
         });
@@ -142,9 +131,17 @@ class GamePlay extends Container {
             // explosion
             // screen skake
             camera.shake();
-            // camera.flash(2);
-            const oneUp = this.add(new OneUp(new Circle({ radius: 10, style: { fill: "blue" } })));
-            oneUp.position.copy(player.position.clone().add(new Vector(16 - 10, 16 - 10)));
+            camera.flash(0.75);
+
+            // DEBUG ---
+            // const particleEmitter = camera.add(
+            //   new ParticleEmitter(
+            //     [...Array(20)].map(() => new BloodParticle(player.direction)),
+            //     Vector.from(barrel.position)
+            //   )
+            // );
+            // particleEmitter.play();
+            // DEBUG ---
           }
           bullet.dead = true;
         });

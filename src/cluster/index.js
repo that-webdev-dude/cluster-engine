@@ -37,6 +37,10 @@ import SoundPool from "./sound/SoundPool";
 import SoundGroup from "./sound/SoundGroup";
 import SoundBuffer from "./sound/SoundBuffer";
 
+// FX
+import Particle from "./fx/Particle";
+import ParticleEmitter from "./fx/ParticleEmitter";
+
 export default {
   // TOOLS
   Vector,
@@ -76,4 +80,8 @@ export default {
   SoundPool,
   SoundGroup,
   SoundBuffer,
+
+  // FX
+  Particle,
+  ParticleEmitter,
 };

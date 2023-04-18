@@ -63,7 +63,7 @@ class Zombie extends TileSprite {
     this.velocity = new Vector();
     this.acceleration = new Vector();
     this.direction = 1;
-    this.health = math.rand(15, 20);
+    this.health = math.rand(5, 10);
     this.hitbox = {
       x: 0,
       y: 0,
