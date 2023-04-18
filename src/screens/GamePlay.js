@@ -108,9 +108,8 @@ class GamePlay extends Container {
           zombie.position.set(zx + 2 * direction, zy);
           zombie.damage(1);
           if (zombie.health === 0) {
-            // explosion
-            // screen skake
-            // camera.shake();
+            // DEBUG ---
+            // splat
             const particleEmitter = camera.add(
               new ParticleEmitter(
                 [...Array(20)].map(() => new BloodParticle(player.direction)),
@@ -118,6 +117,7 @@ class GamePlay extends Container {
               )
             );
             particleEmitter.play();
+            // DEBUG ---
           }
           bullet.dead = true;
         });
@@ -128,20 +128,9 @@ class GamePlay extends Container {
         entity.hit(bullet, barrel, () => {
           barrel.damage(1);
           if (barrel.health === 0) {
-            // explosion
-            // screen skake
+            // screen skake & flash
             camera.shake();
             camera.flash(0.75);
-
-            // DEBUG ---
-            // const particleEmitter = camera.add(
-            //   new ParticleEmitter(
-            //     [...Array(20)].map(() => new BloodParticle(player.direction)),
-            //     Vector.from(barrel.position)
-            //   )
-            // );
-            // particleEmitter.play();
-            // DEBUG ---
           }
           bullet.dead = true;
         });
