@@ -21,14 +21,18 @@ class Camera extends Container {
     this.subject = null;
     this.worldSize = worldSize;
 
+    // EFFECT: EASING
+    // this.easing = 0.075;
+    this.easing = 0.03;
+
     // EFFECT: SHAKE
     this.shakePower = 0;
     this.shakeDecay = 0;
     this.shakeLast = new Vector();
 
     // EFFECT: FLASH
-    this.flashTime = 0;
     this.flashDuration = 0;
+    this.flashTime = 0;
     this.flashRect = null;
 
     this.setSubject(subject);
@@ -106,7 +110,7 @@ class Camera extends Container {
   }
 
   focus() {
-    const { position, width, height, offset, worldSize, subject } = this;
+    const { position, width, height, offset, worldSize, subject, easing } = this;
     const centeredX = subject.position.x + offset.x - width / 2;
     const maxX = worldSize.width - width;
     const x = -math.clamp(centeredX, 0, maxX);
@@ -115,8 +119,8 @@ class Camera extends Container {
     const maxY = worldSize.height - height;
     const y = -math.clamp(centeredY, 0, maxY);
 
-    position.x = x;
-    position.y = y;
+    position.x = math.mix(position.x, x, easing);
+    position.y = math.mix(position.y, y, easing);
   }
 
   update(dt, t) {

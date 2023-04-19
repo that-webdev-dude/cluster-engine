@@ -124,6 +124,19 @@ function normalize(x, min = 0, max = 1) {
 }
 
 /**
+ * mix - returns a value (number) between a & b,
+ * according to the percentage p
+ * @param {Number} a - min
+ * @param {Number} b - max
+ * @param {Number} p - percentage
+ * @returns
+ */
+function mix(a, b, p) {
+  // return a + (b - a) * (p / 100);
+  return a * (1 - p) + b * p;
+}
+
+/**
  * easing functions collection
  */
 const ease = {
@@ -178,5 +191,6 @@ export default {
   clamp,
   lerp,
   normalize,
+  mix,
   ease,
 };
