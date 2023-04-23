@@ -3,6 +3,7 @@ import Zombie from "../entities/Zombie";
 import Player from "../entities/Player";
 import Barrel from "../entities/Barrel";
 import cluster from "../cluster/index";
+import Rect from "../cluster/shapes/Rect";
 
 const { Container, Camera, Vector, ParticleEmitter, entity, math } = cluster;
 
@@ -43,6 +44,9 @@ class GamePlay extends Container {
     this.barrels = barrels;
 
     this.initialize();
+
+    // DEBUG CAMERA
+    this.camera.add(new Rect({ width: 96, health: 96, style: { stroke: "red" } }));
   }
 
   initialize() {
