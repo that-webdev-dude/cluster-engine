@@ -9,20 +9,21 @@ class Camera extends Container {
    * All of the game items (except the UI components).
    * @constructor
    * @param {*} subject what the camera should follow
-   * @param {Object} viewport the size of the camera screen { ..., width, height }
-   * @param {} worldSize the size of the game world { ..., width, height }
+   * @param {Object} viewport the size of the camera screen { width, height }
+   * @param {} worldSize the size of the game world { width, height }
+   * @param {Object} tracker the size of the tracker box { width, height }
    */
-  constructor(subject, viewport, worldSize = viewport) {
+  constructor(subject, viewport, worldSize = viewport, tracker = { width: 96, height: 96 }) {
     super();
     this.position = new Vector();
     this.offset = { x: 0, y: 0 };
     this.height = viewport.height;
     this.width = viewport.width;
     this.subject = null;
+    this.tracker = tracker;
     this.worldSize = worldSize;
 
     // EFFECT: EASING
-    // this.easing = 0.075;
     this.easing = 0.03;
 
     // EFFECT: SHAKE
@@ -83,6 +84,7 @@ class Camera extends Container {
     this.flashDuration = duration;
   }
 
+  // EFFECT: FLASH
   _flash(dt) {
     const { flashRect, flashDuration, position } = this;
     if (!flashRect) return;
@@ -109,8 +111,8 @@ class Camera extends Container {
     }
   }
 
-  focus() {
-    const { position, width, height, offset, worldSize, subject, easing } = this;
+  focus(track = true) {
+    const { position, width, height, offset, worldSize, subject, easing, tracker } = this;
     const centeredX = subject.position.x + offset.x - width / 2;
     const maxX = worldSize.width - width;
     const x = -math.clamp(centeredX, 0, maxX);
@@ -118,6 +120,12 @@ class Camera extends Container {
     const centeredY = subject.position.y + offset.y - height / 2;
     const maxY = worldSize.height - height;
     const y = -math.clamp(centeredY, 0, maxY);
+
+    // if (track) {
+    //   if (subject.position.x > position.x + tracker.width) {
+    //     console.log("start moving");
+    //   }
+    // }
 
     position.x = math.mix(position.x, x, easing);
     position.y = math.mix(position.y, y, easing);

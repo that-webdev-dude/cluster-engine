@@ -1,16 +1,18 @@
-import Particle from "../cluster/fx/Particle";
-import Circle from "../cluster/shapes/Circle";
-import math from "../cluster/utils/math";
+import cluster from "../cluster/index";
+const { Particle, Vector, Circle, math } = cluster;
 
 class BloodParticle extends Particle {
-  constructor() {
-    super(
-      0.5,
-      new Circle({
-        radius: math.randf(5, 2),
+  constructor(direction) {
+    super({
+      alpha: 1,
+      lifeSpan: 2,
+      velocity: new Vector(math.randf(direction * 1, direction * 10), math.randf(-15, -2.5)),
+      gravity: true,
+      renderable: new Circle({
+        radius: math.randf(1.5, 5.5),
         style: { fill: "red" },
-      })
-    );
+      }),
+    });
   }
 }
 
