@@ -2,10 +2,10 @@ import Level from "../levels/Level";
 import Zombie from "../entities/Zombie";
 import Player from "../entities/Player";
 import Barrel from "../entities/Barrel";
+import BloodParticle from "../particles/BloodParticle";
 import cluster from "../cluster/index";
-import Rect from "../cluster/shapes/Rect";
 
-const { Container, Camera, Vector, ParticleEmitter, entity, math } = cluster;
+const { Container, Camera, Vector, Physics, ParticleEmitter, entity, math, Rect } = cluster;
 
 class GamePlay extends Container {
   constructor(game, input, transitions = { onEnter: () => {}, onExit: () => {} }) {
@@ -45,8 +45,16 @@ class GamePlay extends Container {
 
     this.initialize();
 
-    // DEBUG CAMERA
-    this.camera.add(new Rect({ width: 96, health: 96, style: { stroke: "red" } }));
+    // DEBUG CAMERA ...
+    // this.cameraTracker = this.camera.add(
+    //   new Rect({
+    //     width: 96,
+    //     height: 96,
+    //     style: { fill: "transparent", stroke: "yellow" },
+    //   })
+    // );
+    // this.cameraTracker.position = new Vector();
+    // DEBUG CAMERA ...
   }
 
   initialize() {
@@ -85,7 +93,7 @@ class GamePlay extends Container {
       }
     }
 
-    // collisions
+    // bullet collisions
     bullets.children.forEach((bullet) => {
       // bullet hits zombie
       zombies.children.forEach((zombie) => {
@@ -95,16 +103,13 @@ class GamePlay extends Container {
           zombie.position.set(zx + 2 * direction, zy);
           zombie.damage(1);
           if (zombie.health === 0) {
-            // DEBUG ---
-            // splat
             const particleEmitter = camera.add(
               new ParticleEmitter(
-                [...Array(20)].map(() => new BloodParticle(player.direction)),
+                [...Array(20)].map(() => new BloodParticle(player.direction, "green")),
                 Vector.from(zombie.position)
               )
             );
             particleEmitter.play();
-            // DEBUG ---
           }
           bullet.dead = true;
         });
@@ -115,7 +120,6 @@ class GamePlay extends Container {
         entity.hit(bullet, barrel, () => {
           barrel.damage(1);
           if (barrel.health === 0) {
-            // screen skake & flash
             camera.shake();
             camera.flash(0.75);
           }
@@ -124,10 +128,23 @@ class GamePlay extends Container {
       });
     });
 
+    // zombie collisions
+    zombies.children.forEach((zombie) => {
+      entity.hit(zombie, player, () => {
+        // push back the zombie
+        Physics.World.applyImpulse(zombie, { x: -zombie.direction * 50, y: 0 }, dt);
+        Physics.World.applyImpulse(player, { x: -player.direction * 50, y: 0 }, dt);
+      });
+    });
+
     // FIRST UPDATE ONLY
     if (this.firstUpdate) {
       this.firstUpdate = false;
     }
+
+    // DEBUG CAMERA ...
+    // this.cameraTracker.position.x = camera.subject.position.x - camera.width / 2;
+    // this.cameraTracker.position.y = camera.subject.position.y - camera.height / 2;
   }
 }
 

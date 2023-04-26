@@ -2,7 +2,7 @@ import cluster from "../cluster/index";
 const { Particle, Vector, Circle, math } = cluster;
 
 class BloodParticle extends Particle {
-  constructor(direction) {
+  constructor(direction, fill = "red") {
     super({
       alpha: 1,
       lifeSpan: 2,
@@ -10,7 +10,7 @@ class BloodParticle extends Particle {
       gravity: true,
       renderable: new Circle({
         radius: math.randf(1.5, 5.5),
-        style: { fill: "red" },
+        style: { fill: fill },
       }),
     });
   }

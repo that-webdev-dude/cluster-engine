@@ -115,17 +115,24 @@ class Camera extends Container {
     const { position, width, height, offset, worldSize, subject, easing, tracker } = this;
     const centeredX = subject.position.x + offset.x - width / 2;
     const maxX = worldSize.width - width;
-    const x = -math.clamp(centeredX, 0, maxX);
+    let x = -math.clamp(centeredX, 0, maxX);
+    // const x =
+    //   Math.abs(centeredX + position.x) < tracker.width
+    //     ? position.x
+    //     : -math.clamp(centeredX, 0, maxX);
 
     const centeredY = subject.position.y + offset.y - height / 2;
     const maxY = worldSize.height - height;
-    const y = -math.clamp(centeredY, 0, maxY);
+    let y = -math.clamp(centeredY, 0, maxY);
+    // const y =
+    //   Math.abs(centeredY + position.y) < tracker.height
+    //     ? position.y
+    //     : -math.clamp(centeredY, 0, maxY);
 
-    // if (track) {
-    //   if (subject.position.x > position.x + tracker.width) {
-    //     console.log("start moving");
-    //   }
-    // }
+    if (track) {
+      if (Math.abs(centeredX + position.x) < tracker.width) x = position.x;
+      if (Math.abs(centeredY + position.y) < tracker.height) y = position.y;
+    }
 
     position.x = math.mix(position.x, x, easing);
     position.y = math.mix(position.y, y, easing);
