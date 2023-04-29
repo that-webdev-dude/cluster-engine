@@ -8,7 +8,9 @@ const {
   Texture, 
   Physics, 
   Vector, 
-  State 
+  State,
+  Rect,
+  math,
 } = cluster;
 
 const states = {
@@ -59,6 +61,10 @@ class Player extends TileSprite {
 
     this.scale = new Vector(1, 1);
     this.anchor = new Vector(0, 0);
+    // ...
+    this.invincibility = 0;
+    this.isInvincible = false;
+    // ...
     this.direction = 1;
     this.position = new Vector(32 * 8, 224);
     this.velocity = new Vector();
@@ -77,12 +83,12 @@ class Player extends TileSprite {
     // const debugHitbox = new Rect({
     //   width: this.hitbox.width,
     //   height: this.hitbox.height,
-    //   style: { fill: "red" },
+    //   style: { stroke: "red", fill: "transparent" },
     // });
     // debugHitbox.position = new Vector(this.hitbox.x, this.hitbox.y);
     // this.children = [debugHitbox];
+    // END DEBUG
 
-    // ...
     this.firstUpdate = true;
     this.alpha = 1;
   }
@@ -127,6 +133,20 @@ class Player extends TileSprite {
     return weapon.fire(dt, position, direction);
   }
 
+  knockback(dt, entity) {
+    const { velocity, acceleration } = this;
+    const power = 400;
+    const impulse = entity.position.to(this.position).unit().multiply(power);
+    velocity.set(0, 0);
+    acceleration.set(0, 0);
+    Physics.World.applyImpulse(this, impulse, dt);
+  }
+
+  invincible(duration = 1) {
+    this.invincibility = duration;
+    this.isInvincible = true;
+  }
+
   update(dt, t) {
     super.update(dt, t);
     // prettier-ignore
@@ -137,7 +157,14 @@ class Player extends TileSprite {
       velocity, 
       position, 
     } = this;
-    state.update(dt, t);
+
+    // invincibility blinking
+    if ((this.invincibility -= dt) > 0) {
+      this.alpha = Math.floor((t / 0.05) % 2);
+    } else {
+      this.alpha = 1;
+      this.isInvincible = false;
+    }
 
     // apply word forces
     Physics.World.applyFriction(this, world.FRICTION);
@@ -235,6 +262,8 @@ class Player extends TileSprite {
       velocity.set(0, 0);
     }
     position.add(r);
+
+    state.update(dt, t);
 
     // FIRST UPDATE ONLY
     if (this.firstUpdate) {

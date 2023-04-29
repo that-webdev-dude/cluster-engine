@@ -62,7 +62,7 @@ class GamePlay extends Container {
     const { player, level, zombies, barrels } = this;
 
     // zombies spawn only on walkable tiles
-    const nZombies = 10;
+    const nZombies = 1;
     for (let z = 0; z < nZombies; z++) {
       let testPosition = null;
       const { tileW, tileH, width, height } = level;
@@ -106,7 +106,7 @@ class GamePlay extends Container {
           if (zombie.health === 0) {
             const particleEmitter = camera.add(
               new ParticleEmitter(
-                [...Array(20)].map(() => new BloodParticle(player.direction, "green")),
+                [...Array(20)].map(() => new BloodParticle(player.direction, "lightGreen")),
                 Vector.from(zombie.position)
               )
             );
@@ -132,16 +132,22 @@ class GamePlay extends Container {
     // zombie collisions
     zombies.children.forEach((zombie) => {
       entity.hit(zombie, player, () => {
-        // push back the zombie
-        Physics.World.applyImpulse(zombie, { x: -zombie.direction * 50, y: 0 }, dt);
-        Physics.World.applyImpulse(player, { x: -player.direction * 50, y: 0 }, dt);
-        const timer = new Timer(2, () => {
-          console.log("invincible");
-        });
+        // player blood splash
+        const particleEmitter = camera.add(
+          new ParticleEmitter(
+            [...Array(5)].map(() => new BloodParticle(zombie.direction, "red")),
+            Vector.from(player.position)
+          )
+        );
+        particleEmitter.play();
+        // player invincibility blink
+        if (!player.isInvincible) player.invincible(0.5);
+        // player knockback
+        player.knockback(dt, zombie);
+        // player damage
+        // ...
       });
     });
-
-    // player.alpha = Math.floor((t / 0.05) % 2);
 
     // FIRST UPDATE ONLY
     if (this.firstUpdate) {
