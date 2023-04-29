@@ -4,6 +4,7 @@ import Player from "../entities/Player";
 import Barrel from "../entities/Barrel";
 import BloodParticle from "../particles/BloodParticle";
 import cluster from "../cluster/index";
+import Timer from "../cluster/core/Timer";
 
 const { Container, Camera, Vector, Physics, ParticleEmitter, entity, math, Rect } = cluster;
 
@@ -134,8 +135,13 @@ class GamePlay extends Container {
         // push back the zombie
         Physics.World.applyImpulse(zombie, { x: -zombie.direction * 50, y: 0 }, dt);
         Physics.World.applyImpulse(player, { x: -player.direction * 50, y: 0 }, dt);
+        const timer = new Timer(2, () => {
+          console.log("invincible");
+        });
       });
     });
+
+    // player.alpha = Math.floor((t / 0.05) % 2);
 
     // FIRST UPDATE ONLY
     if (this.firstUpdate) {
