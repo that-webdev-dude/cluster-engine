@@ -48,18 +48,30 @@ const wallslide = (targetEntity, level, dx, dy) => {
       // compute the exact distance between the targetEntity bottom bound and the top edge of the tile
 
       // NO support for cloud tiles
+      // ---------------------------
       // hit = true;
       // hits.down = true;
       // const tileEdge = tiles[2].position.y - 1;
       // yo = tileEdge - (bounds.y + bounds.height);
 
       // YES support for cloud tiles
-      const tileEdge = tiles[2].position.y - 1;
+      // ---------------------------
+      const tileEdge = tiles[2].position.y - 0.01;
       const dist = tileEdge - (bounds.y + bounds.height);
       if (!isCloud || dist < 10) {
         hit = true;
         hits.down = true;
         yo = dist;
+
+        // if there's a hit means that the entity is stepping on a solid tile
+        // the tile can be a bridge tile though, therefore we can check if
+        // that's the case
+        const [TLTile, TRTile, ...bottomTiles] = tiles;
+        bottomTiles.forEach((tile) => {
+          if (tile.frame.bridge) {
+            level.makeDisappearingTile(tile);
+          }
+        });
       }
     }
   }
