@@ -9,7 +9,7 @@ class Weapon extends Sprite {
     super(new Texture(weaponImageURL));
     this.level = level;
     this.position = position;
-    this.fireRate = 0.1;
+    this.fireRate = 0.2;
     this.ammo = 100;
   }
 
@@ -18,7 +18,7 @@ class Weapon extends Sprite {
       const { level } = this;
       this.fireRate -= dt;
       if (this.fireRate < 0) {
-        this.fireRate = 0.1;
+        this.fireRate = 0.2;
         // this.ammo--;
         const bulletPos = position
           .clone()

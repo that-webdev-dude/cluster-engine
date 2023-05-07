@@ -3,10 +3,10 @@ import Zombie from "../entities/Zombie";
 import Player from "../entities/Player";
 import Barrel from "../entities/Barrel";
 import BloodParticle from "../particles/BloodParticle";
+import GunShootSoundURL from "../sounds/GunShoot.wav";
 import cluster from "../cluster/index";
-import Timer from "../cluster/core/Timer";
 
-const { Container, Camera, Vector, Physics, ParticleEmitter, entity, math, Rect } = cluster;
+const { Container, Camera, Vector, ParticleEmitter, SoundBuffer, Sound, entity, math } = cluster;
 
 class GamePlay extends Container {
   constructor(game, input, transitions = { onEnter: () => {}, onExit: () => {} }) {
@@ -43,6 +43,9 @@ class GamePlay extends Container {
     this.bullets = bullets;
     this.zombies = zombies;
     this.barrels = barrels;
+
+    // media
+    this.gunShootSound = new SoundBuffer(GunShootSoundURL);
 
     this.initialize();
 
@@ -90,6 +93,7 @@ class GamePlay extends Container {
     if (input.key.action) {
       const bullet = player.fire(dt);
       if (bullet) {
+        this.gunShootSound.play();
         bullets.add(bullet);
       }
     }

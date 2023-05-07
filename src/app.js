@@ -23,6 +23,7 @@ export default () => {
 
   // game.scene = gameTitle;
   game.scene = gamePlay;
+
   Assets.onReady(() => {
     game.run((dt, t) => {
       // ...

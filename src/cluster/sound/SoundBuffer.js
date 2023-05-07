@@ -20,31 +20,31 @@ class SoundBuffer {
   }
 
   play(overrides = {}) {
-    if (!this.playing) {
-      const { audio, options } = this;
-      const opts = Object.assign(options, overrides);
-      const now = Audio.context.currentTime;
-      audio.then((buffer) => {
-        const source = Audio.context.createBufferSource();
-        source.buffer = buffer;
-        source.volume = opts.volume;
-        source.playbackRate.value = opts.speed;
-        source.onended = () => {
-          this.playing = false;
-        };
+    // if (!this.playing) {
+    const { audio, options } = this;
+    const opts = Object.assign(options, overrides);
+    const now = Audio.context.currentTime;
+    audio.then((buffer) => {
+      const source = Audio.context.createBufferSource();
+      source.buffer = buffer;
+      source.volume = opts.volume;
+      source.playbackRate.value = opts.speed;
+      source.onended = () => {
+        this.playing = false;
+      };
 
-        if (opts.filter) {
-          const { filter } = opts;
-          source.connect(filter);
-          filter.connect(opts.output);
-        } else {
-          source.connect(opts.output);
-        }
+      if (opts.filter) {
+        const { filter } = opts;
+        source.connect(filter);
+        filter.connect(opts.output);
+      } else {
+        source.connect(opts.output);
+      }
 
-        source.start(now + opts.delay);
-        this.playing = true;
-      });
-    }
+      source.start(now + opts.delay);
+      this.playing = true;
+    });
+    // }
   }
 }
 
