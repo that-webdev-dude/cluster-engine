@@ -23,7 +23,7 @@ const world = {
 
 const attributes = {
   ACCELERATION: 1250,
-  MIN_VELOCITY: 2,
+  MIN_VELOCITY: 10,
   MAX_VELOCITY: math.rand(32, 64),
 };
 

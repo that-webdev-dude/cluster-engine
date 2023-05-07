@@ -29,6 +29,7 @@ const attributes = {
   ACCELERATION: 2500,
   MIN_VELOCITY: 10,
   MAX_VELOCITY: 400, // ACC/6
+  JUMP_FORGIVENESS: 0.04,
 };
 
 class Player extends TileSprite {
@@ -62,8 +63,12 @@ class Player extends TileSprite {
     this.scale = new Vector(1, 1);
     this.anchor = new Vector(0, 0);
     // ...
+    // invincibility blinking
     this.invincibility = 0;
     this.isInvincible = false;
+    // ...
+    // jump forgiveness
+    this.fallingTimer = 0;
     // ...
     this.direction = 1;
     this.position = new Vector(32 * 8, 224);
@@ -221,7 +226,14 @@ class Player extends TileSprite {
         }
         // → transition falling
         if (velocity.y > 50) {
-          state.set(states.FALLING);
+          // jump forgiveness
+          if (this.fallingTimer <= 0) {
+            this.fallingTimer = attributes.JUMP_FORGIVENESS;
+          } else {
+            if ((this.fallingTimer -= dt) <= 0) {
+              state.set(states.FALLING);
+            }
+          }
         }
         // → transition sleeping
         if (!input.key.x && velocity.x === 0) {
@@ -249,10 +261,13 @@ class Player extends TileSprite {
         break;
     }
 
+    // console.log(state.get());
+
     // update position
     const { x: dx, y: dy } = Physics.World.getDisplacement(this, dt);
     const r = wallslide(this, level, dx, dy);
     if (r.hits.down || r.hits.up) {
+      this.fallingTimer = 0;
       velocity.set(velocity.x, 0);
     }
     if (r.hits.left || r.hits.right) {

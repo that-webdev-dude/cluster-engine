@@ -1,5 +1,10 @@
 import entity from "../utils/entity";
 
+const TL = 0;
+const TR = 1;
+const BL = 2;
+const BR = 3;
+
 /**
  * wallslide():
  *
@@ -24,7 +29,11 @@ const wallslide = (targetEntity, level, dx, dy) => {
   // vertical check
   if (dy !== 0) {
     const tiles = level.tilesAtCorners(bounds, 0, yo);
+    const isCloud =
+      (tiles[BL].frame.cloud || tiles[BR].frame.cloud) &&
+      !(tiles[TL].frame.cloud || tiles[TR].frame.cloud); // HERE AN EDGE CASE?
     const [tl, tr, bl, br] = tiles.map((tile) => tile && tile.frame.walkable);
+
     if (dy < 0 && !(tl && tr)) {
       // hit your head if (tl & tr) are not walkable
       // compute the exact distance between the targetEntity top bound and the bottom edge of the tile
@@ -34,13 +43,24 @@ const wallslide = (targetEntity, level, dx, dy) => {
       yo = tileEdge - bounds.y;
     }
 
-    if (dy > 0 && !(bl && br)) {
+    if (dy > 0 && (!(bl && br) || isCloud)) {
       // hit your feet if (bl & br) are not walkable
       // compute the exact distance between the targetEntity bottom bound and the top edge of the tile
-      hit = true;
-      hits.down = true;
+
+      // NO support for cloud tiles
+      // hit = true;
+      // hits.down = true;
+      // const tileEdge = tiles[2].position.y - 1;
+      // yo = tileEdge - (bounds.y + bounds.height);
+
+      // YES support for cloud tiles
       const tileEdge = tiles[2].position.y - 1;
-      yo = tileEdge - (bounds.y + bounds.height);
+      const dist = tileEdge - (bounds.y + bounds.height);
+      if (!isCloud || dist < 10) {
+        hit = true;
+        hits.down = true;
+        yo = dist;
+      }
     }
   }
 
