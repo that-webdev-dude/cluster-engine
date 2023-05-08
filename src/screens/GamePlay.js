@@ -6,7 +6,7 @@ import BloodParticle from "../particles/BloodParticle";
 import GunShootSoundURL from "../sounds/GunShoot.wav";
 import cluster from "../cluster/index";
 
-const { Container, Camera, Vector, ParticleEmitter, SoundBuffer, Sound, entity, math } = cluster;
+const { Container, Camera, Vector, ParticleEmitter, SoundBuffer, Trigger, entity, math } = cluster;
 
 class GamePlay extends Container {
   constructor(game, input, transitions = { onEnter: () => {}, onExit: () => {} }) {
@@ -18,6 +18,7 @@ class GamePlay extends Container {
     const bullets = new Container();
     const zombies = new Container();
     const barrels = new Container();
+    const triggers = new Container();
     const camera = new Camera(
       player,
       { width: game.width, height: game.height },
@@ -29,6 +30,7 @@ class GamePlay extends Container {
     camera.add(bullets);
     camera.add(zombies);
     camera.add(barrels);
+    camera.add(triggers);
     this.add(camera);
 
     this.firstUpdate = true;
@@ -43,6 +45,7 @@ class GamePlay extends Container {
     this.bullets = bullets;
     this.zombies = zombies;
     this.barrels = barrels;
+    this.triggers = triggers;
 
     // media
     this.gunShootSound = new SoundBuffer(GunShootSoundURL);
@@ -61,11 +64,10 @@ class GamePlay extends Container {
     // DEBUG CAMERA ...
   }
 
-  initialize() {
-    const { player, level, zombies, barrels } = this;
-
+  spawnZombies(numberOfZombies = 5) {
+    const { player, level, zombies } = this;
     // zombies spawn only on walkable tiles
-    const nZombies = 1;
+    const nZombies = numberOfZombies;
     for (let z = 0; z < nZombies; z++) {
       let testPosition = null;
       const { tileW, tileH, width, height } = level;
@@ -80,9 +82,27 @@ class GamePlay extends Container {
         }
       }
     }
+  }
+
+  initialize() {
+    const { player, level, zombies, barrels } = this;
+
+    // zombies spawn
+    this.spawnZombies(2);
 
     // barrels spawn
     this.barrel = barrels.add(new Barrel(new Vector(32 * 20, 32 * 7 + 2)));
+
+    // triggers
+    const testTrigger = new Trigger(
+      { x: 0, y: 0, width: 100, height: 100 },
+      () => {
+        this.spawnZombies(15);
+      },
+      true
+    );
+    testTrigger.position.set(100, 100);
+    this.triggers.add(testTrigger);
   }
 
   update(dt, t) {
@@ -153,14 +173,17 @@ class GamePlay extends Container {
       });
     });
 
+    // player collisions
+    // triggers
+    this.triggers.children.forEach((trigger) => {
+      entity.hit(player, trigger, () => trigger.trigger());
+    });
+    // ...
+
     // FIRST UPDATE ONLY
     if (this.firstUpdate) {
       this.firstUpdate = false;
     }
-
-    // DEBUG CAMERA ...
-    // this.cameraTracker.position.x = camera.subject.position.x - camera.width / 2;
-    // this.cameraTracker.position.y = camera.subject.position.y - camera.height / 2;
   }
 }
 

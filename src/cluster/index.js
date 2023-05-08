@@ -25,6 +25,7 @@ import TileSprite from "./core/TileSprite";
 import KeyControls from "./input/KeyControls";
 import MouseControls from "./input/MouseControls";
 import CanvasRenderer from "./renderers/CanvasRenderer";
+import Trigger from "./core/Trigger";
 
 // DEBUG
 import Logger from "./debug/Logger";
@@ -69,6 +70,7 @@ export default {
   KeyControls,
   MouseControls,
   CanvasRenderer,
+  Trigger,
 
   // DEBUG
   Logger,
