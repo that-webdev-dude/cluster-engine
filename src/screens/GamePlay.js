@@ -2,11 +2,30 @@ import Level from "../levels/Level";
 import Zombie from "../entities/Zombie";
 import Player from "../entities/Player";
 import Barrel from "../entities/Barrel";
+import PauseDialog from "../dialogs/PauseDialog";
 import BloodParticle from "../particles/BloodParticle";
 import GunShootSoundURL from "../sounds/GunShoot.wav";
 import cluster from "../cluster/index";
 
-const { Container, Camera, Vector, ParticleEmitter, SoundBuffer, Trigger, entity, math } = cluster;
+// prettier-ignore
+const { 
+  ParticleEmitter, 
+  SoundBuffer, 
+  Container, 
+  Trigger, 
+  Camera, 
+  Vector, 
+  State,
+  Rect,
+  Text,
+  math, 
+  entity, 
+} = cluster;
+
+const states = {
+  PLAYING: 0,
+  PAUSED: 1,
+};
 
 class GamePlay extends Container {
   constructor(game, input, transitions = { onEnter: () => {}, onExit: () => {} }) {
@@ -46,25 +65,15 @@ class GamePlay extends Container {
     this.zombies = zombies;
     this.barrels = barrels;
     this.triggers = triggers;
+    this.state = new State(states.PLAYING);
 
     // media
     this.gunShootSound = new SoundBuffer(GunShootSoundURL);
 
     this.initialize();
-
-    // DEBUG CAMERA ...
-    // this.cameraTracker = this.camera.add(
-    //   new Rect({
-    //     width: 96,
-    //     height: 96,
-    //     style: { fill: "transparent", stroke: "yellow" },
-    //   })
-    // );
-    // this.cameraTracker.position = new Vector();
-    // DEBUG CAMERA ...
   }
 
-  spawnZombies(numberOfZombies = 5) {
+  spawnZombies(numberOfZombies = 0) {
     const { player, level, zombies } = this;
     // zombies spawn only on walkable tiles
     const nZombies = numberOfZombies;
@@ -88,7 +97,7 @@ class GamePlay extends Container {
     const { player, level, zombies, barrels } = this;
 
     // zombies spawn
-    this.spawnZombies(2);
+    this.spawnZombies();
 
     // barrels spawn
     this.barrel = barrels.add(new Barrel(new Vector(32 * 20, 32 * 7 + 2)));
@@ -99,18 +108,25 @@ class GamePlay extends Container {
       () => {
         this.spawnZombies(15);
       },
-      true
+      false
     );
     testTrigger.position.set(32, 32 * 5);
     this.triggers.add(testTrigger);
   }
 
-  update(dt, t) {
+  play(dt, t) {
     super.update(dt, t);
     const { input, player, camera, bullets, zombies, barrels } = this;
 
-    // bullet spawn
+    if (input.key.pause) {
+      if (!this.state.is([states.PAUSED])) {
+        input.key.reset();
+        this.state.set(states.PAUSED);
+      }
+    }
+
     if (input.key.action) {
+      // bullet spawn
       const bullet = player.fire(dt);
       if (bullet) {
         this.gunShootSound.play();
@@ -179,6 +195,39 @@ class GamePlay extends Container {
       entity.hit(player, trigger, () => trigger.triggerOnce());
     });
     // ...
+  }
+
+  makePauseDialog() {
+    const { input, game } = this;
+    const onCloseDialog = () => {
+      this.state.set(states.PLAYING);
+    };
+    return new PauseDialog(input, onCloseDialog);
+  }
+
+  update(dt, t) {
+    // prettier-ignore
+    const { 
+      state,
+    } = this;
+
+    switch (state.get()) {
+      case states.PAUSED:
+        if (state.first) {
+          this.pauseDialog = this.add(this.makePauseDialog());
+        }
+        this.pauseDialog.update(dt, t);
+        break;
+
+      case states.PLAYING:
+        this.play(dt, t);
+        break;
+
+      default:
+        break;
+    }
+
+    state.update(dt, t);
 
     // FIRST UPDATE ONLY
     if (this.firstUpdate) {

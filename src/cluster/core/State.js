@@ -8,8 +8,7 @@ class State {
   }
 
   is([...states]) {
-    console.log("file: State.js ~ line 11 ~ State ~ is ~ states", states);
-    // return states.some((s) => this.current === s);
+    return states.some((s) => this.current === s);
   }
 
   get() {

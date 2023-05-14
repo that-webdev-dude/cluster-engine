@@ -80,6 +80,7 @@ class KeyController {
   reset() {
     this.#keyMap.forEach((item) => {
       this[item.action].isActive = false;
+      this[item.action].isDown = false;
     });
   }
 }

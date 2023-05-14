@@ -14,7 +14,9 @@ class KeyControls {
       { code: "KeyA", action: "moveLeft" },
       { code: "KeyD", action: "moveRight" },
       { code: "KeyX", action: "action" },
+      { code: "KeyP", action: "pause" },
       { code: "Enter", action: "start" },
+      { code: "Escape", action: "exit" },
     ]);
   }
 
@@ -49,6 +51,14 @@ class KeyControls {
 
   get action() {
     return this.#controller.action.isActive;
+  }
+
+  get pause() {
+    return this.#controller.pause.isActive;
+  }
+
+  get exit() {
+    return this.#controller.exit.isActive;
   }
 
   get start() {
