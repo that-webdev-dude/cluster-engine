@@ -101,7 +101,7 @@ class GamePlay extends Container {
       },
       true
     );
-    testTrigger.position.set(100, 100);
+    testTrigger.position.set(32, 32 * 5);
     this.triggers.add(testTrigger);
   }
 
@@ -176,7 +176,7 @@ class GamePlay extends Container {
     // player collisions
     // triggers
     this.triggers.children.forEach((trigger) => {
-      entity.hit(player, trigger, () => trigger.trigger());
+      entity.hit(player, trigger, () => trigger.triggerOnce());
     });
     // ...
 

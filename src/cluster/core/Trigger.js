@@ -8,6 +8,7 @@ class Trigger {
     this.onCollide = onCollide;
     this.onEnter = null; // TODO
     this.onExit = null; // TODO
+    this.dead = false;
 
     if (debug) {
       const { width, height } = hitbox;
@@ -22,6 +23,11 @@ class Trigger {
         }),
       ];
     }
+  }
+
+  triggerOnce() {
+    this.onCollide();
+    this.dead = true;
   }
 
   trigger() {
