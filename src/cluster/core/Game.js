@@ -24,6 +24,11 @@ class Game {
       width,
     });
 
+    this.destinationScene = null; // destination scene reference for fading scenes
+    this.fadeDuration = 0;
+    this.fadeTime = 0;
+
+    // DEGUG
     this.debug_updates = 0;
 
     // initialize
@@ -55,6 +60,16 @@ class Game {
     return this.#renderer.context;
   }
 
+  setScene(scene, duration = 0) {
+    if (!duration) {
+      this.scene = scene;
+      return;
+    }
+    this.destinationScene = scene;
+    this.fadeDuration = duration;
+    this.fadeTime = duration;
+  }
+
   run(gameUpdate = () => {}) {
     // Assets.onReady(() => {
     let t = 0;
@@ -74,6 +89,18 @@ class Game {
       }
 
       this.#renderer.render(this.scene);
+      // scene transition
+      if (this.fadeTime > 0) {
+        const { fadeDuration } = this;
+        const ratio = this.fadeTime / fadeDuration;
+        this.scene.alpha = ratio;
+        this.destinationScene.alpha = 1 - ratio;
+        this.#renderer.render(this.destinationScene, false);
+        if ((this.fadeTime -= STEP) <= 0) {
+          this.scene = this.destinationScene;
+          this.destinationScene = null;
+        }
+      }
     };
 
     const init = (ms) => {

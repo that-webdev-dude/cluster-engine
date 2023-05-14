@@ -15,14 +15,14 @@ export default () => {
 
   const gameTitle = new GameTitle(game, input, {
     onExit: () => {
-      game.scene = gamePlay;
+      game.setScene(gamePlay, 1);
     },
   });
 
   const gamePlay = new GamePlay(game, input);
 
-  // game.scene = gameTitle;
-  game.scene = gamePlay;
+  game.scene = gameTitle;
+  // game.scene = gamePlay;
 
   Assets.onReady(() => {
     game.run((dt, t) => {
