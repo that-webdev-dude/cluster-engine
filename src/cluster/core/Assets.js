@@ -79,6 +79,7 @@ const Assets = {
   },
 
   // load a sound buffer
+  // TODO - needs a try catch block?
   soundBuffer(url, audioContext) {
     return load(url, async (url, onAssetLoad) => {
       const response = await fetch(url);
@@ -86,16 +87,19 @@ const Assets = {
       const soundBuffer = await audioContext.decodeAudioData(arrayBuffer);
       onAssetLoad(url);
       return soundBuffer;
-      // fetch(url)
-      //   .then((res) => res.arrayBuffer())
-      //   .then((ab) => {
-      //     return new Promise((resolve, reject) => {
-      //       audioContext.decodeAudioData(ab, (buffer) => {
-      //         onAssetLoad(url);
-      //         resolve(buffer);
-      //       });
-      //     });
-      //   });
+    });
+  },
+
+  // load a json file
+  json(url) {
+    return load(url, async (url, onAssetLoad) => {
+      try {
+        const response = await fetch(url);
+        const data = await response.json();
+        onAssetLoad(data);
+      } catch (error) {
+        console.error(error);
+      }
     });
   },
 };
