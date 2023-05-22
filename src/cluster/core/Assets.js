@@ -38,16 +38,16 @@ function done() {
 
 const Assets = {
   onReady(cb) {
-    if (remaining === 0) {
-      readyListeners.push(cb);
-      done();
-    } else {
-      readyListeners.push(cb);
-    }
-    // readyListeners.push(cb);
     // if (remaining === 0) {
+    //   readyListeners.push(cb);
     //   done();
+    // } else {
+    //   readyListeners.push(cb);
     // }
+    readyListeners.push(cb);
+    if (remaining === 0) {
+      done();
+    }
   },
 
   onProgress(cb) {
@@ -85,7 +85,7 @@ const Assets = {
       const response = await fetch(url);
       const arrayBuffer = await response.arrayBuffer();
       const soundBuffer = await audioContext.decodeAudioData(arrayBuffer);
-      onAssetLoad(url);
+      onAssetLoad();
       return soundBuffer;
     });
   },
@@ -96,7 +96,8 @@ const Assets = {
       try {
         const response = await fetch(url);
         const data = await response.json();
-        onAssetLoad(data);
+        onAssetLoad();
+        return data;
       } catch (error) {
         console.error(error);
       }

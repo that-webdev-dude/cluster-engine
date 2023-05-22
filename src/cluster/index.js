@@ -12,6 +12,7 @@ import Line from "./shapes/Line";
 import Polygon from "./shapes/Polygon";
 
 // CORE
+import Assets from "./core/Assets";
 import Camera from "./core/Camera";
 import State from "./core/State";
 import Game from "./core/Game";
@@ -57,6 +58,7 @@ export default {
   Polygon,
 
   // CORE
+  Assets,
   Camera,
   State,
   Game,

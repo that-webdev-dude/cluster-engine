@@ -1,7 +1,6 @@
 import CanvasRenderer from "../renderers/CanvasRenderer";
 import Container from "./Container";
-
-// import Assets from "./Assets";
+import Assets from "./Assets";
 
 let STEP = 1 / 60;
 let MULTIPLIER = 1;
@@ -71,45 +70,45 @@ class Game {
   }
 
   run(gameUpdate = () => {}) {
-    // Assets.onReady(() => {
-    let t = 0;
-    let dt = 0;
-    let last = 0;
+    Assets.onReady(() => {
+      let t = 0;
+      let dt = 0;
+      let last = 0;
 
-    const loop = (ms) => {
-      requestAnimationFrame(loop);
-      t = ms / 1000;
-      dt += Math.min(t - last, MAX_FRAME * 5);
-      last = t;
+      const loop = (ms) => {
+        requestAnimationFrame(loop);
+        t = ms / 1000;
+        dt += Math.min(t - last, MAX_FRAME * 5);
+        last = t;
 
-      while (dt >= SPEED) {
-        this.scene.update(STEP, t / MULTIPLIER);
-        gameUpdate(STEP, t / MULTIPLIER);
-        dt -= SPEED;
-      }
-
-      this.#renderer.render(this.scene);
-      // scene transition
-      if (this.fadeTime > 0) {
-        const { fadeDuration } = this;
-        const ratio = this.fadeTime / fadeDuration;
-        this.scene.alpha = ratio;
-        this.destinationScene.alpha = 1 - ratio;
-        this.#renderer.render(this.destinationScene, false);
-        if ((this.fadeTime -= STEP) <= 0) {
-          this.scene = this.destinationScene;
-          this.destinationScene = null;
+        while (dt >= SPEED) {
+          this.scene.update(STEP, t / MULTIPLIER);
+          gameUpdate(STEP, t / MULTIPLIER);
+          dt -= SPEED;
         }
-      }
-    };
 
-    const init = (ms) => {
-      last = ms / 1000;
-      requestAnimationFrame(loop);
-    };
+        this.#renderer.render(this.scene);
+        // scene transition
+        if (this.fadeTime > 0) {
+          const { fadeDuration } = this;
+          const ratio = this.fadeTime / fadeDuration;
+          this.scene.alpha = ratio;
+          this.destinationScene.alpha = 1 - ratio;
+          this.#renderer.render(this.destinationScene, false);
+          if ((this.fadeTime -= STEP) <= 0) {
+            this.scene = this.destinationScene;
+            this.destinationScene = null;
+          }
+        }
+      };
 
-    requestAnimationFrame(init);
-    // });
+      const init = (ms) => {
+        last = ms / 1000;
+        requestAnimationFrame(loop);
+      };
+
+      requestAnimationFrame(init);
+    });
   }
 }
 

@@ -5,27 +5,30 @@ import Barrel from "../entities/Barrel";
 import PauseDialog from "../dialogs/PauseDialog";
 import BloodParticle from "../particles/BloodParticle";
 import GunShootSoundURL from "../sounds/GunShoot.wav";
-import cluster from "../cluster/index";
 
+// cluster library
 // prettier-ignore
-const { 
-  ParticleEmitter, 
-  SoundBuffer, 
-  Container, 
-  Trigger, 
-  Camera, 
-  Vector, 
+import cluster from "../cluster/index";
+const {
+  ParticleEmitter,
+  SoundBuffer,
+  Container,
+  Trigger,
+  Assets,
+  Camera,
+  Vector,
   State,
-  Rect,
-  Text,
-  math, 
-  entity, 
+  math,
+  entity,
 } = cluster;
 
 const states = {
   PLAYING: 0,
   PAUSED: 1,
 };
+
+// import levelURL from "../levels/level01.json";
+// Assets.json(levelURL).then((data) => console.log(data));
 
 class GamePlay extends Container {
   constructor(game, input, transitions = { onEnter: () => {}, onExit: () => {} }) {
@@ -70,6 +73,17 @@ class GamePlay extends Container {
     // media
     this.gunShootSound = new SoundBuffer(GunShootSoundURL);
 
+    level;
+    const levelNo = 1;
+    const levelURL = import(`../levels/level0${1}.json`)
+      .then((url) => {
+        Assets.json(url.default);
+        // .then((data) => console.log(data))
+        // .catch((error) => console.log(error));
+      })
+      .catch((error) => console.log(error));
+
+    // init
     this.initialize();
   }
 
