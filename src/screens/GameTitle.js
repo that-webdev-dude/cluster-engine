@@ -11,6 +11,8 @@ class GameTitle extends Container {
     this.input = input;
     this.game = game;
 
+    this.onEnter();
+
     // black background
     const background = new Rect({
       width: game.view.width,

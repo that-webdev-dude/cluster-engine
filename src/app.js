@@ -7,51 +7,44 @@ import cluster from "./cluster";
 const { 
   MouseControls, 
   KeyControls, 
-  Game 
+  Assets,
+  Game,
 } = cluster;
 
-/**
- * game master
- * configuration
- */
+// game configuration
 const config = {
-  TILE_SIZE: 32,
   GAME_WIDTH: 832,
   GAME_HEIGHT: 640,
 };
 
-/**
- * game instance
- */
+// game instance
 const game = new Game({
   width: config.GAME_WIDTH,
   height: config.GAME_HEIGHT,
 });
 
-/**
- * input instance
- */
+// input instance
 const input = {
   key: new KeyControls(),
   mouse: new MouseControls(game.view),
 };
 
+// game screens
+const gameTitle = new GameTitle(game, input, {
+  onEnter: () => {},
+  onExit: () => {
+    game.setScene(gamePlay, 1);
+  },
+});
+
+const gamePlay = new GamePlay(game, input, {
+  onEnter: () => {},
+  onExit: () => {},
+});
+
+// run
 export default () => {
-  const gameTitle = new GameTitle(game, input, {
-    onEnter: () => {},
-    onExit: () => {
-      game.setScene(gamePlay, 1);
-    },
-  });
-
-  const gamePlay = new GamePlay(game, input, {
-    onEnter: () => {},
-    onExit: () => {},
-  });
-
   game.scene = gameTitle;
-  // game.scene = gamePlay;
-
   game.run((dt, t) => {
     /** running... */
   });

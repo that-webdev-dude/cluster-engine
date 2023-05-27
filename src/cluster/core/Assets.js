@@ -17,7 +17,7 @@ const load = (url, maker) => {
 
 const onAssetLoad = (e) => {
   if (completed) {
-    console.warn("Warning: asset defined after preload!", e.target);
+    console.warn("Warning: asset defined after preload!", e?.target || "no target");
     return;
   }
   // update listeners with the new state
