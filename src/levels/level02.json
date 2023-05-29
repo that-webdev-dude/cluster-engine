@@ -8,40 +8,64 @@
          "name":"spawns",
          "objects":[
                 {
-                 "class":"",
+                 "class":"player",
                  "gid":5,
                  "height":32,
                  "id":1,
-                 "name":"",
+                 "name":"player",
                  "rotation":0,
                  "visible":true,
                  "width":32,
-                 "x":80,
-                 "y":82.6666666666667
+                 "x":20,
+                 "y":52
                 }, 
                 {
                  "class":"",
                  "gid":11,
                  "height":32,
                  "id":2,
-                 "name":"",
+                 "name":"zombie1",
                  "rotation":0,
                  "visible":true,
                  "width":32,
-                 "x":233.333333333333,
-                 "y":80
+                 "x":182.666666666667,
+                 "y":49.3333333333333
                 }, 
                 {
                  "class":"",
                  "gid":17,
                  "height":32,
                  "id":3,
-                 "name":"",
+                 "name":"zombie02",
                  "rotation":0,
                  "visible":true,
                  "width":32,
-                 "x":168,
-                 "y":122.666666666667
+                 "x":65.3333333333333,
+                 "y":125.333333333333
+                }, 
+                {
+                 "class":"",
+                 "gid":17,
+                 "height":32,
+                 "id":5,
+                 "name":"zombie02",
+                 "rotation":0,
+                 "visible":true,
+                 "width":32,
+                 "x":133.333333333333,
+                 "y":92
+                }, 
+                {
+                 "class":"",
+                 "gid":17,
+                 "height":32,
+                 "id":6,
+                 "name":"zombie02",
+                 "rotation":0,
+                 "visible":true,
+                 "width":32,
+                 "x":221.333333333333,
+                 "y":152
                 }],
          "opacity":1,
          "type":"objectgroup",
@@ -50,7 +74,7 @@
          "y":0
         }],
  "nextlayerid":5,
- "nextobjectid":5,
+ "nextobjectid":7,
  "orientation":"orthogonal",
  "renderorder":"right-down",
  "tiledversion":"1.9.1",
