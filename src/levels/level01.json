@@ -3,45 +3,76 @@
  "infinite":false,
  "layers":[
         {
+         "data":[22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22,
+            22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22,
+            22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22,
+            22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22,
+            22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22,
+            22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22,
+            22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22,
+            22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22,
+            22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22,
+            22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22,
+            22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22,
+            22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22,
+            22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22,
+            22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22,
+            22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22,
+            22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22,
+            22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22,
+            22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22,
+            22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22,
+            22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22],
+         "height":20,
+         "id":1,
+         "name":"background",
+         "opacity":1,
+         "type":"tilelayer",
+         "visible":true,
+         "width":26,
+         "x":0,
+         "y":0
+        }, 
+        {
          "draworder":"topdown",
-         "id":4,
-         "name":"spawns",
+         "id":3,
+         "name":"entities",
          "objects":[
                 {
                  "class":"",
                  "gid":5,
                  "height":32,
                  "id":1,
-                 "name":"",
+                 "name":"player",
                  "rotation":0,
                  "visible":true,
                  "width":32,
-                 "x":80,
-                 "y":82.6666666666667
+                 "x":44,
+                 "y":74.6666666666667
                 }, 
                 {
                  "class":"",
                  "gid":11,
                  "height":32,
                  "id":2,
-                 "name":"",
+                 "name":"zombie1",
                  "rotation":0,
                  "visible":true,
                  "width":32,
-                 "x":233.333333333333,
-                 "y":80
+                 "x":610,
+                 "y":187.333333333333
                 }, 
                 {
                  "class":"",
                  "gid":17,
                  "height":32,
                  "id":3,
-                 "name":"",
+                 "name":"zombie2",
                  "rotation":0,
                  "visible":true,
                  "width":32,
-                 "x":168,
-                 "y":122.666666666667
+                 "x":460.666666666667,
+                 "y":501.333333333333
                 }],
          "opacity":1,
          "type":"objectgroup",
@@ -49,485 +80,19 @@
          "x":0,
          "y":0
         }],
- "nextlayerid":5,
- "nextobjectid":5,
+ "nextlayerid":4,
+ "nextobjectid":4,
  "orientation":"orthogonal",
  "renderorder":"right-down",
  "tiledversion":"1.9.1",
  "tileheight":32,
  "tilesets":[
         {
-         "columns":6,
          "firstgid":1,
-         "image":"..\/images\/shmup_characters.png",
-         "imageheight":128,
-         "imagewidth":192,
-         "margin":0,
-         "name":"Level01",
-         "spacing":0,
-         "tilecount":24,
-         "tileheight":32,
-         "tiles":[
-                {
-                 "id":0,
-                 "properties":[
-                        {
-                         "name":"bridge",
-                         "type":"bool",
-                         "value":false
-                        }, 
-                        {
-                         "name":"cloud",
-                         "type":"bool",
-                         "value":false
-                        }, 
-                        {
-                         "name":"walkable",
-                         "type":"bool",
-                         "value":false
-                        }]
-                }, 
-                {
-                 "id":1,
-                 "properties":[
-                        {
-                         "name":"bridge",
-                         "type":"bool",
-                         "value":false
-                        }, 
-                        {
-                         "name":"cloud",
-                         "type":"bool",
-                         "value":false
-                        }, 
-                        {
-                         "name":"walkable",
-                         "type":"bool",
-                         "value":false
-                        }]
-                }, 
-                {
-                 "id":2,
-                 "properties":[
-                        {
-                         "name":"bridge",
-                         "type":"bool",
-                         "value":false
-                        }, 
-                        {
-                         "name":"cloud",
-                         "type":"bool",
-                         "value":false
-                        }, 
-                        {
-                         "name":"walkable",
-                         "type":"bool",
-                         "value":false
-                        }]
-                }, 
-                {
-                 "id":3,
-                 "properties":[
-                        {
-                         "name":"bridge",
-                         "type":"bool",
-                         "value":false
-                        }, 
-                        {
-                         "name":"cloud",
-                         "type":"bool",
-                         "value":false
-                        }, 
-                        {
-                         "name":"walkable",
-                         "type":"bool",
-                         "value":false
-                        }]
-                }, 
-                {
-                 "id":4,
-                 "properties":[
-                        {
-                         "name":"bridge",
-                         "type":"bool",
-                         "value":false
-                        }, 
-                        {
-                         "name":"cloud",
-                         "type":"bool",
-                         "value":false
-                        }, 
-                        {
-                         "name":"walkable",
-                         "type":"bool",
-                         "value":false
-                        }]
-                }, 
-                {
-                 "id":5,
-                 "properties":[
-                        {
-                         "name":"bridge",
-                         "type":"bool",
-                         "value":false
-                        }, 
-                        {
-                         "name":"cloud",
-                         "type":"bool",
-                         "value":false
-                        }, 
-                        {
-                         "name":"walkable",
-                         "type":"bool",
-                         "value":false
-                        }]
-                }, 
-                {
-                 "id":6,
-                 "properties":[
-                        {
-                         "name":"bridge",
-                         "type":"bool",
-                         "value":false
-                        }, 
-                        {
-                         "name":"cloud",
-                         "type":"bool",
-                         "value":false
-                        }, 
-                        {
-                         "name":"walkable",
-                         "type":"bool",
-                         "value":false
-                        }]
-                }, 
-                {
-                 "id":7,
-                 "properties":[
-                        {
-                         "name":"bridge",
-                         "type":"bool",
-                         "value":false
-                        }, 
-                        {
-                         "name":"cloud",
-                         "type":"bool",
-                         "value":false
-                        }, 
-                        {
-                         "name":"walkable",
-                         "type":"bool",
-                         "value":false
-                        }]
-                }, 
-                {
-                 "id":8,
-                 "properties":[
-                        {
-                         "name":"bridge",
-                         "type":"bool",
-                         "value":false
-                        }, 
-                        {
-                         "name":"cloud",
-                         "type":"bool",
-                         "value":false
-                        }, 
-                        {
-                         "name":"walkable",
-                         "type":"bool",
-                         "value":false
-                        }]
-                }, 
-                {
-                 "id":9,
-                 "properties":[
-                        {
-                         "name":"bridge",
-                         "type":"bool",
-                         "value":false
-                        }, 
-                        {
-                         "name":"cloud",
-                         "type":"bool",
-                         "value":false
-                        }, 
-                        {
-                         "name":"walkable",
-                         "type":"bool",
-                         "value":false
-                        }]
-                }, 
-                {
-                 "id":10,
-                 "properties":[
-                        {
-                         "name":"bridge",
-                         "type":"bool",
-                         "value":false
-                        }, 
-                        {
-                         "name":"cloud",
-                         "type":"bool",
-                         "value":false
-                        }, 
-                        {
-                         "name":"walkable",
-                         "type":"bool",
-                         "value":false
-                        }]
-                }, 
-                {
-                 "id":11,
-                 "properties":[
-                        {
-                         "name":"bridge",
-                         "type":"bool",
-                         "value":false
-                        }, 
-                        {
-                         "name":"cloud",
-                         "type":"bool",
-                         "value":false
-                        }, 
-                        {
-                         "name":"walkable",
-                         "type":"bool",
-                         "value":false
-                        }]
-                }, 
-                {
-                 "id":12,
-                 "properties":[
-                        {
-                         "name":"bridge",
-                         "type":"bool",
-                         "value":false
-                        }, 
-                        {
-                         "name":"cloud",
-                         "type":"bool",
-                         "value":false
-                        }, 
-                        {
-                         "name":"walkable",
-                         "type":"bool",
-                         "value":false
-                        }]
-                }, 
-                {
-                 "id":13,
-                 "properties":[
-                        {
-                         "name":"bridge",
-                         "type":"bool",
-                         "value":false
-                        }, 
-                        {
-                         "name":"cloud",
-                         "type":"bool",
-                         "value":false
-                        }, 
-                        {
-                         "name":"walkable",
-                         "type":"bool",
-                         "value":false
-                        }]
-                }, 
-                {
-                 "id":14,
-                 "properties":[
-                        {
-                         "name":"bridge",
-                         "type":"bool",
-                         "value":false
-                        }, 
-                        {
-                         "name":"cloud",
-                         "type":"bool",
-                         "value":false
-                        }, 
-                        {
-                         "name":"walkable",
-                         "type":"bool",
-                         "value":false
-                        }]
-                }, 
-                {
-                 "id":15,
-                 "properties":[
-                        {
-                         "name":"bridge",
-                         "type":"bool",
-                         "value":false
-                        }, 
-                        {
-                         "name":"cloud",
-                         "type":"bool",
-                         "value":false
-                        }, 
-                        {
-                         "name":"walkable",
-                         "type":"bool",
-                         "value":false
-                        }]
-                }, 
-                {
-                 "id":16,
-                 "properties":[
-                        {
-                         "name":"bridge",
-                         "type":"bool",
-                         "value":false
-                        }, 
-                        {
-                         "name":"cloud",
-                         "type":"bool",
-                         "value":false
-                        }, 
-                        {
-                         "name":"walkable",
-                         "type":"bool",
-                         "value":false
-                        }]
-                }, 
-                {
-                 "id":17,
-                 "properties":[
-                        {
-                         "name":"bridge",
-                         "type":"bool",
-                         "value":false
-                        }, 
-                        {
-                         "name":"cloud",
-                         "type":"bool",
-                         "value":false
-                        }, 
-                        {
-                         "name":"walkable",
-                         "type":"bool",
-                         "value":false
-                        }]
-                }, 
-                {
-                 "id":18,
-                 "properties":[
-                        {
-                         "name":"bridge",
-                         "type":"bool",
-                         "value":false
-                        }, 
-                        {
-                         "name":"cloud",
-                         "type":"bool",
-                         "value":false
-                        }, 
-                        {
-                         "name":"walkable",
-                         "type":"bool",
-                         "value":true
-                        }]
-                }, 
-                {
-                 "id":19,
-                 "properties":[
-                        {
-                         "name":"bridge",
-                         "type":"bool",
-                         "value":false
-                        }, 
-                        {
-                         "name":"cloud",
-                         "type":"bool",
-                         "value":false
-                        }, 
-                        {
-                         "name":"walkable",
-                         "type":"bool",
-                         "value":true
-                        }]
-                }, 
-                {
-                 "id":20,
-                 "properties":[
-                        {
-                         "name":"bridge",
-                         "type":"bool",
-                         "value":false
-                        }, 
-                        {
-                         "name":"cloud",
-                         "type":"bool",
-                         "value":false
-                        }, 
-                        {
-                         "name":"walkable",
-                         "type":"bool",
-                         "value":true
-                        }]
-                }, 
-                {
-                 "id":21,
-                 "properties":[
-                        {
-                         "name":"bridge",
-                         "type":"bool",
-                         "value":false
-                        }, 
-                        {
-                         "name":"cloud",
-                         "type":"bool",
-                         "value":false
-                        }, 
-                        {
-                         "name":"walkable",
-                         "type":"bool",
-                         "value":false
-                        }]
-                }, 
-                {
-                 "id":22,
-                 "properties":[
-                        {
-                         "name":"bridge",
-                         "type":"bool",
-                         "value":false
-                        }, 
-                        {
-                         "name":"cloud",
-                         "type":"bool",
-                         "value":true
-                        }, 
-                        {
-                         "name":"walkable",
-                         "type":"bool",
-                         "value":true
-                        }]
-                }, 
-                {
-                 "id":23,
-                 "properties":[
-                        {
-                         "name":"bridge",
-                         "type":"bool",
-                         "value":true
-                        }, 
-                        {
-                         "name":"cloud",
-                         "type":"bool",
-                         "value":false
-                        }, 
-                        {
-                         "name":"walkable",
-                         "type":"bool",
-                         "value":true
-                        }]
-                }],
-         "tilewidth":32
+         "source":"spritesheet.tsx"
         }],
  "tilewidth":32,
  "type":"map",
  "version":"1.9",
- "width":50
+ "width":26
 }

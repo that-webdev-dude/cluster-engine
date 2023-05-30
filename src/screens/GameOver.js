@@ -1,8 +1,8 @@
 import Screen from "./Screen";
 
 class GameOver extends Screen {
-  constructor(game, input, state, transitions) {
-    super(game, input, state, transitions);
+  constructor(game, input, globals, transitions) {
+    super(game, input, globals, transitions);
   }
 
   update(dt, t) {

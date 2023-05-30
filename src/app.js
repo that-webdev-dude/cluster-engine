@@ -15,7 +15,7 @@ const input = {
   key: new KeyControls(),
 };
 
-// game state is here
+// game globals is here
 const defaults = () => ({
   newGame: true,
   data: {},
@@ -24,7 +24,7 @@ const defaults = () => ({
   lives: 3,
   spawn: null,
 });
-let state = defaults();
+let globals = defaults();
 
 // game screens
 /**
@@ -33,22 +33,22 @@ let state = defaults();
  * onExit
  */
 function startGameTitle() {
-  state = defaults();
+  globals = defaults();
   game.setScene(
-    new GameTitle(game, input, state, {
+    new GameTitle(game, input, globals, {
       onCreate: () => {},
       onExit: () => {
-        startGamePlay(1, state.spawn);
+        startGamePlay(1, globals.spawn);
       },
     })
   );
 }
 
 function startGamePlay(toLevel, spawn) {
-  state.level = toLevel;
-  state.spawn = spawn;
+  globals.level = toLevel;
+  globals.spawn = spawn;
   game.setScene(
-    new GamePlay(game, input, state, {
+    new GamePlay(game, input, globals, {
       onWin: startGamePlay,
       onLoose: startGameOver,
     })
@@ -57,7 +57,7 @@ function startGamePlay(toLevel, spawn) {
 
 function startGameOver() {
   game.setScene(
-    new GameOver(game, input, state, {
+    new GameOver(game, input, globals, {
       onExit: startGameTitle,
     })
   );

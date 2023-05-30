@@ -3,8 +3,8 @@ import cluster from "../cluster";
 const { Rect, Vector, Text, Timer } = cluster;
 
 class GameTitle extends Screen {
-  constructor(game, input, state, transitions) {
-    super(game, input, state, transitions);
+  constructor(game, input, globals, transitions) {
+    super(game, input, globals, transitions);
 
     // background
     const background = this.add(
@@ -42,8 +42,8 @@ class GameTitle extends Screen {
 
   update(dt, t) {
     super.update(dt, t);
+    // this actually starts a new game
     if (this.input.key.start) {
-      // this is actually starts a new game
       this.transitions.onExit();
     }
   }
