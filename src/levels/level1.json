@@ -25,7 +25,7 @@
             22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22, 22],
          "height":20,
          "id":1,
-         "name":"background",
+         "name":"layer0",
          "opacity":1,
          "type":"tilelayer",
          "visible":true,
@@ -36,7 +36,7 @@
         {
          "draworder":"topdown",
          "id":2,
-         "name":"entities",
+         "name":"spawns",
          "objects":[
                 {
                  "class":"",
@@ -47,8 +47,8 @@
                  "rotation":0,
                  "visible":true,
                  "width":32,
-                 "x":46.0932428951661,
-                 "y":587.477633725423
+                 "x":105,
+                 "y":105
                 }, 
                 {
                  "class":"",
@@ -59,44 +59,20 @@
                  "rotation":0,
                  "visible":true,
                  "width":32,
-                 "x":181.269683180218,
-                 "y":163.81488795398
+                 "x":584,
+                 "y":141
                 }, 
                 {
                  "class":"",
-                 "gid":11,
+                 "gid":17,
                  "height":32,
                  "id":3,
                  "name":"",
                  "rotation":0,
                  "visible":true,
                  "width":32,
-                 "x":511.517815746544,
-                 "y":83.03872241779
-                }, 
-                {
-                 "class":"",
-                 "gid":17,
-                 "height":32,
-                 "id":4,
-                 "name":"",
-                 "rotation":0,
-                 "visible":true,
-                 "width":32,
-                 "x":359.856443719413,
-                 "y":254.482012535417
-                }, 
-                {
-                 "class":"",
-                 "gid":17,
-                 "height":32,
-                 "id":5,
-                 "name":"",
-                 "rotation":0,
-                 "visible":true,
-                 "width":32,
-                 "x":613.174894822701,
-                 "y":502.305486391345
+                 "x":351,
+                 "y":483
                 }],
          "opacity":1,
          "type":"objectgroup",
@@ -105,15 +81,24 @@
          "y":0
         }],
  "nextlayerid":3,
- "nextobjectid":6,
+ "nextobjectid":4,
  "orientation":"orthogonal",
  "renderorder":"right-down",
  "tiledversion":"1.9.1",
  "tileheight":32,
  "tilesets":[
         {
+         "columns":6,
          "firstgid":1,
-         "source":"spritesheet.tsx"
+         "image":"..\/images\/spritesheet.png",
+         "imageheight":128,
+         "imagewidth":192,
+         "margin":0,
+         "name":"spritesheet",
+         "spacing":0,
+         "tilecount":24,
+         "tileheight":32,
+         "tilewidth":32
         }],
  "tilewidth":32,
  "type":"map",

@@ -1,6 +1,6 @@
 import Screen from "./Screen";
 import cluster from "../cluster";
-import spritesheetImageURL from "../images/spritesheet.png";
+import TiledLevel from "../levels/TiledLevel";
 const { State, Assets, TileMap, Texture } = cluster;
 
 /**
@@ -10,7 +10,7 @@ const { State, Assets, TileMap, Texture } = cluster;
  */
 const loadTiledLevel = async (levelID) => {
   try {
-    const levelURL = await import(`../levels/level0${levelID}.json`);
+    const levelURL = await import(`../levels/level${levelID}.json`);
     const levelData = await Assets.json(levelURL.default);
     return levelData;
   } catch (error) {
@@ -32,42 +32,35 @@ class GamePlay extends Screen {
     this.state = new State(states.LOADING);
     this.loaded = false;
 
-    // LEVEL LOADING
-    // FROM URL ONLY FOR NOW
-    // to do is the serialization
+    // // LEVEL LOADING
+    // // FROM URL ONLY FOR NOW
+    // // to do is the serialization
     loadTiledLevel(globals.level)
-      .then((data) => {
-        const {
-          tileheight: tileH,
-          tilewidth: tileW,
-          height: mapH,
-          width: mapW,
-          layers,
-          tilesets,
-        } = data;
+      .then((levelData) => {
+        const level = new TiledLevel(levelData);
 
-        // tilelayer
-        const backgroundLayer = layers.find((layer) => layer.name === "background");
-        const tiles = backgroundLayer.data.map((gid) => {
-          const tileIndex = gid - 1;
-          const noColumns = 6;
-          const x = Math.floor(tileIndex / noColumns);
-          const y = tileIndex % noColumns;
-          return {
-            x,
-            y,
-          };
-        });
-
-        // spawns
-        const entityLayer = layers.find((layer) => layer.name === "entities");
-
-        this.level = this.add(
-          new TileMap(tiles, mapW, mapH, tileW, tileH, new Texture(spritesheetImageURL))
-        );
+        //
+        // // tilelayer
+        // const backgroundLayer = layers.find((layer) => layer.name === "background");
+        // const tiles = backgroundLayer.data.map((gid) => {
+        //   const tileIndex = gid - 1;
+        //   const noColumns = 6;
+        //   const x = Math.floor(tileIndex / noColumns);
+        //   const y = tileIndex % noColumns;
+        //   return {
+        //     x,
+        //     y,
+        //   };
+        // });
+        //
+        // // spawns
+        // const entityLayer = layers.find((layer) => layer.name === "entities");
+        // this.level = this.add(
+        //   new TileMap(tiles, mapW, mapH, tileW, tileH, new Texture(spritesheetImageURL))
+        // );
       })
       .then(() => {
-        this.loaded = true;
+        // this.loaded = true;
       });
   }
 
