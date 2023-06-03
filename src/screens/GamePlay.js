@@ -1,292 +1,100 @@
-import Level from "../levels/Level";
-import Zombie from "../entities/Zombie";
-import Player from "../entities/Player";
-import Barrel from "../entities/Barrel";
-import PauseDialog from "../dialogs/PauseDialog";
-import BloodParticle from "../particles/BloodParticle";
-import GunShootSoundURL from "../sounds/GunShoot.wav";
+import Screen from "./Screen";
+import cluster from "../cluster";
+import TiledLevel from "../levels/TiledLevel";
+const { State, Assets, TileMap, Texture } = cluster;
 
-// cluster library
-// prettier-ignore
-import cluster from "../cluster/index";
-const {
-  ParticleEmitter,
-  SoundBuffer,
-  Container,
-  Trigger,
-  Assets,
-  Camera,
-  Vector,
-  State,
-  math,
-  entity,
-} = cluster;
-
-const states = {
-  PLAYING: 0,
-  PAUSED: 1,
+/**
+ * loadTiledLevel
+ * @param {String} levelID id of the level
+ * @returns level raw data
+ */
+const loadTiledLevel = async (levelID) => {
+  try {
+    const levelURL = await import(`../levels/level${levelID}.json`);
+    const levelData = await Assets.json(levelURL.default);
+    return levelData;
+  } catch (error) {
+    console.log(error);
+  }
 };
 
-class TiledLevel {
-  constructor(levelID = 1) {
-    this.levelID = levelID;
+const states = {
+  LOADING: 0,
+  READY: 1,
+  PLAYING: 2,
+  PAUSED: 3,
+  GAMEOVER: 4,
+};
 
-    const loadTiledLevel = async (levelID = 1) => {
-      try {
-        const levelURL = await import(`../levels/level0${levelID}.json`);
-        const levelData = await Assets.json(levelURL.default);
-        return levelData;
-      } catch (error) {
-        console.log(error);
-      }
-    };
+class GamePlay extends Screen {
+  constructor(game, input, globals, transitions) {
+    super(game, input, globals, transitions);
+    this.state = new State(states.LOADING);
+    this.loaded = false;
 
-    loadTiledLevel().then((level) => {
-      this.TiledLevel = level;
-      console.log(this);
-    });
-  }
-}
+    // // LEVEL LOADING
+    // // FROM URL ONLY FOR NOW
+    // // to do is the serialization
+    loadTiledLevel(globals.level)
+      .then((levelData) => {
+        const level = new TiledLevel(levelData);
 
-class GamePlay extends Container {
-  constructor(game, input, transitions = { onEnter: () => {}, onExit: () => {} }) {
-    super();
-    const gameW = game.width;
-    const gameH = game.height;
-
-    this.onEnter = transitions?.onEnter || function () {};
-    this.onExit = transitions?.onExit || function () {};
-    this.input = input;
-    this.game = game;
-    this.level = new TiledLevel(1);
-
-    // // level;
-    // const levelNo = 1;
-    // const levelURL = import(`../levels/level0${levelNo}.json`)
-    //   .then((url) => {
-    //     // console.log("file: GamePlay.js:81 ~ GamePlay ~ .then ~ url.default:", url.default);
-    //     Assets.json(url.default);
-    //     // .then((data) => console.log(data))
-    //     // .catch((error) => console.log(error));
-    //   })
-    //   .catch((error) => console.log(error));
-
-    this.onEnter();
+        //
+        // // tilelayer
+        // const backgroundLayer = layers.find((layer) => layer.name === "background");
+        // const tiles = backgroundLayer.data.map((gid) => {
+        //   const tileIndex = gid - 1;
+        //   const noColumns = 6;
+        //   const x = Math.floor(tileIndex / noColumns);
+        //   const y = tileIndex % noColumns;
+        //   return {
+        //     x,
+        //     y,
+        //   };
+        // });
+        //
+        // // spawns
+        // const entityLayer = layers.find((layer) => layer.name === "entities");
+        // this.level = this.add(
+        //   new TileMap(tiles, mapW, mapH, tileW, tileH, new Texture(spritesheetImageURL))
+        // );
+      })
+      .then(() => {
+        // this.loaded = true;
+      });
   }
 
   update(dt, t) {
-    super.update(dt);
+    super.update(dt, t);
+    const { state } = this;
+    switch (state.get()) {
+      case states.LOADING:
+        console.log("LOADING");
+        if (this.loaded) {
+          state.set(states.READY);
+        }
+        break;
+
+      case states.READY:
+        console.log("READY");
+        break;
+
+      case states.PLAYING:
+        console.log("PLAYING");
+        break;
+
+      case states.PAUSED:
+        console.log("PAUSED");
+        break;
+
+      case states.GAMEOVER:
+        console.log("GAMEOVER");
+        break;
+
+      default:
+        break;
+    }
   }
 }
-
-// class GamePlay extends Container {
-//   constructor(game, input, transitions = { onEnter: () => {}, onExit: () => {} }) {
-//     super();
-//     const gameW = game.width;
-//     const gameH = game.height;
-//     const level = new Level(gameW * 2, gameH);
-//     const player = new Player(input, level);
-//     const bullets = new Container();
-//     const zombies = new Container();
-//     const barrels = new Container();
-//     const triggers = new Container();
-//     const camera = new Camera(
-//       player,
-//       { width: game.width, height: game.height },
-//       { width: level.width, height: level.height }
-//     );
-
-//     camera.add(level);
-//     camera.add(player);
-//     camera.add(bullets);
-//     camera.add(zombies);
-//     camera.add(barrels);
-//     camera.add(triggers);
-//     this.add(camera);
-
-//     this.firstUpdate = true;
-//     this.onEnter = transitions?.onEnter || function () {};
-//     this.onExit = transitions?.onExit || function () {};
-//     this.input = input;
-//     this.game = game;
-
-//     this.level = level;
-//     this.camera = camera;
-//     this.player = player;
-//     this.bullets = bullets;
-//     this.zombies = zombies;
-//     this.barrels = barrels;
-//     this.triggers = triggers;
-//     this.state = new State(states.PLAYING);
-
-//     // media
-//     this.gunShootSound = new SoundBuffer(GunShootSoundURL);
-
-//     // init
-//     this.initialize();
-//   }
-
-//   spawnZombies(numberOfZombies = 0) {
-//     const { player, level, zombies } = this;
-//     // zombies spawn only on walkable tiles
-//     const nZombies = numberOfZombies;
-//     for (let z = 0; z < nZombies; z++) {
-//       let testPosition = null;
-//       const { tileW, tileH, width, height } = level;
-//       while (!testPosition) {
-//         const x = math.rand(tileW, width - 2 * tileW);
-//         const y = math.rand(tileH + 3 * 32, height - 2 * tileH - 3 * 32);
-//         const targetTile = level.tileAtPixelPosition(new Vector(x, y + tileH));
-//         if (!targetTile.frame.walkable) {
-//           const zombiePosition = new Vector(Math.floor(x), Math.floor(y) - 32);
-//           zombies.add(new Zombie(player, level, zombiePosition));
-//           testPosition = true;
-//         }
-//       }
-//     }
-//   }
-
-//   initialize() {
-//     const { player, level, zombies, barrels } = this;
-
-//     // zombies spawn
-//     this.spawnZombies();
-
-//     // barrels spawn
-//     this.barrel = barrels.add(new Barrel(new Vector(32 * 20, 32 * 7 + 2)));
-
-//     // triggers
-//     const testTrigger = new Trigger(
-//       { x: 0, y: 0, width: 100, height: 100 },
-//       () => {
-//         this.spawnZombies(15);
-//       },
-//       false
-//     );
-//     testTrigger.position.set(32, 32 * 5);
-//     this.triggers.add(testTrigger);
-//   }
-
-//   play(dt, t) {
-//     super.update(dt, t);
-//     const { input, player, camera, bullets, zombies, barrels } = this;
-
-//     if (input.key.pause) {
-//       if (!this.state.is([states.PAUSED])) {
-//         input.key.reset();
-//         this.state.set(states.PAUSED);
-//       }
-//     }
-
-//     if (input.key.action) {
-//       // bullet spawn
-//       const bullet = player.fire(dt);
-//       if (bullet) {
-//         this.gunShootSound.play();
-//         bullets.add(bullet);
-//       }
-//     }
-
-//     // bullet collisions
-//     bullets.children.forEach((bullet) => {
-//       // bullet hits zombie
-//       zombies.children.forEach((zombie) => {
-//         entity.hit(bullet, zombie, () => {
-//           const { x: zx, y: zy } = zombie.position;
-//           const { direction } = player;
-//           zombie.position.set(zx + 2 * direction, zy);
-//           zombie.damage(1);
-//           if (zombie.health === 0) {
-//             const particleEmitter = camera.add(
-//               new ParticleEmitter(
-//                 [...Array(20)].map(() => new BloodParticle(player.direction, "lightGreen")),
-//                 Vector.from(zombie.position)
-//               )
-//             );
-//             particleEmitter.play();
-//           }
-//           bullet.dead = true;
-//         });
-//       });
-
-//       // bullet hits barrel
-//       barrels.children.forEach((barrel) => {
-//         entity.hit(bullet, barrel, () => {
-//           barrel.damage(1);
-//           if (barrel.health === 0) {
-//             camera.shake();
-//             camera.flash(0.75);
-//           }
-//           bullet.dead = true;
-//         });
-//       });
-//     });
-
-//     // zombie collisions
-//     zombies.children.forEach((zombie) => {
-//       entity.hit(zombie, player, () => {
-//         // player blood splash
-//         const particleEmitter = camera.add(
-//           new ParticleEmitter(
-//             [...Array(5)].map(() => new BloodParticle(zombie.direction, "red")),
-//             Vector.from(player.position)
-//           )
-//         );
-//         particleEmitter.play();
-//         // player invincibility blink
-//         if (!player.isInvincible) player.invincible(0.5);
-//         // player knockback
-//         player.knockback(dt, zombie);
-//         // player damage
-//         // ...
-//       });
-//     });
-
-//     // player collisions
-//     // triggers
-//     this.triggers.children.forEach((trigger) => {
-//       entity.hit(player, trigger, () => trigger.triggerOnce());
-//     });
-//     // ...
-//   }
-
-//   makePauseDialog() {
-//     const { input, game } = this;
-//     const onCloseDialog = () => {
-//       this.state.set(states.PLAYING);
-//     };
-//     return new PauseDialog(input, onCloseDialog);
-//   }
-
-//   update(dt, t) {
-//     // prettier-ignore
-//     const {
-//       state,
-//     } = this;
-
-//     switch (state.get()) {
-//       case states.PAUSED:
-//         if (state.first) {
-//           this.pauseDialog = this.add(this.makePauseDialog());
-//         }
-//         this.pauseDialog.update(dt, t);
-//         break;
-
-//       case states.PLAYING:
-//         this.play(dt, t);
-//         break;
-
-//       default:
-//         break;
-//     }
-
-//     state.update(dt, t);
-
-//     // FIRST UPDATE ONLY
-//     if (this.firstUpdate) {
-//       this.firstUpdate = false;
-//     }
-//   }
-// }
 
 export default GamePlay;

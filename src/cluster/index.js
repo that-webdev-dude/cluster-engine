@@ -3,6 +3,7 @@ import Vector from "./utils/Vector";
 import Physics from "./utils/Physics";
 import entity from "./utils/entity";
 import math from "./utils/math";
+import tiledParser from "./utils/tiledParser";
 
 // SHAPES
 import Capsule from "./shapes/Capsule";
@@ -49,6 +50,7 @@ export default {
   Physics,
   entity,
   math,
+  tiledParser,
 
   // SHAPES
   Capsule,

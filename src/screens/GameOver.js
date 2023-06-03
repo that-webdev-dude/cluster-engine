@@ -1,25 +1,12 @@
-import cluster from "../cluster/index";
-const { Container } = cluster;
+import Screen from "./Screen";
 
-class GameOver extends Container {
-  constructor(game, input, transitions = { onEnter: () => {}, onExit: () => {} }) {
-    super();
-    this.game = game;
-    this.input = input;
-    this.onExit = transitions?.onExit || function () {};
-    this.onEnter = transitions?.onEnter || function () {};
-    this.updates = 0;
+class GameOver extends Screen {
+  constructor(game, input, globals, transitions) {
+    super(game, input, globals, transitions);
   }
 
   update(dt, t) {
-    super.update(dt, t);
-    console.log("... game over");
-
-    if (this.input.mouse.isPressed) {
-      this.onExit();
-    }
-
-    this.input.mouse.update();
+    console.log("game over", dt);
   }
 }
 
