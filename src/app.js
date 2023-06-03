@@ -15,7 +15,7 @@ const input = {
   key: new KeyControls(),
 };
 
-// game globals is here
+// game globals is here!
 const defaults = () => ({
   newGame: true,
   data: {},
