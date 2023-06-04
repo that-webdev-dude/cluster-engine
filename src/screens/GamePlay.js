@@ -38,26 +38,7 @@ class GamePlay extends Screen {
     loadTiledLevel(globals.level)
       .then((levelData) => {
         const level = new TiledLevel(levelData);
-
-        //
-        // // tilelayer
-        // const backgroundLayer = layers.find((layer) => layer.name === "background");
-        // const tiles = backgroundLayer.data.map((gid) => {
-        //   const tileIndex = gid - 1;
-        //   const noColumns = 6;
-        //   const x = Math.floor(tileIndex / noColumns);
-        //   const y = tileIndex % noColumns;
-        //   return {
-        //     x,
-        //     y,
-        //   };
-        // });
-        //
-        // // spawns
-        // const entityLayer = layers.find((layer) => layer.name === "entities");
-        // this.level = this.add(
-        //   new TileMap(tiles, mapW, mapH, tileW, tileH, new Texture(spritesheetImageURL))
-        // );
+        this.add(level);
       })
       .then(() => {
         // this.loaded = true;

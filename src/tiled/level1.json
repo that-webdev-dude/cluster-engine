@@ -39,36 +39,36 @@
          "name":"spawns",
          "objects":[
                 {
-                 "class":"",
                  "gid":5,
                  "height":32,
                  "id":1,
                  "name":"",
                  "rotation":0,
+                 "type":"",
                  "visible":true,
                  "width":32,
                  "x":105,
                  "y":105
                 }, 
                 {
-                 "class":"",
                  "gid":11,
                  "height":32,
                  "id":2,
                  "name":"",
                  "rotation":0,
+                 "type":"",
                  "visible":true,
                  "width":32,
                  "x":584,
                  "y":141
                 }, 
                 {
-                 "class":"",
                  "gid":17,
                  "height":32,
                  "id":3,
                  "name":"",
                  "rotation":0,
+                 "type":"",
                  "visible":true,
                  "width":32,
                  "x":351,
@@ -84,7 +84,7 @@
  "nextobjectid":4,
  "orientation":"orthogonal",
  "renderorder":"right-down",
- "tiledversion":"1.9.1",
+ "tiledversion":"1.10.1",
  "tileheight":32,
  "tilesets":[
         {
@@ -98,10 +98,20 @@
          "spacing":0,
          "tilecount":24,
          "tileheight":32,
+         "tiles":[
+                {
+                 "id":21,
+                 "properties":[
+                        {
+                         "name":"walkable",
+                         "type":"bool",
+                         "value":true
+                        }]
+                }],
          "tilewidth":32
         }],
  "tilewidth":32,
  "type":"map",
- "version":"1.9",
+ "version":"1.10",
  "width":26
 }

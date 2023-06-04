@@ -1,27 +1,16 @@
 import cluster from "../cluster";
 import spritesheetImageURL from "../images/spritesheet.png";
-const { TileMap, Container, Texture, tiledParser } = cluster;
+const { TileMap, Container, Texture, TiledParser } = cluster;
 
-// this is the tileset texture
-// loaded externally
+// TODO
+// how do we handle the texture here?
 const texture = new Texture(spritesheetImageURL);
 
-// here's the actual TiledLevel
-// class definition
-class TiledLevel extends Container {
-  constructor(levelData) {
-    // parse tiled level
-    // -----------------
-    const {
-      tileheight: tileH,
-      tilewidth: tileW,
-      height: mapH,
-      width: mapW,
-      layers,
-      tilesets,
-    } = levelData;
-    // -----------------
-    // parse tiled level
+class TiledLevel extends TileMap {
+  constructor(tiledData) {
+    const { mapW, mapH, tileW, tileH, tiles } =
+      TiledParser.parseLevel(tiledData);
+    super(tiles, mapW, mapH, tileW, tileH, texture);
   }
 }
 

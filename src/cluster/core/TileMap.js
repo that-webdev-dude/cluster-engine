@@ -22,7 +22,6 @@ class TileMap extends Container {
     this.children = tiles.map((frame, index) => {
       const column = index % mapW;
       const row = Math.floor(index / mapW);
-
       const s = texture ? new TileSprite(texture, tileW, tileH) : frame;
       s.position = new Vector(column * tileW, row * tileH);
       s.frame = frame;

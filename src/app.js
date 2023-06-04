@@ -26,7 +26,7 @@ const defaults = () => ({
 });
 let globals = defaults();
 
-// game screens
+// game screens!
 /**
  * onCreate
  * onNext
