@@ -1,10 +1,17 @@
-import barrelImageURL from "../images/barrel.png";
 import cluster from "../cluster";
-const { Sprite, Texture, Vector } = cluster;
+import barrelImageURL from "../images/barrel.png";
+// prettier-ignore
+const { 
+  Texture, 
+  Sprite, 
+  Vector 
+} = cluster;
+
+const texture = new Texture(barrelImageURL);
 
 class Barrel extends Sprite {
   constructor(position = new Vector()) {
-    super(new Texture(barrelImageURL));
+    super(texture);
     this.position = position;
     this.health = 5;
     this.hitbox = {
@@ -23,14 +30,6 @@ class Barrel extends Sprite {
       width,
       height,
     };
-  }
-
-  damage(amount) {
-    this.health -= amount;
-  }
-
-  update(dt, t) {
-    if (this.health === 0) this.dead = true;
   }
 }
 

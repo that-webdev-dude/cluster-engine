@@ -1,7 +1,16 @@
 import Screen from "./Screen";
 import cluster from "../cluster";
 import TiledLevel from "../levels/TiledLevel";
-const { State, Assets } = cluster;
+import Player from "../entities/Player";
+import Zombie from "../entities/Zombie";
+import Barrel from "../entities/Barrel";
+import Vector from "../cluster/utils/Vector";
+// prettier-ignore
+const { 
+  State, 
+  Assets, 
+  Container 
+} = cluster;
 
 /**
  * loadTiledLevel
@@ -31,18 +40,52 @@ class GamePlay extends Screen {
     super(game, input, globals, transitions);
     this.state = new State(states.LOADING);
     this.loaded = false;
+    this.level = null;
+    this.player = null;
+    this.zombies = new Container();
+    this.barrels = new Container();
+
+    // this.add(this.zombies);
 
     // // LEVEL LOADING
     // // FROM URL ONLY FOR NOW
     // // to do is the serialization
     loadTiledLevel(globals.level)
       .then((levelData) => {
-        const level = new TiledLevel(levelData);
+        // setup level
+        this.level = this.add(new TiledLevel(levelData));
+        this.level.spawns.forEach((spawn) => {
+          const { name, x, y } = spawn;
+          switch (name) {
+            case `player`:
+              this.player = new Player(input, new Vector(x, y));
+              break;
 
-        this.level = this.add(level);
+            case `zombie1`:
+              this.zombies.add(new Zombie(1, new Vector(x, y)));
+              break;
+
+            case `zombie2`:
+              this.zombies.add(new Zombie(2, new Vector(x, y)));
+              break;
+
+            case `barrel`:
+              this.barrels.add(new Barrel(new Vector(x, y)));
+              break;
+
+            default:
+              break;
+          }
+        });
+
+        // add now all the entities
+        this.add(this.player);
+        this.add(this.zombies);
+        this.add(this.barrels);
       })
       .then(() => {
-        // this.loaded = true;
+        this.globals.spawns = this.level.spawns;
+        this.loaded = true;
       });
   }
 
