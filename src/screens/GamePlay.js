@@ -1,7 +1,7 @@
 import Screen from "./Screen";
 import cluster from "../cluster";
 import TiledLevel from "../levels/TiledLevel";
-const { State, Assets, TileMap, Texture } = cluster;
+const { State, Assets } = cluster;
 
 /**
  * loadTiledLevel
@@ -38,7 +38,8 @@ class GamePlay extends Screen {
     loadTiledLevel(globals.level)
       .then((levelData) => {
         const level = new TiledLevel(levelData);
-        this.add(level);
+
+        this.level = this.add(level);
       })
       .then(() => {
         // this.loaded = true;

@@ -102,28 +102,6 @@ class TiledParserTools {
       ...tileProperties,
     };
   }
-
-  /**
-   * parseLevel
-   * @param {Object} tiledData the raw tiled data
-   * @returns object of a TileMap initialization properties
-   */
-  static parseLevel(tiledData) {
-    const {
-      tileheight: tileH,
-      tilewidth: tileW,
-      height: mapH,
-      width: mapW,
-      layers,
-    } = tiledData;
-
-    const { data } = this.getLayerbyName(layers, "level");
-    const tiles = data.map((tileGID) => {
-      return this.parseTile(tiledData, tileGID);
-    });
-
-    return { mapW, mapH, tileW, tileH, tiles };
-  }
 }
 
 class TiledParser {
@@ -147,6 +125,24 @@ class TiledParser {
     });
 
     return { mapW, mapH, tileW, tileH, tiles };
+  }
+
+  /**
+   * parseSpawns
+   * @param {Object} tiledData the raw tiled data
+   * @returns the spawns data
+   */
+  static parseSpawns(tiledData) {
+    const { layers } = tiledData;
+    const { objects } = TiledParserTools.getLayerbyName(layers, "spawns");
+    return objects.map((obj) => {
+      const { name, x, y } = obj;
+      return {
+        name,
+        x,
+        y,
+      };
+    });
   }
 }
 

@@ -11,6 +11,7 @@ class TiledLevel extends TileMap {
     const { mapW, mapH, tileW, tileH, tiles } =
       TiledParser.parseLevel(tiledData);
     super(tiles, mapW, mapH, tileW, tileH, texture);
+    this.spawns = TiledParser.parseSpawns(tiledData);
   }
 }
 
