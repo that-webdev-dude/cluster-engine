@@ -1,14 +1,15 @@
 import Screen from "./Screen";
-import cluster from "../cluster";
-import TiledLevel from "../levels/TiledLevel";
 import Player from "../entities/Player";
 import Zombie from "../entities/Zombie";
 import Barrel from "../entities/Barrel";
-import Vector from "../cluster/utils/Vector";
+import TiledLevel from "../levels/TiledLevel";
+import LoadingDialog from "../dialogs/LoadingDialog";
+import cluster from "../cluster";
 // prettier-ignore
 const { 
   State, 
   Assets, 
+  Vector,
   Container 
 } = cluster;
 
@@ -89,17 +90,30 @@ class GamePlay extends Screen {
       });
   }
 
+  makeLoadingDialog() {
+    const { state } = this;
+    return new LoadingDialog(() => {
+      state.set("READY");
+    });
+  }
+
   update(dt, t) {
     super.update(dt, t);
     const { state } = this;
     switch (state.get()) {
+      // loading state
       case states.LOADING:
-        console.log("LOADING");
+        if (this.state.first) {
+          this.loadingDialog = this.add(this.makeLoadingDialog());
+        }
         if (this.loaded) {
-          state.set(states.READY);
+          this.loadingDialog.close();
+        } else {
+          this.loadingDialog.update(dt, t);
         }
         break;
 
+      // ready state
       case states.READY:
         console.log("READY");
         break;

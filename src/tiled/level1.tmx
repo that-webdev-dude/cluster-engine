@@ -88,8 +88,8 @@
  </layer>
  <objectgroup id="2" name="spawns">
   <object id="1" name="player" gid="5" x="105" y="105" width="32" height="32"/>
-  <object id="2" name="zombie" gid="11" x="584" y="141" width="32" height="32"/>
-  <object id="3" name="zombie" gid="17" x="351" y="483" width="32" height="32"/>
+  <object id="2" name="zombie1" gid="11" x="584" y="141" width="32" height="32"/>
+  <object id="3" name="zombie2" gid="17" x="351" y="483" width="32" height="32"/>
   <object id="4" name="barrel" type="Barrel" gid="25" x="558.598" y="336.085" width="32" height="32"/>
  </objectgroup>
 </map>
