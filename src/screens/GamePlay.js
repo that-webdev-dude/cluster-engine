@@ -4,6 +4,7 @@ import Zombie from "../entities/Zombie";
 import Barrel from "../entities/Barrel";
 import TiledLevel from "../levels/TiledLevel";
 import LoadingDialog from "../dialogs/LoadingDialog";
+import ReadyDialog from "../dialogs/ReadyDialog";
 import cluster from "../cluster";
 // prettier-ignore
 const { 
@@ -43,10 +44,10 @@ class GamePlay extends Screen {
     this.loaded = false;
     this.level = null;
     this.player = null;
+    this.dialog = null;
     this.zombies = new Container();
     this.barrels = new Container();
-
-    // this.add(this.zombies);
+    this.firstUpdate = true;
 
     // // LEVEL LOADING
     // // FROM URL ONLY FOR NOW
@@ -54,7 +55,7 @@ class GamePlay extends Screen {
     loadTiledLevel(globals.level)
       .then((levelData) => {
         // setup level
-        this.level = this.add(new TiledLevel(levelData));
+        this.level = new TiledLevel(levelData);
         this.level.spawns.forEach((spawn) => {
           const { name, x, y } = spawn;
           switch (name) {
@@ -80,6 +81,7 @@ class GamePlay extends Screen {
         });
 
         // add now all the entities
+        this.add(this.level);
         this.add(this.player);
         this.add(this.zombies);
         this.add(this.barrels);
@@ -91,35 +93,53 @@ class GamePlay extends Screen {
   }
 
   makeLoadingDialog() {
-    const { state } = this;
-    return new LoadingDialog(() => {
-      state.set("READY");
+    const { game, state } = this;
+    const { width, height } = game.view;
+    return new LoadingDialog(width, height, () => {
+      this.remove(this.dialog);
+      state.set(states.READY);
     });
   }
 
-  update(dt, t) {
+  makeReadyDialog() {
+    const { game, state } = this;
+    const { width, height } = game.view;
+    return new ReadyDialog(width, height, () => {
+      this.remove(this.dialog);
+      state.set(states.PLAYING);
+    });
+  }
+
+  updateGameplay(dt, t) {
     super.update(dt, t);
+  }
+
+  update(dt, t) {
     const { state } = this;
+
     switch (state.get()) {
       // loading state
       case states.LOADING:
         if (this.state.first) {
-          this.loadingDialog = this.add(this.makeLoadingDialog());
+          this.dialog = this.add(this.makeLoadingDialog());
         }
-        if (this.loaded) {
-          this.loadingDialog.close();
-        } else {
-          this.loadingDialog.update(dt, t);
-        }
+        this.dialog.update(dt, t, {
+          shouldClose: this.loaded,
+        });
+
         break;
 
       // ready state
       case states.READY:
-        console.log("READY");
+        if (this.state.first) {
+          this.dialog = this.add(this.makeReadyDialog());
+        }
+        this.dialog.update(dt, t);
+
         break;
 
       case states.PLAYING:
-        console.log("PLAYING");
+        this.updateGameplay(dt, t);
         break;
 
       case states.PAUSED:
@@ -133,6 +153,8 @@ class GamePlay extends Screen {
       default:
         break;
     }
+
+    state.update(dt, t);
   }
 }
 

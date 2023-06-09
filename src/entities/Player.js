@@ -40,6 +40,7 @@ class Player extends TileSprite {
     this.position = position;
     this.anchor = new Vector(0, 0);
     this.scale = new Vector(1, 1);
+    // this.dead = true;
   }
 
   lookRight() {

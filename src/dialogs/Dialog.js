@@ -1,20 +1,30 @@
 import cluster from "../cluster/index";
+
 // prettier-ignore
 const { 
-  Container,
+  Container, 
+  Vector,
   Text,
   Rect,
 } = cluster;
 
-class LoadingDialog extends Container {
-  constructor(width = 0, height = 0, onClose = () => {}) {
+class Dialog extends Container {
+  constructor(
+    width = 0,
+    height = 0,
+    text = [],
+    onUpdate = () => {},
+    onClose = () => {}
+  ) {
     super();
-    this.width = width;
-    this.height = height;
+    // this.height = height;
+    // this.width = width;
+    // this.text = text;
+    this.onUpdate = onUpdate;
     this.onClose = onClose;
     this.elapsed = 0;
-    this.dead = false;
 
+    // draw the dialog window
     this.background = this.add(
       new Rect({
         width: width,
@@ -22,13 +32,15 @@ class LoadingDialog extends Container {
         style: { fill: "rgba(255, 0, 0, 0.25)" },
       })
     );
+
     this.text = this.add(
-      new Text("...", {
-        fill: "white",
-        font: '16px "Press Start 2P"',
-      })
+      new Text(text, { fill: "white", font: '16px "Press Start 2P"' })
     );
     this.text.position.set(width / 2, height / 2);
+  }
+
+  setText(text) {
+    this.text.text = text;
   }
 
   close() {
@@ -36,13 +48,9 @@ class LoadingDialog extends Container {
     this.onClose();
   }
 
-  update(dt, t, data = {}) {
-    const { shouldClose } = data;
+  update(dt, t) {
     this.elapsed += dt;
-    if (shouldClose) {
-      this.close();
-    }
   }
 }
 
-export default LoadingDialog;
+export default Dialog;
