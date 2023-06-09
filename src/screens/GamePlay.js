@@ -8,6 +8,7 @@ import ReadyDialog from "../dialogs/ReadyDialog";
 import cluster from "../cluster";
 // prettier-ignore
 const { 
+  Text,
   State, 
   Assets, 
   Vector,
@@ -48,11 +49,17 @@ class GamePlay extends Screen {
     this.zombies = new Container();
     this.barrels = new Container();
     this.firstUpdate = true;
+    this.scoreText = null;
+    this.livesText = null;
+    this.timerText = null;
+    this.elapsed = 0;
+    this.timer = globals.timer;
 
     // // LEVEL LOADING
     // // FROM URL ONLY FOR NOW
     // // to do is the serialization
-    loadTiledLevel(globals.level)
+    const { levelId } = globals;
+    loadTiledLevel(levelId)
       .then((levelData) => {
         // setup level
         this.level = new TiledLevel(levelData);
@@ -85,6 +92,23 @@ class GamePlay extends Screen {
         this.add(this.player);
         this.add(this.zombies);
         this.add(this.barrels);
+
+        // now add the level UI
+        const { scores, timer } = globals;
+        this.scoreText = new Text(`scores: ${scores}`, {
+          fill: "white",
+          font: '16px "Press Start 2P"',
+        });
+        this.scoreText.position.set(game.view.width / 2, game.view.height - 40);
+
+        this.timerText = new Text(`${this.timer}`, {
+          fill: "red",
+          font: '32px "Press Start 2P"',
+        });
+        this.timerText.position.set(game.view.width / 2, 32);
+
+        this.add(this.scoreText);
+        this.add(this.timerText);
       })
       .then(() => {
         this.globals.spawns = this.level.spawns;
@@ -92,6 +116,10 @@ class GamePlay extends Screen {
       });
   }
 
+  /**
+   * makeLoadingDialog
+   * @returns LoadingDialog
+   */
   makeLoadingDialog() {
     const { game, state } = this;
     const { width, height } = game.view;
@@ -101,6 +129,10 @@ class GamePlay extends Screen {
     });
   }
 
+  /**
+   * makeReadyDialog
+   * @returns ReadyDialog
+   */
   makeReadyDialog() {
     const { game, state } = this;
     const { width, height } = game.view;
@@ -110,8 +142,17 @@ class GamePlay extends Screen {
     });
   }
 
+  /**
+   * updateGameplay
+   * @param {number} dt time step ms
+   * @param {number} t elapsed seconds
+   */
   updateGameplay(dt, t) {
     super.update(dt, t);
+
+    // timer update
+    this.timer -= dt;
+    this.timerText.text = Math.floor(this.timer);
   }
 
   update(dt, t) {

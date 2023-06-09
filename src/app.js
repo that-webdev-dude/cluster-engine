@@ -19,8 +19,9 @@ const input = {
 const defaults = () => ({
   newGame: true,
   data: {},
-  level: 1,
-  score: 0,
+  timer: 59,
+  levelId: 1,
+  scores: 0,
   lives: 3,
   spawns: null,
 });
