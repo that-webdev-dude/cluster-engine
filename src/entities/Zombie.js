@@ -28,6 +28,13 @@ class Zombie extends TileSprite {
     this.position = position;
     this.anchor = new Vector(0, 0);
     this.scale = new Vector(1, 1);
+    this.hitbox = {
+      x: 0,
+      y: 0,
+      width,
+      height,
+    };
+    this.dead = false;
 
     this.animation.play(`idle`);
   }

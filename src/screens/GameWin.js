@@ -2,7 +2,7 @@ import Screen from "./Screen";
 import cluster from "../cluster";
 const { Rect, Vector, Text, Timer } = cluster;
 
-class GameOver extends Screen {
+class GameWin extends Screen {
   constructor(game, input, globals, transitions) {
     super(game, input, globals, transitions);
 
@@ -11,13 +11,13 @@ class GameOver extends Screen {
       new Rect({
         width: game.width,
         height: game.height,
-        style: { fill: "green" },
+        style: { fill: "pink" },
       })
     );
 
     // game over text
-    const gameOverText = this.add(
-      new Text("GAME OVER", {
+    const gameWinText = this.add(
+      new Text("YOU WIN", {
         fill: "white",
         font: '48px "Press Start 2P"',
       })
@@ -32,15 +32,15 @@ class GameOver extends Screen {
     );
 
     this.background = background;
-    this.gameOverText = gameOverText;
+    this.gameWinText = gameWinText;
     this.pressSpaceText = pressSpaceText;
 
     this.initialize();
   }
 
   initialize() {
-    const { gameOverText, pressSpaceText, game } = this;
-    gameOverText.position = new Vector(
+    const { gameWinText, pressSpaceText, game } = this;
+    gameWinText.position = new Vector(
       game.view.width / 2,
       game.view.height / 2 - 48
     );
@@ -60,4 +60,4 @@ class GameOver extends Screen {
   }
 }
 
-export default GameOver;
+export default GameWin;

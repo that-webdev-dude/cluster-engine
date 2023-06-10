@@ -2,6 +2,7 @@ import cluster from "./cluster";
 import GamePlay from "./screens/GamePlay";
 import GameTitle from "./screens/GameTitle";
 import GameOver from "./screens/GameOver";
+import GameWin from "./screens/GameWin";
 
 // cluster instances
 const { KeyControls, Game } = cluster;
@@ -19,7 +20,7 @@ const input = {
 const defaults = () => ({
   newGame: true,
   data: {},
-  timer: 59,
+  timer: 15,
   levelId: 1,
   scores: 0,
   lives: 3,
@@ -34,15 +35,15 @@ function startGameTitle() {
     new GameTitle(game, input, globals, {
       onCreate: () => {},
       onExit: () => {
-        startGamePlay(1, globals.spawn);
+        startGamePlay(globals.levelId, globals.spawn);
       },
     })
   );
 }
 
-function startGamePlay(toLevel, spawn) {
-  globals.level = toLevel;
-  globals.spawn = spawn;
+function startGamePlay(toLevel, spawns) {
+  globals.levelId = toLevel;
+  globals.spawns = spawns;
   game.setScene(
     new GamePlay(game, input, globals, {
       onWin: startGamePlay,
@@ -54,6 +55,14 @@ function startGamePlay(toLevel, spawn) {
 function startGameOver() {
   game.setScene(
     new GameOver(game, input, globals, {
+      onExit: startGameTitle,
+    })
+  );
+}
+
+function startGameWin() {
+  game.setScene(
+    new GameWin(game, input, globals, {
       onExit: startGameTitle,
     })
   );

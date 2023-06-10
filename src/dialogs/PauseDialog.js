@@ -19,12 +19,14 @@ class PauseDialog extends Container {
       new Rect({
         width: 32 * 26,
         height: 32 * 20,
-        style: { fill: "rgba(255, 0, 0, 0.90)" },
+        style: { fill: "rgba(255, 0, 0, 1)" },
       })
     );
     bg.position = new Vector(0, 0);
 
-    const text = this.add(new Text("PAUSED", { fill: "white", font: '16px "Press Start 2P"' }));
+    const text = this.add(
+      new Text("PAUSED", { fill: "white", font: '16px "Press Start 2P"' })
+    );
     text.position = new Vector(100, 100);
   }
 

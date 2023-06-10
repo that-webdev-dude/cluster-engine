@@ -20,6 +20,7 @@ class Barrel extends Sprite {
       width: this.width,
       height: this.height,
     };
+    this.dead = false;
   }
 
   get bounds() {

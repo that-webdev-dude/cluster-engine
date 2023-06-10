@@ -10,9 +10,12 @@ import cluster from "../cluster";
 const { 
   Text,
   State, 
+  Camera,
   Assets, 
+  Container,
+  // utils
   Vector,
-  Container 
+  entity
 } = cluster;
 
 /**
@@ -40,20 +43,28 @@ const states = {
 
 class GamePlay extends Screen {
   constructor(game, input, globals, transitions) {
+    const gameW = game.width;
+    const gameH = game.height;
+
     super(game, input, globals, transitions);
     this.state = new State(states.LOADING);
-    this.loaded = false;
+    this.camera = null;
     this.level = null;
     this.player = null;
     this.dialog = null;
-    this.zombies = new Container();
-    this.barrels = new Container();
-    this.firstUpdate = true;
     this.scoreText = null;
     this.livesText = null;
     this.timerText = null;
-    this.elapsed = 0;
+    this.zombies = new Container();
+    this.barrels = new Container();
+    this.globals = globals;
     this.timer = globals.timer;
+    this.lives = globals.lives;
+    this.scores = globals.scores;
+    this.transitions = transitions;
+    this.firstUpdate = true;
+    this.elapsed = 0;
+    this.loaded = false;
 
     // // LEVEL LOADING
     // // FROM URL ONLY FOR NOW
@@ -87,28 +98,29 @@ class GamePlay extends Screen {
           }
         });
 
-        // add now all the entities
-        this.add(this.level);
-        this.add(this.player);
-        this.add(this.zombies);
-        this.add(this.barrels);
-
         // now add the level UI
-        const { scores, timer } = globals;
+        const { scores, lives, timer } = this.globals;
+        const { view } = game;
         this.scoreText = new Text(`scores: ${scores}`, {
           fill: "white",
           font: '16px "Press Start 2P"',
         });
-        this.scoreText.position.set(game.view.width / 2, game.view.height - 40);
+        this.scoreText.position.set(view.width / 2 + 100, view.height - 40);
 
-        this.timerText = new Text(`${this.timer}`, {
+        this.livesText = new Text(`lives: ${this.globals.lives}`, {
+          fill: "white",
+          font: '16px "Press Start 2P"',
+        });
+        this.livesText.position.set(view.width / 2 - 100, view.height - 40);
+
+        this.timerText = new Text(`${timer}`, {
           fill: "red",
           font: '32px "Press Start 2P"',
         });
-        this.timerText.position.set(game.view.width / 2, 32);
+        this.timerText.position.set(view.width / 2, 32);
 
-        this.add(this.scoreText);
-        this.add(this.timerText);
+        // finally the camera
+        this.camera = this.add(new Camera(this.player, view, view));
       })
       .then(() => {
         this.globals.spawns = this.level.spawns;
@@ -124,7 +136,7 @@ class GamePlay extends Screen {
     const { game, state } = this;
     const { width, height } = game.view;
     return new LoadingDialog(width, height, () => {
-      this.remove(this.dialog);
+      this.camera.remove(this.dialog);
       state.set(states.READY);
     });
   }
@@ -137,7 +149,14 @@ class GamePlay extends Screen {
     const { game, state } = this;
     const { width, height } = game.view;
     return new ReadyDialog(width, height, () => {
-      this.remove(this.dialog);
+      this.camera.remove(this.dialog);
+      this.camera.add(this.level);
+      this.camera.add(this.player);
+      this.camera.add(this.zombies);
+      this.camera.add(this.barrels);
+      this.camera.add(this.scoreText);
+      this.camera.add(this.livesText);
+      this.camera.add(this.timerText);
       state.set(states.PLAYING);
     });
   }
@@ -149,10 +168,59 @@ class GamePlay extends Screen {
    */
   updateGameplay(dt, t) {
     super.update(dt, t);
+    // prettier-ignore
+    const { 
+      globals, 
+      camera, 
+      player, 
+      barrels,
+      zombies,
+      timerText, 
+      livesText,
+      scoreText,
+      transitions
+    } = this;
 
     // timer update
     this.timer -= dt;
-    this.timerText.text = Math.floor(this.timer);
+    timerText.text = Math.floor(this.timer);
+
+    // if out of time
+    if (this.timer <= 0) {
+      this.timer = globals.timer;
+      camera.flash();
+      player.respawn(globals.spawns.find((spawn) => spawn.name === "player"));
+      this.lives--;
+      livesText.text = `lives: ${this.lives}`;
+    }
+
+    // if player hits barrel
+    entity.hits(player, barrels.children, () => {
+      this.timer = globals.timer;
+      camera.flash();
+      camera.shake();
+      player.respawn(globals.spawns.find((spawn) => spawn.name === "player"));
+      this.lives--;
+      livesText.text = `lives: ${this.lives}`;
+    });
+
+    // if player hits zombie
+    zombies.children.forEach((zombie) => {
+      entity.hit(player, zombie, () => {
+        zombie.dead = true;
+        this.scores++;
+        scoreText.text = `scores: ${this.scores}`;
+      });
+    });
+
+    if (zombies.children.length === 0) {
+      globals.levelId++;
+      transitions.onWin(globals.levelId, globals.spawns);
+    }
+
+    if (this.lives === 0) {
+      transitions.onLoose();
+    }
   }
 
   update(dt, t) {
@@ -162,7 +230,7 @@ class GamePlay extends Screen {
       // loading state
       case states.LOADING:
         if (this.state.first) {
-          this.dialog = this.add(this.makeLoadingDialog());
+          this.dialog = this.camera.add(this.makeLoadingDialog());
         }
         this.dialog.update(dt, t, {
           shouldClose: this.loaded,
@@ -173,7 +241,7 @@ class GamePlay extends Screen {
       // ready state
       case states.READY:
         if (this.state.first) {
-          this.dialog = this.add(this.makeReadyDialog());
+          this.dialog = this.camera.add(this.makeReadyDialog());
         }
         this.dialog.update(dt, t);
 

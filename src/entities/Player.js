@@ -40,7 +40,13 @@ class Player extends TileSprite {
     this.position = position;
     this.anchor = new Vector(0, 0);
     this.scale = new Vector(1, 1);
-    // this.dead = true;
+    this.hitbox = {
+      x: 0,
+      y: 0,
+      width,
+      height,
+    };
+    this.dead = false;
   }
 
   lookRight() {
@@ -55,6 +61,11 @@ class Player extends TileSprite {
     scale.set(-1, 1);
     anchor.set(width, 0);
     this.direction = -1;
+  }
+
+  respawn({ x, y }) {
+    const { position } = this;
+    position.set(x, y);
   }
 
   update(dt, t) {

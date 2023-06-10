@@ -17,6 +17,7 @@ class KeyControls {
       { code: "KeyP", action: "pause" },
       { code: "Enter", action: "start" },
       { code: "Escape", action: "exit" },
+      { code: "Space", action: "action" },
     ]);
   }
 

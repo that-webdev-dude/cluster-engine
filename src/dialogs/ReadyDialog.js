@@ -21,7 +21,7 @@ class ReadyDialog extends Container {
       new Rect({
         width: width,
         height: height,
-        style: { fill: "rgba(255, 0, 0, 0.25)" },
+        style: { fill: "rgba(255, 0, 0, 1)" },
       })
     );
 
