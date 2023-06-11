@@ -99,7 +99,7 @@ class GamePlay extends Screen {
         });
 
         // now add the level UI
-        const { scores, lives, timer } = this.globals;
+        const { scores, timer } = this.globals;
         const { view } = game;
         this.scoreText = new Text(`scores: ${scores}`, {
           fill: "white",
@@ -107,7 +107,7 @@ class GamePlay extends Screen {
         });
         this.scoreText.position.set(view.width / 2 + 100, view.height - 40);
 
-        this.livesText = new Text(`lives: ${this.globals.lives}`, {
+        this.livesText = new Text(`lives: ${globals.lives}`, {
           fill: "white",
           font: '16px "Press Start 2P"',
         });
@@ -162,6 +162,28 @@ class GamePlay extends Screen {
   }
 
   /**
+   * playerDies
+   */
+  playerDies() {
+    const { globals, player, livesText } = this;
+    const { x, y } = globals.spawns.find((spawn) => spawn.name === "player");
+    player.respawn({ x, y }, () => {
+      globals.lives--;
+      livesText.text = `lives: ${globals.lives}`;
+    });
+  }
+
+  /**
+   * zombieDies
+   */
+  zombieDies(zombie) {
+    const { scoreText } = this;
+    zombie.dead = true;
+    this.scores++;
+    scoreText.text = `scores: ${this.scores}`;
+  }
+
+  /**
    * updateGameplay
    * @param {number} dt time step ms
    * @param {number} t elapsed seconds
@@ -175,10 +197,8 @@ class GamePlay extends Screen {
       player, 
       barrels,
       zombies,
-      timerText, 
-      livesText,
-      scoreText,
-      transitions
+      timerText,
+      transitions,
     } = this;
 
     // timer update
@@ -189,36 +209,36 @@ class GamePlay extends Screen {
     if (this.timer <= 0) {
       this.timer = globals.timer;
       camera.flash();
-      player.respawn(globals.spawns.find((spawn) => spawn.name === "player"));
-      this.lives--;
-      livesText.text = `lives: ${this.lives}`;
+      this.playerDies();
     }
 
     // if player hits barrel
-    entity.hits(player, barrels.children, () => {
-      this.timer = globals.timer;
-      camera.flash();
-      camera.shake();
-      player.respawn(globals.spawns.find((spawn) => spawn.name === "player"));
-      this.lives--;
-      livesText.text = `lives: ${this.lives}`;
+    barrels.children.forEach((barrel) => {
+      entity.hit(player, barrel, () => {
+        this.timer = globals.timer;
+        camera.flash();
+        camera.shake();
+        this.playerDies();
+      });
     });
 
     // if player hits zombie
     zombies.children.forEach((zombie) => {
       entity.hit(player, zombie, () => {
-        zombie.dead = true;
-        this.scores++;
-        scoreText.text = `scores: ${this.scores}`;
+        this.zombieDies(zombie);
       });
     });
 
     if (zombies.children.length === 0) {
       globals.levelId++;
-      transitions.onWin(globals.levelId, globals.spawns);
+      if (globals.levelId > globals.noLevels) {
+        transitions.onWin();
+      } else {
+        transitions.onNext(globals.levelId, globals.spawns);
+      }
     }
 
-    if (this.lives === 0) {
+    if (global.lives === 0) {
       transitions.onLoose();
     }
   }
@@ -244,7 +264,6 @@ class GamePlay extends Screen {
           this.dialog = this.camera.add(this.makeReadyDialog());
         }
         this.dialog.update(dt, t);
-
         break;
 
       case states.PLAYING:

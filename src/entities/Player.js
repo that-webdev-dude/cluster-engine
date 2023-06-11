@@ -63,9 +63,10 @@ class Player extends TileSprite {
     this.direction = -1;
   }
 
-  respawn({ x, y }) {
+  respawn({ x, y }, done = () => {}) {
     const { position } = this;
     position.set(x, y);
+    done();
   }
 
   update(dt, t) {

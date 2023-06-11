@@ -25,6 +25,7 @@ const defaults = () => ({
   scores: 0,
   lives: 3,
   spawns: null,
+  noLevels: 2,
 });
 let globals = defaults();
 
@@ -46,7 +47,8 @@ function startGamePlay(toLevel, spawns) {
   globals.spawns = spawns;
   game.setScene(
     new GamePlay(game, input, globals, {
-      onWin: startGamePlay,
+      onWin: startGameWin,
+      onNext: startGamePlay,
       onLoose: startGameOver,
     })
   );
