@@ -59,6 +59,12 @@ class Game {
     return this.#renderer.context;
   }
 
+  /**
+   * for the screen transition
+   * @param {*} scene
+   * @param {*} duration
+   * @returns
+   */
   setScene(scene, duration = 0) {
     if (!duration) {
       this.scene = scene;
