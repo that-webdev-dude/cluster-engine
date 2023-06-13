@@ -17,9 +17,6 @@ class Dialog extends Container {
     onClose = () => {}
   ) {
     super();
-    // this.height = height;
-    // this.width = width;
-    // this.text = text;
     this.onUpdate = onUpdate;
     this.onClose = onClose;
     this.elapsed = 0;
