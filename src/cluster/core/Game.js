@@ -92,7 +92,6 @@ class Game {
             this.destinationScene = null;
           }
         }
-
         requestAnimationFrame(loop);
       };
 

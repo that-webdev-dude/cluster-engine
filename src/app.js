@@ -19,5 +19,7 @@ const input = {
 };
 
 export default () => {
-  game.run();
+  game.run(() => {
+    console.log("...running");
+  });
 };
