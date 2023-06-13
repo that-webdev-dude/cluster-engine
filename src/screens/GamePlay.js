@@ -65,6 +65,11 @@ class GamePlay extends Screen {
     this.firstUpdate = true;
     this.elapsed = 0;
     this.loaded = false;
+    this.loadingDialog = this.makeLoadingDialog();
+    console.log(
+      "file: GamePlay.js:69 ~ GamePlay ~ constructor ~ this.loadingDialog:",
+      this.loadingDialog
+    );
 
     // // LEVEL LOADING
     // // FROM URL ONLY FOR NOW
@@ -136,7 +141,7 @@ class GamePlay extends Screen {
     const { game, state } = this;
     const { width, height } = game.view;
     return new LoadingDialog(width, height, () => {
-      this.camera.remove(this.dialog);
+      this.camera.remove(this.loadingDialog);
       state.set(states.READY);
     });
   }
@@ -245,14 +250,15 @@ class GamePlay extends Screen {
 
   update(dt, t) {
     const { state } = this;
+    state.update(dt, t);
 
     switch (state.get()) {
       // loading state
       case states.LOADING:
         if (this.state.first) {
-          this.dialog = this.camera.add(this.makeLoadingDialog());
+          this.camera.add(this.loadingDialog);
         }
-        this.dialog.update(dt, t, {
+        this.loadingDialog.update(dt, t, {
           shouldClose: this.loaded,
         });
 
@@ -282,7 +288,7 @@ class GamePlay extends Screen {
         break;
     }
 
-    state.update(dt, t);
+    // state.update(dt, t);
   }
 }
 

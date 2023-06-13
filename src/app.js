@@ -70,11 +70,7 @@ function startGameWin() {
   );
 }
 
-console.log(input.key);
-
 export default () => {
   startGameTitle();
-  game.run(() => {
-    // gameSpeedDebug(input.key)
-  });
+  game.run();
 };

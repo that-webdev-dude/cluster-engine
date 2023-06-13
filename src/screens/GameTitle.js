@@ -31,7 +31,10 @@ class GameTitle extends Screen {
 
   initialize() {
     const { pressStartText, game } = this;
-    pressStartText.position = new Vector(game.view.width / 2, game.view.height / 2);
+    pressStartText.position = new Vector(
+      game.view.width / 2,
+      game.view.height / 2
+    );
     pressStartText.alpha = 0;
     this.add(
       new Timer(1, (p) => {

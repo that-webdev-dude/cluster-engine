@@ -27,9 +27,6 @@ class Game {
     this.fadeDuration = 0;
     this.fadeTime = 0;
 
-    // DEGUG
-    this.debug_updates = 0;
-
     // initialize
     document.querySelector(parent).appendChild(this.#renderer.view);
   }
@@ -59,12 +56,6 @@ class Game {
     return this.#renderer.context;
   }
 
-  /**
-   * for the screen transition
-   * @param {*} scene
-   * @param {*} duration
-   * @returns
-   */
   setScene(scene, duration = 0) {
     if (!duration) {
       this.scene = scene;
@@ -77,12 +68,7 @@ class Game {
 
   run(gameUpdate = () => {}) {
     Assets.onReady(() => {
-      let t = 0;
-      let dt = 0;
-      let last = 0;
-
       const loop = (ms) => {
-        requestAnimationFrame(loop);
         t = ms / 1000;
         dt += Math.min(t - last, MAX_FRAME * 5);
         last = t;
@@ -94,7 +80,7 @@ class Game {
         }
 
         this.#renderer.render(this.scene);
-        // scene transition
+
         if (this.fadeTime > 0) {
           const { fadeDuration } = this;
           const ratio = this.fadeTime / fadeDuration;
@@ -106,14 +92,14 @@ class Game {
             this.destinationScene = null;
           }
         }
-      };
 
-      const init = (ms) => {
-        last = ms / 1000;
         requestAnimationFrame(loop);
       };
 
-      requestAnimationFrame(init);
+      let t = 0;
+      let dt = 0;
+      let last = 0;
+      requestAnimationFrame(loop);
     });
   }
 }
