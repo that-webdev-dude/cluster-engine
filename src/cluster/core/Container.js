@@ -17,17 +17,23 @@ class Container {
   }
 
   remove(child) {
-    this.children = this.children.filter((currentChild) => currentChild !== child);
+    this.children = this.children.filter(
+      (currentChild) => currentChild !== child
+    );
     return child;
   }
 
-  update(dt, t) {
-    this.children = this.children.filter((child) => {
+  update(dt, t, parent) {
+    for (let i = 0; i < this.children.length; i++) {
+      const child = this.children[i];
       if (child.update) {
-        child.update(dt, t);
+        child.update(dt, t, this);
       }
-      return child.dead ? false : true;
-    });
+      if (child.dead) {
+        this.children.splice(i, 1);
+        i--;
+      }
+    }
   }
 }
 
