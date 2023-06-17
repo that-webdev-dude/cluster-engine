@@ -1,9 +1,15 @@
+/**
+ * cluster library
+ * iClusterDev 2023
+ */
+
 // TOOLS
+import Pool from "./utils/Pool";
 import Vector from "./utils/Vector";
 import Physics from "./utils/Physics";
 import entity from "./utils/entity";
 import math from "./utils/math";
-import TiledParser from "./utils/TiledParser";
+// import tiledParser from "./utils/TiledParser";
 
 // SHAPES
 import Capsule from "./shapes/Capsule";
@@ -46,11 +52,12 @@ import ParticleEmitter from "./fx/ParticleEmitter";
 
 export default {
   // TOOLS
+  Pool,
   Vector,
   Physics,
   entity,
   math,
-  TiledParser,
+  // TiledParser,
 
   // SHAPES
   Capsule,

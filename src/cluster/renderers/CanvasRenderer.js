@@ -155,7 +155,10 @@ class CanvasRenderer {
       }
 
       if (child.position) {
-        context.translate(Math.round(child.position.x), Math.round(child.position.y));
+        context.translate(
+          Math.round(child.position.x),
+          Math.round(child.position.y)
+        );
       }
 
       if (child.anchor) {
