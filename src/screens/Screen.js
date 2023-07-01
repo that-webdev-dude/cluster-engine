@@ -2,7 +2,7 @@ import cluster from "../cluster/index";
 const { Container } = cluster;
 
 class Screen extends Container {
-  constructor(game, input, globals, transitions = {}) {
+  constructor(game, input, globals = {}, transitions = {}) {
     super();
     this.transitions = transitions;
     this.globals = globals;

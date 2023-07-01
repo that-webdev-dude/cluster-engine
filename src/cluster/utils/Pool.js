@@ -18,7 +18,7 @@ class Pool {
   }
 
   next() {
-    const { cache, creator } = this;
+    const { cache } = this;
     let entity = cache.find((e) => e.dead);
     if (!entity) {
       entity = this.create();
