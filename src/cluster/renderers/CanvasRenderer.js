@@ -1,5 +1,14 @@
 // ThatWebdevDude - 2022
 
+const isOnCamera = (child, camera) => {
+  return (
+    child.position.x + child.width >= camera.position.x &&
+    child.position.y + child.height >= camera.position.y &&
+    child.position.x <= camera.position.x + camera.width &&
+    child.position.y <= camera.position.y + camera.height
+  );
+};
+
 /**
  * canvas defaults styles
  */
@@ -134,7 +143,7 @@ class CanvasRenderer {
    * passed container to the current context.
    * @param {Container} container
    */
-  #renderRecursive(container) {
+  #renderRecursive(container, camera = null) {
     // exit immediately if the whole container is transparent
     if (container.visible === false || container.alpha === 0) return;
 
@@ -147,6 +156,12 @@ class CanvasRenderer {
     container.children.forEach((child) => {
       // exit immediately if the child is transparent
       if (child.visible == false || child.alpha === 0) return;
+
+      // exit immediately if the whole container offscreen
+      if (camera && !isOnCamera(child, camera)) {
+        console.log("not rendering");
+        return;
+      }
 
       context.save();
 
@@ -204,7 +219,12 @@ class CanvasRenderer {
       }
 
       if (child.children) {
-        this.#renderRecursive(child);
+        if (child.worldSize) {
+          const camera = child;
+          this.#renderRecursive(child, camera);
+        } else {
+          this.#renderRecursive(child);
+        }
       }
 
       context.restore();

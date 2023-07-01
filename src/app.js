@@ -1,3 +1,4 @@
+import GameScreen from "./screens/GameScreen";
 import cluster from "./cluster";
 
 // cluster instances
@@ -18,7 +19,10 @@ const input = {
   key: new KeyControls(),
 };
 
+const gameScreen = new GameScreen(game, input);
+
 export default () => {
+  game.setScene(gameScreen);
   game.run((dt, t) => {
     // ...
   });

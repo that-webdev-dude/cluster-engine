@@ -13,7 +13,12 @@ class Camera extends Container {
    * @param {} worldSize the size of the game world { width, height }
    * @param {Object} tracker the size of the tracker box { width, height }
    */
-  constructor(subject, viewport, worldSize = viewport, tracker = { width: 96, height: 96 }) {
+  constructor(
+    subject,
+    viewport,
+    worldSize = viewport,
+    tracker = { width: 96, height: 96 }
+  ) {
     super();
     this.position = new Vector();
     this.offset = { x: 0, y: 0 };
@@ -112,7 +117,16 @@ class Camera extends Container {
   }
 
   focus(track = true) {
-    const { position, width, height, offset, worldSize, subject, easing, tracker } = this;
+    const {
+      position,
+      width,
+      height,
+      offset,
+      worldSize,
+      subject,
+      easing,
+      tracker,
+    } = this;
     const centeredX = subject.position.x + offset.x - width / 2;
     const maxX = worldSize.width - width;
     let x = -math.clamp(centeredX, 0, maxX);
