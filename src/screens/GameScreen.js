@@ -26,17 +26,16 @@ class Player extends Rect {
 
 class Spiral {
   constructor(position = new Vector()) {
-    const e = document.createElement("canvas");
-    e.width = 100;
-    e.height = 100;
+    const e = new OffscreenCanvas(100, 100);
     const c = e.getContext("2d");
-    c.fillStyle = "red";
+    c.fillStyle = "blue";
     c.fillRect(0, 0, 100, 100);
 
     this.width = 200;
     this.height = 200;
     this.position = position;
     this.canvas = e;
+    this.alpha = 0.5;
   }
 }
 
