@@ -144,6 +144,15 @@ class CanvasRenderer {
    * @param {Container} container
    */
   #renderRecursive(container, camera = null) {
+    // const e = document.createElement("canvas");
+    // e.width = 100;
+    // e.height = 100;
+    // const c = e.getContext("2d");
+    // c.fillStyle = "red";
+    // c.fillRect(0, 0, 100, 100);
+    // this.context.drawImage(e, 0, 0);
+    // console.log(e.style);
+
     // exit immediately if the whole container is transparent
     if (container.visible === false || container.alpha === 0) return;
 
@@ -159,7 +168,6 @@ class CanvasRenderer {
 
       // exit immediately if the whole container offscreen
       if (camera && !isOnCamera(child, camera)) {
-        console.log("not rendering");
         return;
       }
 
@@ -216,6 +224,8 @@ class CanvasRenderer {
         } else if (child.path) {
           CanvasArtist.drawPath(context, child);
         }
+      } else if (child.canvas) {
+        context.drawImage(child.canvas, 0, 0);
       }
 
       if (child.children) {
