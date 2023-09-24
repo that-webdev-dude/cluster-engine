@@ -1,61 +1,106 @@
 import Screen from "./Screen";
 import cluster from "../cluster";
-const { Camera, Rect, Vector } = cluster;
+const { Container, Camera, Rect, Circle, Vector, math } = cluster;
 
-class Player extends Rect {
-  constructor(input) {
-    super({
-      width: 50,
-      height: 50,
-      style: { fill: "red" },
-    });
+class Ball extends Circle {
+  constructor(radius = 10, position = new Vector(), velocity = new Vector()) {
+    const r = math.rand(0, 128);
+    const g = math.rand(0, 0);
+    const b = math.rand(0, 0);
+    const a = math.randf();
+    const color = `rgba(${r}, ${g}, ${b}, ${a})`;
 
-    this.input = input;
-    this.speed = 400;
-    this.position = new Vector();
+    super({ radius: radius, style: { fill: color } });
+    this.position = position;
+    this.velocity = velocity;
+    this.friction = 0.5;
   }
 
   update(dt, t) {
-    const { input, position } = this;
-    if (input.key.x || input.key.y) {
-      position.x += input.key.x * this.speed * dt;
-      position.y += input.key.y * this.speed * dt;
-    }
-  }
-}
-
-class Spiral {
-  constructor(position = new Vector()) {
-    const e = new OffscreenCanvas(100, 100);
-    const c = e.getContext("2d");
-    c.fillStyle = "blue";
-    c.fillRect(0, 0, 100, 100);
-
-    this.width = 200;
-    this.height = 200;
-    this.position = position;
-    this.canvas = e;
-    this.alpha = 0.5;
+    const { position, velocity } = this;
+    position.x += dt * velocity.x;
+    position.y += dt * velocity.y;
   }
 }
 
 class GameScreen extends Screen {
   constructor(game, input) {
     super(game, input);
-    const spiral = new Spiral(new Vector(100, 100));
-    const player = new Player(input);
-    const camera = new Camera(player, game.view);
+    // ...
+    const balls = new Container();
+    for (let i = 0; i <= 1; i++) {
+      const radius = math.rand(10, 25);
+      balls.add(
+        new Ball(
+          radius,
+          new Vector(
+            // math.rand(0, game.width - radius * 2),
+            // math.rand(0, game.height - radius * 2)
+            game.width / 2,
+            game.height / 2
+          ),
 
-    camera.add(player);
-    camera.add(spiral);
+          new Vector(
+            math.randOneFrom([-200, 200]),
+            0
+            // math.randOneFrom([-100, -50 - 25, 50, 25, 100]),
+            // math.randOneFrom([-100, -50 - 25, 50, 25, 100])
+          )
+        )
+      );
+    }
 
-    this.player = player;
-    this.camera = this.add(camera);
+    this.firstUpdate = true;
+    this.balls = this.add(balls);
+    this.game = game;
   }
 
   update(dt, t) {
     super.update(dt, t);
-    // ...
+    const { balls, game } = this;
+
+    // unoptimized bouncing detection
+    balls.children.forEach((ball) => {
+      if (
+        ball.position.x <= 0 ||
+        ball.position.x + ball.radius * 2 >= game.width
+      ) {
+        const vx = ball.velocity.x;
+        const vy = ball.velocity.y;
+        ball.velocity.set(-vx, vy);
+      }
+
+      if (
+        ball.position.y <= 0 ||
+        ball.position.y + ball.radius * 2 >= game.height
+      ) {
+        const vx = ball.velocity.x;
+        const vy = ball.velocity.y;
+        ball.velocity.set(vx, -vy);
+      }
+    });
+
+    // unoptimized collision detection
+    for (let i = 0; i < balls.children.length - 1; i++) {
+      for (let j = i + 1; j < balls.children.length; j++) {
+        let b1 = balls.children[i];
+        let b2 = balls.children[j];
+        if (math.distance(b1.position, b2.position) <= b1.radius + b2.radius) {
+          let collisionDirection = b1.velocity.to(b2.velocity);
+          let collisionNormal = collisionDirection.normal();
+          // console.log(
+          //   "file: GameScreen.js:87 ~ GameScreen ~ update ~ collisionNormal:",
+          //   collisionNormal
+          // );
+        }
+      }
+    }
+
+    // DEBUG
+    if (this.firstUpdate) {
+      // ...
+      this.firstUpdate = false;
+    }
   }
 }
 
