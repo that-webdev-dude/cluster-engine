@@ -2,6 +2,28 @@ import Screen from "./Screen";
 import cluster from "../cluster";
 const { Container, Camera, Rect, Circle, Vector, math } = cluster;
 
+/**
+ * Adjusts the game speed based on user input.
+ * @param {Object} input - The input object.
+ * @param {KeyControls} input.keys - The KeyControls instance.
+ * @param {Object} game - The game state object.
+ * @param {number} game.speed - The current game speed.
+ */
+function slowmo(input, game) {
+  if (input.keys.key("Digit1")) {
+    game.speed = Math.min(game.speed + 0.25, 5);
+    input.keys.key("Digit1", false);
+  }
+  if (input.keys.key("Digit2")) {
+    game.speed = Math.max(0.25, game.speed - 0.25);
+    input.keys.key("Digit2", false);
+  }
+  if (input.keys.key("Digit3")) {
+    game.speed = 1;
+    input.keys.key("Digit3", false);
+  }
+}
+
 class Ball extends Circle {
   constructor(radius = 10, position = new Vector(), velocity = new Vector()) {
     const r = math.rand(0, 128);
@@ -57,7 +79,7 @@ class GameScreen extends Screen {
 
   update(dt, t) {
     super.update(dt, t);
-    const { balls, game } = this;
+    const { balls, game, input } = this;
 
     // unoptimized bouncing detection
     balls.children.forEach((ball) => {
@@ -95,6 +117,8 @@ class GameScreen extends Screen {
         }
       }
     }
+
+    slowmo(input, game);
 
     // DEBUG
     if (this.firstUpdate) {

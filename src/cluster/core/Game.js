@@ -37,7 +37,7 @@ class Game {
 
   set speed(speed) {
     MULTIPLIER = speed;
-    SPEED = STEP * MULTIPLIER;
+    SPEED = STEP / MULTIPLIER;
   }
 
   get height() {

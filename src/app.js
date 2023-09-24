@@ -17,7 +17,7 @@ const game = new Game({
 
 const input = {
   mouse: new MouseControls(),
-  key: new KeyControls(),
+  keys: new KeyControls(),
 };
 
 const gameScreen = new GameScreen(game, input);
