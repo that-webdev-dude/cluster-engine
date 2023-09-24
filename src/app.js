@@ -6,6 +6,7 @@ import cluster from "./cluster";
 const {
   MouseControls,
   KeyControls, 
+  Debugger,
   Game 
 } = cluster;
 

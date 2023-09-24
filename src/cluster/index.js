@@ -34,10 +34,7 @@ import KeyControls from "./input/KeyControls";
 import MouseControls from "./input/MouseControls";
 import CanvasRenderer from "./renderers/CanvasRenderer";
 import Trigger from "./core/Trigger";
-
-// DEBUG
-import Logger from "./debug/Logger";
-import VectorViewer from "./debug/VectorViewer";
+import Debugger from "./core/Debugger";
 
 // SOUND
 import Audio from "./sound/Audio";
@@ -82,10 +79,7 @@ export default {
   MouseControls,
   CanvasRenderer,
   Trigger,
-
-  // DEBUG
-  Logger,
-  VectorViewer,
+  Debugger,
 
   // SOUND
   Audio,
