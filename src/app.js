@@ -5,7 +5,7 @@ import cluster from "./cluster";
 // prettier-ignore
 const {
   MouseControls,
-  KeyControls, 
+  KeyControls,  
   Debugger,
   Game 
 } = cluster;
