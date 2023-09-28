@@ -1,5 +1,7 @@
+import DebugDialog from "../dialogs/DebugDialog";
 import Screen from "./Screen";
 import cluster from "../cluster";
+
 const { Container, Camera, Rect, Circle, Vector, math } = cluster;
 
 /**
@@ -74,7 +76,7 @@ class GameScreen extends Screen {
 
     this.firstUpdate = true;
     this.balls = this.add(balls);
-    this.game = game;
+    this.debugDialog = this.add(new DebugDialog(game));
   }
 
   update(dt, t) {

@@ -1,6 +1,7 @@
 import CanvasRenderer from "../renderers/CanvasRenderer";
-import Container from "./Container";
+import Engine from "../engines/Engine";
 import Assets from "./Assets";
+import Container from "./Container";
 
 let STEP = 1 / 60;
 let MULTIPLIER = 1;
@@ -9,15 +10,27 @@ let SPEED = STEP * MULTIPLIER;
 
 class Game {
   #renderer;
+  #engine;
 
   constructor(
-    { width = 832, height = 640, parent = "#app" } = {
+    {
+      title = "Game",
+      version = "1.0.0",
+      width = 832,
+      height = 640,
+      parent = "#app",
+    } = {
+      title: "Game",
+      version: "1.0.0",
       width: 832,
       height: 640,
       parent: "#app",
     }
   ) {
+    this.title = title;
+    this.version = version;
     this.scene = new Container();
+    this.#engine = new Engine();
     this.#renderer = new CanvasRenderer({
       height,
       width,
@@ -26,6 +39,11 @@ class Game {
     this.destinationScene = null; // destination scene reference for fading scenes
     this.fadeDuration = 0;
     this.fadeTime = 0;
+
+    // initialize FPS counter
+    this.lastFPSUpdate = 0;
+    this.currentFPS = 0;
+    this.frames = 0;
 
     // initialize
     document.querySelector(parent).appendChild(this.#renderer.view);
@@ -54,6 +72,10 @@ class Game {
 
   get ctx() {
     return this.#renderer.context;
+  }
+
+  get FPS() {
+    return this.currentFPS;
   }
 
   setScene(scene, duration = 0) {
@@ -92,6 +114,16 @@ class Game {
             this.destinationScene = null;
           }
         }
+
+        // FPS Counter
+        this.frames++;
+        if (ms - this.lastFPSUpdate > 1000) {
+          // Check every second
+          this.currentFPS = this.frames;
+          this.frames = 0;
+          this.lastFPSUpdate = ms;
+        }
+
         requestAnimationFrame(loop);
       };
 
