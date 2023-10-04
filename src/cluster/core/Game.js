@@ -1,7 +1,8 @@
 import CanvasRenderer from "../renderers/CanvasRenderer";
-import Engine from "../engines/Engine";
+import Engine from "../engines/EngineOptimized";
 import Assets from "./Assets";
 import Container from "./Container";
+import Debugger from "./Debugger";
 
 let STEP = 1 / 60;
 let MULTIPLIER = 1;
@@ -99,8 +100,18 @@ class Game {
           this.scene.update(STEP, t / MULTIPLIER);
           gameUpdate(STEP, t / MULTIPLIER);
           dt -= SPEED;
+
+          // FPS Counter
+          this.frames++;
+          if (ms - this.lastFPSUpdate > 1000) {
+            // Check every second
+            this.currentFPS = this.frames;
+            this.frames = 0;
+            this.lastFPSUpdate = ms;
+          }
         }
 
+        // the renderer will be called at the same refresh rate as the screen
         this.#renderer.render(this.scene);
 
         if (this.fadeTime > 0) {
@@ -113,15 +124,6 @@ class Game {
             this.scene = this.destinationScene;
             this.destinationScene = null;
           }
-        }
-
-        // FPS Counter
-        this.frames++;
-        if (ms - this.lastFPSUpdate > 1000) {
-          // Check every second
-          this.currentFPS = this.frames;
-          this.frames = 0;
-          this.lastFPSUpdate = ms;
         }
 
         requestAnimationFrame(loop);

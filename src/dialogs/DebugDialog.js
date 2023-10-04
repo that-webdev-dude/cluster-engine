@@ -23,6 +23,7 @@ class DebugDialog extends Dialog {
     this.versionInfo = this.#setText(``);
     this.speedInfo = this.#setText(``);
     this.sizeInfo = this.#setText(``);
+
     this.background = this.add(
       new Rect({
         width: this.width,
