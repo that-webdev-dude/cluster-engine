@@ -5,15 +5,14 @@ import cluster from "./cluster";
 // prettier-ignore
 const {
   MouseControls,
-  KeyControls,  
-  Debugger,
+  KeyControls,
   Game 
 } = cluster;
 
 const game = new Game({
-  title: "Test Game",
-  width: 832,
+  title: "New Game",
   height: 640,
+  width: 832,
 });
 
 const input = {
