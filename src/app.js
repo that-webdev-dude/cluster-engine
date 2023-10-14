@@ -10,7 +10,7 @@ const {
 } = cluster;
 
 const game = new Game({
-  title: "New Game",
+  title: "Shmup!",
   height: 640,
   width: 832,
 });
