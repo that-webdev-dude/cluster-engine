@@ -1,16 +1,16 @@
 import CanvasRenderer from "../renderers/CanvasRenderer";
 import Assets from "./Assets";
 import Container from "./Container";
-import Stats from "stats.js";
+// import Stats from "stats.js";
 
 let STEP = 1 / 60;
 let MULTIPLIER = 1;
 let MAX_FRAME = STEP * 5;
 let SPEED = STEP * MULTIPLIER;
 
-const stats = new Stats();
-stats.showPanel(0);
-document.body.appendChild(stats.dom);
+// const stats = new Stats();
+// stats.showPanel(0);
+// document.body.appendChild(stats.dom);
 
 class Game {
   #renderer;
@@ -97,7 +97,7 @@ class Game {
   run(gameUpdate = () => {}) {
     Assets.onReady(() => {
       const loop = (ms) => {
-        stats.begin();
+        // stats.begin();
 
         t = ms / 1000;
         dt += Math.min(t - last, MAX_FRAME * 5);
@@ -132,8 +132,8 @@ class Game {
             this.destinationScene = null;
           }
         }
-        stats.end();
 
+        // stats.end();
         requestAnimationFrame(loop);
       };
 
