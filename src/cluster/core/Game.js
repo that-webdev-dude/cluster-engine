@@ -1,17 +1,19 @@
 import CanvasRenderer from "../renderers/CanvasRenderer";
-import Engine from "../engines/EngineOptimized";
 import Assets from "./Assets";
 import Container from "./Container";
-import Debugger from "./Debugger";
+import Stats from "stats.js";
 
 let STEP = 1 / 60;
 let MULTIPLIER = 1;
 let MAX_FRAME = STEP * 5;
 let SPEED = STEP * MULTIPLIER;
 
+const stats = new Stats();
+stats.showPanel(0);
+document.body.appendChild(stats.dom);
+
 class Game {
   #renderer;
-  #engine;
 
   constructor(
     {
@@ -31,7 +33,6 @@ class Game {
     this.title = title;
     this.version = version;
     this.scene = new Container();
-    this.#engine = new Engine();
     this.#renderer = new CanvasRenderer({
       height,
       width,
@@ -75,9 +76,13 @@ class Game {
     return this.#renderer.context;
   }
 
-  get FPS() {
+  get updateFPS() {
     return this.currentFPS;
   }
+
+  // get refreshFPS() {
+  //   return this.refreshRate;
+  // }
 
   setScene(scene, duration = 0) {
     if (!duration) {
@@ -92,6 +97,8 @@ class Game {
   run(gameUpdate = () => {}) {
     Assets.onReady(() => {
       const loop = (ms) => {
+        stats.begin();
+
         t = ms / 1000;
         dt += Math.min(t - last, MAX_FRAME * 5);
         last = t;
@@ -125,6 +132,7 @@ class Game {
             this.destinationScene = null;
           }
         }
+        stats.end();
 
         requestAnimationFrame(loop);
       };

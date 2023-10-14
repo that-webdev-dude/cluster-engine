@@ -24,6 +24,15 @@ function slowmo(input, game) {
     game.speed = 1;
     input.keys.key("Digit3", false);
   }
+  if (input.keys.key("Digit0")) {
+    if (!game.debugDialog) {
+      game.debugDialog = game.scene.add(new DebugDialog(game));
+    } else {
+      game.scene.remove(game.debugDialog);
+      game.debugDialog = null;
+    }
+    input.keys.key("Digit0", false);
+  }
 }
 
 class Ball extends Circle {
@@ -76,7 +85,7 @@ class GameScreen extends Screen {
 
     this.firstUpdate = true;
     this.balls = this.add(balls);
-    this.debugDialog = this.add(new DebugDialog(game));
+    // this.debugDialog = this.add(new DebugDialog(game));
   }
 
   update(dt, t) {

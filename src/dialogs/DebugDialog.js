@@ -56,7 +56,8 @@ class DebugDialog extends Dialog {
     const { game } = this;
     this.titleInfo.text = `title: ${game.title}`;
     this.versionInfo.text = `version: ${game.version}`;
-    this.speedInfo.text = `speed: ${game.speed} - FPS: ${game.FPS}`;
+    this.speedInfo.text = `speed: ${game.speed} - FPS: ${game.updateFPS}`;
+    // this.renderInfo.text = `rendering refresh rate: ${game.refreshFPS}`;
     this.sizeInfo.text = `size: ${game.width} x ${game.height}`;
 
     if (this.firstUpdate) {
