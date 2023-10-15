@@ -11,11 +11,11 @@ class Sprite {
   }
 
   get width() {
-    return this.texture.width;
+    return this.texture.width * this.scale.x;
   }
 
   get height() {
-    return this.texture.height;
+    return this.texture.height * this.scale.y;
   }
 }
 
