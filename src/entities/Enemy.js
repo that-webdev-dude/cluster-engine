@@ -4,31 +4,25 @@ import cluster from "../cluster";
 const { Sprite, Texture, math } = cluster;
 
 class Enemy extends Sprite {
-  constructor(game, input) {
+  constructor() {
     super(new Texture(enemyImageURL));
-    this.gameHeight = game.height;
-    this.gameWidth = game.width;
-    this.input = input;
     this.speed = null;
+    this.hitbox = {
+      x: 0,
+      y: 0,
+      width: this.width,
+      height: this.height,
+    };
+
+    this.reset();
   }
 
   reset() {
     this.speed = math.rand(50, 200);
-    this.position.set(
-      this.gameWidth - this.width,
-      math.rand(0, this.gameHeight - this.height)
-    );
-
-    const scale = math.rand(1, 3);
-    this.scale.x = scale;
-    this.scale.y = scale;
   }
 
   update(dt, t) {
     this.position.x -= this.speed * dt;
-    if (this.position.x + this.width < 0) {
-      this.dead = true;
-    }
   }
 }
 

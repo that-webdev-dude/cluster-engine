@@ -3,39 +3,99 @@ import cluster from "../cluster";
 
 // background
 import backgroundImageURL from "../images/background.png";
-import ScrollingBackground from "../entities/ScrollingBackground";
 import Player from "../entities/Player";
 import Enemy from "../entities/Enemy";
+import Bullet from "../entities/Bullet";
+import Background from "../entities/Background";
 
-const { Texture, Sprite, Pool } = cluster;
+const { Texture, Sprite, Container, Pool, entity, math } = cluster;
 
 class GameScreen extends Screen {
   constructor(game, input) {
     super(game, input);
 
-    const enemies = new Pool(() => new Enemy(game, input), 10);
+    const backgroundTexture = new Texture(backgroundImageURL);
+    const background = new Background(backgroundTexture, game, 50);
+    const enemies = new Container();
+    const bullets = new Container();
     const player = new Player(game, input);
 
-    const backgroundTexture = new Texture(backgroundImageURL);
-    const background = new ScrollingBackground(
-      backgroundTexture,
-      game.width,
-      200
+    this.enemyPool = new Pool(() => new Enemy(), 20);
+    this.bulletPool = new Pool(() => new Bullet(), 15);
+    this.background = this.add(background);
+    this.enemies = this.add(enemies);
+    this.bullets = this.add(bullets);
+    this.player = this.add(player);
+
+    this.enemySpawnRate = 0.75;
+    this.enemySpawnMax = 10;
+    this.enemySpawnLast = 0;
+  }
+
+  /**
+   * Spawns a bullet at the player's position.
+   * @function
+   * @memberof GameScreen
+   * @returns {void}
+   */
+  spawnBullet() {
+    let bullet = this.bullets.add(this.bulletPool.next());
+    let { x, y } = entity.center(this.player);
+    bullet.position.set(x - bullet.width / 2, y - bullet.height / 2);
+  }
+
+  /**
+   * Spawns a new enemy on the game screen.
+   * @function
+   * @memberof GameScreen
+   * @returns {void}
+   */
+  spawnEnemy() {
+    let enemy = this.enemies.add(this.enemyPool.next());
+    enemy.position.set(
+      this.game.width - enemy.width,
+      math.rand(100, this.game.height - enemy.height - 100)
     );
-
-    this.add(background);
-    this.add(player);
-    this.add(enemies.next());
-
-    this.firstUpdate = true;
   }
 
   update(dt, t) {
     super.update(dt, t);
-
-    if (this.firstUpdate) {
-      this.firstUpdate = false;
+    if (t - this.enemySpawnLast > this.enemySpawnRate) {
+      this.enemySpawnLast = t;
+      this.spawnEnemy();
     }
+
+    if (this.player.canFire) {
+      this.spawnBullet();
+    }
+
+    // bullet out of bounds
+    // bullet enemy collisions
+    this.bullets.children.forEach((bullet) => {
+      if (bullet.position.x > this.game.width + bullet.width) {
+        bullet.dead = true;
+      } else {
+        this.enemies.children.forEach((enemy) => {
+          entity.hit(bullet, enemy, () => {
+            bullet.dead = true;
+            enemy.dead = true;
+          });
+        });
+      }
+    });
+
+    // enemy out of bounds
+    this.enemies.children.forEach((enemy) => {
+      if (enemy.position.x + enemy.width < 0) {
+        enemy.dead = true;
+        // GAME OVER
+      } else {
+        entity.hit(enemy, this.player, () => {
+          enemy.dead = true;
+          // GAME OVER
+        });
+      }
+    });
   }
 }
 

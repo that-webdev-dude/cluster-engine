@@ -11,6 +11,17 @@ class Player extends Sprite {
     this.input = input;
     this.speed = 200;
     this.position.set(100, this.gameHeight / 2 - this.width);
+    this.hitbox = {
+      x: 0,
+      y: 0,
+      width: this.width,
+      height: this.height,
+    };
+
+    this.totalShotTime = 0;
+    this.lastShotTime = 0;
+    this.canFire = false;
+    this.fireRate = 0.1;
   }
 
   update(dt, t) {
@@ -26,6 +37,20 @@ class Player extends Sprite {
       math.clamp(position.x, 0, this.gameWidth - this.width),
       math.clamp(position.y, 0, this.gameHeight - this.height)
     );
+
+    if (input.keys.action) {
+      this.totalShotTime += dt;
+      if (this.totalShotTime - this.lastShotTime > this.fireRate) {
+        this.lastShotTime = this.totalShotTime;
+        this.canFire = true;
+      } else {
+        this.canFire = false;
+      }
+    } else {
+      this.totalShotTime = 0;
+      this.lastShotTime = 0;
+      this.canFire = false;
+    }
   }
 }
 
