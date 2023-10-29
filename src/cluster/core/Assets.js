@@ -16,8 +16,13 @@ const load = (url, maker) => {
 };
 
 const onAssetLoad = (e) => {
+  console.log("onAssetLoad: called");
+
   if (completed) {
-    console.warn("Warning: asset defined after preload!", e?.target || "no target");
+    console.warn(
+      "Warning: asset defined after preload!",
+      e?.target || "no target"
+    );
     return;
   }
   // update listeners with the new state
@@ -38,16 +43,16 @@ function done() {
 
 const Assets = {
   onReady(cb) {
-    // if (remaining === 0) {
-    //   readyListeners.push(cb);
-    //   done();
-    // } else {
-    //   readyListeners.push(cb);
-    // }
-    readyListeners.push(cb);
     if (remaining === 0) {
+      readyListeners.push(cb);
       done();
+    } else {
+      readyListeners.push(cb);
     }
+    // readyListeners.push(cb);
+    // if (remaining === 0) {
+    //   done();
+    // }
   },
 
   onProgress(cb) {

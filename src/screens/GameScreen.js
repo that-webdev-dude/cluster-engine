@@ -1,14 +1,20 @@
 import Screen from "./Screen";
 import cluster from "../cluster";
 
-// background
 import backgroundImageURL from "../images/background.png";
 import Player from "../entities/Player";
 import Enemy from "../entities/Enemy";
 import Bullet from "../entities/Bullet";
 import Background from "../entities/Background";
 
-const { Texture, Sprite, Container, Pool, entity, math } = cluster;
+// prettier-ignore
+const { 
+  Container, 
+  Texture, 
+  Pool, 
+  entity, 
+  math 
+} = cluster;
 
 class GameScreen extends Screen {
   constructor(game, input) {

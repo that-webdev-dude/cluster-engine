@@ -1,4 +1,5 @@
 import GameScreen from "./screens/GameScreen";
+// import TestScreen from "./screens/TestScreen";
 import cluster from "./cluster";
 
 // cluster instances
@@ -21,6 +22,7 @@ const input = {
 };
 
 const gameScreen = new GameScreen(game, input);
+// const gameScreen = new TestScreen(game, input);
 
 export default () => {
   game.setScene(gameScreen);
