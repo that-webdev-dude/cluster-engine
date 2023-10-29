@@ -2,10 +2,11 @@ import Screen from "./Screen";
 import cluster from "../cluster";
 
 import backgroundImageURL from "../images/background.png";
+import Background from "../entities/Background";
 import Player from "../entities/Player";
 import Enemy from "../entities/Enemy";
 import Bullet from "../entities/Bullet";
-import Background from "../entities/Background";
+import Vector from "../cluster/utils/Vector";
 
 // prettier-ignore
 const { 
@@ -21,7 +22,12 @@ class GameScreen extends Screen {
     super(game, input);
 
     const backgroundTexture = new Texture(backgroundImageURL);
-    const background = new Background(backgroundTexture, game, 50);
+    const background = new Background({
+      texture: backgroundTexture,
+      displayW: game.width,
+      displayH: game.height,
+      velocity: new Vector(-100, 0),
+    });
     const enemies = new Container();
     const bullets = new Container();
     const player = new Player(game, input);

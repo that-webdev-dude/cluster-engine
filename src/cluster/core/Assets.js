@@ -16,8 +16,6 @@ const load = (url, maker) => {
 };
 
 const onAssetLoad = (e) => {
-  console.log("onAssetLoad: called");
-
   if (completed) {
     console.warn(
       "Warning: asset defined after preload!",
@@ -43,16 +41,17 @@ function done() {
 
 const Assets = {
   onReady(cb) {
-    if (remaining === 0) {
-      readyListeners.push(cb);
-      done();
-    } else {
-      readyListeners.push(cb);
-    }
-    // readyListeners.push(cb);
     // if (remaining === 0) {
+    //   readyListeners.push(cb);
     //   done();
+    // } else {
+    //   readyListeners.push(cb);
     // }
+
+    readyListeners.push(cb);
+    if (remaining === 0) {
+      done();
+    }
   },
 
   onProgress(cb) {
