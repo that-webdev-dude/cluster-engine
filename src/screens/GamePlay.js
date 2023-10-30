@@ -13,13 +13,15 @@ const {
   Container, 
   Texture, 
   Pool, 
+  Text,
+  Timer,
   entity, 
   math 
 } = cluster;
 
-class GameScreen extends Screen {
-  constructor(game, input) {
-    super(game, input);
+class GamePlay extends Screen {
+  constructor(game, input, globals = {}, transitions = {}) {
+    super(game, input, globals, transitions);
 
     const backgroundTexture = new Texture(backgroundImageURL);
     const background = new Background({
@@ -42,12 +44,53 @@ class GameScreen extends Screen {
     this.enemySpawnRate = 0.75;
     this.enemySpawnMax = 10;
     this.enemySpawnLast = 0;
+
+    // UI ==================================================
+    this.scoreText = this.add(
+      new Text(`SCORES: ${this.globals.scores}`, {
+        align: "left",
+        fill: "white",
+        font: '16px "Press Start 2P"',
+      })
+    );
+    this.scoreText.position = new Vector(32, this.game.height - 48);
+
+    this.livesText = this.add(
+      new Text(`LIVES: ${this.globals.lives}`, {
+        align: "left",
+        fill: "white",
+        font: '16px "Press Start 2P"',
+      })
+    );
+    this.livesText.position = new Vector(32, this.game.height - 80);
+
+    this.levelText = this.add(
+      new Text(`LEVEL: ${this.globals.levelID}`, {
+        align: "right",
+        fill: "white",
+        font: '16px "Press Start 2P"',
+      })
+    );
+    this.levelText.position = new Vector(
+      game.width - 32,
+      this.game.height - 48
+    );
+
+    this.timerText = this.add(
+      new Text(`${this.globals.timer.toFixed(2)}`, {
+        align: "center",
+        fill: "white",
+        font: '24px "Press Start 2P"',
+      })
+    );
+    this.timerText.position = new Vector(this.game.width / 2, 32);
+    // UI ==================================================
   }
 
   /**
    * Spawns a bullet at the player's position.
    * @function
-   * @memberof GameScreen
+   * @memberof GamePlay
    * @returns {void}
    */
   spawnBullet() {
@@ -59,7 +102,7 @@ class GameScreen extends Screen {
   /**
    * Spawns a new enemy on the game screen.
    * @function
-   * @memberof GameScreen
+   * @memberof GamePlay
    * @returns {void}
    */
   spawnEnemy() {
@@ -70,13 +113,47 @@ class GameScreen extends Screen {
     );
   }
 
+  /**
+   * Increments the score by 10.
+   * @function
+   * @memberof GamePlay
+   * @returns {void}
+   */
+  score() {
+    this.globals.scores += 10;
+    this.scoreText.text = `SCORES: ${this.globals.scores}`;
+  }
+
+  /**
+   * Decrements the timer by dt.
+   * @function
+   * @memberof GamePlay
+   * @param {*} dt
+   */
+  countDown(dt) {
+    this.globals.timer -= dt;
+    if (this.globals.timer <= 0) {
+      this.globals.timer = 20;
+      this.timerText.text = ``;
+      this.transitions.onLoose();
+    } else {
+      this.timerText.text = `${this.globals.timer.toFixed(2)}`;
+    }
+  }
+
   update(dt, t) {
     super.update(dt, t);
+
+    // update the timer
+    this.countDown(dt);
+
+    // spawn enemies
     if (t - this.enemySpawnLast > this.enemySpawnRate) {
       this.enemySpawnLast = t;
       this.spawnEnemy();
     }
 
+    // fire a bullet
     if (this.player.canFire) {
       this.spawnBullet();
     }
@@ -91,6 +168,7 @@ class GameScreen extends Screen {
           entity.hit(bullet, enemy, () => {
             bullet.dead = true;
             enemy.dead = true;
+            this.score();
           });
         });
       }
@@ -100,15 +178,16 @@ class GameScreen extends Screen {
     this.enemies.children.forEach((enemy) => {
       if (enemy.position.x + enemy.width < 0) {
         enemy.dead = true;
-        // GAME OVER
+        // increase the damage // GAME OVER
       } else {
         entity.hit(enemy, this.player, () => {
           enemy.dead = true;
-          // GAME OVER
+          this.player.dead = true;
+          this.transitions.onLoose();
         });
       }
     });
   }
 }
 
-export default GameScreen;
+export default GamePlay;

@@ -1,5 +1,6 @@
 import enemyImageURL from "../images/enemy.png";
 import cluster from "../cluster";
+import Vector from "../cluster/utils/Vector";
 
 const { Sprite, Texture, math } = cluster;
 

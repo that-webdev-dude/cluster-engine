@@ -1,13 +1,14 @@
-import GameScreen from "./screens/GameScreen";
-// import TestScreen from "./screens/TestScreen";
+import GameTitle from "./screens/GameTitle";
+import GamePlay from "./screens/GamePlay";
+import GameOver from "./screens/GameOver";
 import cluster from "./cluster";
 
-// cluster instances
 // prettier-ignore
 const {
   MouseControls,
   KeyControls,
-  Game 
+  Game ,
+  Texture
 } = cluster;
 
 const game = new Game({
@@ -21,12 +22,59 @@ const input = {
   keys: new KeyControls(),
 };
 
-const gameScreen = new GameScreen(game, input);
-// const gameScreen = new TestScreen(game, input);
+const defaults = () => ({
+  levelID: 1,
+  scores: 0,
+  lives: 3,
+  timer: 40,
+});
+let globals = defaults();
+
+const startGameTitle = () => {
+  globals = defaults();
+  game.setScene(
+    new GameTitle(game, input, globals, {
+      onPlay: () => {
+        startGamePlay(globals.levelID);
+      },
+    }),
+    0.5
+  );
+};
+
+const startGamePlay = (toLevel) => {
+  globals.levelID = toLevel;
+  game.setScene(
+    new GamePlay(game, input, globals, {
+      onLoose: () => {
+        startGameOver();
+      },
+    }),
+    0.5
+  );
+};
+
+const startGameOver = () => {
+  game.setScene(
+    new GameOver(game, input, globals, {
+      onPlay: () => {
+        startGameTitle();
+      },
+    }),
+    0.5
+  );
+};
 
 export default () => {
-  game.setScene(gameScreen);
+  startGameTitle();
   game.run((dt, t) => {
     // ...
   });
 };
+
+// Create the game pause scene, including any necessary buttons or menus.
+// Implement the game pause functionality.
+// Add sound effects and background music.
+// Test and debug the game.
+// Optimize the game for performance.
+// Deploy the game to a web server.

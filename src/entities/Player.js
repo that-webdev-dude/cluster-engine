@@ -1,7 +1,7 @@
 import playerImageURL from "../images/player.png";
 import cluster from "../cluster";
 
-const { Sprite, Texture, math } = cluster;
+const { Sprite, Texture, Vector, math } = cluster;
 
 class Player extends Sprite {
   constructor(game, input) {

@@ -19,7 +19,7 @@ class Timer {
     const ratio = this.elapsed / duration;
     if (ratio >= 1) {
       onTick(1);
-      onDone();
+      onDone && onDone();
       this.dead = true;
     } else {
       onTick(ratio);

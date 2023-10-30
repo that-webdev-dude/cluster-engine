@@ -80,10 +80,6 @@ class Game {
     return this.currentFPS;
   }
 
-  // get refreshFPS() {
-  //   return this.refreshRate;
-  // }
-
   setScene(scene, duration = 0) {
     if (!duration) {
       this.scene = scene;

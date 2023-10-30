@@ -23,6 +23,7 @@ const onAssetLoad = (e) => {
     );
     return;
   }
+
   // update listeners with the new state
   remaining--;
   progressListeners.forEach((cb) => cb(total - remaining, total));
@@ -41,13 +42,6 @@ function done() {
 
 const Assets = {
   onReady(cb) {
-    // if (remaining === 0) {
-    //   readyListeners.push(cb);
-    //   done();
-    // } else {
-    //   readyListeners.push(cb);
-    // }
-
     readyListeners.push(cb);
     if (remaining === 0) {
       done();
