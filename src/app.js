@@ -41,7 +41,6 @@ const startGameTitle = () => {
     0.5
   );
 };
-
 const startGamePlay = (toLevel) => {
   globals.levelID = toLevel;
   game.setScene(
@@ -53,7 +52,6 @@ const startGamePlay = (toLevel) => {
     0.5
   );
 };
-
 const startGameOver = () => {
   game.setScene(
     new GameOver(game, input, globals, {
@@ -72,8 +70,6 @@ export default () => {
   });
 };
 
-// Create the game pause scene, including any necessary buttons or menus.
-// Implement the game pause functionality.
 // Add sound effects and background music.
 // Test and debug the game.
 // Optimize the game for performance.

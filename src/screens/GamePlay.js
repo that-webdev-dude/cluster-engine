@@ -6,23 +6,32 @@ import Background from "../entities/Background";
 import Player from "../entities/Player";
 import Enemy from "../entities/Enemy";
 import Bullet from "../entities/Bullet";
-import Vector from "../cluster/utils/Vector";
+import DialogPause from "../dialogs/DialogPause";
 
 // prettier-ignore
 const { 
   Container, 
   Texture, 
+  Vector,
+  State,
   Pool, 
   Text,
-  Timer,
+  math, 
   entity, 
-  math 
 } = cluster;
+
+const states = {
+  PLAYING: 0,
+  PAUSED: 1,
+};
 
 class GamePlay extends Screen {
   constructor(game, input, globals = {}, transitions = {}) {
     super(game, input, globals, transitions);
 
+    const player = new Player(game, input);
+    const bullets = new Container();
+    const enemies = new Container();
     const backgroundTexture = new Texture(backgroundImageURL);
     const background = new Background({
       texture: backgroundTexture,
@@ -30,20 +39,18 @@ class GamePlay extends Screen {
       displayH: game.height,
       velocity: new Vector(-100, 0),
     });
-    const enemies = new Container();
-    const bullets = new Container();
-    const player = new Player(game, input);
 
+    this.state = new State(states.PLAYING);
     this.enemyPool = new Pool(() => new Enemy(), 20);
     this.bulletPool = new Pool(() => new Bullet(), 15);
     this.background = this.add(background);
     this.enemies = this.add(enemies);
     this.bullets = this.add(bullets);
     this.player = this.add(player);
-
-    this.enemySpawnRate = 0.75;
+    this.dialog = null;
     this.enemySpawnMax = 10;
     this.enemySpawnLast = 0;
+    this.enemySpawnRate = 0.75;
 
     // UI ==================================================
     this.scoreText = this.add(
@@ -141,7 +148,14 @@ class GamePlay extends Screen {
     }
   }
 
-  update(dt, t) {
+  /**
+   * updates the gameplay.
+   * @function
+   * @memberof GamePlay
+   * @param {*} dt
+   * @param {*} t
+   */
+  updateGameplay(dt, t) {
     super.update(dt, t);
 
     // update the timer
@@ -187,6 +201,42 @@ class GamePlay extends Screen {
         });
       }
     });
+  }
+
+  update(dt, t) {
+    const { state, input, game } = this;
+    state.update(dt, t);
+
+    switch (state.get()) {
+      case states.PLAYING:
+        this.updateGameplay(dt, t);
+        break;
+      case states.PAUSED:
+        if (state.first) {
+          this.dialog = this.add(
+            new DialogPause(
+              game.width,
+              game.height,
+              () => {
+                if (state.is([states.PAUSED]) && input.keys.key("KeyP")) {
+                  input.keys.reset();
+                  this.dialog.close();
+                }
+              },
+              () => {
+                state.set(states.PLAYING);
+              }
+            )
+          );
+        }
+        this.dialog.update(dt, t);
+        break;
+    }
+
+    if (!state.is([states.PAUSED]) && input.keys.key("KeyP")) {
+      state.set(states.PAUSED);
+      input.keys.reset();
+    }
   }
 }
 
