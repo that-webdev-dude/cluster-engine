@@ -1,9 +1,11 @@
 import Screen from "./Screen";
 import cluster from "../cluster";
 import Background from "../entities/Background";
+import sountrackURL from "../sounds/title_soundtrack.mp3";
 import backgroundImageURL from "../images/background.png";
+import audioBtnImageURL from "../images/audio_btn.png";
 
-const { Text, Vector, Texture, Timer, math } = cluster;
+const { Text, Vector, Texture, Timer, Sound, math } = cluster;
 
 class GameTitle extends Screen {
   constructor(game, input, globals = {}, transitions = {}) {
@@ -55,6 +57,19 @@ class GameTitle extends Screen {
     );
     this.footerText.alpha = 0.5;
     this.footerText.position = new Vector(game.width / 2, game.height - 32);
+
+    // audio button
+    this.audioBtn = this.add(
+      new cluster.Sprite(new cluster.Texture(audioBtnImageURL))
+    );
+    this.audioBtn.alpha = 0.25;
+    this.audioBtn.position = new Vector(
+      game.width - this.audioBtn.width - 32,
+      32
+    );
+
+    // soundtrack
+    this.soundtrack = new Sound(sountrackURL, { volume: 1, loop: true });
   }
 
   update(dt, t) {
@@ -63,6 +78,37 @@ class GameTitle extends Screen {
     if (this.input.keys.action) {
       this.transitions.onPlay();
     }
+
+    if (this.input.mouse.isPressed) {
+      const { position } = this.input.mouse;
+      const btnMinX = this.audioBtn.position.x;
+      const btnMaxX = this.audioBtn.position.x + this.audioBtn.width;
+      const btnMinY = this.audioBtn.position.y;
+      const btnMaxY = this.audioBtn.position.y + this.audioBtn.height;
+      const { x, y } = position;
+      if (
+        !this.audioBtn.active &&
+        x >= btnMinX &&
+        x <= btnMaxX &&
+        y >= btnMinY &&
+        y <= btnMaxY
+      ) {
+        this.audioBtn.alpha = 0.75;
+        this.audioBtn.active = true;
+        this.soundtrack.play();
+      } else if (
+        this.audioBtn.active &&
+        x >= btnMinX &&
+        x <= btnMaxX &&
+        y >= btnMinY &&
+        y <= btnMaxY
+      ) {
+        this.audioBtn.alpha = 0.25;
+        this.audioBtn.active = false;
+        this.soundtrack.stop();
+      }
+    }
+    this.input.mouse.update();
   }
 }
 

@@ -8,7 +8,7 @@ class MouseControls {
     // released: true on the first frame only where released
     // pressed: true on the first frame only then pressed
     // down: true on mouse held down
-    this.element = container;
+    this.element = container || document.body;
     this.position = new Vector();
     this.isDown = false;
     this.isPressed = false;

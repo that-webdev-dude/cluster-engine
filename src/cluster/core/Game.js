@@ -92,6 +92,7 @@ class Game {
 
   run(gameUpdate = () => {}) {
     Assets.onReady(() => {
+      console.log("Assets ready, running game");
       const loop = (ms) => {
         // stats.begin();
 

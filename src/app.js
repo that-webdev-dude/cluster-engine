@@ -7,8 +7,7 @@ import cluster from "./cluster";
 const {
   MouseControls,
   KeyControls,
-  Game ,
-  Texture
+  Game,
 } = cluster;
 
 const game = new Game({
@@ -18,7 +17,7 @@ const game = new Game({
 });
 
 const input = {
-  mouse: new MouseControls(),
+  mouse: new MouseControls(game.view),
   keys: new KeyControls(),
 };
 
@@ -65,9 +64,7 @@ const startGameOver = () => {
 
 export default () => {
   startGameTitle();
-  game.run((dt, t) => {
-    // ...
-  });
+  game.run((dt, t) => {});
 };
 
 // Add sound effects and background music.
