@@ -67,7 +67,7 @@ export default () => {
   game.run((dt, t) => {});
 };
 
-// Add sound effects and background music.
+// Add sound effects.
 // Test and debug the game.
 // Optimize the game for performance.
 // Deploy the game to a web server.
