@@ -1,6 +1,7 @@
 import GameTitle from "./screens/GameTitle";
 import GamePlay from "./screens/GamePlay";
 import GameOver from "./screens/GameOver";
+import GameTest from "./screens/GameTest"; // game test
 import cluster from "./cluster";
 
 // prettier-ignore
@@ -13,7 +14,7 @@ const {
 const game = new Game({
   title: "Shmup!",
   height: 640,
-  width: 832,
+  width: 768,
 });
 
 const input = {
@@ -29,6 +30,9 @@ const defaults = () => ({
 });
 let globals = defaults();
 
+const startGameTest = () => {
+  game.setScene(new GameTest(game, input, globals, {}), 0);
+}; //`game test
 const startGameTitle = () => {
   globals = defaults();
   game.setScene(
@@ -63,7 +67,8 @@ const startGameOver = () => {
 };
 
 export default () => {
-  startGameTitle();
+  // startGameTitle();
+  startGameTest(); //`game test
   game.run((dt, t) => {});
 };
 

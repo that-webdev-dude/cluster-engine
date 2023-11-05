@@ -9,7 +9,8 @@ import Vector from "./utils/Vector";
 import Physics from "./utils/Physics";
 import entity from "./utils/entity";
 import math from "./utils/math";
-// import tiledParser from "./utils/TiledParser";
+import GridHash from "./utils/GridHash";
+// import TiledParser from "./utils/tiledParser";
 
 // SHAPES
 import Capsule from "./shapes/Capsule";
@@ -54,6 +55,7 @@ export default {
   Physics,
   entity,
   math,
+  GridHash,
   // TiledParser,
 
   // SHAPES
