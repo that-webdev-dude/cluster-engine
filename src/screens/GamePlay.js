@@ -101,9 +101,11 @@ class GamePlay extends Screen {
    * @returns {void}
    */
   spawnBullet() {
-    let bullet = this.bullets.add(this.bulletPool.next());
     let { x, y } = entity.center(this.player);
-    bullet.position.set(x - bullet.width / 2, y - bullet.height / 2);
+    for (let i = -8; i <= 16; i += 16) {
+      let bullet = this.bullets.add(this.bulletPool.next());
+      bullet.position.set(x - bullet.width / 2, y - bullet.height / 2 + i);
+    }
   }
 
   /**

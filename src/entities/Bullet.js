@@ -1,4 +1,4 @@
-import bulletImageURL from "../images/bullet.png";
+import bulletImageURL from "../images/blue_bullet.png";
 import cluster from "../cluster";
 
 const { Texture, Sprite } = cluster;

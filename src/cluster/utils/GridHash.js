@@ -29,6 +29,10 @@ class GridHash {
       return;
     } else {
       const bounds = hitBounds(entity);
+      if (bounds.width >= this.cellSize || bounds.height >= this.cellSize) {
+        console.warn("Entity is too big for GridHash cell");
+        return;
+      }
       const min = this.hash({ x: bounds.x, y: bounds.y });
       const max = this.hash({
         x: bounds.x + bounds.width,
@@ -37,17 +41,22 @@ class GridHash {
 
       // where to add remove entity
       if (entity.hashMin) {
-        // entity hasn't changed cell
-        if (entity.hashMin[0] === min[0] && entity.hashMin[1] === min[1]) {
+        if (
+          entity.hashMin[0] === min[0] &&
+          entity.hashMin[1] === min[1] &&
+          entity.hashMax[0] === max[0] &&
+          entity.hashMax[1] === max[1]
+        ) {
+          // entity hasn't changed cell
           return;
+        } else {
+          // entity has changed cell so remove it from old cell
+          this.remove(entity);
         }
-        // entity has changed cell so remove it from old cell
-        this.remove(entity);
       }
 
-      // add entity to EVERY cell it touches
-      for (let j = min[1]; j <= max[1] + 1; j++) {
-        for (let i = min[0]; i <= max[0] + 1; i++) {
+      for (let j = min[1]; j <= max[1]; j++) {
+        for (let i = min[0]; i <= max[0]; i++) {
           this.#add([i, j], entity);
         }
       }
@@ -60,8 +69,8 @@ class GridHash {
   remove(entity) {
     const min = entity.hashMin;
     const max = entity.hashMax;
-    for (let j = min[1]; j <= max[1] + 1; j++) {
-      for (let i = min[0]; i <= max[0] + 1; i++) {
+    for (let j = min[1]; j <= max[1]; j++) {
+      for (let i = min[0]; i <= max[0]; i++) {
         const hash = [i, j];
         // delete entity from cells
         const cell = this.entities[hash];

@@ -1,16 +1,21 @@
-import playerImageURL from "../images/player.png";
+import spritesheetImageURL from "../images/spritesheet.png";
 import cluster from "../cluster";
 
-const { Sprite, Texture, Vector, math } = cluster;
+const { TileSprite, Texture, entity, math } = cluster;
 
-class Player extends Sprite {
+class Player extends TileSprite {
   constructor(game, input) {
-    super(new Texture(playerImageURL));
+    super(new Texture(spritesheetImageURL), 32, 32);
+    this.frame = { x: 1, y: 3 };
+    this.angle = math.deg2rad(90);
+    this.pivot.x = this.width / 2;
+    this.pivot.y = this.height / 2;
     this.gameHeight = game.height;
     this.gameWidth = game.width;
     this.input = input;
     this.speed = 200;
-    this.position.set(100, this.gameHeight / 2 - this.width);
+    this.position.set(0, 0);
+    // this.position.set(100, this.gameHeight / 2 - this.width);
     this.hitbox = {
       x: 0,
       y: 0,
@@ -21,7 +26,7 @@ class Player extends Sprite {
     this.totalShotTime = 0;
     this.lastShotTime = 0;
     this.canFire = false;
-    this.fireRate = 0.1;
+    this.fireRate = 0.25;
   }
 
   update(dt, t) {

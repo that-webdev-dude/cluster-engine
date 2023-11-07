@@ -14,7 +14,7 @@ const {
 const game = new Game({
   title: "Shmup!",
   height: 640,
-  width: 768,
+  width: 832,
 });
 
 const input = {
@@ -26,7 +26,7 @@ const defaults = () => ({
   levelID: 1,
   scores: 0,
   lives: 3,
-  timer: 40,
+  timer: 120,
 });
 let globals = defaults();
 
@@ -41,7 +41,7 @@ const startGameTitle = () => {
         startGamePlay(globals.levelID);
       },
     }),
-    0.5
+    0.75
   );
 };
 const startGamePlay = (toLevel) => {
@@ -52,7 +52,7 @@ const startGamePlay = (toLevel) => {
         startGameOver();
       },
     }),
-    0.5
+    0.75
   );
 };
 const startGameOver = () => {
@@ -62,17 +62,17 @@ const startGameOver = () => {
         startGameTitle();
       },
     }),
-    0.5
+    0.75
   );
 };
 
 export default () => {
   // startGameTitle();
-  startGameTest(); //`game test
+  startGamePlay();
+  // startGameTest(); //`game test
   game.run((dt, t) => {});
 };
 
-// Add sound effects.
 // Test and debug the game.
 // Optimize the game for performance.
 // Deploy the game to a web server.
