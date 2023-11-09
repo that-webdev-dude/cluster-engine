@@ -44,6 +44,7 @@ class GamePlay extends Screen {
     this.enemyPool = new Pool(() => new Enemy(), 20);
     this.bulletPool = new Pool(() => new Bullet(), 15);
     this.background = this.add(background);
+
     this.enemies = this.add(enemies);
     this.bullets = this.add(bullets);
     this.player = this.add(player);
@@ -101,6 +102,7 @@ class GamePlay extends Screen {
    * @returns {void}
    */
   spawnBullet() {
+    console.log("spawn bullet");
     let { x, y } = entity.center(this.player);
     for (let i = -8; i <= 16; i += 16) {
       let bullet = this.bullets.add(this.bulletPool.next());

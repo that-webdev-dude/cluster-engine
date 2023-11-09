@@ -14,7 +14,7 @@ class Camera extends Container {
    * @param {Object} tracker the size of the tracker box { width, height }
    */
   constructor(
-    subject,
+    subject = null,
     viewport,
     worldSize = viewport,
     tracker = { width: 96, height: 96 }
@@ -103,7 +103,8 @@ class Camera extends Container {
     }
   }
 
-  setSubject(entity) {
+  setSubject(entity = null) {
+    if (!entity) return;
     this.subject = entity && entity.position ? entity : this.position;
     this.offset = { x: 0, y: 0 };
     if (entity && entity.width) {

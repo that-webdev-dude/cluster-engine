@@ -1,7 +1,7 @@
 import GameTitle from "./screens/GameTitle";
 import GamePlay from "./screens/GamePlay";
 import GameOver from "./screens/GameOver";
-import GameTest from "./screens/GameTest"; // game test
+// import GameTest from "./screens/GameTest"; // DELETE THIS TO DISABLE GAME TEST
 import cluster from "./cluster";
 
 // prettier-ignore
@@ -30,9 +30,12 @@ const defaults = () => ({
 });
 let globals = defaults();
 
+// ---------------------------------------------------------------------
 const startGameTest = () => {
   game.setScene(new GameTest(game, input, globals, {}), 0);
-}; //`game test
+}; // DELETE THIS TO DISABLE GAME TEST
+// ---------------------------------------------------------------------
+
 const startGameTitle = () => {
   globals = defaults();
   game.setScene(
@@ -49,8 +52,7 @@ const startGamePlay = (toLevel) => {
   game.setScene(
     new GamePlay(game, input, globals, {
       onLoose: () => {
-        // startGameOver();
-        startGamePlay(); // DELETE THIS AND UNCOMMENT startGameOver() TO ENABLE GAME OVER SCREEN
+        startGameOver();
       },
     }),
     0.75
@@ -68,9 +70,7 @@ const startGameOver = () => {
 };
 
 export default () => {
-  // startGameTitle();
-  startGamePlay();
-  // startGameTest(); //`game test
+  startGameTitle();
   game.run((dt, t) => {});
 };
 
