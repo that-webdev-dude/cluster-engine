@@ -14,8 +14,7 @@ class Player extends TileSprite {
     this.gameWidth = game.width;
     this.input = input;
     this.speed = 200;
-    this.position.set(0, 0);
-    // this.position.set(100, this.gameHeight / 2 - this.width);
+    this.position.set(100, this.gameHeight / 2 - this.width);
     this.hitbox = {
       x: 0,
       y: 0,

@@ -49,7 +49,8 @@ const startGamePlay = (toLevel) => {
   game.setScene(
     new GamePlay(game, input, globals, {
       onLoose: () => {
-        startGameOver();
+        // startGameOver();
+        startGamePlay(); // DELETE THIS AND UNCOMMENT startGameOver() TO ENABLE GAME OVER SCREEN
       },
     }),
     0.75
