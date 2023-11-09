@@ -1,7 +1,7 @@
 import GameTitle from "./screens/GameTitle";
 import GamePlay from "./screens/GamePlay";
 import GameOver from "./screens/GameOver";
-// import GameTest from "./screens/GameTest"; // DELETE THIS TO DISABLE GAME TEST
+// import GameTest from "./screens/GameTest"; // DELETE THIS TO DISABLE GAME TEST!
 import cluster from "./cluster";
 
 // prettier-ignore
