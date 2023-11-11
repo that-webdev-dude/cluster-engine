@@ -1,9 +1,7 @@
 import Screen from "./Screen";
 import cluster from "../cluster";
-import Background from "../entities/Background";
-import backgroundImageURL from "../images/background.png";
 
-const { Text, Vector, Texture, Timer, math } = cluster;
+const { Text, Vector, Timer, Rect } = cluster;
 
 class GameOver extends Screen {
   constructor(game, input, globals = {}, transitions = {}) {
@@ -11,11 +9,10 @@ class GameOver extends Screen {
 
     // background
     this.add(
-      new Background({
-        texture: new Texture(backgroundImageURL),
-        displayW: game.width,
-        displayH: game.height,
-        velocity: new Vector(-100, 0),
+      new Rect({
+        height: game.height,
+        width: game.width,
+        style: { fill: "black" },
       })
     );
 

@@ -1,7 +1,6 @@
 import GameTitle from "./screens/GameTitle";
 import GamePlay from "./screens/GamePlay";
 import GameOver from "./screens/GameOver";
-// import GameTest from "./screens/GameTest"; // DELETE THIS TO DISABLE GAME TEST!
 import cluster from "./cluster";
 
 // prettier-ignore
@@ -12,7 +11,7 @@ const {
 } = cluster;
 
 const game = new Game({
-  title: "Shmup!",
+  title: "Amazing Game",
   height: 640,
   width: 832,
 });
@@ -23,32 +22,30 @@ const input = {
 };
 
 const defaults = () => ({
-  levelID: 1,
-  scores: 0,
-  lives: 3,
-  timer: 120,
+  levelId: 1,
+  // ... MAIN GAME STATE HERE ...
 });
 let globals = defaults();
 
-// ---------------------------------------------------------------------
-const startGameTest = () => {
-  game.setScene(new GameTest(game, input, globals, {}), 0);
-}; // DELETE THIS TO DISABLE GAME TEST
-// ---------------------------------------------------------------------
+// DELETE THIS TO DISABLE GAME TEST ...
+// const startGameTest = () => {
+//   game.setScene(new GameTest(game, input, globals, {}), 0);
+// };
 
 const startGameTitle = () => {
   globals = defaults();
   game.setScene(
     new GameTitle(game, input, globals, {
       onPlay: () => {
-        startGamePlay(globals.levelID);
+        startGamePlay(globals.levelId);
       },
     }),
     0.75
   );
 };
-const startGamePlay = (toLevel) => {
-  globals.levelID = toLevel;
+
+const startGamePlay = (toLevel = 1) => {
+  globals.levelId = toLevel;
   game.setScene(
     new GamePlay(game, input, globals, {
       onLoose: () => {
@@ -58,6 +55,7 @@ const startGamePlay = (toLevel) => {
     0.75
   );
 };
+
 const startGameOver = () => {
   game.setScene(
     new GameOver(game, input, globals, {
@@ -73,7 +71,3 @@ export default () => {
   startGameTitle();
   game.run((dt, t) => {});
 };
-
-// Test and debug the game.
-// Optimize the game for performance.
-// Deploy the game to a web server.
