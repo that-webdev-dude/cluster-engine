@@ -1,5 +1,6 @@
 class AnimationItem {
-  constructor(frames = [], rate = 0) {
+  constructor(frames = [], rate = 0, onCompleted = () => {}) {
+    this.onCompleted = onCompleted;
     this.frames = frames;
     this.rate = rate;
     this.reset();
@@ -12,10 +13,13 @@ class AnimationItem {
   }
 
   update(dt) {
-    const { rate, frames } = this;
+    const { rate, frames, onCompleted } = this;
     this.currentTime += dt;
     if (this.currentTime > rate) {
       const nextFrameIndex = this.currentFrameIndex++ % frames.length;
+      if (nextFrameIndex === frames.length - 1) {
+        onCompleted();
+      }
       this.currentFrame = frames[nextFrameIndex];
       this.currentTime -= rate;
     }
@@ -30,8 +34,17 @@ class Animation {
     this.currentAnimationName = null;
   }
 
-  add(animationName, animationFrames, animationRate) {
-    this.animations[animationName] = new AnimationItem(animationFrames, animationRate);
+  add(
+    animationName,
+    animationFrames,
+    animationRate,
+    onAnimationCompleted = () => {}
+  ) {
+    this.animations[animationName] = new AnimationItem(
+      animationFrames,
+      animationRate,
+      onAnimationCompleted
+    );
     return this.animations[animationName];
   }
 

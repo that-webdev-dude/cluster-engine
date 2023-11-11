@@ -3,6 +3,7 @@ import cluster from "../cluster";
 
 import backgroundImageURL from "../images/background.png";
 import Background from "../entities/Background";
+import Explosion from "../entities/Explosion";
 import Player from "../entities/Player";
 import Enemy from "../entities/Enemy";
 import Bullet from "../entities/Bullet";
@@ -32,6 +33,7 @@ class GamePlay extends Screen {
     const player = new Player(game, input);
     const bullets = new Container();
     const enemies = new Container();
+    const explosions = new Container();
     const backgroundTexture = new Texture(backgroundImageURL);
     const background = new Background({
       texture: backgroundTexture,
@@ -41,10 +43,13 @@ class GamePlay extends Screen {
     });
 
     this.state = new State(states.PLAYING);
+
     this.enemyPool = new Pool(() => new Enemy(), 20);
     this.bulletPool = new Pool(() => new Bullet(), 15);
-    this.background = this.add(background);
+    this.explosionPool = new Pool(() => new Explosion(), 10);
 
+    this.background = this.add(background);
+    this.explosions = this.add(explosions);
     this.enemies = this.add(enemies);
     this.bullets = this.add(bullets);
     this.player = this.add(player);
@@ -102,7 +107,6 @@ class GamePlay extends Screen {
    * @returns {void}
    */
   spawnBullet() {
-    console.log("spawn bullet");
     let { x, y } = entity.center(this.player);
     for (let i = -8; i <= 16; i += 16) {
       let bullet = this.bullets.add(this.bulletPool.next());
@@ -122,6 +126,19 @@ class GamePlay extends Screen {
       this.game.width - enemy.width,
       math.rand(100, this.game.height - enemy.height - 100)
     );
+  }
+
+  /**
+   * Spawns an explosion at the given position.
+   * @function
+   * @memberof GamePlay
+   * @param {number} x - The x position of the explosion.
+   * @param {number} y - The y position of the explosion.
+   * @returns {void}
+   */
+  spawnExplosion(x, y) {
+    let explosion = this.explosions.add(this.explosionPool.next());
+    explosion.position.set(x, y);
   }
 
   /**
@@ -184,6 +201,7 @@ class GamePlay extends Screen {
       } else {
         this.enemies.children.forEach((enemy) => {
           entity.hit(bullet, enemy, () => {
+            this.spawnExplosion(enemy.position.x - 16, enemy.position.y - 16);
             bullet.dead = true;
             enemy.dead = true;
             this.score();
@@ -207,10 +225,16 @@ class GamePlay extends Screen {
     });
   }
 
+  /**
+   * updates the gameplay state.
+   * @function
+   * @memberof GamePlay
+   * @param {*} dt
+   * @param {*} t
+   */
   update(dt, t) {
     const { state, input, game } = this;
     state.update(dt, t);
-
     switch (state.get()) {
       case states.PLAYING:
         this.updateGameplay(dt, t);
