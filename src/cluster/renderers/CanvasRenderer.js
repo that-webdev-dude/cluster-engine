@@ -144,15 +144,6 @@ class CanvasRenderer {
    * @param {Container} container
    */
   #renderRecursive(container, camera = null) {
-    // const e = document.createElement("canvas");
-    // e.width = 100;
-    // e.height = 100;
-    // const c = e.getContext("2d");
-    // c.fillStyle = "red";
-    // c.fillRect(0, 0, 100, 100);
-    // this.context.drawImage(e, 0, 0);
-    // console.log(e.style);
-
     // exit immediately if the whole container is transparent
     if (container.visible === false || container.alpha === 0) return;
 
@@ -166,9 +157,19 @@ class CanvasRenderer {
       // exit immediately if the child is transparent
       if (child.visible == false || child.alpha === 0) return;
 
-      // exit immediately if the whole container offscreen
+      // exit immediately if the whole container is offscreen (camera or viewport bounds)
       if (camera && !isOnCamera(child, camera)) {
         return;
+      } else {
+        if (
+          child.position.x + child.width < 0 ||
+          child.position.x > this.width ||
+          child.position.y + child.height < 0 ||
+          child.position.y > this.height
+        ) {
+          console.log("out of bounds");
+          return;
+        }
       }
 
       context.save();
