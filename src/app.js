@@ -11,7 +11,7 @@ const {
 } = cluster;
 
 const game = new Game({
-  title: "Amazing Game",
+  title: "Physimania",
   height: 640,
   width: 832,
 });
@@ -68,6 +68,7 @@ const startGameOver = () => {
 };
 
 export default () => {
-  startGameTitle();
+  // startGameTitle();
+  startGamePlay();
   game.run((dt, t) => {});
 };
