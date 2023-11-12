@@ -32,10 +32,12 @@ class GamePlay extends Screen {
       style: { fill: "transparent", stroke: "white" },
     });
     player.radius = playerRadius;
+    player.mass = 1;
     player.position = new Vector(10, 10);
     player.velocity = new Vector(0, 0);
     player.acceleration = new Vector(0, 0);
-    player.maxVelocity = 500;
+    player.prevPosition = player.position.clone();
+    // player.maxVelocity = 500;
 
     this.state = new State(states.PLAYING);
     this.background = this.add(background);
@@ -68,7 +70,7 @@ class GamePlay extends Screen {
 
     let playerVelocity = this.player.velocity.magnitude;
     if (this.input.keys.x || this.input.keys.y) {
-      if (playerVelocity < this.player.maxVelocity) {
+      if (playerVelocity < 1000) {
         Physics.World.applyForce(this.player, {
           x: this.input.keys.x * 2000,
           y: this.input.keys.y * 2000,

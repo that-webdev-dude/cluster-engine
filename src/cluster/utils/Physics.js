@@ -64,7 +64,7 @@ class PhysicsWorld {
    * @param {*} dt
    */
   static reposition(entity, dt) {
-    entity.position.add(this.getDisplacement(entity, dt, 5));
+    entity.position.add(this.getDisplacement(entity, dt));
   }
 }
 
