@@ -38,43 +38,43 @@ class Vector {
     return this._magnitude;
   }
 
-  set(x: number, y: number): this {
+  public set(x: number, y: number): this {
     this.x = x;
     this.y = y;
     return this;
   }
 
-  copy({ x, y }: Vector): this {
+  public copy({ x, y }: Vector): this {
     return this.set(x, y);
   }
 
-  add({ x, y }: Vector): this {
+  public add({ x, y }: Vector): this {
     this.x += x;
     this.y += y;
     return this;
   }
 
-  subtract({ x, y }: Vector): this {
+  public subtract({ x, y }: Vector): this {
     this.x -= x;
     this.y -= y;
     return this;
   }
 
-  multiply(scalar: number = 1): this {
+  public multiply(scalar: number = 1): this {
     this.x *= scalar;
     this.y *= scalar;
     return this;
   }
 
-  scale(scalar: number = 1): this {
+  public scale(scalar: number = 1): this {
     return this.multiply(scalar);
   }
 
-  reverse(): this {
+  public reverse(): this {
     return this.scale(-1);
   }
 
-  normalize(): this {
+  public normalize(): this {
     let magnitude = this.magnitude;
     if (magnitude > 0) {
       this.x /= magnitude;
@@ -83,39 +83,39 @@ class Vector {
     return this;
   }
 
-  unit(): this {
+  public unit(): this {
     return this.normalize();
   }
 
-  dot({ x, y }: Vector): number {
+  public dot({ x, y }: Vector): number {
     return this.x * x + this.y * y;
   }
 
-  cross({ x, y }: Vector): number {
+  public cross({ x, y }: Vector): number {
     return this.x * y - this.y * x;
   }
 
-  angleTo({ x, y }: Vector): number {
+  public angleTo({ x, y }: Vector): number {
     const dotProduct = this.x * x + this.y * y;
     const magnitudeProduct = this.magnitude * Math.sqrt(x * x + y * y);
     return Math.acos(dotProduct / magnitudeProduct);
   }
 
-  normal(): Vector {
+  public normal(): Vector {
     let x = -this.y;
     let y = this.x;
     return this.set(x, y).unit();
   }
 
-  clone(): Vector {
+  public clone(): Vector {
     return Vector.from(this);
   }
 
-  distance(vector: Vector): Vector {
+  public distance(vector: Vector): Vector {
     return Vector.from(this).subtract(vector).reverse();
   }
 
-  to(vector: Vector): Vector {
+  public to(vector: Vector): Vector {
     return Vector.from(this).subtract(vector).reverse();
   }
 }

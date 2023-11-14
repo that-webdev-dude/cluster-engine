@@ -14,16 +14,20 @@ class Engine {
   private _update: (dt: number, t: number) => void;
   private _render: () => void;
 
-  constructor(options: EngineOptions = {}) {
+  constructor({
+    update = () => {},
+    render = () => {},
+    fps = 60,
+  }: EngineOptions = {}) {
     this._frameRequest = null;
     this._currentTime = null;
     this._elapsedTime = 0;
     this._updated = false;
     this._updates = 0;
     this._updates = 0;
-    this._timeStep = 1000 / (options.fps ?? 60);
-    this._update = options.update ?? (() => {});
-    this._render = options.render ?? (() => {});
+    this._timeStep = 1000 / fps;
+    this._update = update;
+    this._render = render;
   }
 
   set update(update: (dt: number, t: number) => void) {

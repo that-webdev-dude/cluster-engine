@@ -1,47 +1,49 @@
 import Vector from "../tools/Vector";
 import Entity from "./Entity";
 
-// interface Entity {
-//   position: Vector;
-//   height: number;
-//   width: number;
-//   dead: boolean;
-//   update: (dt: number, t: number, parent?: Container) => void;
-// }
-
 class Container {
-  position: Vector;
-  children: Entity[];
+  public position: Vector;
+  public visible: boolean;
+  public alpha: number;
+  private _children: (Entity | Container)[];
 
   constructor(position: Vector = new Vector()) {
     this.position = position;
-    this.children = [];
+    this.visible = true;
+    this.alpha = 1;
+    this._children = [];
   }
 
-  map(f: (entity: Entity) => any = () => {}): any[] {
-    return this.children.map(f);
+  public foreach(f: (child: Entity | Container) => any = () => {}): void {
+    for (let i = 0; i < this._children.length; i++) {
+      f(this._children[i]);
+    }
   }
 
-  add(entity: Entity): Entity {
-    this.children.push(entity);
-    return entity;
+  public map(f: (child: Entity | Container) => any = () => {}): any[] {
+    return this._children.map(f);
   }
 
-  remove(entity: Entity): Entity {
-    this.children = this.children.filter(
-      (currentChild) => currentChild !== entity
+  public add(child: Entity | Container): Entity | Container {
+    this._children.push(child);
+    return child;
+  }
+
+  public remove(child: Entity | Container): Entity | Container {
+    this._children = this._children.filter(
+      (currentChild) => currentChild !== child
     );
-    return entity;
+    return child;
   }
 
-  update(dt: number, t: number, parent?: Container): void {
-    for (let i = 0; i < this.children.length; i++) {
-      const entity = this.children[i];
-      if (entity.update) {
-        entity.update(dt, t, this);
+  public update(dt: number, t: number, parent?: Container): void {
+    for (let i = 0; i < this._children.length; i++) {
+      const child = this._children[i];
+      if (child.update) {
+        child.update(dt, t, this);
       }
-      if (entity.dead) {
-        this.children.splice(i, 1);
+      if ("dead" in child && child.dead) {
+        this._children.splice(i, 1);
         i--;
       }
     }
