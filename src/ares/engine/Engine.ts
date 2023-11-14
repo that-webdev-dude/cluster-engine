@@ -1,92 +1,75 @@
+interface EngineOptions {
+  update?: (dt: number, t: number) => void;
+  render?: () => void;
+  fps?: number;
+}
+
 class Engine {
-  private static instance: Engine;
-  private frameRequest!: number | null;
-  private currentTime!: number | null;
-  private elapsedTime: number = 0;
-  private timeStep: number = 1000 / 60;
-  private updated: boolean = false;
-  private update!: (dt: number, t: number) => void;
-  private render!: (timeStep: number) => void;
-  private onUpdate: (dt: number, t: number) => void = (dt, t) => {};
-  private onRender: () => void = () => {};
+  private _frameRequest: number | null;
+  private _currentTime: number | null;
+  private _elapsedTime: number;
+  private _timeStep: number;
+  private _updated: boolean;
+  private _updates: number;
+  private _update: (dt: number, t: number) => void;
+  private _render: () => void;
 
-  constructor({
-    update = () => {},
-    render = () => {},
-  }: {
-    update?: (dt: number, t: number) => void;
-    render?: (timeStep: number) => void;
-  } = {}) {
-    if (Engine.instance) {
-      return Engine.instance;
-    } else {
-      this.frameRequest = null;
-      this.currentTime = null;
-      this.update = update;
-      this.render = render;
-
-      Engine.instance = this;
-      return Engine.instance;
-    }
+  constructor(options: EngineOptions = {}) {
+    this._frameRequest = null;
+    this._currentTime = null;
+    this._elapsedTime = 0;
+    this._updated = false;
+    this._updates = 0;
+    this._updates = 0;
+    this._timeStep = 1000 / (options.fps ?? 60);
+    this._update = options.update ?? (() => {});
+    this._render = options.render ?? (() => {});
   }
 
-  private run(timestamp: number): void {
-    if (!this.currentTime) this.currentTime = window.performance.now();
-    this.frameRequest = window.requestAnimationFrame((timestamp) => {
-      this.run(timestamp);
-    });
+  set update(update: (dt: number, t: number) => void) {
+    this._update = update;
+  }
 
-    this.elapsedTime += timestamp - (this.currentTime || timestamp);
-    this.currentTime = timestamp;
+  set render(render: () => void) {
+    this._render = render;
+  }
 
-    let t = this.currentTime / 1000;
-    let dt = this.timeStep / 1000;
-    let updates = 0;
-    while (this.elapsedTime >= this.timeStep) {
-      this.update(dt, t);
-      this.onUpdate(dt, t);
-      this.elapsedTime -= this.timeStep;
-      this.updated = true;
-      if (++updates > 3) {
-        console.warn("WARNING: Engine.ts ~ number of updates exceeding 2");
-        break;
+  private _run = (timestamp: number) => {
+    if (!this._currentTime) this._currentTime = window.performance.now();
+    this._frameRequest = window.requestAnimationFrame(this._run);
+
+    this._elapsedTime += timestamp - this._currentTime;
+    this._currentTime = timestamp;
+    this._updates = 0;
+
+    if (this._elapsedTime >= this._timeStep * 3) {
+      this._elapsedTime = this._timeStep;
+    }
+
+    while (this._elapsedTime >= this._timeStep) {
+      this._elapsedTime -= this._timeStep;
+      this._update(this._timeStep / 1000, this._currentTime / 1000);
+      if (++this._updates > 2) {
+        throw new Error("Engine (46): Too many updates!");
       }
+      this._updated = true;
     }
 
-    if (this.updated) {
-      this.render(this.timeStep);
-      this.onRender();
-      this.updated = false;
+    if (this._updated) {
+      this._render();
+      this._updated = false;
     }
+  };
+
+  public start() {
+    this._currentTime = window.performance.now();
+    this._frameRequest = window.requestAnimationFrame(this._run);
   }
 
-  public start(): void {
-    this.currentTime = window.performance.now();
-    this.frameRequest = window.requestAnimationFrame((timestamp) => {
-      this.run(timestamp);
-    });
-  }
-
-  public stop(): void {
-    if (this.frameRequest !== null) {
-      window.cancelAnimationFrame(this.frameRequest);
+  public stop() {
+    if (this._frameRequest !== null) {
+      window.cancelAnimationFrame(this._frameRequest);
     }
-  }
-
-  public setUpdate(update: (dt: number, t: number) => void): void {
-    this.update = update;
-  }
-
-  public setRender(render: (timeStep: number) => void): void {
-    this.render = render;
-  }
-
-  public setOnUpdate(onUpdate: (dt: number, t: number) => void): void {
-    this.onUpdate = onUpdate;
-  }
-
-  public setOnRender(onRender: () => void): void {
-    this.onRender = onRender;
   }
 }
 

@@ -5,7 +5,7 @@ const { Game } = ares;
 const game = new Game();
 
 export default () => {
-  console.log(game);
+  game.start();
 };
 
 // import GameTitle from "./screens/GameTitle";
