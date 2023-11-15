@@ -53,4 +53,4 @@ class Entity {
   public update?(dt: number, t: number, parent?: Container): void {}
 }
 
-export default Entity;
+export { EntityOptions, Entity };

@@ -14,7 +14,7 @@ class Game {
   readonly version: string;
   readonly title: string;
   readonly input: Input;
-  readonly scene: Container;
+  private _scene: Container;
   private _engine: Engine;
   private _renderer: Renderer;
 
@@ -26,8 +26,8 @@ class Game {
   }: GameOptions = {}) {
     this.version = version;
     this.title = title;
-    this.scene = new Container();
     this.input = new Input();
+    this._scene = new Container();
     this._engine = new Engine();
     this._renderer = new Renderer({ width, height });
 
@@ -43,14 +43,17 @@ class Game {
     }
   }
 
-  public setScene(scene: Container, transitionDuration: number = 0) {}
+  public setScene(scene: Container, transitionDuration: number = 0) {
+    this._scene = scene;
+  }
 
-  public start() {
+  public start(updateCb: (dt: number, t: number) => void = () => {}): void {
     this._engine.update = (dt: number, t: number) => {
-      this.scene.update(dt, t);
+      this._scene.update(dt, t);
+      updateCb(dt, t);
     };
     this._engine.render = () => {
-      this._renderer.render(this.scene);
+      this._renderer.render(this._scene);
     };
     this._engine.start(); // start the engine
   }

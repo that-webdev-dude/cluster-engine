@@ -1,39 +1,27 @@
-import Entity from "./Entity";
-import Vector from "../tools/Vector";
+import { Entity, EntityOptions } from "./Entity";
 
 interface CanvasStyleOptions {
-  fill: string;
-  stroke: string;
-  lineWidth: number;
+  fill?: string;
+  stroke?: string;
+  lineWidth?: number;
 }
 
-interface CanvasRectOptions {
-  position?: Vector;
-  height?: number;
-  width?: number;
+// rect
+interface CanvasRectOptions extends EntityOptions {
   style?: CanvasStyleOptions;
 }
 
 class CanvasRect extends Entity {
   public style: CanvasStyleOptions;
 
-  constructor({
-    position = new Vector(),
-    height = 0,
-    width = 0,
-    style = { fill: "red", stroke: "red", lineWidth: 0 },
-  }: CanvasRectOptions = {}) {
-    super({
-      position,
-      height,
-      width,
-    });
-    this.style = style;
+  constructor(options: CanvasRectOptions = {}) {
+    super(options);
+    this.style = options.style || {};
   }
 }
 
-interface CanvasRectOptions {
-  position?: Vector;
+// circle
+interface CanvasCircleOptions extends EntityOptions {
   radius?: number;
   style?: CanvasStyleOptions;
 }
@@ -42,18 +30,12 @@ class CanvasCircle extends Entity {
   public radius: number;
   public style: CanvasStyleOptions;
 
-  constructor({
-    position = new Vector(),
-    radius = 0,
-    style = { fill: "red", stroke: "red", lineWidth: 0 },
-  }: CanvasRectOptions = {}) {
-    super({
-      position,
-      height: radius * 2,
-      width: radius * 2,
-    });
-    this.radius = radius;
-    this.style = style;
+  constructor(options: CanvasCircleOptions = {}) {
+    super(options);
+    this.radius = options.radius || 50;
+    this.style = options.style || {};
+
+    this.anchor.set(this.radius, this.radius);
   }
 }
 

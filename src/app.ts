@@ -1,11 +1,44 @@
 import ares from "./ares/index";
+import { CanvasRect, CanvasCircle } from "./ares/core/Shape";
+import CanvasText from "./ares/core/Text";
+import Container from "./ares/core/Container";
+import Vector from "./ares/tools/Vector";
 
 const { Game } = ares;
 
 const game = new Game();
+const scene = new Container();
+
+const rect = scene.add(
+  new CanvasRect({
+    position: new Vector(100, 100),
+    height: 100,
+    width: 100,
+    style: { fill: "black", stroke: "red", lineWidth: 5 },
+  })
+);
+
+const circle = scene.add(
+  new CanvasCircle({
+    position: new Vector(100, 100),
+    radius: 100,
+    alpha: 0.5,
+  })
+);
+
+const text = scene.add(
+  new CanvasText({
+    text: "Hello World",
+    position: new Vector(100, 100),
+    style: { fill: "red", align: "center" },
+  })
+);
 
 export default () => {
-  game.start();
+  game.setScene(scene);
+  game.start((dt, t) => {
+    console.log("running");
+  });
 };
 
 // import GameTitle from "./screens/GameTitle";

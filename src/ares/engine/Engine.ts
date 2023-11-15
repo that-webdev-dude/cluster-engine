@@ -1,6 +1,8 @@
 interface EngineOptions {
   update?: (dt: number, t: number) => void;
   render?: () => void;
+  updateCb?: (dt: number, t: number) => void;
+  renderCb?: () => void;
   fps?: number;
 }
 

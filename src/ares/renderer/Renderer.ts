@@ -1,6 +1,15 @@
 import Container from "../core/Container";
-import Entity from "../core/Entity";
+import { Entity } from "../core/Entity";
 import { CanvasCircle, CanvasRect } from "../core/Shape";
+import CanvasText from "../core/Text";
+
+const DEFAULTS = {
+  strokeStyle: "transparent",
+  lineWidth: 1,
+  fillStyle: "#68c3d4",
+  // textAlign: "center",
+  font: '10px "Press Start 2P"',
+};
 
 interface CanvasRendererOptions {
   height?: number;
@@ -12,6 +21,7 @@ class Renderer {
   readonly width: number;
   readonly view: HTMLCanvasElement;
   readonly context: CanvasRenderingContext2D;
+
   constructor({ height = 640, width = 832 }: CanvasRendererOptions = {}) {
     const canvas = document.createElement("canvas");
     const context = canvas.getContext("2d");
@@ -107,9 +117,9 @@ class Renderer {
         const { style } = child;
         const { stroke, fill, lineWidth } = style;
         const { width, height } = child;
-        this.context.fillStyle = fill;
-        this.context.lineWidth = lineWidth;
-        this.context.strokeStyle = stroke;
+        this.context.fillStyle = fill || DEFAULTS.fillStyle;
+        this.context.lineWidth = lineWidth || DEFAULTS.lineWidth;
+        this.context.strokeStyle = stroke || DEFAULTS.strokeStyle;
         this.context.beginPath();
         this.context.rect(0, 0, width, height);
         this.context.stroke();
@@ -121,14 +131,23 @@ class Renderer {
         const { style } = child;
         const { stroke, fill, lineWidth } = style;
         const { radius } = child;
-        this.context.fillStyle = fill;
-        this.context.lineWidth = lineWidth;
-        this.context.strokeStyle = stroke;
+        this.context.fillStyle = fill || DEFAULTS.fillStyle;
+        this.context.lineWidth = lineWidth || DEFAULTS.lineWidth;
+        this.context.strokeStyle = stroke || DEFAULTS.strokeStyle;
 
         this.context.beginPath();
         this.context.arc(0, 0, radius, 0, Math.PI * 2);
         this.context.stroke();
         this.context.fill();
+      }
+
+      if (child instanceof CanvasText) {
+        const { text, style } = child;
+        const { fill, font, align } = style;
+        this.context.font = font || DEFAULTS.font;
+        this.context.fillStyle = fill || DEFAULTS.fillStyle;
+        this.context.textAlign = align || "left";
+        this.context.fillText(text, 0, 0);
       }
 
       if (child instanceof Container) {
