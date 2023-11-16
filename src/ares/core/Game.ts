@@ -1,4 +1,4 @@
-import Input from "../input/Input";
+import { KeyboardInput, MouseInput } from "../input";
 import Engine from "../engine/Engine";
 import Renderer from "../renderer/Renderer";
 import Container from "./Container";
@@ -9,6 +9,11 @@ interface GameOptions {
   height?: number;
   version?: string;
 }
+
+type Input = {
+  readonly mouse: MouseInput;
+  readonly keyboard: KeyboardInput;
+};
 
 class Game {
   readonly version: string;
@@ -26,12 +31,23 @@ class Game {
   }: GameOptions = {}) {
     this.version = version;
     this.title = title;
-    this.input = new Input();
+    this.input = {
+      mouse: new MouseInput(),
+      keyboard: new KeyboardInput(),
+    };
     this._scene = new Container();
     this._engine = new Engine();
     this._renderer = new Renderer({ width, height });
 
     this._init();
+  }
+
+  get width(): number {
+    return this._renderer.width;
+  }
+
+  get height(): number {
+    return this._renderer.height;
   }
 
   private _init() {

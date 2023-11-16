@@ -9,12 +9,17 @@ const { Game } = ares;
 const game = new Game();
 const scene = new Container();
 
+// prettier-ignore
 const rect = scene.add(
   new CanvasRect({
     position: new Vector(100, 100),
     height: 100,
     width: 100,
-    style: { fill: "black", stroke: "red", lineWidth: 5 },
+    style: { 
+      fill: "black", 
+      stroke: "red", 
+      lineWidth: 5 
+    },
   })
 );
 
@@ -28,8 +33,8 @@ const circle = scene.add(
 
 const text = scene.add(
   new CanvasText({
-    text: "Hello World",
     position: new Vector(100, 100),
+    text: "Hello World",
     style: { fill: "red", align: "center" },
   })
 );
@@ -38,6 +43,9 @@ export default () => {
   game.setScene(scene);
   game.start((dt, t) => {
     console.log("running");
+    if (game.input.keyboard.x) {
+      rect.position.x += game.input.keyboard.x * dt * 100;
+    }
   });
 };
 
