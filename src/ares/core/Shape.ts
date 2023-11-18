@@ -1,34 +1,41 @@
-import { Entity, EntityOptions } from "./Entity";
+import { StyleOptions, RectOptions, CircleOptions } from "../types";
+import { Entity } from "./Entity";
 
-type CanvasStyleOptions = {
-  fill?: string;
-  stroke?: string;
-  lineWidth?: number;
+const DEFAULTS = {
+  strokeStyle: "transparent",
+  lineWidth: 1,
+  fillStyle: "#68c3d4",
+  textAlign: "center",
+  font: '10px "Press Start 2P"',
 };
 
-// ===================== RECT =====================
-type CanvasRectOptions = EntityOptions & {
-  style?: CanvasStyleOptions;
-};
+class Rect extends Entity {
+  public style: StyleOptions;
 
-class CanvasRect extends Entity {
-  public style: CanvasStyleOptions;
-  constructor(options: CanvasRectOptions = {}) {
+  constructor(options: RectOptions) {
     super(options);
     this.style = options.style || {};
   }
+
+  render(context: CanvasRenderingContext2D): void {
+    const { style } = this;
+    const { stroke, fill, lineWidth } = style;
+    const { width, height } = this;
+    context.fillStyle = fill || DEFAULTS.fillStyle;
+    context.lineWidth = lineWidth || DEFAULTS.lineWidth;
+    context.strokeStyle = stroke || DEFAULTS.strokeStyle;
+    context.beginPath();
+    context.rect(0, 0, width, height);
+    context.stroke();
+    context.fill();
+  }
 }
 
-// ===================== CIRCLE =====================
-type CanvasCircleOptions = EntityOptions & {
-  radius: number;
-  style?: CanvasStyleOptions;
-};
-
-class CanvasCircle extends Entity {
+class Circle extends Entity {
   public radius: number;
-  public style: CanvasStyleOptions;
-  constructor(options: CanvasCircleOptions) {
+  public style: StyleOptions;
+
+  constructor(options: CircleOptions) {
     super({
       ...options,
       width: options.radius * 2,
@@ -39,6 +46,19 @@ class CanvasCircle extends Entity {
 
     this.anchor.set(this.radius, this.radius);
   }
+
+  render(context: CanvasRenderingContext2D): void {
+    const { style } = this;
+    const { stroke, fill, lineWidth } = style;
+    const { radius } = this;
+    context.fillStyle = fill || DEFAULTS.fillStyle;
+    context.lineWidth = lineWidth || DEFAULTS.lineWidth;
+    context.strokeStyle = stroke || DEFAULTS.strokeStyle;
+    context.beginPath();
+    context.arc(0, 0, radius, 0, Math.PI * 2);
+    context.stroke();
+    context.fill();
+  }
 }
 
-export { CanvasRect, CanvasCircle };
+export { Rect, Circle };

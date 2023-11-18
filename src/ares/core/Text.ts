@@ -1,24 +1,28 @@
-import { Entity, EntityOptions } from "./Entity";
+import { Entity } from "./Entity";
+import { StyleOptions, TextOptions } from "../types";
 
-type CanvasStyleOptions = {
-  fill?: string;
-  font?: string;
-  align?: CanvasTextAlign;
-};
-
-type CanvasTextOptions = EntityOptions & {
-  text?: string;
-  style?: CanvasStyleOptions;
+const DEFAULTS = {
+  fillStyle: "#68c3d4",
+  font: '16px "Press Start 2P"',
 };
 
 class CanvasText extends Entity {
-  public style: CanvasStyleOptions;
+  public style: StyleOptions;
   public text: string;
 
-  constructor(options: CanvasTextOptions = {}) {
+  constructor(options: TextOptions = {}) {
     super(options);
     this.style = options.style || {};
     this.text = options.text || "";
+  }
+
+  render(context: CanvasRenderingContext2D): void {
+    const { text, style } = this;
+    const { fill, font, align } = style;
+    context.font = font || DEFAULTS.font;
+    context.fillStyle = fill || DEFAULTS.fillStyle;
+    context.textAlign = align || "left";
+    context.fillText(text, 0, 0);
   }
 }
 

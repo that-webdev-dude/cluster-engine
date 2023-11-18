@@ -1,8 +1,5 @@
 import Container from "../core/Container";
 import { Entity } from "../core/Entity";
-import { CanvasCircle, CanvasRect } from "../core/Shape";
-import Sprite from "../core/Sprite";
-import CanvasText from "../core/Text";
 
 const DEFAULTS = {
   strokeStyle: "transparent",
@@ -77,7 +74,7 @@ class Renderer {
       }
 
       //   child is an entity
-      if (child instanceof Entity) {
+      if (child instanceof Entity && child?.render) {
         if (!child.visible || child.alpha <= 0) {
           return;
         }
@@ -119,49 +116,7 @@ class Renderer {
           this.context.translate(-px, -py);
         }
 
-        // CanvasRect
-        if (child instanceof CanvasRect) {
-          const { style } = child;
-          const { stroke, fill, lineWidth } = style;
-          const { width, height } = child;
-          this.context.fillStyle = fill || DEFAULTS.fillStyle;
-          this.context.lineWidth = lineWidth || DEFAULTS.lineWidth;
-          this.context.strokeStyle = stroke || DEFAULTS.strokeStyle;
-          this.context.beginPath();
-          this.context.rect(0, 0, width, height);
-          this.context.stroke();
-          this.context.fill();
-        }
-
-        // CanvasCircle
-        if (child instanceof CanvasCircle) {
-          const { style } = child;
-          const { stroke, fill, lineWidth } = style;
-          const { radius } = child;
-          this.context.fillStyle = fill || DEFAULTS.fillStyle;
-          this.context.lineWidth = lineWidth || DEFAULTS.lineWidth;
-          this.context.strokeStyle = stroke || DEFAULTS.strokeStyle;
-          this.context.beginPath();
-          this.context.arc(0, 0, radius, 0, Math.PI * 2);
-          this.context.stroke();
-          this.context.fill();
-        }
-
-        // text
-        if (child instanceof CanvasText) {
-          const { text, style } = child;
-          const { fill, font, align } = style;
-          this.context.font = font || DEFAULTS.font;
-          this.context.fillStyle = fill || DEFAULTS.fillStyle;
-          this.context.textAlign = align || "left";
-          this.context.fillText(text, 0, 0);
-        }
-
-        // regular sprite
-        if (child instanceof Sprite) {
-          const texture = child.texture;
-          this.context.drawImage(texture, 0, 0);
-        }
+        child.render(this.context);
 
         this.context.restore();
       }

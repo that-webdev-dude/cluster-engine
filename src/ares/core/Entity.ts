@@ -1,20 +1,8 @@
 import Vector from "../tools/Vector";
 import Container from "./Container";
+import { Renderable, EntityOptions } from "../types";
 
-type EntityOptions = {
-  position?: Vector;
-  anchor?: Vector;
-  height?: number;
-  width?: number;
-  scale?: Vector;
-  pivot?: Vector;
-  angle?: number;
-  dead?: boolean;
-  alpha?: number;
-  visible?: boolean;
-};
-
-abstract class Entity {
+abstract class Entity implements Renderable {
   private _height: number;
   private _width: number;
   public position: Vector;
@@ -51,12 +39,14 @@ abstract class Entity {
   }
 
   get height(): number {
-    return this._height;
+    return this._height * this.scale.y;
   }
 
   get width(): number {
-    return this._width;
+    return this._width * this.scale.x;
   }
+
+  public abstract render(context: CanvasRenderingContext2D): void;
 
   public update?(dt: number, t: number, parent?: Container): void {}
 }

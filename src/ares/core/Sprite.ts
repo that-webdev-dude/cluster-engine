@@ -1,28 +1,31 @@
-import { Entity, EntityOptions } from "./Entity";
+import { SpriteOptions, TileSpriteOptions } from "../types";
+import { Entity } from "./Entity";
+import Animation from "./Animation";
 import Assets from "./Assets";
-
-type SpriteOptions = EntityOptions & {
-  textureURL: string;
-};
 
 class Sprite extends Entity {
   private _texture: HTMLImageElement;
 
-  constructor(options: SpriteOptions = { textureURL: "" }) {
-    super(options);
-    this._texture = Assets.image(options.textureURL || "");
+  constructor(
+    options: SpriteOptions = {
+      textureURL: "",
+    }
+  ) {
+    const image = Assets.image(options.textureURL || "");
+    super({
+      ...options,
+      width: image.width,
+      height: image.height,
+    });
+    this._texture = image;
   }
 
-  get width() {
-    return this._texture.width * this.scale.x;
-  }
-
-  get height() {
-    return this._texture.height * this.scale.y;
-  }
-
-  get texture() {
+  get texture(): HTMLImageElement {
     return this._texture;
+  }
+
+  render(context: CanvasRenderingContext2D): void {
+    context.drawImage(this._texture, 0, 0);
   }
 }
 
