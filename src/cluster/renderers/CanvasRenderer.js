@@ -162,10 +162,10 @@ class CanvasRenderer {
         return;
       } else {
         if (
-          child.position.x + child.width < 0 ||
-          child.position.x > this.width ||
-          child.position.y + child.height < 0 ||
-          child.position.y > this.height
+          child.position?.x + child.width < 0 ||
+          child.position?.x > this.width ||
+          child.position?.y + child.height < 0 ||
+          child.position?.y > this.height
         ) {
           console.log("out of bounds");
           return;

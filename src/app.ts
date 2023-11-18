@@ -1,12 +1,21 @@
 import ares from "./ares/index";
 import { CanvasRect, CanvasCircle } from "./ares/core/Shape";
+import { KeyboardInput, MouseInput } from "./ares/input";
 import CanvasText from "./ares/core/Text";
 import Container from "./ares/core/Container";
 import Vector from "./ares/tools/Vector";
 
 const { Game } = ares;
 
-const game = new Game();
+const game = new Game({
+  title: "Game",
+  height: 640,
+  width: 832,
+  input: {
+    mouse: new MouseInput(),
+    keyboard: new KeyboardInput(),
+  },
+});
 const scene = new Container();
 
 // prettier-ignore
@@ -15,10 +24,10 @@ const rect = scene.add(
     position: new Vector(100, 100),
     height: 100,
     width: 100,
-    style: { 
-      fill: "black", 
-      stroke: "red", 
-      lineWidth: 5 
+    style: {
+      fill: "black",
+      stroke: "red",
+      lineWidth: 5
     },
   })
 );
@@ -40,15 +49,25 @@ const text = scene.add(
 );
 
 export default () => {
+  const { input } = game;
   game.setScene(scene);
   game.start((dt, t) => {
-    console.log("running");
-    if (game.input.keyboard.x) {
-      rect.position.x += game.input.keyboard.x * dt * 100;
+    if (input?.keyboard && input?.keyboard.x) {
+      rect.position.x += input?.keyboard.x * dt * 100;
+      if (rect.position.x < 0) {
+        rect.visible = false;
+      } else {
+        rect.visible = true;
+      }
     }
+    // if (mouse.isDown || mouse.isReleased) {
+    //   console.log(mouse.position);
+    // }
+    // mouse.update();
   });
 };
 
+// Path: src/app.js
 // import GameTitle from "./screens/GameTitle";
 // import GamePlay from "./screens/GamePlay";
 // import GameOver from "./screens/GameOver";
@@ -120,5 +139,7 @@ export default () => {
 
 // export default () => {
 //   startGameTitle();
-//   game.run((dt, t) => {});
+//   game.run((dt, t) => {
+//     // ...
+//   });
 // };
