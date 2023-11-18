@@ -68,6 +68,7 @@ const Assets = {
   },
 
   image(url: string): HTMLImageElement {
+    if (!url) throw new Error("[Assets.ts:image] URL is required!");
     return load(url, (url, onAssetLoad) => {
       const img = new Image();
       img.src = url;

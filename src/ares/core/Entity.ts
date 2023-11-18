@@ -14,11 +14,11 @@ type EntityOptions = {
   visible?: boolean;
 };
 
-class Entity {
+abstract class Entity {
+  private _height: number;
+  private _width: number;
   public position: Vector;
   public anchor: Vector;
-  public height: number;
-  public width: number;
   public scale: Vector;
   public pivot: Vector;
   public angle: number;
@@ -38,10 +38,10 @@ class Entity {
     alpha = 1,
     visible = true,
   }: EntityOptions = {}) {
+    this._height = height;
+    this._width = width;
     this.position = position;
     this.anchor = anchor;
-    this.height = height;
-    this.width = width;
     this.scale = scale;
     this.pivot = pivot;
     this.angle = angle;
@@ -50,7 +50,16 @@ class Entity {
     this.visible = visible;
   }
 
+  get height(): number {
+    return this._height;
+  }
+
+  get width(): number {
+    return this._width;
+  }
+
   public update?(dt: number, t: number, parent?: Container): void {}
+  // abstract update(dt: number, t: number, parent?: Container): void;
 }
 
 export { EntityOptions, Entity };
