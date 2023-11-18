@@ -1,6 +1,5 @@
 import ares from "./ares/index";
 import { CanvasRect, CanvasCircle } from "./ares/core/Shape";
-import { KeyboardInput, MouseInput } from "./ares/input";
 import CanvasText from "./ares/core/Text";
 import Container from "./ares/core/Container";
 import Vector from "./ares/tools/Vector";
@@ -11,10 +10,6 @@ const game = new Game({
   title: "Game",
   height: 640,
   width: 832,
-  input: {
-    mouse: new MouseInput(),
-    keyboard: new KeyboardInput(),
-  },
 });
 const scene = new Container();
 
@@ -60,10 +55,10 @@ export default () => {
         rect.visible = true;
       }
     }
-    // if (mouse.isDown || mouse.isReleased) {
-    //   console.log(mouse.position);
-    // }
-    // mouse.update();
+    if (input?.mouse) {
+      rect.position.x = input.mouse.position.x;
+      rect.position.y = input.mouse.position.y;
+    }
   });
 };
 

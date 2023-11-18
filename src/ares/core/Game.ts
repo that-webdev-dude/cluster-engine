@@ -3,61 +3,55 @@ import Engine from "../engine/Engine";
 import Renderer from "../renderer/Renderer";
 import Container from "./Container";
 
-type GameInput = {
+type Input = {
   readonly mouse?: MouseInput;
   readonly keyboard?: KeyboardInput;
 } | null;
 
-// type Renderer = {
-//   rennew: Renderer;
-// };
-
 type GameOptions = {
-  renderer?: Renderer;
-  input?: GameInput;
   title?: string;
   width?: number;
   height?: number;
   version?: string;
 };
 
-type GameEngine = Engine;
-
 class Game {
   readonly version: string;
   readonly title: string;
-  private _input: GameInput;
+  private _input: Input;
   private _scene: Container;
-  private _engine: GameEngine;
+  private _engine: Engine;
   private _renderer: Renderer;
 
   constructor({
-    input = null,
     title = "Game",
     width = 832,
     height = 640,
     version = "1.0.0",
   }: GameOptions = {}) {
-    if (!input) {
-      throw new Error("Game.ts error: the input type is now required!");
-    }
-
     this.version = version;
     this.title = title;
-    this._input = input;
     this._scene = new Container();
     this._engine = new Engine();
     this._renderer = new Renderer({ width, height });
+    this._input = {
+      keyboard: new KeyboardInput(),
+      mouse: new MouseInput(this._renderer.view),
+    };
     this._init();
   }
 
   private _init() {
-    let appElement = document.querySelector("#app");
+    let appElement = document.querySelector("#app") as HTMLElement;
     if (!appElement) {
-      throw new Error("Failed to get app element");
+      throw new Error("[Game.ts:_init] Failed to get app element");
     } else {
       appElement.appendChild(this._renderer.view);
     }
+  }
+
+  get input(): Input {
+    return this._input;
   }
 
   get width(): number {
@@ -66,10 +60,6 @@ class Game {
 
   get height(): number {
     return this._renderer.height;
-  }
-
-  get input(): GameInput {
-    return this._input;
   }
 
   public setScene(scene: Container, transitionDuration: number = 0) {

@@ -1,15 +1,15 @@
 import { Entity, EntityOptions } from "./Entity";
 
-interface CanvasStyleOptions {
+type CanvasStyleOptions = {
   fill?: string;
   stroke?: string;
   lineWidth?: number;
-}
+};
 
 // rect
-interface CanvasRectOptions extends EntityOptions {
+type CanvasRectOptions = EntityOptions & {
   style?: CanvasStyleOptions;
-}
+};
 
 class CanvasRect extends Entity {
   public style: CanvasStyleOptions;
@@ -21,10 +21,10 @@ class CanvasRect extends Entity {
 }
 
 // circle
-interface CanvasCircleOptions extends EntityOptions {
+type CanvasCircleOptions = EntityOptions & {
   radius?: number;
   style?: CanvasStyleOptions;
-}
+};
 
 class CanvasCircle extends Entity {
   public radius: number;

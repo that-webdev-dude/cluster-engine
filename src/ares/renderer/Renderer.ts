@@ -7,14 +7,14 @@ const DEFAULTS = {
   strokeStyle: "transparent",
   lineWidth: 1,
   fillStyle: "#68c3d4",
-  // textAlign: "center",
+  textAlign: "center",
   font: '10px "Press Start 2P"',
 };
 
-interface CanvasRendererOptions {
+type CanvasRendererOptions = {
   height?: number;
   width?: number;
-}
+};
 
 class Renderer {
   readonly height: number;

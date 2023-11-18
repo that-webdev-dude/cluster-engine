@@ -89,21 +89,21 @@ const Assets = {
     });
   },
 
-  //   soundBuffer(url: string, ctx: AudioContext): Promise<AudioBuffer> {
-  //     return load(url, (url, onAssetLoad) =>
-  //       fetch(url)
-  //         .then((r) => r.arrayBuffer())
-  //         .then(
-  //           (ab) =>
-  //             new Promise((success) => {
-  //               ctx.decodeAudioData(ab, (buffer) => {
-  //                 onAssetLoad(url);
-  //                 success(buffer);
-  //               });
-  //             })
-  //         )
-  //     );
-  //   },
+  soundBuffer(url: string, ctx: AudioContext): Promise<AudioBuffer> {
+    return load(url, (url, onAssetLoad) =>
+      fetch(url)
+        .then((r) => r.arrayBuffer())
+        .then(
+          (ab) =>
+            new Promise((success) => {
+              ctx.decodeAudioData(ab, (buffer) => {
+                onAssetLoad(url);
+                success(buffer);
+              });
+            })
+        )
+    );
+  },
 
   font(name: string, url: string): Promise<void> {
     return load(url, (url, onAssetLoad) => {

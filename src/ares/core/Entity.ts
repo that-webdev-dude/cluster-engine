@@ -1,7 +1,7 @@
 import Vector from "../tools/Vector";
 import Container from "./Container";
 
-interface EntityOptions {
+type EntityOptions = {
   position?: Vector;
   anchor?: Vector;
   height?: number;
@@ -12,7 +12,7 @@ interface EntityOptions {
   dead?: boolean;
   alpha?: number;
   visible?: boolean;
-}
+};
 
 class Entity {
   public position: Vector;

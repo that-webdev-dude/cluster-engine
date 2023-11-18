@@ -1,15 +1,15 @@
 import { Entity, EntityOptions } from "./Entity";
 
-interface CanvasStyleOptions {
+type CanvasStyleOptions = {
   fill?: string;
   font?: string;
   align?: CanvasTextAlign;
-}
+};
 
-interface CanvasTextOptions extends EntityOptions {
+type CanvasTextOptions = EntityOptions & {
   text?: string;
   style?: CanvasStyleOptions;
-}
+};
 
 class CanvasText extends Entity {
   public style: CanvasStyleOptions;
