@@ -2,7 +2,7 @@ import { Entity, EntityOptions } from "./Entity";
 import Assets from "./Assets";
 
 type SpriteOptions = EntityOptions & {
-  textureURL?: string;
+  textureURL: string;
 };
 
 class Sprite extends Entity {

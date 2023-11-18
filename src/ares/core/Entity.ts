@@ -37,7 +37,7 @@ abstract class Entity {
     dead = false,
     alpha = 1,
     visible = true,
-  }: EntityOptions = {}) {
+  }: EntityOptions) {
     this._height = height;
     this._width = width;
     this.position = position;
@@ -59,7 +59,6 @@ abstract class Entity {
   }
 
   public update?(dt: number, t: number, parent?: Container): void {}
-  // abstract update(dt: number, t: number, parent?: Container): void;
 }
 
 export { EntityOptions, Entity };

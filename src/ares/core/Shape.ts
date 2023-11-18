@@ -6,32 +6,34 @@ type CanvasStyleOptions = {
   lineWidth?: number;
 };
 
-// rect
+// ===================== RECT =====================
 type CanvasRectOptions = EntityOptions & {
   style?: CanvasStyleOptions;
 };
 
 class CanvasRect extends Entity {
   public style: CanvasStyleOptions;
-
   constructor(options: CanvasRectOptions = {}) {
     super(options);
     this.style = options.style || {};
   }
 }
 
-// circle
+// ===================== CIRCLE =====================
 type CanvasCircleOptions = EntityOptions & {
-  radius?: number;
+  radius: number;
   style?: CanvasStyleOptions;
 };
 
 class CanvasCircle extends Entity {
   public radius: number;
   public style: CanvasStyleOptions;
-
-  constructor(options: CanvasCircleOptions = {}) {
-    super(options);
+  constructor(options: CanvasCircleOptions) {
+    super({
+      ...options,
+      width: options.radius * 2,
+      height: options.radius * 2,
+    });
     this.radius = options.radius || 50;
     this.style = options.style || {};
 
