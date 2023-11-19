@@ -1,5 +1,13 @@
-import { StyleOptions, RectOptions, CircleOptions } from "../types";
+import { EntityConfig } from "./Entity";
 import Entity from "./Entity";
+
+type StyleConfig = {
+  align?: CanvasTextAlign;
+  font?: string;
+  fill?: string;
+  stroke?: string;
+  lineWidth?: number;
+};
 
 const DEFAULTS = {
   strokeStyle: "transparent",
@@ -9,10 +17,14 @@ const DEFAULTS = {
   font: '10px "Press Start 2P"',
 };
 
-class Rect extends Entity {
-  public style: StyleOptions;
+type RectConfig = EntityConfig & {
+  style?: StyleConfig;
+};
 
-  constructor(options: RectOptions) {
+class Rect extends Entity {
+  public style: StyleConfig;
+
+  constructor(options: RectConfig) {
     super(options);
     this.style = options.style || {};
   }
@@ -29,13 +41,20 @@ class Rect extends Entity {
     context.stroke();
     context.fill();
   }
+
+  update(dt: number, t: number): void {}
 }
+
+type CircleConfig = EntityConfig & {
+  radius: number;
+  style?: StyleConfig;
+};
 
 class Circle extends Entity {
   public radius: number;
-  public style: StyleOptions;
+  public style: StyleConfig;
 
-  constructor(options: CircleOptions) {
+  constructor(options: CircleConfig) {
     super({
       ...options,
       width: options.radius * 2,
@@ -44,7 +63,8 @@ class Circle extends Entity {
     this.radius = options.radius || 50;
     this.style = options.style || {};
 
-    this.anchor.set(this.radius, this.radius);
+    this.anchor.x = this.radius;
+    this.anchor.y = this.radius;
   }
 
   render(context: CanvasRenderingContext2D): void {
@@ -59,6 +79,39 @@ class Circle extends Entity {
     context.stroke();
     context.fill();
   }
+
+  update(dt: number, t: number): void {}
 }
 
-export { Rect, Circle };
+type TextConfig = EntityConfig & {
+  text?: string;
+  style?: StyleConfig;
+};
+
+class Text extends Entity {
+  public style: StyleConfig;
+  public text: string;
+
+  constructor(options: TextConfig = {}) {
+    super(options);
+    this.style = options.style || {};
+    this.text = options.text || "";
+  }
+
+  render(context: CanvasRenderingContext2D): void {
+    const { text, style } = this;
+    const { fill, font, align } = style;
+    context.font = font || DEFAULTS.font;
+    context.fillStyle = fill || DEFAULTS.fillStyle;
+    context.textAlign = align || "left";
+    context.fillText(text, 0, 0);
+  }
+
+  update(dt: number, t: number): void {}
+}
+
+export default {
+  Text,
+  Rect,
+  Circle,
+};

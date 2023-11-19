@@ -1,9 +1,27 @@
 import Vector from "../tools/Vector";
 
-// Renderable
-// interface that defines the render method.
+interface Positionable {
+  x: number;
+  y: number;
+}
+
 interface Renderable {
-  render(context: CanvasRenderingContext2D): void;
+  position: Positionable;
+  anchor: Positionable;
+  scale: Positionable;
+  pivot: Positionable;
+  height: number;
+  width: number;
+  alpha: number;
+  angle: number;
+  render?: (context: CanvasRenderingContext2D) => void;
+  update?: (delta: number, elapsed: number) => void;
+}
+
+interface Renderables {
+  children: Array<Renderable | Renderables>;
+  position: Positionable;
+  size: number;
 }
 
 // EntityOptions
@@ -36,43 +54,10 @@ type TileSpriteOptions = SpriteOptions & {
   tileH: number;
 };
 
-// StyleOptions
-// interface that defines the options that can be passed to a Shape.
-type StyleOptions = {
-  align?: CanvasTextAlign;
-  font?: string;
-  fill?: string;
-  stroke?: string;
-  lineWidth?: number;
-};
-
-// RectOptions
-// interface that defines the options that can be passed to a Rect.
-type RectOptions = EntityOptions & {
-  style?: StyleOptions;
-};
-
-// CircleOptions
-// interface that defines the options that can be passed to a Circle.
-type CircleOptions = EntityOptions & {
-  radius: number;
-  style?: StyleOptions;
-};
-
-// TextOptions
-// interface that defines the options that can be passed to a Text.
-type TextOptions = EntityOptions & {
-  text?: string;
-  style?: StyleOptions;
-};
-
 export {
+  Positionable,
   Renderable,
-  EntityOptions,
+  Renderables,
   SpriteOptions,
   TileSpriteOptions,
-  StyleOptions,
-  RectOptions,
-  CircleOptions,
-  TextOptions,
 };

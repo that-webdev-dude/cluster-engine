@@ -1,8 +1,18 @@
 import Vector from "../tools/Vector";
-import Container from "./Container";
-import { Renderable, EntityOptions } from "../types";
+import { Renderable } from "../types";
 
-// abstract
+type EntityConfig = {
+  position?: Vector;
+  anchor?: Vector;
+  scale?: Vector;
+  pivot?: Vector;
+  height?: number;
+  width?: number;
+  angle?: number;
+  alpha?: number;
+  dead?: boolean;
+};
+
 abstract class Entity implements Renderable {
   private _height: number;
   private _width: number;
@@ -11,32 +21,29 @@ abstract class Entity implements Renderable {
   public scale: Vector;
   public pivot: Vector;
   public angle: number;
-  public dead: boolean;
   public alpha: number;
-  public visible: boolean;
+  public dead: boolean;
 
   constructor({
-    position = new Vector(),
-    anchor = new Vector(),
+    position = new Vector(0, 0),
+    anchor = new Vector(0, 0),
+    scale = new Vector(1, 1),
+    pivot = new Vector(0, 0),
     height = 0,
     width = 0,
-    scale = new Vector(1, 1),
-    pivot = new Vector(),
     angle = 0,
-    dead = false,
     alpha = 1,
-    visible = true,
-  }: EntityOptions) {
-    this._height = height;
-    this._width = width;
+    dead = false,
+  }: EntityConfig) {
     this.position = position;
     this.anchor = anchor;
     this.scale = scale;
     this.pivot = pivot;
+    this._height = height;
+    this._width = width;
     this.angle = angle;
-    this.dead = dead;
     this.alpha = alpha;
-    this.visible = visible;
+    this.dead = dead;
   }
 
   get height(): number {
@@ -49,7 +56,8 @@ abstract class Entity implements Renderable {
 
   public abstract render(context: CanvasRenderingContext2D): void;
 
-  public update?(dt: number, t: number, parent?: Container): void {}
+  public abstract update(dt: number, t: number): void;
 }
 
+export type { EntityConfig };
 export default Entity;

@@ -1,13 +1,4 @@
-import Container from "../core/Container";
-import { Entity } from "../core/Entity";
-
-const DEFAULTS = {
-  strokeStyle: "transparent",
-  lineWidth: 1,
-  fillStyle: "#68c3d4",
-  textAlign: "center",
-  font: '10px "Press Start 2P"',
-};
+import { Renderable, Renderables } from "../types";
 
 type CanvasRendererOptions = {
   height?: number;
@@ -55,27 +46,27 @@ class Renderer {
     }
   }
 
-  private _renderRecursive(container: Container) {
+  private _renderRecursive(container: Renderables) {
     if (container.size === 0) return;
 
     this.context.save();
 
-    if (container.position.magnitude !== 0) {
+    if (container.position.x !== 0 || container.position.y !== 0) {
       this.context.translate(
         Math.round(container.position.x),
         Math.round(container.position.y)
       );
     }
 
-    container.foreach((child) => {
-      // child is another container
-      if (child instanceof Container) {
-        this._renderRecursive(child);
+    container.children.forEach((child: Renderable | Renderables) => {
+      // child is an array of renderables
+      if ("children" in child) {
+        this._renderRecursive(child as Renderables);
       }
 
-      //   child is an entity
-      if (child instanceof Entity && child?.render) {
-        if (!child.visible || child.alpha <= 0) {
+      // child is a renderable
+      if ("render" in child && child.render) {
+        if (child.alpha <= 0) {
           return;
         }
 
@@ -94,18 +85,18 @@ class Renderer {
           this.context.globalAlpha = child.alpha;
         }
 
-        if (child.position.magnitude !== 0) {
+        if (child.position.x !== 0 || child.position.y !== 0) {
           this.context.translate(
             Math.round(child.position.x),
             Math.round(child.position.y)
           );
         }
 
-        if (child.anchor.magnitude !== 0) {
+        if (child.anchor.x !== 0 || child.anchor.y !== 0) {
           this.context.translate(child.anchor.x, child.anchor.y);
         }
 
-        if (child.scale.magnitude !== 0) {
+        if (child.scale.x !== 1 || child.scale.y !== 1) {
           this.context.scale(child.scale.x, child.scale.y);
         }
 
@@ -125,7 +116,7 @@ class Renderer {
     this.context.restore();
   }
 
-  public render(container: Container, clear: boolean = true) {
+  public render(container: Renderables, clear: boolean = true) {
     if (clear) {
       this.context.clearRect(0, 0, this.width, this.height);
     }

@@ -14,6 +14,10 @@ class Container {
     return this._children.length;
   }
 
+  get children(): (Entity | Container)[] {
+    return this._children;
+  }
+
   public foreach(f: (child: Entity | Container) => void): void {
     this._children.forEach(f);
   }
