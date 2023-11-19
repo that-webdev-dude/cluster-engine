@@ -1,11 +1,13 @@
 import Vector from "../tools/Vector";
 
-// Renderable is an interface that defines the render method.
+// Renderable
+// interface that defines the render method.
 interface Renderable {
   render(context: CanvasRenderingContext2D): void;
 }
 
-// EntityOptions is an interface that defines the options that can be passed to an Entity.
+// EntityOptions
+// interface that defines the options that can be passed to an Entity.
 type EntityOptions = {
   position?: Vector;
   anchor?: Vector;
@@ -19,17 +21,23 @@ type EntityOptions = {
   visible?: boolean;
 };
 
-// SpriteOptions is an interface that defines the options that can be passed to a Sprite.
+// SpriteOptions
+// interface that defines the options that can be passed to a Sprite.
 type SpriteOptions = EntityOptions & {
   textureURL: string;
+  height?: number;
+  width?: number;
 };
 
+// TileSpriteOptions
+// interface that defines the options that can be passed to a TileSprite.
 type TileSpriteOptions = SpriteOptions & {
   tileW: number;
   tileH: number;
 };
 
-// StyleOptions is an interface that defines the options that can be passed to a Shape.
+// StyleOptions
+// interface that defines the options that can be passed to a Shape.
 type StyleOptions = {
   align?: CanvasTextAlign;
   font?: string;
@@ -38,18 +46,21 @@ type StyleOptions = {
   lineWidth?: number;
 };
 
-// RectOptions is an interface that defines the options that can be passed to a Rect.
+// RectOptions
+// interface that defines the options that can be passed to a Rect.
 type RectOptions = EntityOptions & {
   style?: StyleOptions;
 };
 
-// CircleOptions is an interface that defines the options that can be passed to a Circle.
+// CircleOptions
+// interface that defines the options that can be passed to a Circle.
 type CircleOptions = EntityOptions & {
   radius: number;
   style?: StyleOptions;
 };
 
-// TextOptions is an interface that defines the options that can be passed to a Text.
+// TextOptions
+// interface that defines the options that can be passed to a Text.
 type TextOptions = EntityOptions & {
   text?: string;
   style?: StyleOptions;

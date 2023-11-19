@@ -1,5 +1,5 @@
 import Vector from "../tools/Vector";
-import { Entity } from "./Entity";
+import Entity from "./Entity";
 
 class Container {
   public position: Vector;
@@ -22,16 +22,16 @@ class Container {
     return this._children.map(f);
   }
 
-  public add(child: Entity | Container): Entity | Container {
+  public add(child: Entity | Container): void {
     this._children.push(child);
-    return child;
+    // return child;
   }
 
-  public remove(child: Entity | Container): Entity | Container {
+  public remove(child: Entity | Container): void {
     this._children = this._children.filter(
       (currentChild) => currentChild !== child
     );
-    return child;
+    // return child;
   }
 
   public update(dt: number, t: number, parent?: Container): void {

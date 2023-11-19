@@ -1,25 +1,36 @@
+import { SpriteOptions } from "../types";
 import Sprite from "./Sprite";
 import Animation from "./Animation";
-import { TileSpriteOptions } from "../types";
+import Container from "./Container";
+
+// TileSpriteOptions
+// interface that defines the options that can be passed to a TileSprite.
+type TileSpriteOptions = SpriteOptions & {
+  frame?: { x: number; y: number };
+  tileW: number;
+  tileH: number;
+};
 
 class TileSprite extends Sprite {
   private _tileW: number;
   private _tileH: number;
   private _frame: { x: number; y: number };
-  private _animation: Animation;
+  readonly animation: Animation;
 
-  constructor(
-    options: TileSpriteOptions = {
-      textureURL: "",
-      tileW: 0,
-      tileH: 0,
-    }
-  ) {
+  constructor(options: TileSpriteOptions) {
     super(options);
     this._tileW = options.tileW;
     this._tileH = options.tileH;
-    this._frame = { x: 0, y: 0 };
-    this._animation = new Animation({ frame: this._frame });
+    this._frame = options.frame || { x: 0, y: 0 };
+    this.animation = new Animation({ frame: this._frame });
+  }
+
+  get width(): number {
+    return this._tileW * this.scale.x;
+  }
+
+  get height(): number {
+    return this._tileH * this.scale.y;
   }
 
   render(context: CanvasRenderingContext2D): void {
@@ -35,4 +46,11 @@ class TileSprite extends Sprite {
       this._tileH
     );
   }
+
+  public update(dt: number, t: number, parent?: Container | undefined): void {
+    this.animation.update(dt);
+    //     this._frame = this.animation.frame;
+  }
 }
+
+export default TileSprite;

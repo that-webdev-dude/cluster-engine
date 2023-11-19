@@ -1,5 +1,5 @@
 import { StyleOptions, RectOptions, CircleOptions } from "../types";
-import { Entity } from "./Entity";
+import Entity from "./Entity";
 
 const DEFAULTS = {
   strokeStyle: "transparent",

@@ -2,6 +2,7 @@ import Vector from "../tools/Vector";
 import Container from "./Container";
 import { Renderable, EntityOptions } from "../types";
 
+// abstract
 abstract class Entity implements Renderable {
   private _height: number;
   private _width: number;
@@ -51,4 +52,4 @@ abstract class Entity implements Renderable {
   public update?(dt: number, t: number, parent?: Container): void {}
 }
 
-export { EntityOptions, Entity };
+export default Entity;

@@ -1,12 +1,12 @@
-import { Entity } from "./Entity";
 import { StyleOptions, TextOptions } from "../types";
+import Entity from "./Entity";
 
 const DEFAULTS = {
   fillStyle: "#68c3d4",
   font: '16px "Press Start 2P"',
 };
 
-class CanvasText extends Entity {
+class Text extends Entity {
   public style: StyleOptions;
   public text: string;
 
@@ -26,4 +26,4 @@ class CanvasText extends Entity {
   }
 }
 
-export default CanvasText;
+export default Text;
