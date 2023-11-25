@@ -8,7 +8,7 @@ interface Transitions {
 
 interface Globals {}
 
-const { Scene, Primitive, Vector } = ares;
+const { Scene, Vector, Rect, Circle, Text } = ares;
 
 // Function to interpolate between two colors
 function interpolateColor(
@@ -31,10 +31,10 @@ function rgbToHex(rgb: number[]): string {
 }
 
 class GameTitle extends Scene {
-  private _transitions;
+  private _transitions: Transitions;
   private _globals;
   private _background;
-  private _titleText;
+  private _text;
 
   constructor(
     game: Game,
@@ -45,27 +45,39 @@ class GameTitle extends Scene {
     this._globals = globals;
     this._transitions = transitions;
 
-    const background = new Primitive.Rect({
+    this._background = new Rect({
       width: game.width,
       height: game.height,
-      style: { fill: "black" },
+      fill: "black",
     });
 
-    const titleText = new Primitive.Text({
-      position: new Vector(game.width / 2, game.height / 2 - 100),
-      text: "ARES",
-      style: {
-        fill: "white",
-        font: '48px "Press Start 2P"',
-        align: "center",
-      },
+    // const updateableRect = new UpdateableRect();
+    const rect = new Rect({
+      width: 100,
+      height: 100,
     });
 
-    this._background = background;
-    this._titleText = titleText;
+    const circle = new Circle({
+      position: new Vector(100, 100),
+      radius: 20,
+      fill: "red",
+    });
 
+    this._text = new Text({
+      text: "Hello World!",
+      align: "left",
+      fill: "white",
+      font: '20px "Press Start 2P"',
+      position: new Vector(200, 200),
+    });
+
+    // this.add(updateableRect);
     this.add(this._background);
-    this.add(this._titleText);
+    this.add(this._text);
+    this.add(rect);
+    this.add(circle);
+
+    this._transitions.onEnter && this._transitions.onEnter();
   }
 
   update(dt: number, t: number): void {
@@ -73,9 +85,9 @@ class GameTitle extends Scene {
     const color: number[] = interpolateColor(
       [100, 131, 195],
       [70, 35, 122],
-      (Math.sin((t / 1.5) * Math.PI) + 1) / 2
+      (Math.sin((t / 0.5) * Math.PI) + 1) / 2
     );
-    this._background.style.fill = rgbToHex(color);
+    this._text.fill = rgbToHex(color);
   }
 }
 
