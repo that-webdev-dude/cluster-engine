@@ -1,7 +1,8 @@
-import Game from "./core/Game";
 import Container from "./core/Container";
+import Sprite from "./core/Sprite";
 import Text from "./core/Text";
-import { Rect, Circle } from "./core/Shape";
+import Game from "./core/Game";
+// import { Circle, Rect } from "./core/Shape";
 
 // tools
 import Scene from "./tools/Scene";
@@ -12,11 +13,12 @@ export type { Game, Container };
 
 export default {
   // core
-  Game,
   Container,
-  Rect,
-  Circle,
+  Sprite,
+  // Circle,
+  // Rect,
   Text,
+  Game,
 
   // tools
   Cmath,

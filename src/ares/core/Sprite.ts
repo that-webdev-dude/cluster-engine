@@ -1,33 +1,56 @@
-// import { SpriteOptions } from "../types";
-// import { Entity } from "./Entity";
-// import Assets from "./Assets";
+import Assets from "./Assets";
+import Vector from "../tools/Vector";
+import { IEntity, IEntityConfig, IENTITY_DEFAULTS } from "../types";
 
-// class Sprite extends Entity {
-//   readonly texture: HTMLImageElement;
+// Sprite
+type SpriteConfig = IEntityConfig & {
+  textureURL?: string;
+};
 
-//   constructor(
-//     options: SpriteOptions = {
-//       textureURL: "",
-//     }
-//   ) {
-//     const image = Assets.image(options.textureURL || "");
-//     super(options);
-//     this.texture = image;
-//   }
+const SPRITE_DEFAULTS = {
+  textureURL: "",
+};
 
-//   get width(): number {
-//     return this.texture.width * this.scale.x;
-//   }
+class Sprite implements IEntity {
+  public position: Vector;
+  public anchor: Vector;
+  public scale: Vector;
+  public pivot: Vector;
+  public angle: number;
+  public alpha: number;
+  public dead: boolean;
+  public image: HTMLImageElement;
 
-//   get height(): number {
-//     return this.texture.height * this.scale.y;
-//   }
+  constructor(config: SpriteConfig = {}) {
+    const { position, anchor, scale, pivot, angle, alpha, dead, textureURL } = {
+      ...IENTITY_DEFAULTS,
+      ...SPRITE_DEFAULTS,
+      ...config,
+    };
 
-//   render(context: CanvasRenderingContext2D): void {
-//     context.drawImage(this.texture, 0, 0);
-//   }
+    this.position = position;
+    this.anchor = anchor;
+    this.scale = scale;
+    this.pivot = pivot;
+    this.angle = angle;
+    this.alpha = alpha;
+    this.dead = dead;
+    this.image = Assets.image(textureURL || "");
+  }
 
-//   update(dt: number, t: number): void {}
-// }
+  get width(): number {
+    return this.image.width * this.scale.x;
+  }
 
-// export default Sprite;
+  get height(): number {
+    return this.image.height * this.scale.y;
+  }
+
+  public render(context: CanvasRenderingContext2D): void {
+    context.drawImage(this.image, 0, 0);
+  }
+
+  public update(delta: number, elapsed: number) {}
+}
+
+export default Sprite;

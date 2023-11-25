@@ -2,14 +2,14 @@ import Vector from "../tools/Vector";
 import { IEntity, IEntityConfig, IENTITY_DEFAULTS } from "../types";
 
 // Text
-interface ITextConfig extends IEntityConfig {
+type TextConfig = IEntityConfig & {
   font?: string;
   fill?: string;
   text?: string;
   align?: CanvasTextAlign;
-}
+};
 
-const ITEXT_DEFAULTS = {
+const TEXT_DEFAULTS = {
   font: '10px "Press Start 2P"',
   fill: "black",
   text: "my text",
@@ -25,20 +25,16 @@ class Text implements IEntity {
   public anchor: Vector;
   public scale: Vector;
   public pivot: Vector;
-  public height: number;
-  public width: number;
   public angle: number;
   public alpha: number;
   public dead: boolean;
 
-  constructor(config: ITextConfig = {}) {
+  constructor(config: TextConfig = {}) {
     const {
       position,
       anchor,
       scale,
       pivot,
-      height,
-      width,
       angle,
       alpha,
       dead,
@@ -46,14 +42,12 @@ class Text implements IEntity {
       fill,
       text,
       align,
-    } = { ...IENTITY_DEFAULTS, ...ITEXT_DEFAULTS, ...config };
+    } = { ...IENTITY_DEFAULTS, ...TEXT_DEFAULTS, ...config };
 
     this.position = position;
     this.anchor = anchor;
     this.scale = scale;
     this.pivot = pivot;
-    this.height = height;
-    this.width = width;
     this.angle = angle;
     this.alpha = alpha;
     this.dead = dead;
