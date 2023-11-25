@@ -1,66 +1,48 @@
 import Vector from "../tools/Vector";
 
-interface Positionable {
-  x: number;
-  y: number;
-}
-
-interface Renderable {
-  position: Positionable;
-  anchor: Positionable;
-  scale: Positionable;
-  pivot: Positionable;
+interface IEntity {
+  position: Vector;
+  anchor: Vector;
+  scale: Vector;
+  pivot: Vector;
   height: number;
   width: number;
   alpha: number;
   angle: number;
   dead: boolean;
   render: (context: CanvasRenderingContext2D) => void;
-  update?: (delta: number, elapsed: number) => void;
+  update: (delta: number, elapsed: number) => void;
 }
 
-interface Renderables {
-  children: Array<Renderable | Renderables>;
-  position: Positionable;
-  size: number;
-  // dead: boolean;
-  update?: (delta: number, elapsed: number) => void;
-}
-
-// EntityOptions
-// interface that defines the options that can be passed to an Entity.
-type EntityOptions = {
+type IEntityConfig = {
   position?: Vector;
   anchor?: Vector;
-  height?: number;
-  width?: number;
   scale?: Vector;
   pivot?: Vector;
-  angle?: number;
-  dead?: boolean;
-  alpha?: number;
-  visible?: boolean;
-};
-
-// SpriteOptions
-// interface that defines the options that can be passed to a Sprite.
-type SpriteOptions = EntityOptions & {
-  textureURL: string;
   height?: number;
   width?: number;
+  angle?: number;
+  alpha?: number;
+  dead?: boolean;
 };
 
-// TileSpriteOptions
-// interface that defines the options that can be passed to a TileSprite.
-type TileSpriteOptions = SpriteOptions & {
-  tileW: number;
-  tileH: number;
+const IENTITY_DEFAULTS = {
+  position: new Vector(0, 0),
+  anchor: new Vector(0, 0),
+  scale: new Vector(1, 1),
+  pivot: new Vector(0, 0),
+  height: 0,
+  width: 0,
+  angle: 0,
+  alpha: 1,
+  dead: false,
 };
 
-export {
-  Positionable,
-  Renderable,
-  Renderables,
-  SpriteOptions,
-  TileSpriteOptions,
-};
+interface IEntityContainer {
+  children: Array<IEntity | IEntityContainer>;
+  position: Vector;
+  size: number;
+  update: (delta: number, elapsed: number) => void;
+}
+
+export { IEntity, IEntityConfig, IENTITY_DEFAULTS, IEntityContainer };

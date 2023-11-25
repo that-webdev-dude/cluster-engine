@@ -62,6 +62,10 @@ class Game {
     return this._renderer.height;
   }
 
+  get scene(): Container {
+    return this._scene;
+  }
+
   public setScene(scene: Container, transitionDuration: number = 0) {
     this._scene = scene;
   }

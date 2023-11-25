@@ -1,40 +1,69 @@
-import { Entity, EntityConfig, ENTITY_DEFAULTS } from "./Entity";
+import Vector from "../tools/Vector";
+import { IEntity, IEntityConfig, IENTITY_DEFAULTS } from "../types";
 
 // Text
-interface TextConfig extends EntityConfig {
+interface ITextConfig extends IEntityConfig {
   font?: string;
   fill?: string;
   text?: string;
   align?: CanvasTextAlign;
 }
 
-const TEXT_DEFAULTS = {
+const ITEXT_DEFAULTS = {
   font: '10px "Press Start 2P"',
   fill: "black",
   text: "my text",
   align: "center" as CanvasTextAlign,
 };
 
-class Text extends Entity {
+class Text implements IEntity {
   public font: string;
   public fill: string;
   public text: string;
   public align: CanvasTextAlign;
+  public position: Vector;
+  public anchor: Vector;
+  public scale: Vector;
+  public pivot: Vector;
+  public height: number;
+  public width: number;
+  public angle: number;
+  public alpha: number;
+  public dead: boolean;
 
-  constructor(
-    config: TextConfig = {
-      ...ENTITY_DEFAULTS,
-      ...TEXT_DEFAULTS,
-    }
-  ) {
-    super(config);
-    this.font = config.font || TEXT_DEFAULTS.font;
-    this.fill = config.fill || TEXT_DEFAULTS.fill;
-    this.text = config.text || TEXT_DEFAULTS.text;
-    this.align = config.align || TEXT_DEFAULTS.align;
+  constructor(config: ITextConfig = {}) {
+    const {
+      position,
+      anchor,
+      scale,
+      pivot,
+      height,
+      width,
+      angle,
+      alpha,
+      dead,
+      font,
+      fill,
+      text,
+      align,
+    } = { ...IENTITY_DEFAULTS, ...ITEXT_DEFAULTS, ...config };
+
+    this.position = position;
+    this.anchor = anchor;
+    this.scale = scale;
+    this.pivot = pivot;
+    this.height = height;
+    this.width = width;
+    this.angle = angle;
+    this.alpha = alpha;
+    this.dead = dead;
+    this.font = font;
+    this.fill = fill;
+    this.text = text;
+    this.align = align;
   }
 
-  render(context: CanvasRenderingContext2D): void {
+  public render(context: CanvasRenderingContext2D): void {
     const { font, fill, text, align } = this;
     context.font = font;
     context.fillStyle = fill;
@@ -42,10 +71,7 @@ class Text extends Entity {
     context.fillText(text, 0, 0);
   }
 
-  public update(dt: number, t: number): void {
-    // noop
-  }
+  public update(delta: number, elapsed: number) {}
 }
 
-export type { Text };
 export default Text;
