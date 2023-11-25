@@ -1,6 +1,7 @@
 import Vector from "../tools/Vector";
 import { Renderable } from "../types";
 
+// Entity
 type EntityConfig = {
   position?: Vector;
   anchor?: Vector;
@@ -13,7 +14,19 @@ type EntityConfig = {
   dead?: boolean;
 };
 
-abstract class Entity implements Renderable {
+const ENTITY_DEFAULTS = {
+  position: new Vector(0, 0),
+  anchor: new Vector(0, 0),
+  scale: new Vector(1, 1),
+  pivot: new Vector(0, 0),
+  height: 0,
+  width: 0,
+  angle: 0,
+  alpha: 1,
+  dead: false,
+};
+
+class Entity implements Renderable {
   private _height: number;
   private _width: number;
   public position: Vector;
@@ -24,17 +37,18 @@ abstract class Entity implements Renderable {
   public alpha: number;
   public dead: boolean;
 
-  constructor({
-    position = new Vector(0, 0),
-    anchor = new Vector(0, 0),
-    scale = new Vector(1, 1),
-    pivot = new Vector(0, 0),
-    height = 0,
-    width = 0,
-    angle = 0,
-    alpha = 1,
-    dead = false,
-  }: EntityConfig) {
+  constructor(config: EntityConfig) {
+    const {
+      position,
+      anchor,
+      scale,
+      pivot,
+      height,
+      width,
+      angle,
+      alpha,
+      dead,
+    } = { ...ENTITY_DEFAULTS, ...config };
     this.position = position;
     this.anchor = anchor;
     this.scale = scale;
@@ -54,10 +68,9 @@ abstract class Entity implements Renderable {
     return this._width * this.scale.x;
   }
 
-  public abstract render(context: CanvasRenderingContext2D): void;
+  public render(context: CanvasRenderingContext2D): void {}
 
-  public abstract update(dt: number, t: number): void;
+  public update?(dt: number, t: number): void {}
 }
 
-export type { EntityConfig };
-export default Entity;
+export { Entity, EntityConfig, ENTITY_DEFAULTS };

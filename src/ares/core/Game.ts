@@ -18,8 +18,8 @@ type GameOptions = {
 class Game {
   readonly version: string;
   readonly title: string;
-  private _input: Input;
   private _scene: Container;
+  private _input: Input;
   private _engine: Engine;
   private _renderer: Renderer;
 

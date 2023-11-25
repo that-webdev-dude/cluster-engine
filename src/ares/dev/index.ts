@@ -1,6 +1,28 @@
-import { Renderable, Renderables } from "../types";
+import Vector from "../tools/Vector";
 
-type CanvasRendererOptions = {
+interface IEntity {
+  position: Vector;
+  anchor: Vector;
+  scale: Vector;
+  pivot: Vector;
+  height: number;
+  width: number;
+  alpha: number;
+  angle: number;
+  dead: boolean;
+  render: (context: CanvasRenderingContext2D) => void;
+  update: (delta: number, elapsed: number) => void;
+}
+
+interface IEntityContainer {
+  children: Array<IEntity | IEntityContainer>;
+  position: Vector;
+  size: number;
+  update: (delta: number, elapsed: number) => void;
+}
+
+// RENDERER
+type RendererConfig = {
   height?: number;
   width?: number;
 };
@@ -11,7 +33,7 @@ class Renderer {
   readonly view: HTMLCanvasElement;
   readonly context: CanvasRenderingContext2D;
 
-  constructor({ height = 640, width = 832 }: CanvasRendererOptions = {}) {
+  constructor({ height = 640, width = 832 }: RendererConfig = {}) {
     const canvas = document.createElement("canvas");
     const context = canvas.getContext("2d");
     if (!context) {
@@ -46,7 +68,7 @@ class Renderer {
     }
   }
 
-  private _render(child: Renderable) {
+  private _render(child: IEntity) {
     if ("render" in child && child.render) {
       if (child.alpha <= 0) {
         return;
@@ -95,7 +117,7 @@ class Renderer {
     }
   }
 
-  private _renderRecursive(container: Renderables) {
+  private _renderRecursive(container: IEntityContainer) {
     if (container.size === 0) return;
 
     this.context.save();
@@ -107,30 +129,28 @@ class Renderer {
       );
     }
 
-    container.children.forEach((child: Renderable | Renderables) => {
-      // child is an array of renderables
+    container.children.forEach((child: IEntity | IEntityContainer) => {
+      // child is an array of IEntityContainer
       if ("children" in child) {
-        this._renderRecursive(child as Renderables);
+        this._renderRecursive(child as IEntityContainer);
       }
 
-      // child is a renderable
-      this._render(child as Renderable);
+      // child is a IEntity
+      this._render(child as IEntity);
     });
 
     this.context.restore();
   }
 
-  public render(item: Renderables | Renderable, clear: boolean = true) {
+  public render(item: IEntityContainer | IEntity, clear: boolean = true) {
     if (clear) {
       this.context.clearRect(0, 0, this.width, this.height);
     }
 
     if ("children" in item) {
-      this._renderRecursive(item as Renderables);
+      this._renderRecursive(item as IEntityContainer);
     } else {
-      this._render(item as Renderable);
+      this._render(item as IEntity);
     }
   }
 }
-
-export default Renderer;

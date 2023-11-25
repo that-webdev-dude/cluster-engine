@@ -14,7 +14,8 @@ interface Renderable {
   width: number;
   alpha: number;
   angle: number;
-  render?: (context: CanvasRenderingContext2D) => void;
+  dead: boolean;
+  render: (context: CanvasRenderingContext2D) => void;
   update?: (delta: number, elapsed: number) => void;
 }
 
@@ -22,6 +23,8 @@ interface Renderables {
   children: Array<Renderable | Renderables>;
   position: Positionable;
   size: number;
+  // dead: boolean;
+  update?: (delta: number, elapsed: number) => void;
 }
 
 // EntityOptions

@@ -52,13 +52,11 @@ class AnimationItem {
 
 class Animation {
   private _animations: { [key: string]: AnimationItem };
-  private _running: boolean;
   private _targetEntity: { frame: Frame };
   private _currentAnimationName: string | null;
 
   constructor(targetEntity: { frame: Frame }) {
     this._animations = {};
-    this._running = false;
     this._targetEntity = targetEntity;
     this._currentAnimationName = null;
   }
