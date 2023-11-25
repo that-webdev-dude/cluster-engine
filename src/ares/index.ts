@@ -12,10 +12,10 @@ export type { Game, Container };
 
 export default {
   // core
+  Game,
   Container,
   Rect,
   Circle,
-  Game,
   Text,
 
   // tools
