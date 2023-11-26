@@ -75,6 +75,10 @@ class Animation {
     return this._animations[animationName];
   }
 
+  get frame(): Frame {
+    return this._targetEntity.frame;
+  }
+
   public update(dt: number): void {
     if (!this._currentAnimationName) return;
     const animation = this._animations[this._currentAnimationName];

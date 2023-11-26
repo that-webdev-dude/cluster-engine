@@ -1,8 +1,9 @@
 import Container from "./core/Container";
+import TileSprite from "./core/TileSprite";
 import Sprite from "./core/Sprite";
 import Text from "./core/Text";
 import Game from "./core/Game";
-// import { Circle, Rect } from "./core/Shape";
+import { Circle, Rect } from "./core/Shape";
 
 // tools
 import Scene from "./tools/Scene";
@@ -14,9 +15,10 @@ export type { Game, Container };
 export default {
   // core
   Container,
+  TileSprite,
   Sprite,
-  // Circle,
-  // Rect,
+  Circle,
+  Rect,
   Text,
   Game,
 
