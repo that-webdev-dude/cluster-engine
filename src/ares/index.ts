@@ -3,6 +3,7 @@ import TileSprite from "./core/TileSprite";
 import Sprite from "./core/Sprite";
 import Text from "./core/Text";
 import Game from "./core/Game";
+import Sound from "./core/Sound";
 import { Circle, Rect } from "./core/Shape";
 
 // tools
@@ -21,6 +22,7 @@ export default {
   Rect,
   Text,
   Game,
+  Sound,
 
   // tools
   Cmath,

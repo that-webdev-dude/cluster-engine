@@ -1,6 +1,7 @@
 import ares from "./ares";
 import Player from "./entities/Player";
-import LaserShootSoundURL from "./sounds/Laser_Shoot.wav";
+import LaserShootSoundURL from "./sounds/Laser.wav";
+import SoundtrackSoundURL from "./sounds/soundtrack.mp3";
 
 const game = new ares.Game({
   version: "0.0.1",
@@ -9,56 +10,36 @@ const game = new ares.Game({
   height: 640,
 });
 
-class Sound {
-  private context: AudioContext;
-  private gainNode: GainNode;
-  private buffer: AudioBuffer | null = null;
-  private source: AudioBufferSourceNode | null = null;
-  private isLooping: boolean = false;
+const fireSound = new ares.Sound(LaserShootSoundURL, {
+  volume: 0.25,
+  speed: 1,
+  // filter: {
+  //   type: "lowpass",
+  //   frequency: 2500,
+  //   gain: 10,
+  //   Q: 5,
+  // },
+});
 
-  constructor(private url: string) {
-    this.context = new AudioContext();
-    this.gainNode = this.context.createGain();
-    this.gainNode.connect(this.context.destination);
-    this.loadSound();
-  }
+const soundtrack = new ares.Sound(SoundtrackSoundURL);
 
-  private async loadSound() {
-    const response = await fetch(this.url);
-    const arrayBuffer = await response.arrayBuffer();
-    this.buffer = await this.context.decodeAudioData(arrayBuffer);
-  }
+const player = new Player({
+  input: game.keyboard,
+  onFire: () => {
+    fireSound.play();
+    console.log("file: app.ts:27 ~ fireSound:", fireSound);
+  },
+});
 
-  public play() {
-    if (!this.buffer) return;
-    this.source = this.context.createBufferSource();
-    this.source.buffer = this.buffer;
-    this.source.loop = this.isLooping;
-    this.source.connect(this.gainNode);
-    this.source.start();
-  }
-
-  public stop() {
-    if (!this.source) return;
-    this.source.stop();
-    this.source = null;
-  }
-
-  set loop(value: boolean) {
-    this.isLooping = value;
-    if (this.source) {
-      this.source.loop = value;
-    }
-  }
-
-  set volume(value: number) {
-    this.gainNode.gain.value = value;
-  }
-}
-
-const fireSound = new Sound(LaserShootSoundURL);
-console.log("file: app.ts:60 ~ fireSound:", fireSound);
+game.scene.add(player);
 
 export default () => {
-  game.start(() => {});
+  game.start(() => {
+    if (game.keyboard.action && !soundtrack.playing) {
+      soundtrack.play({
+        loop: true,
+        volume: 0.25,
+      });
+    }
+  });
 };

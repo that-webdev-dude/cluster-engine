@@ -90,7 +90,11 @@ const Assets = {
     });
   },
 
-  soundBuffer(url: string, ctx: AudioContext): Promise<AudioBuffer> {
+  soundBuffer(
+    url: string,
+    ctx: AudioContext | null = null
+  ): Promise<AudioBuffer> {
+    if (!ctx) return Promise.reject("[Assets]: No AudioContext detected");
     return load(url, (url, onAssetLoad) =>
       fetch(url)
         .then((r) => r.arrayBuffer())
