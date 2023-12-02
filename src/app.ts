@@ -1,45 +1,68 @@
 import ares from "./ares";
 import Player from "./entities/Player";
-import LaserShootSoundURL from "./sounds/Laser.wav";
-import SoundtrackSoundURL from "./sounds/soundtrack.mp3";
+// import Flame from "./entities/Flame";
 
-const game = new ares.Game({
+// GAME
+const { Game, Container, Sound, Camera, Rect, Vector, Cmath } = ares;
+const game = new Game({
   version: "0.0.1",
   title: "Ares",
-  width: 832,
-  height: 640,
+  width: 600,
+  height: 400,
 });
 
-const fireSound = new ares.Sound(LaserShootSoundURL, {
-  volume: 0.25,
-  speed: 1,
-  // filter: {
-  //   type: "lowpass",
-  //   frequency: 2500,
-  //   gain: 10,
-  //   Q: 5,
-  // },
+// WORLD
+const world = new Container();
+const worldW = game.width * 3;
+const worldH = game.height * 3;
+const worldBackground = new Rect({
+  width: worldW,
+  height: worldH,
+  fill: "black",
 });
+world.add(worldBackground);
+for (let i = 0; i < 100; i++) {
+  const block = new Rect({
+    width: Cmath.rand(4, 12),
+    height: Cmath.rand(4, 12),
+    fill: "lightGrey",
+    position: new Vector(Cmath.rand(0, worldW), Cmath.rand(0, worldH)),
+  });
+  world.add(block);
+}
 
-const soundtrack = new ares.Sound(SoundtrackSoundURL);
-
+// PLAYER
 const player = new Player({
   input: game.keyboard,
-  onFire: () => {
-    fireSound.play();
-    console.log("file: app.ts:27 ~ fireSound:", fireSound);
-  },
 });
 
-game.scene.add(player);
+// const flame = new Flame();
+
+// CAMERA
+const camera = new Camera({
+  viewSize: { width: game.width, height: game.height },
+  worldSize: { width: game.width, height: game.height },
+  subject: player,
+});
 
 export default () => {
+  camera.add(world);
+  camera.add(player);
+  game.scene.add(camera);
   game.start(() => {
-    if (game.keyboard.action && !soundtrack.playing) {
-      soundtrack.play({
-        loop: true,
-        volume: 0.25,
-      });
+    player.position.x = Cmath.clamp(
+      player.position.x,
+      24,
+      game.width - player.width
+    );
+    player.position.y = Cmath.clamp(
+      player.position.y,
+      0,
+      game.height - player.height
+    );
+
+    if (game.keyboard.action) {
+      camera.shake();
     }
   });
 };

@@ -1,6 +1,8 @@
 import Vector from "../tools/Vector";
 import { IEntity, IEntityConfig, IENTITY_DEFAULTS } from "../types";
 
+// TODO: Shape can just extend the entity class
+
 interface IShape extends IEntity {
   fill: string;
   stroke: string;

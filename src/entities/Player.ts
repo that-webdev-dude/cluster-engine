@@ -1,20 +1,33 @@
-import { KeyboardInput } from "../ares/input";
-import spritesheetImageURL from "../images/spritesheet.png";
 import ares from "../ares";
+import PlayerImageURL from "../images/spritesheet.png";
+import { KeyboardInput } from "../ares/input";
+import Entity from "../ares/core/Entity";
+import Flame from "./Flame";
 
-const { TileSprite, Cmath, Vector } = ares;
+const { Container, TileSprite, Vector, Cmath } = ares;
 
-class Player extends TileSprite {
+type Sizeable = {
+  width: number;
+  height: number;
+};
+
+type SizeableEntity = Entity & Sizeable;
+
+class PLayer extends Container {
   private _input: KeyboardInput;
+  private _ship: SizeableEntity;
+  private _flame: Flame;
   private _speed: number;
-  private _fireInterval: number;
-  private _timeSinceLastShot: number;
   private _onFire = () => {};
 
   constructor(config: { input: KeyboardInput; onFire?: () => void }) {
     const { input, onFire } = config;
-    super({
-      textureURL: spritesheetImageURL,
+    super();
+    this._input = input;
+    this._speed = 200;
+    this._onFire = onFire || (() => {});
+    this._ship = new TileSprite({
+      textureURL: PlayerImageURL,
       tileW: 32,
       tileH: 32,
       frame: { x: 1, y: 3 },
@@ -22,38 +35,39 @@ class Player extends TileSprite {
       pivot: new Vector(16, 16),
     });
 
-    this._input = input;
-    this._speed = 200;
-    this._fireInterval = 0.125;
-    this._timeSinceLastShot = 0;
-    this._onFire = onFire || (() => {});
+    this._flame = new Flame();
+
+    this.add(this._flame);
+    this.add(this._ship);
+    this.position.set(100, 100);
   }
 
-  public fire(): void {
-    // play fire sound?
-    this._onFire();
+  get width(): number {
+    return this._ship.width;
+  }
+
+  get height(): number {
+    return this._ship.height;
   }
 
   public update(dt: number, t: number): void {
+    super.update(dt, t);
     if (this._input.x) {
       this.position.x += this._speed * dt * this._input.x;
+      if (
+        this._input.x === 1 &&
+        this._flame.animation.currentAnimationName === "idle"
+      ) {
+        this._flame.animation.play("thrust");
+      }
+    } else {
+      this._flame.animation.play("idle");
     }
 
     if (this._input.y) {
       this.position.y += this._speed * dt * this._input.y;
     }
-
-    if (this._input.action) {
-      if (this._timeSinceLastShot <= 0) {
-        this.fire();
-        this._timeSinceLastShot = this._fireInterval;
-      } else {
-        this._timeSinceLastShot -= dt;
-      }
-    } else {
-      this._timeSinceLastShot = 0;
-    }
   }
 }
 
-export default Player;
+export default PLayer;

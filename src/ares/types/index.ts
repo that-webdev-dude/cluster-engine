@@ -5,8 +5,6 @@ interface IEntity {
   anchor: Vector;
   scale: Vector;
   pivot: Vector;
-  // height: number;
-  // width: number;
   alpha: number;
   angle: number;
   dead: boolean;
@@ -19,8 +17,6 @@ type IEntityConfig = {
   anchor?: Vector;
   scale?: Vector;
   pivot?: Vector;
-  // height?: number;
-  // width?: number;
   angle?: number;
   alpha?: number;
   dead?: boolean;
@@ -31,8 +27,6 @@ const IENTITY_DEFAULTS = {
   anchor: new Vector(0, 0),
   scale: new Vector(1, 1),
   pivot: new Vector(0, 0),
-  // height: 0,
-  // width: 0,
   angle: 0,
   alpha: 1,
   dead: false,
