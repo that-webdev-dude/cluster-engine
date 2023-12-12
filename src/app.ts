@@ -30,10 +30,25 @@ const game = new Game({
 //   world.add(block);
 // }
 
-game.scene.add(new GamePlay(game));
+// const startGameTitle = () => {
+//   globals = defaults();
+//   game.setScene(
+//     new GameTitle(game, input, globals, {
+//       onPlay: () => {
+//         startGamePlay(globals.levelID);
+//       },
+//     }),
+//     0.75
+//   );
+// };
 
-export default () => {
+const startGamePlay = () => {
+  game.setScene(new GamePlay(game));
   game.start((dt) => {
     // ...
   });
+};
+
+export default () => {
+  startGamePlay();
 };

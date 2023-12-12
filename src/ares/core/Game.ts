@@ -72,6 +72,7 @@ class Game {
     return this._keyboardInput;
   }
 
+  // todo: add transition
   public setScene(scene: Container, transitionDuration: number = 0) {
     this._scene = scene;
   }
