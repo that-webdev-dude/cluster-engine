@@ -56,12 +56,12 @@ class Camera extends Container {
     this._easing = 0.04;
 
     // EFFECT: SHAKE
-    // EFFECT: SHAKE
     this._shakePower = 0;
     this._shakeDecay = 0;
     this._shakeLast = new Vector();
 
     // EFFECT: FLASH
+    // ...
 
     this._setSubject(subject);
   }

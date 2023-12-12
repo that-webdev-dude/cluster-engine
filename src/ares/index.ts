@@ -5,6 +5,7 @@ import Text from "./core/Text";
 import Game from "./core/Game";
 import Sound from "./core/Sound";
 import Camera from "./core/Camera";
+import Entity from "./core/Entity";
 import { Circle, Rect } from "./core/Shape";
 
 // tools
@@ -15,6 +16,7 @@ import Vector from "./tools/Vector";
 export type {
   Game,
   Container,
+  Entity,
   // Rect,
   // Circle,
   // TileSprite,

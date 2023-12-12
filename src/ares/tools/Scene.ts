@@ -2,7 +2,7 @@ import Game from "../core/Game";
 import Container from "../core/Container";
 
 class Scene extends Container {
-  game: Game;
+  public game: Game;
 
   constructor(game: Game) {
     super();

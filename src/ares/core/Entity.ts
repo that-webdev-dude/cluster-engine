@@ -16,8 +16,6 @@ const ENTITY_DEFAULTS = {
   anchor: new Vector(0, 0),
   scale: new Vector(1, 1),
   pivot: new Vector(0, 0),
-  height: 0,
-  width: 0,
   angle: 0,
   alpha: 1,
   dead: false,
@@ -33,17 +31,10 @@ class Entity implements IEntity {
   public dead: boolean;
 
   constructor(config: EntityConfig = {}) {
-    const {
-      position,
-      anchor,
-      scale,
-      pivot,
-      height,
-      width,
-      angle,
-      alpha,
-      dead,
-    } = { ...ENTITY_DEFAULTS, ...config };
+    const { position, anchor, scale, pivot, angle, alpha, dead } = {
+      ...ENTITY_DEFAULTS,
+      ...config,
+    };
 
     this.position = position;
     this.anchor = anchor;
