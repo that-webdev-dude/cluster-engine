@@ -1,9 +1,9 @@
 import KeyboardInput from "../input/Keyboard";
 import MouseInput from "../input/Mouse";
-import Assets from "./Assets";
 import Engine from "../engine/Engine";
 import Renderer from "../renderer/Renderer";
 import Container from "./Container";
+import Assets from "./Assets";
 
 type GameOptions = {
   title?: string;
@@ -16,7 +16,6 @@ class Game {
   readonly version: string;
   readonly title: string;
   private _scene: Container;
-  // private _input: ;
   private _engine: Engine;
   private _renderer: Renderer;
   private _mouseInput: MouseInput;
@@ -35,11 +34,6 @@ class Game {
     this._renderer = new Renderer({ width, height });
     this._mouseInput = new MouseInput(this._renderer.view);
     this._keyboardInput = new KeyboardInput();
-    // this._input = {
-    //   // controller: ''
-    //   keyboard: new Input.Keyboard(),
-    //   mouse: new Input.Mouse(this._renderer.view),
-    // };
     this._init();
   }
 
@@ -72,7 +66,7 @@ class Game {
     return this._keyboardInput;
   }
 
-  // todo: add transition
+  // TODO: Add transitionDuration
   public setScene(scene: Container, transitionDuration: number = 0) {
     this._scene = scene;
   }

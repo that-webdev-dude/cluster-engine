@@ -1,11 +1,15 @@
-import ares, { Container } from "../ares";
+import ares from "../ares";
 import Player from "../entities/Player";
 
 const { Scene, Camera, Cmath } = ares;
 
+type Camera = {
+  add: (entity: any) => void;
+};
+
 class GamePlay extends Scene {
   private player: Player;
-  private camera: Container;
+  private camera: Camera;
 
   constructor(game: any) {
     super(game);

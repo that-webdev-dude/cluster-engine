@@ -1,3 +1,4 @@
+// core
 import Container from "./core/Container";
 import TileSprite from "./core/TileSprite";
 import Sprite from "./core/Sprite";
@@ -9,8 +10,9 @@ import Entity from "./core/Entity";
 import { Circle, Rect } from "./core/Shape";
 
 // tools
-import Scene from "./tools/Scene";
 import Cmath from "./tools/Cmath";
+import Pool from "./tools/Pool";
+import Scene from "./tools/Scene";
 import Vector from "./tools/Vector";
 
 export type {
@@ -43,6 +45,7 @@ export default {
 
   // tools
   Cmath,
+  Pool,
   Scene,
   Vector,
 };

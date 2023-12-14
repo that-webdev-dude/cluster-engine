@@ -1,7 +1,6 @@
 import Container from "./Container";
 import Vector from "../tools/Vector";
 import Cmath from "../tools/Cmath";
-import Entity from "./Entity";
 
 type Sizeable = {
   width: number;

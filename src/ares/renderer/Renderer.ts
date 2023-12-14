@@ -52,20 +52,21 @@ class Renderer {
         return;
       }
 
-      // if ("width" in child && "height" in child) {
-      //   const { width, height } = child as IEntity & {
-      //     width: number;
-      //     height: number;
-      //   };
-      //   if (
-      //     child.position.x + width < 0 ||
-      //     child.position.x > this.width ||
-      //     child.position.y + height < 0 ||
-      //     child.position.y > this.height
-      //   ) {
-      //     return;
-      //   }
-      // }
+      if ("width" in child && "height" in child) {
+        const { width, height } = child as IEntity & {
+          width: number;
+          height: number;
+        };
+        if (
+          child.position.x + width < 0 ||
+          child.position.x > this.width ||
+          child.position.y + height < 0 ||
+          child.position.y > this.height
+        ) {
+          // console.log(child);
+          return;
+        }
+      }
 
       this.context.save();
 

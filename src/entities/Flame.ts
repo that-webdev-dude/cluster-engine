@@ -10,9 +10,10 @@ class Flame extends TileSprite {
       tileW: 32,
       tileH: 50,
       frame: { x: 0, y: 0 },
-      scale: new Vector(0.5, 0.25),
-      position: new Vector(-20, 20),
-      angle: Cmath.deg2rad(270),
+      // scale: new Vector(0.5, 0.25),
+      // position: new Vector(-20, 20),
+      position: new Vector(0, 0),
+      // angle: Cmath.deg2rad(270),
       alpha: 0.75,
     });
 
