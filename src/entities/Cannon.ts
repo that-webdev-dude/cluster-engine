@@ -40,7 +40,10 @@ class Cannon {
   readonly position: Vector;
   readonly cannonType: CannonType;
 
-  constructor(position: Vector, cannonType: CannonType = CannonType.default) {
+  constructor(
+    position: Vector = new Vector(),
+    cannonType: CannonType = CannonType.default
+  ) {
     this._reloadTime = 0;
     this.cannonType = cannonType;
     this.position = position;
@@ -52,9 +55,9 @@ class Cannon {
 
   public fire(): Bullet[] | null {
     if (this.ready) {
-      const { fireRate, fire } = cannonTypes[this.cannonType];
-      this._reloadTime = 1 / fireRate;
-      return fire(this);
+      const cannonType = cannonTypes[this.cannonType];
+      this._reloadTime = 1 / cannonType.fireRate;
+      return cannonType.fire(this);
     }
     return null;
   }

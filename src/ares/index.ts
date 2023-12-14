@@ -1,51 +1,20 @@
 // core
-import Container from "./core/Container";
-import TileSprite from "./core/TileSprite";
-import Sprite from "./core/Sprite";
-import Text from "./core/Text";
-import Game from "./core/Game";
-import Sound from "./core/Sound";
-import Camera from "./core/Camera";
-import Entity from "./core/Entity";
-import { Circle, Rect } from "./core/Shape";
+export { default as Container } from "./core/Container";
+export { default as TileSprite } from "./core/TileSprite";
+export { default as Sprite } from "./core/Sprite";
+export { default as Text } from "./core/Text";
+export { default as Game } from "./core/Game";
+export { default as Sound } from "./core/Sound";
+export { default as Camera } from "./core/Camera";
+export { default as Entity } from "./core/Entity";
+export { Circle, Rect } from "./core/Shape";
 
 // tools
-import Cmath from "./tools/Cmath";
-import Pool from "./tools/Pool";
-import Scene from "./tools/Scene";
-import Vector from "./tools/Vector";
+export { default as Cmath } from "./tools/Cmath";
+export { default as Pool } from "./tools/Pool";
+export { default as Scene } from "./tools/Scene";
+export { default as Vector } from "./tools/Vector";
 
-export type {
-  Game,
-  Container,
-  Entity,
-  // Rect,
-  // Circle,
-  // TileSprite,
-  // Sprite,
-  // Text,
-  // Sound,
-  // Camera,
-  // Scene,
-  // Cmath,
-  // Vector,
-};
-
-export default {
-  // core
-  Container,
-  TileSprite,
-  Sprite,
-  Circle,
-  Rect,
-  Text,
-  Game,
-  Sound,
-  Camera,
-
-  // tools
-  Cmath,
-  Pool,
-  Scene,
-  Vector,
-};
+// input
+export { default as Keyboard } from "./input/Keyboard";
+export { default as Mouse } from "./input/Mouse";

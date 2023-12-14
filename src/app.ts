@@ -1,8 +1,7 @@
-import ares from "./ares";
+import { Game } from "./ares";
 import GamePlay from "./screens/GamePlay";
 
 // GAME
-const { Game } = ares;
 const game = new Game({
   version: "0.0.1",
   title: "Ares",

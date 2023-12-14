@@ -1,23 +1,21 @@
-import ares from "../ares";
-import { KeyboardInput } from "../ares/input";
+import { Container, Keyboard } from "../ares";
 import Ship from "./Ship";
 import Bullet from "./Bullet";
 import Cannon from "./Cannon";
-const { Container, Rect } = ares;
 
 class PLayer extends Container {
-  private _input: KeyboardInput;
+  private _input: Keyboard;
   private _cannon: Cannon;
   private _ship: Ship;
   private _speed: number;
 
-  constructor(config: { input: KeyboardInput }) {
+  constructor(config: { input: Keyboard }) {
     const { input } = config;
     super();
     this._input = input;
-    this._ship = new Ship();
-    this._cannon = new Cannon(this.position);
     this._speed = 200;
+    this._ship = new Ship();
+    this._cannon = new Cannon();
 
     this.add(this._ship);
     this.position.set(100, 100);

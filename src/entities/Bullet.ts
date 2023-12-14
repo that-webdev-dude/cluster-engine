@@ -1,6 +1,4 @@
-import ares from "../ares";
-import Vector from "../ares/tools/Vector";
-const { Rect } = ares;
+import { Rect, Vector } from "../ares";
 
 class Bullet extends Rect {
   private _speed: number;

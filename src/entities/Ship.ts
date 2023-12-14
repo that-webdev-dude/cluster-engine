@@ -1,7 +1,5 @@
-import ares from "../ares";
+import { TileSprite, Vector, Cmath } from "../ares";
 import PlayerImageURL from "../images/spritesheet.png";
-
-const { TileSprite, Vector, Cmath } = ares;
 
 class Ship extends TileSprite {
   constructor() {

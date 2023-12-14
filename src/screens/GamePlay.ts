@@ -1,18 +1,17 @@
-import ares from "../ares";
+import { Container, Scene, Camera, Cmath, Pool } from "../ares";
 import Player from "../entities/Player";
-
-const { Scene, Camera, Cmath } = ares;
-
-type Camera = {
-  add: (entity: any) => void;
-};
+import Bullet from "../entities/Bullet";
 
 class GamePlay extends Scene {
+  private bulletPool: Pool;
+  private bullets: Container;
   private player: Player;
   private camera: Camera;
 
   constructor(game: any) {
     super(game);
+    const bulletPool = new Pool(() => new Bullet());
+    const bullets = new Container();
     const player = new Player({ input: game.keyboard });
     const camera = new Camera({
       viewSize: { width: game.width, height: game.height },
@@ -20,9 +19,12 @@ class GamePlay extends Scene {
       subject: player,
     });
 
+    this.bulletPool = bulletPool;
+    this.bullets = bullets;
     this.player = player;
     this.camera = camera;
 
+    camera.add(bullets);
     camera.add(player);
     this.add(camera);
   }
@@ -43,12 +45,16 @@ class GamePlay extends Scene {
     );
 
     if (game.keyboard.action) {
-      const bullets = player.fire(() => {});
-      if (bullets) {
-        bullets.forEach((bullet) => {
-          camera.add(bullet);
-        });
-      }
+      const bullet = this.bulletPool.next();
+      bullet.position.x = player.position.x + player.width;
+      bullet.position.y = player.position.y + player.height / 2;
+      this.bullets.add(bullet);
+      // const bullets = player.fire(() => {});
+      // if (bullets) {
+      //   bullets.forEach((bullet) => {
+      //     camera.add(bullet);
+      //   });
+      // }
     }
   }
 }

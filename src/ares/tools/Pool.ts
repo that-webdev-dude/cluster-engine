@@ -1,7 +1,8 @@
-interface Entity {
-  dead: boolean;
-  reset?: () => void;
-}
+// interface Entity {
+//   dead: boolean;
+//   reset?: () => void;
+// }
+import Entity from "../core/Entity";
 
 type CreatorFn = () => Entity;
 
@@ -10,7 +11,7 @@ class Pool {
   private _cache: Entity[];
 
   constructor(
-    creatorFn: CreatorFn = () => ({ dead: true }),
+    creatorFn: CreatorFn = () => new Entity(),
     initialCacheLength: number = 10
   ) {
     this._creator = creatorFn;
@@ -34,9 +35,9 @@ class Pool {
     if (!entity) {
       entity = this._create();
     }
-    if (entity.reset) {
-      entity.reset();
-    }
+    // if (entity.reset) {
+    //   entity.reset();
+    // }
     entity.dead = false;
     return entity;
   }

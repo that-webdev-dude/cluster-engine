@@ -10,6 +10,7 @@ interface IEntity {
   dead: boolean;
   render: (context: CanvasRenderingContext2D) => void;
   update: (delta: number, elapsed: number) => void;
+  // reset?: () => void;
 }
 
 type IEntityConfig = {
