@@ -23,6 +23,10 @@ class TileSprite extends Sprite {
     this.animation = new Animation({ frame: this._frame });
   }
 
+  set frame(frame: { x: number; y: number }) {
+    this._frame = frame;
+  }
+
   get width(): number {
     return this._tileW * this.scale.x;
   }

@@ -3,6 +3,17 @@ import Ship from "./Ship";
 import Bullet from "./Bullet";
 import Cannon from "./Cannon";
 
+const weapons = {
+  default: {
+    fireRate: 10,
+    damage: 10,
+    bullet: {
+      type: 1,
+      path: 0,
+    },
+  },
+};
+
 class PLayer extends Container {
   private _input: Keyboard;
   private _cannon: Cannon;
@@ -18,6 +29,11 @@ class PLayer extends Container {
     this._cannon = new Cannon();
 
     this.add(this._ship);
+
+    this._init();
+  }
+
+  private _init(): void {
     this.position.set(100, 100);
   }
 

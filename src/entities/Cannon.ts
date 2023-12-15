@@ -10,6 +10,14 @@ enum CannonType {
 const cannonTypes = {
   [CannonType.default]: {
     fireRate: 10,
+    bullets: [
+      {
+        angle: 0,
+        size: { w: 12, h: 12 },
+        frame: { x: 0, y: 0 },
+        speed: { x: 400, y: 0 },
+      },
+    ],
     fire: (cannonCtx: Cannon): Bullet[] => {
       const positions = [
         new Vector(cannonCtx.position.x + 30, cannonCtx.position.y + 14),

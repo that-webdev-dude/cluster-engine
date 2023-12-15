@@ -1,16 +1,18 @@
-import { Rect, Vector } from "../ares";
+import { Rect, Vector, TileSprite } from "../ares";
+import bulletsImageURL from "../images/bullets.png";
 
-class Bullet extends Rect {
+class Bullet extends TileSprite {
   private _speed: number;
 
   constructor(position: Vector = new Vector()) {
-    super({ width: 4, height: 4, fill: "red", position });
+    super({ tileH: 12, tileW: 12, textureURL: bulletsImageURL });
+    this.position = position;
     this._speed = 400;
   }
 
-  set color(color: string) {
-    this.fill = color;
-  }
+  // set color(color: string) {
+  //   this.fill = color;
+  // }
 
   public update(dt: number, t: number): void {
     super.update(dt, t);
