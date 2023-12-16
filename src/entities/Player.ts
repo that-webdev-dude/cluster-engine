@@ -1,18 +1,12 @@
-import { Container, Keyboard } from "../ares";
+import { Container, Keyboard, Vector } from "../ares";
 import Ship from "./Ship";
 import Bullet from "./Bullet";
-import Cannon from "./Cannon";
-
-const weapons = {
-  default: {
-    fireRate: 10,
-    damage: 10,
-    bullet: {
-      type: 1,
-      path: 0,
-    },
-  },
-};
+import {
+  Cannon,
+  // DefaultShootingStrategy,
+  // DoubleShootingStrategy,
+  // TripleShootingStrategy,
+} from "./Cannon";
 
 class PLayer extends Container {
   private _input: Keyboard;
@@ -26,14 +20,13 @@ class PLayer extends Container {
     this._input = input;
     this._speed = 200;
     this._ship = new Ship();
-    this._cannon = new Cannon();
+    this._cannon = new Cannon({
+      position: this.position,
+      offset: new Vector(32, 16),
+    });
 
     this.add(this._ship);
 
-    this._init();
-  }
-
-  private _init(): void {
     this.position.set(100, 100);
   }
 
@@ -45,13 +38,12 @@ class PLayer extends Container {
     return this._ship.height;
   }
 
-  public fire(done: () => void): Bullet[] | null {
-    if (this._cannon.ready) {
-      const bullets = this._cannon.fire();
-      done();
-      return bullets;
-    }
-    return null;
+  get cannon(): Cannon {
+    return this._cannon;
+  }
+
+  public fire(): Bullet[] | null {
+    return this._cannon.ready ? this._cannon.fire() : null;
   }
 
   public update(dt: number, t: number): void {
@@ -63,6 +55,12 @@ class PLayer extends Container {
     if (this._input.y) {
       this.position.y += this._speed * dt * this._input.y;
     }
+
+    // if (this.position.x > 250) {
+    //   this._cannon.shootingStrategy = DoubleShootingStrategy;
+    // } else {
+    //   this._cannon.shootingStrategy = DefaultShootingStrategy;
+    // }
 
     this._cannon.update(dt);
   }

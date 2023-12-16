@@ -1,22 +1,50 @@
-import { Rect, Vector, TileSprite } from "../ares";
+import { Vector, TileSprite } from "../ares";
 import bulletsImageURL from "../images/bullets.png";
 
-class Bullet extends TileSprite {
-  private _speed: number;
+type BulletConfig = {
+  frame: { x: number; y: number };
+  damage: number;
+  velocity: Vector;
+  position: Vector;
+  scale?: Vector;
+};
 
-  constructor(position: Vector = new Vector()) {
-    super({ tileH: 12, tileW: 12, textureURL: bulletsImageURL });
-    this.position = position;
-    this._speed = 400;
+class Bullet extends TileSprite {
+  public velocity: Vector;
+  public damage: number;
+
+  constructor(config: BulletConfig) {
+    const {
+      frame,
+      damage,
+      velocity,
+      position,
+      scale = new Vector(0.5, 0.5),
+    } = config;
+    super({
+      tileH: 12,
+      tileW: 12,
+      frame: frame,
+      position: position,
+      textureURL: bulletsImageURL,
+      scale: scale,
+    });
+    this.velocity = velocity;
+    this.damage = damage;
   }
 
-  // set color(color: string) {
-  //   this.fill = color;
-  // }
+  public reset(config: BulletConfig): void {
+    const { frame, damage, velocity, position } = config;
+    this.frame = frame;
+    this.position = position;
+    this.velocity = velocity;
+    this.damage = damage;
+  }
 
   public update(dt: number, t: number): void {
     super.update(dt, t);
-    this.position.x += this._speed * dt;
+    this.position.x += this.velocity.x * dt;
+    this.position.y += this.velocity.y * dt;
   }
 }
 

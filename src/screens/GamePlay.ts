@@ -1,61 +1,71 @@
-import { Container, Scene, Camera, Cmath, Pool } from "../ares";
+import { Container, Scene, Camera, Cmath } from "../ares";
+import Background from "../entities/Background";
 import Player from "../entities/Player";
 import Bullet from "../entities/Bullet";
 
 class GamePlay extends Scene {
-  private bulletPool: Pool;
-  private bullets: Container;
-  private player: Player;
-  private camera: Camera;
+  private _bullets: Container;
+  private _player: Player;
+  private _camera: Camera;
 
   constructor(game: any) {
     super(game);
-    const bulletPool = new Pool(() => new Bullet());
+    const { width, height } = game;
+    const background = new Background({ width, height });
     const bullets = new Container();
     const player = new Player({ input: game.keyboard });
     const camera = new Camera({
-      viewSize: { width: game.width, height: game.height },
-      worldSize: { width: game.width, height: game.height },
+      viewSize: { width, height },
+      worldSize: { width, height },
       subject: player,
     });
 
-    this.bulletPool = bulletPool;
-    this.bullets = bullets;
-    this.player = player;
-    this.camera = camera;
-
+    // camera.add(background);
     camera.add(bullets);
     camera.add(player);
     this.add(camera);
+
+    this._bullets = bullets;
+    this._player = player;
+    this._camera = camera;
   }
 
   update(dt: number, t: number) {
     super.update(dt, t);
-    const { player, camera, game } = this;
+    const { _player, game } = this;
 
-    player.position.x = Cmath.clamp(
-      player.position.x,
+    _player.position.x = Cmath.clamp(
+      _player.position.x,
       24,
-      game.width - player.width
+      game.width - _player.width
     );
-    player.position.y = Cmath.clamp(
-      player.position.y,
+    _player.position.y = Cmath.clamp(
+      _player.position.y,
       0,
-      game.height - player.height
+      game.height - _player.height
     );
 
     if (game.keyboard.action) {
-      const bullet = this.bulletPool.next();
-      bullet.position.x = player.position.x + player.width;
-      bullet.position.y = player.position.y + player.height / 2;
-      this.bullets.add(bullet);
-      // const bullets = player.fire(() => {});
-      // if (bullets) {
-      //   bullets.forEach((bullet) => {
-      //     camera.add(bullet);
-      //   });
-      // }
+      const bullets = _player.fire();
+      if (bullets) {
+        bullets.forEach((bullet) => {
+          this._bullets.add(bullet);
+        });
+      }
     }
+
+    this._bullets.children.forEach((bullet) => {
+      if (
+        bullet.position.x > game.width ||
+        bullet.position.x < 0 ||
+        bullet.position.y > game.height ||
+        bullet.position.y < 0
+      ) {
+        if ("dead" in bullet) {
+          bullet.dead = true;
+        }
+      }
+    });
   }
 }
 

@@ -23,8 +23,13 @@ class TileSprite extends Sprite {
     this.animation = new Animation({ frame: this._frame });
   }
 
+  get frame(): { x: number; y: number } {
+    return this._frame;
+  }
+
   set frame(frame: { x: number; y: number }) {
     this._frame = frame;
+    this.animation.frame = frame;
   }
 
   get width(): number {
@@ -50,8 +55,10 @@ class TileSprite extends Sprite {
   }
 
   public update(dt: number, t: number): void {
-    this.animation.update(dt);
-    this._frame = this.animation.frame;
+    if (this.animation.length > 0) {
+      this.animation.update(dt);
+      this._frame = this.animation.frame;
+    }
   }
 }
 

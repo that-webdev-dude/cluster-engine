@@ -79,6 +79,14 @@ class Animation {
     return this._targetEntity.frame;
   }
 
+  set frame(frame: Frame) {
+    this._targetEntity.frame = frame;
+  }
+
+  get length(): number {
+    return Object.keys(this._animations).length;
+  }
+
   get currentAnimationName(): string | null {
     return this._currentAnimationName;
   }

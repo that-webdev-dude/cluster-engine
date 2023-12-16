@@ -63,7 +63,6 @@ class Renderer {
           child.position.y + height < 0 ||
           child.position.y > this.height
         ) {
-          // console.log(child);
           return;
         }
       }
