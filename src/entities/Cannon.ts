@@ -76,11 +76,11 @@ class Cannon {
 
   constructor(config: CannonConfig) {
     const { offset, position } = config;
-    this._parentPosition = position;
-    this._offset = new Vector(offset.x, offset.y);
-    this._position = new Vector();
-    this._reloadTime = 0;
     this._shootingStrategy = new DefaultShootingStrategy(this);
+    this._position = new Vector();
+    this._offset = new Vector(offset.x, offset.y);
+    this._reloadTime = 0;
+    this._parentPosition = position;
   }
 
   get ready(): boolean {

@@ -1,4 +1,4 @@
-import { Game } from "./ares";
+import { Game, Vector } from "./ares";
 import GamePlay from "./screens/GamePlay";
 
 // GAME
@@ -9,43 +9,9 @@ const game = new Game({
   height: 400,
 });
 
-// WORLD
-// const world = new Container();
-// const worldW = game.width * 3;
-// const worldH = game.height * 3;
-// const worldBackground = new Rect({
-//   width: worldW,
-//   height: worldH,
-//   fill: "black",
-// });
-// world.add(worldBackground);
-// for (let i = 0; i < 100; i++) {
-//   const block = new Rect({
-//     width: Cmath.rand(4, 12),
-//     height: Cmath.rand(4, 12),
-//     fill: "lightGrey",
-//     position: new Vector(Cmath.rand(0, worldW), Cmath.rand(0, worldH)),
-//   });
-//   world.add(block);
-// }
-
-// const startGameTitle = () => {
-//   globals = defaults();
-//   game.setScene(
-//     new GameTitle(game, input, globals, {
-//       onPlay: () => {
-//         startGamePlay(globals.levelID);
-//       },
-//     }),
-//     0.75
-//   );
-// };
-
 const startGamePlay = () => {
   game.setScene(new GamePlay(game));
-  game.start((dt) => {
-    // ...
-  });
+  game.start((dt) => {});
 };
 
 export default () => {

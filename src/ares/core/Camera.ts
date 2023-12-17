@@ -6,12 +6,10 @@ type Sizeable = {
   width: number;
   height: number;
 };
-
 type Positionable = {
   position: Vector;
   anchor?: Vector;
 };
-
 type FocusableEntity = Sizeable & Positionable;
 
 type CameraConfig = {

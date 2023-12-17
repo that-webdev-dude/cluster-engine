@@ -8,7 +8,7 @@ import {
   // TripleShootingStrategy,
 } from "./Cannon";
 
-class PLayer extends Container {
+class Player extends Container {
   private _input: Keyboard;
   private _cannon: Cannon;
   private _ship: Ship;
@@ -66,4 +66,4 @@ class PLayer extends Container {
   }
 }
 
-export default PLayer;
+export default Player;

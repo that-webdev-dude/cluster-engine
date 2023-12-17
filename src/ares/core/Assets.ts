@@ -1,5 +1,5 @@
-type Callback = () => void;
 type ProgressCallback = (remaining: number, total: number) => void;
+type Callback = () => void;
 type AssetMaker = (
   url: string,
   onAssetLoad: (e: Event | string) => void

@@ -1,12 +1,13 @@
-import { Container, Scene, Camera, Cmath } from "../ares";
+import { Container, Scene, Camera, Cmath, Entity } from "../ares";
 import Background from "../entities/Background";
 import Player from "../entities/Player";
-import Bullet from "../entities/Bullet";
+import Pup from "../entities/Pup";
 
 class GamePlay extends Scene {
   private _bullets: Container;
   private _player: Player;
   private _camera: Camera;
+  private _pup: Pup; // PUP DEV
 
   constructor(game: any) {
     super(game);
@@ -20,14 +21,24 @@ class GamePlay extends Scene {
       subject: player,
     });
 
-    // camera.add(background);
+    // PUP DEV
+    const pup = new Pup();
+    pup.position.set(0, 0);
+
+    camera.add(background);
     camera.add(bullets);
     camera.add(player);
+    camera.add(pup); // PUP DEV
     this.add(camera);
 
     this._bullets = bullets;
     this._player = player;
     this._camera = camera;
+    this._pup = pup; // PUP DEV
+
+    // console.log(this._pup.hitBox);
+    this._pup.position.set(100, 0);
+    // console.log(this._pup.hitBox);
   }
 
   update(dt: number, t: number) {

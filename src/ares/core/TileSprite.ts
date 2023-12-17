@@ -1,5 +1,6 @@
 import Animation from "./Animation";
 import Sprite from "./Sprite";
+import Vector from "../tools/Vector";
 import { SpriteConfig } from "./Sprite";
 
 type TileSpriteConfig = SpriteConfig & {
@@ -16,7 +17,7 @@ class TileSprite extends Sprite {
 
   constructor(config: TileSpriteConfig) {
     const { tileW, tileH, frame, ...superConfig } = config;
-    super(config);
+    super({ ...config, position: new Vector(0, 0) });
     this._tileW = tileW;
     this._tileH = tileH;
     this._frame = frame || { x: 0, y: 0 };

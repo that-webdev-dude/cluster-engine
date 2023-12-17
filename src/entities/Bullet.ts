@@ -33,14 +33,6 @@ class Bullet extends TileSprite {
     this.damage = damage;
   }
 
-  public reset(config: BulletConfig): void {
-    const { frame, damage, velocity, position } = config;
-    this.frame = frame;
-    this.position = position;
-    this.velocity = velocity;
-    this.damage = damage;
-  }
-
   public update(dt: number, t: number): void {
     super.update(dt, t);
     this.position.x += this.velocity.x * dt;

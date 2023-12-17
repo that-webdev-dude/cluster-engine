@@ -1,5 +1,6 @@
 import Assets from "./Assets";
 import Entity from "./Entity";
+import Vector from "../tools/Vector";
 import { EntityConfig } from "./Entity";
 
 type SpriteConfig = EntityConfig & { textureURL: string };
@@ -9,7 +10,7 @@ class Sprite extends Entity {
 
   constructor(config: EntityConfig & { textureURL: string }) {
     const { textureURL, ...superConfig } = config;
-    super(superConfig);
+    super({ ...superConfig, position: new Vector(0, 0) });
     this.image = Assets.image(textureURL);
   }
 
