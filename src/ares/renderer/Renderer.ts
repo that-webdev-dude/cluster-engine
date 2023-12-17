@@ -1,4 +1,4 @@
-import { IEntity, IEntityContainer } from "../types";
+import { EntityType, EntityContainerType } from "../types";
 
 type RendererConfig = {
   height?: number;
@@ -46,14 +46,14 @@ class Renderer {
     }
   }
 
-  private _render(child: IEntity) {
+  private _render(child: EntityType) {
     if ("render" in child && child.render) {
       if (child.alpha <= 0) {
         return;
       }
 
       if ("width" in child && "height" in child) {
-        const { width, height } = child as IEntity & {
+        const { width, height } = child as EntityType & {
           width: number;
           height: number;
         };
@@ -101,7 +101,7 @@ class Renderer {
     }
   }
 
-  private _renderRecursive(container: IEntityContainer) {
+  private _renderRecursive(container: EntityContainerType) {
     if (container.size === 0) return;
 
     this.context.save();
@@ -113,28 +113,28 @@ class Renderer {
       );
     }
 
-    container.children.forEach((child: IEntity | IEntityContainer) => {
-      // child is an array of IEntityContainer
+    container.children.forEach((child: EntityType | EntityContainerType) => {
+      // child is an array of EntityContainerType
       if ("children" in child) {
-        this._renderRecursive(child as IEntityContainer);
+        this._renderRecursive(child as EntityContainerType);
       }
 
-      // child is a IEntity
-      this._render(child as IEntity);
+      // child is a EntityType
+      this._render(child as EntityType);
     });
 
     this.context.restore();
   }
 
-  public render(item: IEntityContainer | IEntity, clear: boolean = true) {
+  public render(item: EntityContainerType | EntityType, clear: boolean = true) {
     if (clear) {
       this.context.clearRect(0, 0, this.width, this.height);
     }
 
     if ("children" in item) {
-      this._renderRecursive(item as IEntityContainer);
+      this._renderRecursive(item as EntityContainerType);
     } else {
-      this._render(item as IEntity);
+      this._render(item as EntityType);
     }
   }
 }

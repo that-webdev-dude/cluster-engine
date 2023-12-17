@@ -1,17 +1,9 @@
+import { Sizeable, Positionable } from "../types";
 import Container from "./Container";
 import Vector from "../tools/Vector";
 import Cmath from "../tools/Cmath";
 
-type Sizeable = {
-  width: number;
-  height: number;
-};
-type Positionable = {
-  position: Vector;
-  anchor?: Vector;
-};
 type FocusableEntity = Sizeable & Positionable;
-
 type CameraConfig = {
   subject?: FocusableEntity | null;
   viewSize: Sizeable;

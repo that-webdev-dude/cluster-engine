@@ -1,7 +1,7 @@
+import { SpriteConfig } from "./Sprite";
 import Animation from "./Animation";
 import Sprite from "./Sprite";
 import Vector from "../tools/Vector";
-import { SpriteConfig } from "./Sprite";
 
 type TileSpriteConfig = SpriteConfig & {
   tileW: number;

@@ -1,5 +1,5 @@
+import { IEntity, IEntityConfig, ENTITY_DEFAULTS } from "./Entity";
 import Vector from "../tools/Vector";
-import { IEntity, IEntityConfig, IENTITY_DEFAULTS } from "../types";
 
 // TODO: Shape can just extend the entity class
 
@@ -21,7 +21,7 @@ const SHAPE_DEFAULTS = {
   lineWidth: 1,
 };
 
-class Shape implements IShape {
+class Shape {
   public fill: string;
   public stroke: string;
   public lineWidth: number;
@@ -45,7 +45,7 @@ class Shape implements IShape {
       fill,
       stroke,
       lineWidth,
-    } = { ...IENTITY_DEFAULTS, ...SHAPE_DEFAULTS, ...config };
+    } = { ...ENTITY_DEFAULTS, ...SHAPE_DEFAULTS, ...config };
 
     this.position = position;
     this.anchor = anchor;

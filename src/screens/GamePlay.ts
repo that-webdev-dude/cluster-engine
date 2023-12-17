@@ -1,4 +1,4 @@
-import { Container, Scene, Camera, Cmath, Entity } from "../ares";
+import { Container, Scene, Camera, Cmath } from "../ares";
 import Background from "../entities/Background";
 import Player from "../entities/Player";
 import Pup from "../entities/Pup";

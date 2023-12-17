@@ -6,7 +6,6 @@ export { default as Text } from "./core/Text";
 export { default as Game } from "./core/Game";
 export { default as Sound } from "./core/Sound";
 export { default as Camera } from "./core/Camera";
-export { default as Entity } from "./core/Entity";
 export { Circle, Rect } from "./core/Shape";
 
 // tools

@@ -1,18 +1,15 @@
-type Frame = {
-  x: number;
-  y: number;
-};
+import { Locateable } from "../types";
 
 class AnimationItem {
   private _onCompleted: () => void;
-  private _frames: Frame[];
+  private _frames: Locateable[];
   private _rate: number;
   private _currentFrameIndex: number;
-  private _currentFrame: Frame;
+  private _currentFrame: Locateable;
   private _currentTime: number;
 
   constructor(
-    frames: Frame[] = [],
+    frames: Locateable[] = [],
     rate: number = 0,
     onCompleted: () => void = () => {}
   ) {
@@ -27,7 +24,7 @@ class AnimationItem {
     this.reset();
   }
 
-  get currentFrame(): Frame {
+  get currentFrame(): Locateable {
     return this._currentFrame;
   }
 
@@ -52,10 +49,10 @@ class AnimationItem {
 
 class Animation {
   private _animations: { [key: string]: AnimationItem };
-  private _targetEntity: { frame: Frame };
+  private _targetEntity: { frame: Locateable };
   private _currentAnimationName: string | null;
 
-  constructor(targetEntity: { frame: Frame }) {
+  constructor(targetEntity: { frame: Locateable }) {
     this._animations = {};
     this._targetEntity = targetEntity;
     this._currentAnimationName = null;
@@ -63,7 +60,7 @@ class Animation {
 
   public add(
     animationName: string,
-    animationFrames: Frame[],
+    animationFrames: Locateable[],
     animationRate: number,
     onAnimationCompleted: () => void = () => {}
   ): AnimationItem {
@@ -75,11 +72,11 @@ class Animation {
     return this._animations[animationName];
   }
 
-  get frame(): Frame {
+  get frame(): Locateable {
     return this._targetEntity.frame;
   }
 
-  set frame(frame: Frame) {
+  set frame(frame: Locateable) {
     this._targetEntity.frame = frame;
   }
 

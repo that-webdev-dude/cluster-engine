@@ -1,5 +1,5 @@
+import { IEntityConfig, ENTITY_DEFAULTS } from "./Entity";
 import Vector from "../tools/Vector";
-import { IEntity, IEntityConfig, IENTITY_DEFAULTS } from "../types";
 
 // Text
 type TextConfig = IEntityConfig & {
@@ -16,7 +16,7 @@ const TEXT_DEFAULTS = {
   align: "center" as CanvasTextAlign,
 };
 
-class Text implements IEntity {
+class Text {
   public font: string;
   public fill: string;
   public text: string;
@@ -42,7 +42,7 @@ class Text implements IEntity {
       fill,
       text,
       align,
-    } = { ...IENTITY_DEFAULTS, ...TEXT_DEFAULTS, ...config };
+    } = { ...ENTITY_DEFAULTS, ...TEXT_DEFAULTS, ...config };
 
     this.position = position;
     this.anchor = anchor;

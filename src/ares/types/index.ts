@@ -1,50 +1,10 @@
 import Vector from "../tools/Vector";
 
-type IEntityConfig = {
-  position?: Vector;
-  anchor?: Vector;
-  scale?: Vector;
-  pivot?: Vector;
-  angle?: number;
-  alpha?: number;
-  dead?: boolean;
+type Locateable = {
+  x: number;
+  y: number;
 };
 
-const IENTITY_DEFAULTS = {
-  position: new Vector(0, 0),
-  anchor: new Vector(0, 0),
-  scale: new Vector(1, 1),
-  pivot: new Vector(0, 0),
-  angle: 0,
-  alpha: 1,
-  dead: false,
-};
-
-interface IEntity {
-  position: Vector;
-  anchor: Vector;
-  scale: Vector;
-  pivot: Vector;
-  alpha: number;
-  angle: number;
-  dead: boolean;
-  render: (context: CanvasRenderingContext2D) => void;
-  update: (delta: number, elapsed: number) => void;
-  reset?: () => void;
-}
-
-interface IEntityContainer {
-  children: Array<IEntity | IEntityContainer>;
-  position: Vector;
-  size: number;
-  update: (delta: number, elapsed: number) => void;
-}
-
-export { IEntity, IEntityConfig, IENTITY_DEFAULTS, IEntityContainer };
-
-// NEW TYPE DEFINITIONS
-// Path: src/ares/types/index.ts
-// --------------------------------------------------------
 type Positionable = {
   position: Vector;
   anchor: Vector;
@@ -73,34 +33,67 @@ type Deadable = {
 };
 
 type Renderable = {
+  /**
+   * render
+   * @param {CanvasRenderingContext2D} context
+   * @memberof Renderable
+   * @returns {void}
+   */
   render: (context: CanvasRenderingContext2D) => void;
 };
 
 type Updateable = {
+  /**
+   * update
+   * @param {number} delta
+   * @param {number} elapsed
+   * @memberof Updateable
+   * @returns {void}
+   */
   update: (delta: number, elapsed: number) => void;
 };
 
 type Resetable = {
+  /**
+   * reset
+   * @memberof Resetable
+   * @returns {void}
+   */
   reset: () => void;
 };
 
-type Entity = Positionable &
+// type Entity = Positionable &
+//   Sizeable &
+//   Rotatable &
+//   Scalable &
+//   Alphaable &
+//   Deadable &
+//   Renderable &
+//   Updateable;
+
+// type EntityContainer = Positionable &
+//   Updateable & {
+//     children: Array<Entity | EntityContainer>;
+//     size: number;
+//   };
+
+type EntityType = Positionable &
   Sizeable &
   Rotatable &
   Scalable &
   Alphaable &
   Deadable &
   Renderable &
-  Updateable &
-  Resetable;
+  Updateable;
 
-type EntityContainer = Positionable &
-  Updateable &
-  Resetable & {
-    children: Array<Entity | EntityContainer>;
+type EntityContainerType = Positionable &
+  Updateable & {
+    children: Array<EntityType | EntityContainerType>;
+    size: number;
   };
 
 export {
+  Locateable,
   Positionable,
   Sizeable,
   Rotatable,
@@ -110,6 +103,8 @@ export {
   Renderable,
   Updateable,
   Resetable,
-  Entity,
-  EntityContainer,
+  // Entity,
+  // EntityContainer,
+  EntityType,
+  EntityContainerType,
 };

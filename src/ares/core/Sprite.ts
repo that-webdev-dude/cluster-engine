@@ -1,14 +1,14 @@
+import { IEntityConfig } from "./Entity";
 import Assets from "./Assets";
 import Entity from "./Entity";
 import Vector from "../tools/Vector";
-import { EntityConfig } from "./Entity";
 
-type SpriteConfig = EntityConfig & { textureURL: string };
+type SpriteConfig = IEntityConfig & { textureURL: string };
 
 class Sprite extends Entity {
   image: HTMLImageElement;
 
-  constructor(config: EntityConfig & { textureURL: string }) {
+  constructor(config: IEntityConfig & { textureURL: string }) {
     const { textureURL, ...superConfig } = config;
     super({ ...superConfig, position: new Vector(0, 0) });
     this.image = Assets.image(textureURL);
@@ -20,6 +20,10 @@ class Sprite extends Entity {
 
   get height(): number {
     return this.image.height * this.scale.y;
+  }
+
+  public update(dt: number, t: number): void {
+    // do nothing
   }
 
   public render(context: CanvasRenderingContext2D): void {

@@ -1,15 +1,19 @@
+import { EntityType } from "../types";
 import Vector from "../tools/Vector";
-import { IEntity } from "../types";
 
-type EntityConfig = {
+interface IEntity extends EntityType {}
+
+interface IEntityConfig {
   position?: Vector;
   anchor?: Vector;
-  scale?: Vector;
-  pivot?: Vector;
+  height?: number;
+  width?: number;
   angle?: number;
+  pivot?: Vector;
+  scale?: Vector;
   alpha?: number;
   dead?: boolean;
-};
+}
 
 const ENTITY_DEFAULTS = {
   position: new Vector(0, 0),
@@ -22,17 +26,6 @@ const ENTITY_DEFAULTS = {
 };
 
 class Entity implements IEntity {
-  // static hitTest(a: Entity, b: Entity): boolean {
-  //   const hitBoundsA = a.hitBounds;
-  //   const hitBoundsB = b.hitBounds;
-  //   return (
-  //     hitBoundsA.x < hitBoundsB.x + hitBoundsB.width &&
-  //     hitBoundsA.x + hitBoundsA.width > hitBoundsB.x &&
-  //     hitBoundsA.y < hitBoundsB.y + hitBoundsB.height &&
-  //     hitBoundsA.y + hitBoundsA.height > hitBoundsB.y
-  //   );
-  // }
-
   public position: Vector;
   public anchor: Vector;
   public scale: Vector;
@@ -41,7 +34,7 @@ class Entity implements IEntity {
   public alpha: number;
   public dead: boolean;
 
-  constructor(config: EntityConfig = {}) {
+  constructor(config: IEntityConfig = {}) {
     const { position, anchor, scale, pivot, angle, alpha, dead } = {
       ...ENTITY_DEFAULTS,
       ...config,
@@ -64,61 +57,10 @@ class Entity implements IEntity {
     return 0;
   }
 
-  // /**
-  //  * Returns the center of the entity
-  //  * @returns {Vector}
-  //  * @memberof Entity
-  //  */
-  // get center(): Vector {
-  //   return new Vector(
-  //     this.position.x + this.width / 2,
-  //     this.position.y + this.height / 2
-  //   );
-  // }
-
-  // /**
-  //  * Returns the hitbox of the entity
-  //  * @returns {{ x: number; y: number; width: number; height: number }}
-  //  * @memberof Entity
-  //  */
-  // get hitBox(): {
-  //   x: number;
-  //   y: number;
-  //   width: number;
-  //   height: number;
-  // } {
-  //   return {
-  //     x: this.position.x,
-  //     y: this.position.y,
-  //     width: this.width,
-  //     height: this.height,
-  //   };
-  // }
-
-  // /**
-  //  * Returns the hitbounds of the entity
-  //  * @returns {{ x: number; y: number; width: number; height: number }}
-  //  * @memberof Entity
-  //  */
-  // get hitBounds(): {
-  //   x: number;
-  //   y: number;
-  //   width: number;
-  //   height: number;
-  // } {
-  //   const { position, hitBox } = this;
-  //   return {
-  //     x: position.x + hitBox.x,
-  //     y: position.y + hitBox.y,
-  //     width: hitBox.width,
-  //     height: hitBox.height,
-  //   };
-  // }
-
   public render(context: CanvasRenderingContext2D) {}
 
   public update(delta: number, elapsed: number) {}
 }
 
-export type { EntityConfig };
+export { Entity, IEntity, IEntityConfig, ENTITY_DEFAULTS };
 export default Entity;
