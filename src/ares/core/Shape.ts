@@ -32,6 +32,7 @@ class Shape implements IShape {
   public fill: string;
   public stroke: string;
   public lineWidth: number;
+  public hitbox?: { x: number; y: number; width: number; height: number };
 
   constructor({
     position = new Vector(),
@@ -57,13 +58,13 @@ class Shape implements IShape {
     this.lineWidth = lineWidth;
   }
 
-  get width(): number {
-    return 0;
-  }
+  // get width(): number {
+  //   return 0;
+  // }
 
-  get height(): number {
-    return 0;
-  }
+  // get height(): number {
+  //   return 0;
+  // }
 
   public render(ctx: CanvasRenderingContext2D) {}
 }

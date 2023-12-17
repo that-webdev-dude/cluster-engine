@@ -11,8 +11,8 @@ type Positionable = {
 };
 
 type Sizeable = {
-  width: number;
-  height: number;
+  width?: number;
+  height?: number;
 };
 
 type Rotatable = {
@@ -32,13 +32,11 @@ type Deadable = {
   dead: boolean;
 };
 
+type Collidable = {
+  hitbox?: Locateable & Sizeable;
+};
+
 type Renderable = {
-  /**
-   * render
-   * @param {CanvasRenderingContext2D} context
-   * @memberof Renderable
-   * @returns {void}
-   */
   render: (context: CanvasRenderingContext2D) => void;
 };
 
@@ -47,30 +45,8 @@ type Updateable = {
 };
 
 type Resetable = {
-  /**
-   * reset
-   * @memberof Resetable
-   * @returns {void}
-   */
   reset: () => void;
 };
-
-// type EntityType = Positionable &
-//   Sizeable &
-//   Rotatable &
-//   Scalable &
-//   Alphaable &
-//   Deadable &
-//   Renderable &
-//   Updateable;
-
-// type EntityContainerType = Positionable &
-//   Updateable & {
-//     add: (entity: EntityType | EntityContainerType) => void;
-//     remove: (entity: EntityType | EntityContainerType) => void;
-//     children: Array<EntityType | EntityContainerType>;
-//     size: number;
-//   };
 
 type EntityType = Positionable &
   Sizeable &
@@ -78,9 +54,11 @@ type EntityType = Positionable &
   Scalable &
   Alphaable &
   Deadable &
+  Collidable &
   Renderable;
 
 type EntityContainerType = Positionable &
+  Sizeable &
   Updateable & {
     add: (entity: EntityType | EntityContainerType) => void;
     remove: (entity: EntityType | EntityContainerType) => void;
@@ -96,6 +74,7 @@ export {
   Scalable,
   Alphaable,
   Deadable,
+  Collidable,
   Renderable,
   Updateable,
   Resetable,

@@ -11,6 +11,21 @@ class Renderer {
   readonly view: HTMLCanvasElement;
   readonly context: CanvasRenderingContext2D;
 
+  // constructor({ height = 640, width = 832 }: RendererConfig = {}) {
+  //   const canvas = document.createElement("canvas");
+  //   const context = canvas.getContext("2d");
+  //   if (!context) {
+  //     throw new Error("Failed to get 2D context");
+  //   }
+
+  //   this.context = context;
+  //   this.height = canvas.height = height;
+  //   this.width = canvas.width = width;
+  //   this.view = canvas;
+
+  //   this._init();
+  // }
+
   constructor({ height = 640, width = 832 }: RendererConfig = {}) {
     const canvas = document.createElement("canvas");
     const context = canvas.getContext("2d");
@@ -18,9 +33,16 @@ class Renderer {
       throw new Error("Failed to get 2D context");
     }
 
+    const devicePixelRatio = window.devicePixelRatio || 1;
+    canvas.width = width * devicePixelRatio;
+    canvas.height = height * devicePixelRatio;
+    canvas.style.width = `${width}px`;
+    canvas.style.height = `${height}px`;
+    context.scale(devicePixelRatio, devicePixelRatio);
+
     this.context = context;
-    this.height = canvas.height = height;
-    this.width = canvas.width = width;
+    this.height = canvas.height;
+    this.width = canvas.width;
     this.view = canvas;
 
     this._init();

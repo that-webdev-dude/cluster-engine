@@ -19,7 +19,7 @@ class Player extends Container {
     super();
     this._input = input;
     this._speed = 200;
-    this._ship = new Ship();
+    this._ship = new Ship(this);
     this._cannon = new Cannon({
       position: this.position,
       offset: new Vector(32, 16),
@@ -40,6 +40,19 @@ class Player extends Container {
 
   get cannon(): Cannon {
     return this._cannon;
+  }
+
+  get ship(): Ship {
+    return this._ship;
+  }
+
+  get hitbox(): { x: number; y: number; width: number; height: number } {
+    return {
+      x: 0,
+      y: 0,
+      width: this.width,
+      height: this.height,
+    };
   }
 
   public fire(): Bullet[] | null {

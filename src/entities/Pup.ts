@@ -14,6 +14,15 @@ class Pup extends TileSprite {
     });
   }
 
+  get hitbox(): { x: number; y: number; width: number; height: number } {
+    return {
+      x: 0,
+      y: 0,
+      width: this.width,
+      height: this.height,
+    };
+  }
+
   public update(dt: number, t: number): void {
     // Fluctuate the position in the y direction
     const fluctuationSpeed = 20; // Adjust this value to control the speed of fluctuation

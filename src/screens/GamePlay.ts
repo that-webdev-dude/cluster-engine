@@ -1,4 +1,5 @@
-import { Container, Scene, Camera, Cmath, Vector } from "../ares";
+import { Container, Scene, Camera, Cmath, Vector, Entity } from "../ares";
+import { EntityType } from "../ares/types";
 import Background from "../entities/Background";
 import Player from "../entities/Player";
 import Pup from "../entities/Pup";
@@ -74,6 +75,8 @@ class GamePlay extends Scene {
     // if (t > 10) {
     //   this._camera.add(new Pup(new Vector()));
     // }
+
+    Entity.hit(this._player, this._pup, () => console.log("hit"));
   }
 }
 

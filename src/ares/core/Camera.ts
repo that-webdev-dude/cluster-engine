@@ -56,19 +56,21 @@ class Camera extends Container {
   }
 
   get width(): number {
-    return this._viewSize.width;
+    return this._viewSize?.width || 0;
   }
 
   get height(): number {
-    return this._viewSize.height;
+    return this._viewSize?.height || 0;
   }
 
   private _setSubject(subject: FocusableEntity | null = null): void {
     if (!subject) return;
+    const { width, height } = subject;
+    if (!width || !height) return;
     this._subject = subject;
     this._offset.set(0, 0);
-    this._offset.x += subject.width / 2;
-    this._offset.y += subject.height / 2;
+    this._offset.x += width / 2;
+    this._offset.y += height / 2;
     if (subject.anchor) {
       this._offset.subtract(subject.anchor);
     }
@@ -112,18 +114,32 @@ class Camera extends Container {
       _easing,
       position,
     } = this;
-    const centeredX = _subject!.position.x + _offset.x - _viewSize.width / 2;
-    const maxX = _worldSize!.width - _viewSize.width;
+
+    const { width: viewSizeWidth, height: viewSizeHeight } = _viewSize;
+    const { width: worldSizeWidth, height: worldSizeHeight } = _worldSize;
+    const { width: trackerSizeWidth, height: trackerSizeHeight } = _trackerSize;
+
+    if (
+      !viewSizeWidth ||
+      !viewSizeHeight ||
+      !worldSizeWidth ||
+      !worldSizeHeight ||
+      !trackerSizeWidth ||
+      !trackerSizeHeight
+    )
+      return;
+
+    const centeredX = _subject!.position.x + _offset.x - viewSizeWidth / 2;
+    const maxX = worldSizeWidth - viewSizeWidth;
     let x = -Cmath.clamp(centeredX, 0, maxX);
 
-    const centeredY = _subject!.position.y + _offset.y - _viewSize.height / 2;
-    const maxY = _worldSize!.height - _viewSize.height;
+    const centeredY = _subject!.position.y + _offset.y - viewSizeHeight / 2;
+    const maxY = worldSizeHeight - viewSizeHeight;
     let y = -Cmath.clamp(centeredY, 0, maxY);
 
     if (track && _subject) {
-      if (Math.abs(centeredX + position.x) < _trackerSize.width) x = position.x;
-      if (Math.abs(centeredY + position.y) < _trackerSize.height)
-        y = position.y;
+      if (Math.abs(centeredX + position.x) < trackerSizeWidth) x = position.x;
+      if (Math.abs(centeredY + position.y) < trackerSizeHeight) y = position.y;
     }
 
     position.x = Cmath.mix(position.x, x, _easing);
