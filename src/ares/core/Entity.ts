@@ -2,7 +2,6 @@ import { EntityType } from "../types";
 import Vector from "../tools/Vector";
 
 interface IEntity extends EntityType {}
-
 interface IEntityConfig {
   position?: Vector;
   anchor?: Vector;
@@ -18,8 +17,8 @@ interface IEntityConfig {
 const ENTITY_DEFAULTS = {
   position: new Vector(0, 0),
   anchor: new Vector(0, 0),
-  scale: new Vector(1, 1),
   pivot: new Vector(0, 0),
+  scale: new Vector(1, 1),
   angle: 0,
   alpha: 1,
   dead: false,
@@ -63,4 +62,3 @@ class Entity implements IEntity {
 }
 
 export { Entity, IEntity, IEntityConfig, ENTITY_DEFAULTS };
-export default Entity;

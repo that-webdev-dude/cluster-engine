@@ -43,13 +43,6 @@ type Renderable = {
 };
 
 type Updateable = {
-  /**
-   * update
-   * @param {number} delta
-   * @param {number} elapsed
-   * @memberof Updateable
-   * @returns {void}
-   */
   update: (delta: number, elapsed: number) => void;
 };
 
@@ -62,7 +55,7 @@ type Resetable = {
   reset: () => void;
 };
 
-// type Entity = Positionable &
+// type EntityType = Positionable &
 //   Sizeable &
 //   Rotatable &
 //   Scalable &
@@ -71,9 +64,11 @@ type Resetable = {
 //   Renderable &
 //   Updateable;
 
-// type EntityContainer = Positionable &
+// type EntityContainerType = Positionable &
 //   Updateable & {
-//     children: Array<Entity | EntityContainer>;
+//     add: (entity: EntityType | EntityContainerType) => void;
+//     remove: (entity: EntityType | EntityContainerType) => void;
+//     children: Array<EntityType | EntityContainerType>;
 //     size: number;
 //   };
 
@@ -83,11 +78,12 @@ type EntityType = Positionable &
   Scalable &
   Alphaable &
   Deadable &
-  Renderable &
-  Updateable;
+  Renderable;
 
 type EntityContainerType = Positionable &
   Updateable & {
+    add: (entity: EntityType | EntityContainerType) => void;
+    remove: (entity: EntityType | EntityContainerType) => void;
     children: Array<EntityType | EntityContainerType>;
     size: number;
   };
@@ -103,8 +99,6 @@ export {
   Renderable,
   Updateable,
   Resetable,
-  // Entity,
-  // EntityContainer,
   EntityType,
   EntityContainerType,
 };

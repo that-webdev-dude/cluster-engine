@@ -1,16 +1,51 @@
-import { IEntityConfig } from "./Entity";
+import Animation from "./Animation";
 import Assets from "./Assets";
-import Entity from "./Entity";
 import Vector from "../tools/Vector";
+import { EntityType } from "../types";
 
-type SpriteConfig = IEntityConfig & { textureURL: string };
-
-class Sprite extends Entity {
+// SPRITE CLASS DEFINITION
+interface ISprite extends EntityType {
   image: HTMLImageElement;
+}
 
-  constructor(config: IEntityConfig & { textureURL: string }) {
-    const { textureURL, ...superConfig } = config;
-    super({ ...superConfig, position: new Vector(0, 0) });
+interface ISpriteConfig {
+  textureURL: string;
+  position?: Vector;
+  anchor?: Vector;
+  scale?: Vector;
+  pivot?: Vector;
+  angle?: number;
+  alpha?: number;
+  dead?: boolean;
+}
+
+class Sprite implements ISprite {
+  public position: Vector;
+  public anchor: Vector;
+  public scale: Vector;
+  public pivot: Vector;
+  public angle: number;
+  public alpha: number;
+  public dead: boolean;
+  readonly image: HTMLImageElement;
+
+  constructor({
+    textureURL,
+    position = new Vector(),
+    anchor = new Vector(),
+    scale = new Vector(1, 1),
+    pivot = new Vector(),
+    angle = 0,
+    alpha = 1,
+    dead = false,
+  }: ISpriteConfig) {
+    this.position = position;
+    this.anchor = anchor;
+    this.scale = scale;
+    this.pivot = pivot;
+    this.angle = angle;
+    this.alpha = alpha;
+    this.dead = dead;
     this.image = Assets.image(textureURL);
   }
 
@@ -22,14 +57,74 @@ class Sprite extends Entity {
     return this.image.height * this.scale.y;
   }
 
-  public update(dt: number, t: number): void {
-    // do nothing
-  }
-
-  public render(context: CanvasRenderingContext2D): void {
+  public render(context: CanvasRenderingContext2D) {
     context.drawImage(this.image, 0, 0);
   }
 }
 
-export type { SpriteConfig };
-export default Sprite;
+// TILESPRITE CLASS DEFINITION
+interface ITileSpriteConfig extends ISpriteConfig {
+  tileW: number;
+  tileH: number;
+  frame?: { x: number; y: number };
+}
+
+class TileSprite extends Sprite {
+  private _tileW: number;
+  private _tileH: number;
+  private _frame: { x: number; y: number };
+  readonly animation: Animation;
+
+  constructor({
+    tileW,
+    tileH,
+    frame = { x: 0, y: 0 },
+    ...superConfig
+  }: ITileSpriteConfig) {
+    super(superConfig);
+    this._tileW = tileW;
+    this._tileH = tileH;
+    this._frame = frame;
+    this.animation = new Animation({ frame: this._frame });
+  }
+
+  get frame(): { x: number; y: number } {
+    return this._frame;
+  }
+
+  set frame(frame: { x: number; y: number }) {
+    this._frame = frame;
+    this.animation.frame = frame;
+  }
+
+  get width(): number {
+    return this._tileW * this.scale.x;
+  }
+
+  get height(): number {
+    return this._tileH * this.scale.y;
+  }
+
+  public update(dt: number, t: number): void {
+    if (this.animation.length > 0) {
+      this.animation.update(dt);
+      this._frame = this.animation.frame;
+    }
+  }
+
+  render(context: CanvasRenderingContext2D): void {
+    context.drawImage(
+      this.image,
+      this._frame.x * this._tileW,
+      this._frame.y * this._tileH,
+      this._tileW,
+      this._tileH,
+      0,
+      0,
+      this._tileW,
+      this._tileH
+    );
+  }
+}
+
+export { Sprite, TileSprite };

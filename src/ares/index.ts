@@ -1,12 +1,12 @@
 // core
 export { default as Container } from "./core/Container";
-export { default as TileSprite } from "./core/TileSprite";
-export { default as Sprite } from "./core/Sprite";
+export { Sprite, TileSprite } from "./core/Sprite";
 export { default as Text } from "./core/Text";
 export { default as Game } from "./core/Game";
 export { default as Sound } from "./core/Sound";
 export { default as Camera } from "./core/Camera";
-export { Circle, Rect } from "./core/Shape";
+// export { Entity } from "./core/Entity";
+export { Rect, Circle } from "./core/Shape";
 
 // tools
 export { default as Cmath } from "./tools/Cmath";

@@ -1,13 +1,14 @@
-import { Container, Scene, Camera, Cmath } from "../ares";
+import { Container, Scene, Camera, Cmath, Vector } from "../ares";
 import Background from "../entities/Background";
 import Player from "../entities/Player";
 import Pup from "../entities/Pup";
 
 class GamePlay extends Scene {
+  private _background: Background;
   private _bullets: Container;
   private _player: Player;
   private _camera: Camera;
-  private _pup: Pup; // PUP DEV
+  private _pup: Pup;
 
   constructor(game: any) {
     super(game);
@@ -18,33 +19,25 @@ class GamePlay extends Scene {
     const camera = new Camera({
       viewSize: { width, height },
       worldSize: { width, height },
-      subject: player,
     });
-
-    // PUP DEV
-    const pup = new Pup();
-    pup.position.set(0, 0);
+    const pup = new Pup(new Vector(400, 100));
 
     camera.add(background);
-    camera.add(bullets);
     camera.add(player);
-    camera.add(pup); // PUP DEV
+    camera.add(bullets);
+    camera.add(pup);
     this.add(camera);
 
+    this._background = background;
     this._bullets = bullets;
     this._player = player;
     this._camera = camera;
-    this._pup = pup; // PUP DEV
-
-    // console.log(this._pup.hitBox);
-    this._pup.position.set(100, 0);
-    // console.log(this._pup.hitBox);
+    this._pup = pup;
   }
 
   update(dt: number, t: number) {
     super.update(dt, t);
     const { _player, game } = this;
-
     _player.position.x = Cmath.clamp(
       _player.position.x,
       24,
@@ -77,6 +70,10 @@ class GamePlay extends Scene {
         }
       }
     });
+
+    // if (t > 10) {
+    //   this._camera.add(new Pup(new Vector()));
+    // }
   }
 }
 

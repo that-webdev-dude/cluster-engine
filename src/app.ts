@@ -1,4 +1,4 @@
-import { Game, Vector } from "./ares";
+import { Game } from "./ares";
 import GamePlay from "./screens/GamePlay";
 
 // GAME
