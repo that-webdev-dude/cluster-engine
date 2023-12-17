@@ -1,5 +1,13 @@
 import { Locateable } from "../types";
 
+/**
+ * @class AnimationItem
+ * @description
+ * AnimationItem represents a single animation, which is a sequence of frames (Locateable[]). Each frame is an object with x and y properties.
+ * The animation has a rate (_rate) which determines how fast it progresses, and a callback function (_onCompleted) that is called when the animation completes.
+ * The update method advances the animation by a given time delta (dt), and if the current time exceeds the rate,
+ * it advances to the next frame and calls the completion callback if it's the last frame.
+ */
 class AnimationItem {
   private _onCompleted: () => void;
   private _frames: Locateable[];
@@ -47,6 +55,14 @@ class AnimationItem {
   }
 }
 
+/**
+ * @class Animation
+ * @description
+ * Animation is a container for multiple AnimationItem instances.
+ * It has a target entity (_targetEntity) which is an object with a frame property that gets updated with the current frame of the current animation.
+ * The add method adds a new animation to the container. The update method updates the current animation and applies its current frame to the target entity.
+ * The play method starts a specific animation, and the stop method stops the current animation.
+ */
 class Animation {
   private _animations: { [key: string]: AnimationItem };
   private _targetEntity: { frame: Locateable };

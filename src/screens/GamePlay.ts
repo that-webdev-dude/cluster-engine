@@ -51,6 +51,7 @@ class GamePlay extends Scene {
     );
 
     if (game.keyboard.action) {
+      // this._camera.shake();
       const bullets = _player.fire();
       if (bullets) {
         bullets.forEach((bullet) => {

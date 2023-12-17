@@ -118,6 +118,7 @@ class Cannon {
 
 export {
   Cannon,
+  ShootingStrategy,
   DefaultShootingStrategy,
   DoubleShootingStrategy,
   // TripleShootingStrategy,
