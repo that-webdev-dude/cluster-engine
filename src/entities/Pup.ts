@@ -1,7 +1,10 @@
 import { TileSprite, Vector } from "../ares";
 import PupsImageURL from "../images/pups.png";
+import { DoubleShootingStrategy } from "./Cannon";
 
 class Pup extends TileSprite {
+  private _payload: DoubleShootingStrategy;
+
   constructor(position: Vector) {
     super({
       textureURL: PupsImageURL,
@@ -11,7 +14,10 @@ class Pup extends TileSprite {
       scale: new Vector(0.5, 0.5),
       pivot: new Vector(32, 32),
       position,
+      dead: false,
     });
+
+    this._payload = new DoubleShootingStrategy();
   }
 
   get hitbox(): { x: number; y: number; width: number; height: number } {
@@ -21,6 +27,10 @@ class Pup extends TileSprite {
       width: this.width,
       height: this.height,
     };
+  }
+
+  get payload(): DoubleShootingStrategy {
+    return this._payload;
   }
 
   public update(dt: number, t: number): void {

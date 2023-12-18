@@ -11,8 +11,8 @@ type Positionable = {
 };
 
 type Sizeable = {
-  width?: number;
-  height?: number;
+  width?: number; // made optional for now (will be required in the derived classes)
+  height?: number; // made optional for now (will be required in the derived classes)
 };
 
 type Rotatable = {
@@ -33,7 +33,7 @@ type Deadable = {
 };
 
 type Collidable = {
-  hitbox?: Locateable & Sizeable;
+  hitbox?: Locateable & Sizeable; // made optional for now
 };
 
 type Renderable = {

@@ -9,7 +9,7 @@ interface IEntityContainerConfig {
 }
 
 class Container implements IEntityContainer {
-  readonly children: Array<EntityType | EntityContainerType>;
+  public children: Array<EntityType | EntityContainerType>;
   readonly position: Vector;
   readonly anchor: Vector;
 
@@ -35,16 +35,12 @@ class Container implements IEntityContainer {
   }
 
   public update(delta: number, elapsed: number) {
-    for (let i = 0; i < this.children.length; i++) {
-      const child = this.children[i];
+    this.children = this.children.filter((child) => {
       if ("update" in child) {
         child.update(delta, elapsed);
       }
-      if ("dead" in child && child.dead) {
-        this.children.splice(i, 1);
-        i--;
-      }
-    }
+      return !("dead" in child && child.dead);
+    });
   }
 }
 

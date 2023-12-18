@@ -1,5 +1,4 @@
 import { Container, Scene, Camera, Cmath, Vector, Entity } from "../ares";
-import { EntityType } from "../ares/types";
 import Background from "../entities/Background";
 import Player from "../entities/Player";
 import Pup from "../entities/Pup";
@@ -20,6 +19,7 @@ class GamePlay extends Scene {
     const camera = new Camera({
       viewSize: { width, height },
       worldSize: { width, height },
+      subject: player,
     });
     const pup = new Pup(new Vector(400, 100));
 
@@ -51,7 +51,6 @@ class GamePlay extends Scene {
     );
 
     if (game.keyboard.action) {
-      // this._camera.shake();
       const bullets = _player.fire();
       if (bullets) {
         bullets.forEach((bullet) => {
@@ -73,11 +72,16 @@ class GamePlay extends Scene {
       }
     });
 
-    // if (t > 10) {
-    //   this._camera.add(new Pup(new Vector()));
-    // }
-
-    Entity.hit(this._player, this._pup, () => console.log("hit"));
+    if (!this._pup.dead) {
+      // this will always be true as the pup reference is never null
+      // so we need to check if the pup is dead first
+      Entity.hit(this._player, this._pup, () => {
+        const payload = this._pup.payload;
+        this._player.cannon.shootingStrategy = payload;
+        this._camera.shake();
+        this._pup.dead = true;
+      });
+    }
   }
 }
 
