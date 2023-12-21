@@ -1,4 +1,4 @@
-interface EngineOptions {
+interface IEngineConfig {
   update?: (dt: number, t: number) => void;
   render?: () => void;
   updateCb?: (dt: number, t: number) => void;
@@ -20,7 +20,7 @@ class Engine {
     update = () => {},
     render = () => {},
     fps = 60,
-  }: EngineOptions = {}) {
+  }: IEngineConfig = {}) {
     this._frameRequest = null;
     this._currentTime = null;
     this._elapsedTime = 0;

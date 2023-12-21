@@ -13,6 +13,7 @@ export { default as Pool } from "./tools/Pool";
 export { default as Scene } from "./tools/Scene";
 export { default as Vector } from "./tools/Vector";
 export { default as Entity } from "./tools/Entity";
+export { default as Timer } from "./tools/Timer";
 
 // input
 export { default as Keyboard } from "./input/Keyboard";

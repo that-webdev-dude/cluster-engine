@@ -1,20 +1,23 @@
 import { Scene, Game, Vector, Text, Timer } from "../ares";
 import Background from "../entities/Background";
 
-class GameTitle extends Scene {
-  public timer: Timer;
-  public gameActionText: Text;
+class GameWin extends Scene {
+  timer: Timer;
+  gameActionText: Text;
 
   constructor(
     game: Game,
-    transitions: {
+    transitions?: {
       toNext: () => void;
     }
   ) {
+    super(game, transitions);
     const { width, height } = game;
+
     const background = new Background({ width, height });
-    const gameTitleText = new Text({
-      text: game.title,
+
+    const gameWinText = new Text({
+      text: "You Win!",
       align: "center",
       fill: "white",
       font: '52px "Press Start 2P"',
@@ -23,13 +26,15 @@ class GameTitle extends Scene {
       alpha: 0,
       position: new Vector(width / 2, height / 2 - 200),
     });
+
     const gameActionText = new Text({
-      text: "Press Enter to Start",
+      text: "Press Enter to Main Menu",
       align: "center",
       fill: "white",
       font: '20px "Press Start 2P"',
       position: new Vector(width / 2, height / 2 + 150),
     });
+
     const gameFooterText = new Text({
       text: "@that.webdev.dude 2023",
       align: "center",
@@ -39,9 +44,8 @@ class GameTitle extends Scene {
       position: new Vector(width / 2, height - 100),
     });
 
-    super(game, transitions);
     this.add(background);
-    this.add(gameTitleText);
+    this.add(gameWinText);
     this.add(gameActionText);
     this.add(gameFooterText);
 
@@ -49,7 +53,7 @@ class GameTitle extends Scene {
     this.timer = new Timer({
       duration: 1,
       onTick: (ratio: number) => {
-        gameTitleText.alpha = ratio;
+        gameWinText.alpha = ratio;
       },
     });
   }
@@ -65,7 +69,9 @@ class GameTitle extends Scene {
       this.game.keyboard.active = false;
       this.transitions.toNext();
     }
+
+    console.log(this.game.keyboard.active);
   }
 }
 
-export default GameTitle;
+export default GameWin;

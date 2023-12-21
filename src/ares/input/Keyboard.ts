@@ -5,6 +5,7 @@ type KeyMap = {
 class KeyboardInput {
   private _keys: KeyMap;
   private _preventDefaultKeys: Set<string>;
+  public active: boolean;
 
   constructor() {
     this._keys = {};
@@ -15,6 +16,8 @@ class KeyboardInput {
       "ArrowDown",
       "Space",
     ]);
+    this.active = true;
+
     document.addEventListener("keydown", this._handleKeyDown.bind(this));
     document.addEventListener("keyup", this._handleKeyUp.bind(this));
   }
@@ -27,6 +30,7 @@ class KeyboardInput {
   }
 
   private _handleKeyUp(e: KeyboardEvent): void {
+    if (!this.active) this.active = true;
     if (this._preventDefaultKeys.has(e.code)) {
       e.preventDefault();
     }
@@ -52,9 +56,11 @@ class KeyboardInput {
   }
 
   key(key: string, value?: boolean): boolean {
+    if (!this.active) return false;
     if (value !== undefined) {
       this._keys[key] = value;
     }
+
     return this._keys[key] || false;
   }
 

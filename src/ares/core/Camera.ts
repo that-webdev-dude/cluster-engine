@@ -1,79 +1,69 @@
-import { Sizeable, Positionable } from "../types";
+import { Positionable, Measurable } from "../types";
 import Container from "./Container";
 import Vector from "../tools/Vector";
 import Cmath from "../tools/Cmath";
 
-type FocusableEntity = Sizeable & Positionable;
 type CameraConfig = {
-  subject?: FocusableEntity | null;
-  viewSize: Sizeable;
-  worldSize?: Sizeable | null;
-  trackerSize?: Sizeable;
-};
-
-const CAMERA_DEFAULTS = {
-  trackerSize: { width: 32, height: 32 },
+  subject?: (Positionable & Measurable) | null;
+  viewSize: Measurable;
+  worldSize?: Measurable | null;
+  trackerSize?: Measurable;
 };
 
 class Camera extends Container {
-  private _subject: FocusableEntity | null;
-  private _viewSize: Sizeable;
-  private _worldSize: Sizeable;
-  private _trackerSize: Sizeable;
+  private _subject: (Positionable & Measurable) | null;
+  private _viewSize: Measurable;
+  private _worldSize: Measurable;
+  private _trackerSize: Measurable;
   private _offset: Vector;
-
   private _easing: number;
-
   private _shakePower: number;
   private _shakeDecay: number;
   private _shakeLast: Vector;
 
   constructor(config: CameraConfig) {
-    const { subject, viewSize, worldSize, trackerSize } = {
-      ...CAMERA_DEFAULTS,
+    const {
+      subject = null,
+      viewSize,
+      worldSize = null,
+      trackerSize = { width: 32, height: 32 },
+    } = {
       ...config,
     };
 
     super();
-    this._subject = null;
+    this._subject = subject;
     this._viewSize = viewSize;
     this._worldSize = worldSize || viewSize;
     this._trackerSize = trackerSize;
     this._offset = new Vector();
-
-    // EFFECT: EASING
-    this._easing = 0.04;
-
-    // EFFECT: SHAKE
-    this._shakePower = 0;
+    this._easing = 0.04; // EFFECT: EASING
+    this._shakePower = 0; // EFFECT: SHAKE
     this._shakeDecay = 0;
     this._shakeLast = new Vector();
-
     // EFFECT: FLASH
-    // ...
 
     this._setSubject(subject);
   }
 
   get width(): number {
-    return this._viewSize?.width || 0;
+    return this._viewSize.width;
   }
 
   get height(): number {
-    return this._viewSize?.height || 0;
+    return this._viewSize.height;
   }
 
-  private _setSubject(subject: FocusableEntity | null = null): void {
+  private _setSubject(
+    subject: (Positionable & Measurable) | null = null
+  ): void {
     if (!subject) return;
     const { width, height } = subject;
-    if (!width || !height) return;
     this._subject = subject;
     this._offset.set(0, 0);
     this._offset.x += width / 2;
     this._offset.y += height / 2;
-    if (subject.anchor) {
-      this._offset.subtract(subject.anchor);
-    }
+    this._offset.subtract(subject.anchor);
   }
 
   // EFFECT: SHAKE
@@ -88,13 +78,10 @@ class Camera extends Container {
     if (_shakePower <= 0) {
       return;
     }
-    // do shake!
-    // prettier-ignore
     _shakeLast.set(
-      Cmath.randf(-_shakePower, _shakePower), 
+      Cmath.randf(-_shakePower, _shakePower),
       Cmath.randf(-_shakePower, _shakePower)
     );
-
     position.add(_shakeLast);
     this._shakePower -= this._shakeDecay * dt;
   }
@@ -105,41 +92,31 @@ class Camera extends Container {
   }
 
   private _focus(track: boolean = true) {
+    if (!this._subject) return;
     const {
+      _trackerSize,
+      _worldSize,
+      _viewSize,
       _subject,
       _offset,
-      _trackerSize,
-      _viewSize,
-      _worldSize,
       _easing,
       position,
     } = this;
 
-    const { width: viewSizeWidth, height: viewSizeHeight } = _viewSize;
-    const { width: worldSizeWidth, height: worldSizeHeight } = _worldSize;
-    const { width: trackerSizeWidth, height: trackerSizeHeight } = _trackerSize;
-
-    if (
-      !viewSizeWidth ||
-      !viewSizeHeight ||
-      !worldSizeWidth ||
-      !worldSizeHeight ||
-      !trackerSizeWidth ||
-      !trackerSizeHeight
-    )
-      return;
-
-    const centeredX = _subject!.position.x + _offset.x - viewSizeWidth / 2;
-    const maxX = worldSizeWidth - viewSizeWidth;
+    const centeredX = _subject.position.x + _offset.x - _viewSize.width / 2;
+    const maxX = _worldSize.width - _viewSize.width;
     let x = -Cmath.clamp(centeredX, 0, maxX);
-
-    const centeredY = _subject!.position.y + _offset.y - viewSizeHeight / 2;
-    const maxY = worldSizeHeight - viewSizeHeight;
+    const centeredY = _subject.position.y + _offset.y - _viewSize.height / 2;
+    const maxY = _worldSize.height - _viewSize.height;
     let y = -Cmath.clamp(centeredY, 0, maxY);
 
-    if (track && _subject) {
-      if (Math.abs(centeredX + position.x) < trackerSizeWidth) x = position.x;
-      if (Math.abs(centeredY + position.y) < trackerSizeHeight) y = position.y;
+    if (track) {
+      if (Math.abs(centeredX + position.x) < _trackerSize.width) {
+        x = position.x;
+      }
+      if (Math.abs(centeredY + position.y) < _trackerSize.height) {
+        y = position.y;
+      }
     }
 
     position.x = Cmath.mix(position.x, x, _easing);
@@ -149,9 +126,7 @@ class Camera extends Container {
   update(dt: number, t: number): void {
     this._unshake();
     super.update(dt, t);
-    if (this._subject) {
-      this._focus(true);
-    }
+    this._focus(true);
     this._shake(dt);
     // this._flash(dt);
   }

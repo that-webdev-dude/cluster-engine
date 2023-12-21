@@ -15,6 +15,15 @@ type Sizeable = {
   height?: number; // made optional for now (will be required in the derived classes)
 };
 
+// type Sizeable = {
+//   size: number;
+// };
+
+type Measurable = {
+  width: number;
+  height: number;
+};
+
 type Rotatable = {
   pivot: Vector;
   angle: number;
@@ -58,10 +67,8 @@ type EntityType = Positionable &
   Renderable;
 
 type EntityContainerType = Positionable &
-  Sizeable &
-  Updateable & {
-    add: (entity: EntityType | EntityContainerType) => void;
-    remove: (entity: EntityType | EntityContainerType) => void;
+  Updateable &
+  Deadable & {
     children: Array<EntityType | EntityContainerType>;
     size: number;
   };
@@ -69,6 +76,7 @@ type EntityContainerType = Positionable &
 export {
   Locateable,
   Positionable,
+  Measurable,
   Sizeable,
   Rotatable,
   Scalable,

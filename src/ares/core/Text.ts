@@ -8,8 +8,10 @@ interface IText extends EntityType {
 
 interface ITextConfig {
   text?: string;
-  fill?: string;
   font?: string;
+  fill?: string;
+  stroke?: string;
+  lineWidth?: number;
   align?: CanvasTextAlign;
   position?: Vector;
   anchor?: Vector;
@@ -22,8 +24,10 @@ interface ITextConfig {
 
 class Text implements IText {
   public text: string;
-  public fill: string;
   public font: string;
+  public fill: string;
+  public stroke: string;
+  public lineWidth: number;
   public align: CanvasTextAlign;
   public position: Vector;
   public anchor: Vector;
@@ -35,8 +39,10 @@ class Text implements IText {
 
   constructor({
     text = "text",
-    fill = "black",
     font = '16px "Press Start 2P"',
+    fill = "black",
+    stroke = "transparent",
+    lineWidth = 0,
     align = "center" as CanvasTextAlign,
     position = new Vector(),
     anchor = new Vector(),
@@ -47,8 +53,10 @@ class Text implements IText {
     dead = false,
   }: ITextConfig) {
     this.text = text;
-    this.fill = fill;
     this.font = font;
+    this.fill = fill;
+    this.stroke = stroke;
+    this.lineWidth = lineWidth;
     this.align = align;
     this.position = position;
     this.anchor = anchor;
@@ -59,19 +67,14 @@ class Text implements IText {
     this.dead = dead;
   }
 
-  // get width(): number {
-  //   return 0;
-  // }
-
-  // get height(): number {
-  //   return 0;
-  // }
-
   public render(context: CanvasRenderingContext2D) {
-    const { font, fill, text, align } = this;
+    const { font, fill, stroke, lineWidth, text, align } = this;
     context.font = font;
     context.fillStyle = fill;
+    context.strokeStyle = stroke;
+    context.lineWidth = lineWidth;
     context.textAlign = align;
+    context.strokeText(text, 0, 0);
     context.fillText(text, 0, 0);
   }
 }

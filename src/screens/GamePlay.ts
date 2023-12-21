@@ -1,19 +1,29 @@
-import { Container, Scene, Camera, Cmath, Vector, Entity } from "../ares";
+import { Container, Scene, Camera, Cmath, Pool, Game } from "../ares";
 import Background from "../entities/Background";
+import Asteroid from "../entities/Asteroid";
 import Player from "../entities/Player";
-import Pup from "../entities/Pup";
+
+const asteroidsPool = new Pool(() => new Asteroid(), 10);
 
 class GamePlay extends Scene {
   private _background: Background;
+  private _asteroids: Container;
   private _bullets: Container;
   private _player: Player;
   private _camera: Camera;
-  private _pup: Pup;
 
-  constructor(game: any) {
-    super(game);
+  constructor(
+    game: Game,
+    transitions?: {
+      toNext?: () => void;
+      toStart?: () => void;
+      toEnd?: () => void;
+    }
+  ) {
+    super(game, transitions);
     const { width, height } = game;
     const background = new Background({ width, height });
+    const asteroids = new Container();
     const bullets = new Container();
     const player = new Player({ input: game.keyboard });
     const camera = new Camera({
@@ -21,24 +31,28 @@ class GamePlay extends Scene {
       worldSize: { width, height },
       subject: player,
     });
-    const pup = new Pup(new Vector(400, 100));
 
     camera.add(background);
-    camera.add(player);
+    camera.add(asteroids);
     camera.add(bullets);
-    camera.add(pup);
+    camera.add(player);
     this.add(camera);
 
     this._background = background;
+    this._asteroids = asteroids;
     this._bullets = bullets;
     this._player = player;
     this._camera = camera;
-    this._pup = pup;
+
+    const asteroid = asteroidsPool.next();
+    asteroids.add(asteroid);
   }
 
   update(dt: number, t: number) {
     super.update(dt, t);
-    const { _player, game } = this;
+    const { _player, _bullets, game } = this;
+
+    // player positioning
     _player.position.x = Cmath.clamp(
       _player.position.x,
       24,
@@ -50,38 +64,50 @@ class GamePlay extends Scene {
       game.height - _player.height
     );
 
+    // player shooting
     if (game.keyboard.action) {
       const bullets = _player.fire();
       if (bullets) {
         bullets.forEach((bullet) => {
-          this._bullets.add(bullet);
+          _bullets.add(bullet);
         });
       }
     }
 
-    this._bullets.children.forEach((bullet) => {
+    // bullets rendering
+    _bullets.children.forEach((bullet) => {
       if (
         bullet.position.x > game.width ||
         bullet.position.x < 0 ||
         bullet.position.y > game.height ||
         bullet.position.y < 0
       ) {
-        if ("dead" in bullet) {
-          bullet.dead = true;
-        }
+        bullet.dead = true;
       }
     });
 
-    if (!this._pup.dead) {
-      // this will always be true as the pup reference is never null
-      // so we need to check if the pup is dead first
-      Entity.hit(this._player, this._pup, () => {
-        const payload = this._pup.payload;
-        this._player.cannon.shootingStrategy = payload;
-        this._camera.shake();
-        this._pup.dead = true;
-      });
+    // quit to main menu
+    if (this.game.keyboard.key("KeyQ")) {
+      this.game.keyboard.active = false;
+      this.transitions.toStart();
     }
+
+    // go to win screen
+    if (this.game.keyboard.key("KeyW")) {
+      this.game.keyboard.active = false;
+      this.transitions.toEnd();
+    }
+
+    // if (!this._pup.dead) {
+    //   // this will always be true as the pup reference is never null
+    //   // so we need to check if the pup is dead first
+    //   Entity.hit(this._player, this._pup, () => {
+    //     const payload = this._pup.payload;
+    //     this._player.cannon.shootingStrategy = payload;
+    //     this._camera.shake();
+    //     this._pup.dead = true;
+    //   });
+    // }
   }
 }
 
