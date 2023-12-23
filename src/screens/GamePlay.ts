@@ -1,9 +1,30 @@
-import { Container, Scene, Camera, Cmath, Pool, Game } from "../ares";
+import { Container, Scene, Camera, Cmath, Pool, Game, Rect } from "../ares";
 import Background from "../entities/Background";
 import Asteroid from "../entities/Asteroid";
 import Player from "../entities/Player";
+import Dialog from "../dialogs/Dialog";
 
-const asteroidsPool = new Pool(() => new Asteroid(), 10);
+// class GameOverDialog extends Dialog {
+//   constructor() {
+//     super({
+//       width: 100,
+//       height: 100,
+//       onUpdate: () => {},
+//       onClose: () => {},
+//     });
+
+//     this.add(
+//       new Rect({
+//         width: this.width,
+//         height: this.height,
+//         fill: "white",
+//         alpha: 0.5,
+//       })
+//     );
+//   }
+// }
+
+// const asteroidsPool = new Pool(() => new Asteroid(), 10);
 
 class GamePlay extends Scene {
   private _background: Background;
@@ -44,8 +65,10 @@ class GamePlay extends Scene {
     this._player = player;
     this._camera = camera;
 
-    const asteroid = asteroidsPool.next();
-    asteroids.add(asteroid);
+    // const asteroid = asteroidsPool.next();
+    // asteroids.add(asteroid);
+
+    // this.add(new GameOverDialog());
   }
 
   update(dt: number, t: number) {

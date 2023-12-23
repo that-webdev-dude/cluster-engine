@@ -93,6 +93,14 @@ class Rect extends Shape {
     return this._height * this.scale.y;
   }
 
+  set width(value: number) {
+    this._width = value;
+  }
+
+  set height(value: number) {
+    this._height = value;
+  }
+
   public render(context: CanvasRenderingContext2D) {
     context.beginPath();
     context.rect(0, 0, this.width, this.height);
