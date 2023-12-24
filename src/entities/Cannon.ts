@@ -75,7 +75,7 @@ type CannonConfig = {
 };
 
 class Cannon {
-  private _parentPosition: Vector;
+  private _ownerPosition: Vector;
   private _offset: Vector;
   private _position: Vector;
   private _reloadTime: number;
@@ -87,7 +87,7 @@ class Cannon {
     this._position = new Vector();
     this._offset = new Vector(offset.x, offset.y);
     this._reloadTime = 0;
-    this._parentPosition = position;
+    this._ownerPosition = position;
   }
 
   get ready(): boolean {
@@ -116,8 +116,8 @@ class Cannon {
 
   public update(dt: number): void {
     this._position.set(
-      this._parentPosition.x + this._offset.x,
-      this._parentPosition.y + this._offset.y
+      this._ownerPosition.x + this._offset.x,
+      this._ownerPosition.y + this._offset.y
     );
     this._reloadTime -= dt;
   }

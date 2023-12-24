@@ -19,7 +19,7 @@ class Bullet extends TileSprite {
       damage,
       velocity,
       position,
-      scale = new Vector(0.5, 0.5),
+      scale = new Vector(1, 1),
     } = config;
     super({
       tileH: 12,

@@ -1,4 +1,4 @@
-import { Container, Keyboard, Vector } from "../ares";
+import { Cmath, Container, Keyboard, Vector } from "../ares";
 import Ship from "./Ship";
 import Bullet from "./Bullet";
 import {
@@ -8,11 +8,18 @@ import {
   // TripleShootingStrategy,
 } from "./Cannon";
 
+const MAX_HEALTH = 4;
+const MAX_LIVES = 3;
+const INVINCIBILITY_TIME = 3;
+
 class Player extends Container {
   private _input: Keyboard;
   private _cannon: Cannon;
   private _ship: Ship;
   private _speed: number;
+  private _invincibility: number;
+  public health: number;
+  public lives: number;
 
   constructor(config: { input: Keyboard }) {
     const { input } = config;
@@ -24,6 +31,10 @@ class Player extends Container {
       position: this.position,
       offset: new Vector(32, 16),
     });
+
+    this._invincibility = INVINCIBILITY_TIME;
+    this.health = MAX_HEALTH;
+    this.lives = MAX_LIVES;
 
     this.add(this._ship);
 
@@ -46,6 +57,10 @@ class Player extends Container {
     return this._ship;
   }
 
+  get invincible(): boolean {
+    return this._invincibility > 0;
+  }
+
   get hitbox(): { x: number; y: number; width: number; height: number } {
     return {
       x: 0,
@@ -57,6 +72,22 @@ class Player extends Container {
 
   public fire(): Bullet[] | null {
     return this._cannon.ready ? this._cannon.fire() : null;
+  }
+
+  public hit(damage: number, onHit: () => void = () => {}) {
+    if (!this.invincible) {
+      this._invincibility = INVINCIBILITY_TIME;
+      this.health -= damage;
+    }
+    onHit();
+  }
+
+  public die(onDie: () => void) {
+    if (this.health <= 0) {
+      this.health = MAX_HEALTH;
+      this.lives--;
+    }
+    onDie();
   }
 
   public update(dt: number, t: number): void {
@@ -76,6 +107,13 @@ class Player extends Container {
     // }
 
     this._cannon.update(dt);
+
+    this._invincibility -= dt;
+    if (this._invincibility > 0) {
+      this._ship.alpha = Math.floor(this._invincibility * 10) % 2 === 0 ? 0 : 1;
+    } else {
+      this._ship.alpha = 1;
+    }
   }
 }
 

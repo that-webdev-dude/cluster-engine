@@ -48,6 +48,7 @@ const startGameTitle = () => {
 
 export default () => {
   startGameTitle();
+  // startGamePlay();
   game.start();
 };
 
