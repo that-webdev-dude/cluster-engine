@@ -1,16 +1,13 @@
-import { Cmath, Container, Keyboard, Vector } from "../ares";
+import { Container, Keyboard, Vector, Pool } from "../ares";
+import { Bullet } from "./Bullet";
+import { Cannon } from "../lib/Cannon";
 import Ship from "./Ship";
-import Bullet from "./Bullet";
-import {
-  Cannon,
-  // DefaultShootingStrategy,
-  // DoubleShootingStrategy,
-  // TripleShootingStrategy,
-} from "./Cannon";
 
 const MAX_HEALTH = 4;
 const MAX_LIVES = 3;
 const INVINCIBILITY_TIME = 3;
+
+const bulletPool = new Pool<Bullet>(() => new Bullet({}));
 
 class Player extends Container {
   private _input: Keyboard;
@@ -28,8 +25,9 @@ class Player extends Container {
     this._speed = 200;
     this._ship = new Ship(this);
     this._cannon = new Cannon({
-      position: this.position,
-      offset: new Vector(32, 16),
+      offset: new Vector(this.width, this.height / 2 - 6),
+      owner: this,
+      pool: bulletPool,
     });
 
     this._invincibility = INVINCIBILITY_TIME;
@@ -41,6 +39,10 @@ class Player extends Container {
     this.position.set(100, 100);
   }
 
+  get invincible(): boolean {
+    return this._invincibility > 0;
+  }
+
   get width(): number {
     return this._ship.width;
   }
@@ -49,16 +51,12 @@ class Player extends Container {
     return this._ship.height;
   }
 
-  get cannon(): Cannon {
-    return this._cannon;
-  }
-
   get ship(): Ship {
     return this._ship;
   }
 
-  get invincible(): boolean {
-    return this._invincibility > 0;
+  get cannon(): Cannon {
+    return this._cannon;
   }
 
   get hitbox(): { x: number; y: number; width: number; height: number } {
@@ -99,12 +97,6 @@ class Player extends Container {
     if (this._input.y) {
       this.position.y += this._speed * dt * this._input.y;
     }
-
-    // if (this.position.x > 250) {
-    //   this._cannon.shootingStrategy = DoubleShootingStrategy;
-    // } else {
-    //   this._cannon.shootingStrategy = DefaultShootingStrategy;
-    // }
 
     this._cannon.update(dt);
 

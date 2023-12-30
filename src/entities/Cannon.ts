@@ -1,33 +1,59 @@
-import { Vector, Pool } from "../ares";
-import Bullet from "./Bullet";
+import { Vector, Pool, Cmath } from "../ares";
+import { Bullet } from "./Bullet";
 
-abstract class ShootingStrategy {
-  // protected _cannon: Cannon;
-  // constructor(cannon: Cannon) {
-  //   this._cannon = cannon;
-  // }
+// BULLET POOL
+const bulletPool = new Pool(
+  () =>
+    new Bullet({
+      damage: 1,
+      frame: { x: 0, y: 0 },
+      velocity: new Vector(500, 100),
+      position: new Vector(0, 0),
+      direction: 1,
+    }),
+  10
+) as Pool<Bullet>;
 
-  abstract shoot(sourceCannon: Cannon): Bullet[];
+// SHOOTING STRATEGY
+interface IShootingStrategy {
+  shoot(sourceCannon: Cannon): Bullet[];
 }
 
-class DefaultShootingStrategy extends ShootingStrategy {
+class EnemyShootingStrategy implements IShootingStrategy {
   public shoot(sourceCannon: Cannon): Bullet[] {
-    sourceCannon.reloadTime = 0.25;
+    sourceCannon.reloadTime = Cmath.randf(2, 8);
     return [
       bulletPool.next((bullet) => {
         bullet.position.set(
           sourceCannon.position.x,
           sourceCannon.position.y - bullet.height / 2
         );
-        bullet.velocity.set(500, 0);
-        bullet.damage = 1;
-        bullet.frame = { x: 1, y: 1 };
+        // bullet.velocity.set(-200, 0);
+        // bullet.damage = 1;
+        // bullet.frame = { x: 3, y: 1 };
       }),
     ];
   }
 }
 
-class DoubleShootingStrategy extends ShootingStrategy {
+class DefaultShootingStrategy implements IShootingStrategy {
+  public shoot(cannon: Cannon): Bullet[] {
+    cannon.reloadTime = 0.25;
+    return [
+      bulletPool.next((bulletInstance) => {
+        bulletInstance.position.set(
+          cannon.position.x,
+          cannon.position.y - bulletInstance.height / 2
+        );
+        // bulletInstance.velocity.set(500, 0);
+        // bulletInstance.damage = 1;
+        // bulletInstance.frame = { x: 1, y: 1 };
+      }),
+    ];
+  }
+}
+
+class DoubleShootingStrategy implements IShootingStrategy {
   public shoot(sourceCannon: Cannon): Bullet[] {
     sourceCannon.reloadTime = 0.125;
     const offsets = [
@@ -40,58 +66,40 @@ class DoubleShootingStrategy extends ShootingStrategy {
           sourceCannon.position.x + offset.x,
           sourceCannon.position.y + offset.y - bullet.height / 2
         );
-        bullet.velocity.set(500, 0);
-        bullet.damage = 1;
-        bullet.frame = { x: 1, y: 0 };
+        // bullet.velocity.set(500, 0);
+        // bullet.damage = 1;
+        // bullet.frame = { x: 1, y: 0 };
       });
       return bullet;
     });
   }
 }
 
-// class TripleShootingStrategy extends ShootingStrategy {
-//   public shoot(): Bullet[] {
-//     // Implement triple shooting logic here
-//     return [];
-//   }
-// }
-
-// BULLET POOL
-const bulletPool = new Pool(
-  () =>
-    new Bullet({
-      velocity: new Vector(500, 100),
-      position: new Vector(0, 0),
-      damage: 1,
-      frame: { x: 0, y: 0 },
-    }),
-  10
-) as Pool<Bullet>;
-
 // CANNON
 type CannonConfig = {
   offset: Vector;
   position: Vector;
+  shootingStrategy: IShootingStrategy;
 };
 
 class Cannon {
+  private _shootingStrategy: IShootingStrategy;
   private _ownerPosition: Vector;
-  private _offset: Vector;
   private _position: Vector;
+  private _offset: Vector;
   private _reloadTime: number;
-  private _shootingStrategy: ShootingStrategy;
 
   constructor(config: CannonConfig) {
-    const { offset, position } = config;
-    this._shootingStrategy = new DefaultShootingStrategy();
+    const { offset, position, shootingStrategy } = config;
+    this._shootingStrategy = shootingStrategy;
+    this._ownerPosition = position;
     this._position = new Vector();
     this._offset = new Vector(offset.x, offset.y);
     this._reloadTime = 0;
-    this._ownerPosition = position;
   }
 
   get ready(): boolean {
-    return this._reloadTime <= 0;
+    return this._reloadTime <= 0 ? true : false;
   }
 
   get position(): Vector {
@@ -102,12 +110,12 @@ class Cannon {
     this._reloadTime = seconds;
   }
 
-  set shootingStrategy(strategy: ShootingStrategy) {
+  set shootingStrategy(strategy: IShootingStrategy) {
     this._shootingStrategy = strategy;
   }
 
   public fire(): Bullet[] | null {
-    if (this.ready) {
+    if (this.ready && this._shootingStrategy) {
       return this._shootingStrategy.shoot(this);
     } else {
       return null;
@@ -125,8 +133,7 @@ class Cannon {
 
 export {
   Cannon,
-  ShootingStrategy,
   DefaultShootingStrategy,
   DoubleShootingStrategy,
-  // TripleShootingStrategy,
+  EnemyShootingStrategy,
 };

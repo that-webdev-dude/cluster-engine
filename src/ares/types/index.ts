@@ -1,8 +1,18 @@
 import Vector from "../tools/Vector";
 
+type milliseconds = number;
+
+type seconds = number;
+
+type degrees = number;
+
+type radians = number;
+
+type pixels = number;
+
 type Locateable = {
-  x: number;
-  y: number;
+  x: pixels;
+  y: pixels;
 };
 
 type Positionable = {
@@ -11,8 +21,8 @@ type Positionable = {
 };
 
 type Sizeable = {
-  width?: number; // made optional for now (will be required in the derived classes)
-  height?: number; // made optional for now (will be required in the derived classes)
+  width?: pixels;
+  height?: pixels;
 };
 
 // type Sizeable = {
@@ -20,13 +30,13 @@ type Sizeable = {
 // };
 
 type Measurable = {
-  width: number;
-  height: number;
+  width: pixels;
+  height: pixels;
 };
 
 type Rotatable = {
   pivot: Vector;
-  angle: number;
+  angle: radians;
 };
 
 type Scalable = {
@@ -50,7 +60,7 @@ type Renderable = {
 };
 
 type Updateable = {
-  update: (delta: number, elapsed: number) => void;
+  update: (delta: milliseconds, elapsed: seconds) => void;
 };
 
 type Resetable = {
@@ -88,4 +98,9 @@ export {
   Resetable,
   EntityType,
   EntityContainerType,
+  milliseconds,
+  seconds,
+  degrees,
+  radians,
+  pixels,
 };

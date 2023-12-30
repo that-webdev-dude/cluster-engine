@@ -18,7 +18,7 @@ class Background extends Container {
       new Rect({
         width,
         height,
-        fill: "#000",
+        fill: "#00005e",
       })
     );
 
