@@ -1,7 +1,37 @@
 import EnemiesImageURL from "../images/enemies.png";
-import { TileSprite, Vector, Pool } from "../ares";
-import { Cannon, EnemyShootingStrategy } from "./Cannon";
+import { TileSprite, Vector, Pool, Cmath } from "../ares";
+import { Cannon } from "../lib/Cannon";
+import { ShootingStrategy } from "../lib/ShootingStrategy";
 import { Bullet, BulletFrame } from "./Bullet";
+
+type seconds = number;
+
+class EnemyShootingStrategy extends ShootingStrategy {
+  private static readonly RELOAD_TIME: seconds = 0.25;
+
+  get reloadTime(): number {
+    return Cmath.randf(0.5, 2);
+  }
+
+  public shoot(cannon: Cannon): Bullet[] {
+    const bullet = cannon.pool.next((b) => {
+      b.reset({
+        position: cannon.position.clone(),
+      });
+    });
+    return [bullet];
+  }
+}
+
+const bulletPool = new Pool<Bullet>(
+  () =>
+    new Bullet({
+      frame: { x: 1, y: 0 },
+      direction: -1,
+    })
+);
+
+const shootingStrategies = [new EnemyShootingStrategy()];
 
 interface IMovementStrategy {
   move(position: Vector, dt: number): void;
@@ -116,6 +146,9 @@ interface IEnemyConfig {
 }
 
 class Enemy extends TileSprite {
+  public static HEIGHT = 64;
+  public static WIDTH = 64;
+
   private _movement: IMovementStrategy;
   private _cannon: Cannon | null;
   private _health: number;
@@ -138,9 +171,10 @@ class Enemy extends TileSprite {
     this._health = health;
     this._cannon = cannon
       ? new Cannon({
-          shootingStrategy: new EnemyShootingStrategy(),
-          position: this.position,
-          offset: new Vector(0, 32),
+          offset: new Vector(0, this.height / 2 - 6),
+          owner: this,
+          pool: bulletPool,
+          shootingStrategy: shootingStrategies[0],
         })
       : null;
   }
@@ -197,54 +231,4 @@ interface IEnemySpawnerConfig {
   cannon?: boolean;
 }
 
-class EnemySpawner {
-  private _spawnRate: number;
-  private _spawnPosition: Vector;
-  private _movement: IMovementStrategy;
-  private _frame: IEnemyFrame;
-  private _health: number;
-  private _cannon: boolean;
-  private _time: number;
-
-  constructor({
-    spawnRate,
-    spawnPosition,
-    movement,
-    frame,
-    health,
-    cannon,
-  }: IEnemySpawnerConfig) {
-    this._spawnRate = spawnRate;
-    this._spawnPosition = spawnPosition;
-    this._movement = movement;
-    this._frame = frame;
-    this._health = health || 1;
-    this._cannon = cannon || false;
-    this._time = 0;
-  }
-
-  get ready(): boolean {
-    return this._time <= 0;
-  }
-
-  public spawn(): Enemy | null {
-    if (this.ready) {
-      this._time = this._spawnRate;
-      return new Enemy({
-        position: new Vector(this._spawnPosition.x, this._spawnPosition.y),
-        movement: this._movement,
-        frame: this._frame,
-        health: this._health,
-        cannon: this._cannon,
-      });
-    } else {
-      return null;
-    }
-  }
-
-  public update(dt: number): void {
-    this._time -= dt;
-  }
-}
-
-export { Enemy, EnemyFrame, LinearMovement, CurvedMovement, EnemySpawner };
+export { Enemy, EnemyFrame, LinearMovement, CurvedMovement };
