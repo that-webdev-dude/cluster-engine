@@ -24,6 +24,7 @@ class Renderer {
     // canvas.style.width = `${width}px`;
     // canvas.style.height = `${height}px`;
     // context.scale(devicePixelRatio, devicePixelRatio);
+
     canvas.width = width;
     canvas.height = height;
 

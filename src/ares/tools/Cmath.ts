@@ -141,7 +141,8 @@ class Cmath {
    * @param {number} max
    */
   static lerp(x: number, min: number, max: number) {
-    return (x - min) / (max - min);
+    const t = Math.max(0, Math.min(1, x));
+    return min + t * (max - min);
   }
 
   /**
@@ -170,7 +171,7 @@ class Cmath {
   /**
    * easing functions collection
    */
-  static ease: Ease;
+  static ease = Ease;
 }
 
 export default Cmath;

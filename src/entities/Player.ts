@@ -17,6 +17,7 @@ class Player extends Container {
   private _invincibility: number;
   public health: number;
   public lives: number;
+  public active: Boolean;
 
   constructor(config: { input: Keyboard }) {
     const { input } = config;
@@ -33,6 +34,7 @@ class Player extends Container {
     this._invincibility = INVINCIBILITY_TIME;
     this.health = MAX_HEALTH;
     this.lives = MAX_LIVES;
+    this.active = false;
 
     this.add(this._ship);
 
@@ -91,20 +93,23 @@ class Player extends Container {
   public update(dt: number, t: number): void {
     super.update(dt, t);
 
-    if (this._input.x) {
-      this.position.x += this._speed * dt * this._input.x;
-    }
-    if (this._input.y) {
-      this.position.y += this._speed * dt * this._input.y;
-    }
+    if (this.active) {
+      if (this._input.x) {
+        this.position.x += this._speed * dt * this._input.x;
+      }
+      if (this._input.y) {
+        this.position.y += this._speed * dt * this._input.y;
+      }
 
-    this._cannon.update(dt);
+      this._cannon.update(dt);
 
-    this._invincibility -= dt;
-    if (this._invincibility > 0) {
-      this._ship.alpha = Math.floor(this._invincibility * 10) % 2 === 0 ? 0 : 1;
-    } else {
-      this._ship.alpha = 1;
+      this._invincibility -= dt;
+      if (this._invincibility > 0) {
+        this._ship.alpha =
+          Math.floor(this._invincibility * 10) % 2 === 0 ? 0 : 1;
+      } else {
+        this._ship.alpha = 1;
+      }
     }
   }
 }

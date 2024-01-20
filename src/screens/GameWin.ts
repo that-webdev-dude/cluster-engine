@@ -62,7 +62,7 @@ class GameWin extends Scene {
     super.update(dt, t);
     this.gameActionText.alpha = Math.abs(Math.sin(t * 3));
     if (!this.timer.dead) {
-      this.timer.update(dt, t);
+      this.timer.update(dt);
     }
 
     if (this.game.keyboard.key("Enter")) {

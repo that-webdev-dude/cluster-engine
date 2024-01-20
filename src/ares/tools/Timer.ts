@@ -1,47 +1,66 @@
 interface ITimerConfig {
   duration: number;
-  onTick: Function;
-  onDone?: Function;
+  onTick: TimerCallback;
+  onDone?: SimpleCallback | undefined;
   delay?: number;
 }
 
+const DEFAULT_DURATION = 1;
+const DEFAULT_DELAY = 0;
+
+type TimerCallback = (ratio: number) => void;
+type SimpleCallback = () => void;
+
 class Timer {
   private _duration: number;
-  private _onTick: Function;
-  private _onDone: Function;
-  private _delay: number;
+  private _onTick: TimerCallback;
+  private _onDone: SimpleCallback | undefined;
   private _elapsed: number;
-  public dead: boolean;
+  private _delay: number;
+  private _dead: boolean;
 
   constructor({
-    duration = 1,
-    delay = 0,
+    duration = DEFAULT_DURATION,
+    delay = DEFAULT_DELAY,
     onTick = () => {},
-    onDone = () => {},
+    onDone,
   }: ITimerConfig) {
     this._duration = duration;
     this._delay = delay;
     this._onTick = onTick;
     this._onDone = onDone;
     this._elapsed = 0;
-    this.dead = false;
+    this._dead = false;
   }
 
-  public update(dt: number, t: number) {
-    const { _duration, _onTick, _onDone, _delay } = this;
+  get elapsed(): number {
+    return this._elapsed;
+  }
+
+  get dead(): boolean {
+    return this._dead;
+  }
+
+  public update(dt: number): void {
+    if (this._dead) return;
     if (this._delay > 0) {
       this._delay -= dt;
       return;
     }
     this._elapsed += dt;
-    const ratio = this._elapsed / _duration;
+    const ratio = this._elapsed / this._duration;
     if (ratio >= 1) {
-      _onTick(1);
-      _onDone && _onDone();
-      this.dead = true;
+      this._onTick(1);
+      this._onDone?.();
+      this._dead = true;
     } else {
-      _onTick(ratio);
+      this._onTick(ratio);
     }
+  }
+
+  public reset(): void {
+    this._elapsed = 0;
+    this._dead = false;
   }
 }
 

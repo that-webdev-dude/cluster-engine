@@ -1,9 +1,27 @@
-import { Container, Camera, Vector, Entity, Scene, Cmath, Game } from "../ares";
-import { Enemy, EnemyFrame, CurvedMovement } from "../entities/Enemy";
+// prettier-ignore
+import { 
+  Container, 
+  Camera, 
+  Entity, 
+  Scene, 
+  Cmath,
+  Game, 
+  State,
+} from "../ares";
+import { Enemy } from "../entities/Enemy";
 import { Bullet } from "../entities/Bullet";
+import EnemySpawner from "../lib/EnemySpawner";
 import Background from "../entities/Background";
 import Player from "../entities/Player";
-import EnemySpawner from "../lib/EnemySpawner";
+import LoadingDialog from "../dialogs/LoadingDialog";
+
+enum STATES {
+  load,
+  play,
+  pause,
+  loose,
+  win,
+}
 
 class GamePlay extends Scene {
   private _playerBullets: Container;
@@ -12,48 +30,55 @@ class GamePlay extends Scene {
   private _player: Player;
   private _camera: Camera;
   private _enemySpawner: EnemySpawner;
+  private _state: State<STATES>;
+  private _dialog: LoadingDialog | null;
+  private _background: Background;
 
   constructor(
     game: Game,
     transitions?: {
-      toNext?: () => void;
       toStart?: () => void;
+      toNext?: () => void;
       toEnd?: () => void;
     }
   ) {
     super(game, transitions);
     const { width, height } = game;
-    const background = new Background({ width, height });
     const playerBullets = new Container();
     const enemyBullets = new Container();
-    const asteroids = new Container();
+    const background = new Background({ width, height });
     const enemies = new Container();
     const player = new Player({ input: game.keyboard });
     const camera = new Camera({
-      viewSize: { width, height },
       worldSize: { width, height },
+      viewSize: { width, height },
       subject: player,
     });
 
-    camera.add(background);
-    camera.add(playerBullets);
-    camera.add(enemyBullets);
-    camera.add(asteroids);
-    camera.add(enemies);
-    camera.add(player);
-    this.add(camera);
-
     this._playerBullets = playerBullets;
     this._enemyBullets = enemyBullets;
+    this._background = background;
     this._enemies = enemies;
     this._player = player;
     this._camera = camera;
-
+    this._state = new State(STATES.load);
+    this._dialog = null;
     this._enemySpawner = new EnemySpawner(game, this._enemies);
+    this._initialize();
   }
 
-  update(dt: number, t: number) {
-    super.update(dt, t);
+  private _initialize() {
+    const { game } = this;
+    const playerPosX = 100;
+    const playerPosY = game.height / 2 - this._player.height / 2;
+    this._player.position.set(playerPosX, playerPosY);
+    this._player.active = false;
+    this._camera.add(this._background);
+    this._camera.add(this._player);
+    this.add(this._camera);
+  }
+
+  private _play(dt: number, t: number) {
     const { _player, _enemies, _playerBullets, _enemyBullets, game } = this;
 
     // Update the enemy spawner
@@ -87,14 +112,14 @@ class GamePlay extends Scene {
     // all the bullets going offscreen are removed
     // this should include all the entities that are not player
     [..._playerBullets.children, ..._enemyBullets.children].forEach(
-      (entity) => {
+      (bullet) => {
         if (
-          entity.position.x > game.width ||
-          entity.position.x < 0 ||
-          entity.position.y > game.height ||
-          entity.position.y < 0
+          bullet.position.x > game.width ||
+          bullet.position.x < 0 ||
+          bullet.position.y > game.height ||
+          bullet.position.y < 0
         ) {
-          entity.dead = true;
+          bullet.dead = true;
         }
       }
     );
@@ -177,6 +202,62 @@ class GamePlay extends Scene {
 
     // player with no more lives
     // GAME OVER
+  }
+
+  update(dt: number, t: number) {
+    super.update(dt, t);
+
+    const { _state } = this;
+    _state.update(dt);
+
+    switch (_state.get()) {
+      case STATES.load:
+        if (_state.first) {
+          const onDialogClose = () => {
+            this._player.active = true;
+            if (this._dialog) {
+              this._dialog.dead = true;
+              this._state.set(STATES.play);
+            }
+          };
+          this._dialog = new LoadingDialog(onDialogClose);
+          this._dialog.position.set(
+            this.game.width / 2 - this._dialog.width / 2,
+            this.game.height / 2 - this._dialog.height / 2
+          );
+          this._camera.add(this._dialog);
+        }
+        break;
+      case STATES.play:
+        if (_state.first) {
+          this._camera.add(this._playerBullets);
+          this._camera.add(this._enemyBullets);
+          this._camera.add(this._enemies);
+        }
+        // do something
+        this._play(dt, t);
+        break;
+      case STATES.pause:
+        if (_state.first) {
+          // do something
+        }
+        // do something
+        break;
+      case STATES.loose:
+        if (_state.first) {
+          // do something
+        }
+        // do something
+        break;
+      case STATES.win:
+        if (_state.first) {
+          // do something
+        }
+        // do something
+        break;
+      default:
+        break;
+    }
   }
 }
 

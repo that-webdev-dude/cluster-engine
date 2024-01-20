@@ -65,7 +65,7 @@ class GameTitle extends Scene {
     super.update(dt, t);
     this._gameActionText.alpha = Math.abs(Math.sin(t * 3));
     if (!this._timer.dead) {
-      this._timer.update(dt, t);
+      this._timer.update(dt);
     }
 
     if (this.game.keyboard.key("Enter")) {

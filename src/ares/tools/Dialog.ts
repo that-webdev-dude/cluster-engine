@@ -1,5 +1,4 @@
-import { config } from "webpack";
-import { Container } from "../ares";
+import Container from "../core/Container";
 
 interface IDialogConfig {
   width: number;
