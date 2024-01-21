@@ -67,7 +67,7 @@ class Game {
     return this._keyboardInput;
   }
 
-  // TODO: Add transitionDuration
+  // TODO: Add screen transition
   public setScene(scene: Container, transitionDuration: number = 0) {
     this._scene = scene;
   }

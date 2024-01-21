@@ -7,13 +7,15 @@ import {
   Cmath,
   Game, 
   State,
+  Dialog
 } from "../ares";
 import { Enemy } from "../entities/Enemy";
 import { Bullet } from "../entities/Bullet";
 import EnemySpawner from "../lib/EnemySpawner";
 import Background from "../entities/Background";
 import Player from "../entities/Player";
-import LoadingDialog from "../dialogs/LoadingDialog";
+import ReadyDialog from "../dialogs/ReadyDialog";
+import PauseDialog from "../dialogs/PauseDialog";
 
 enum STATES {
   load,
@@ -31,7 +33,7 @@ class GamePlay extends Scene {
   private _camera: Camera;
   private _enemySpawner: EnemySpawner;
   private _state: State<STATES>;
-  private _dialog: LoadingDialog | null;
+  private _dialog: Dialog | null;
   private _background: Background;
 
   constructor(
@@ -75,6 +77,9 @@ class GamePlay extends Scene {
     this._player.active = false;
     this._camera.add(this._background);
     this._camera.add(this._player);
+    this._camera.add(this._enemies);
+    this._camera.add(this._enemyBullets);
+    this._camera.add(this._playerBullets);
     this.add(this._camera);
   }
 
@@ -205,8 +210,6 @@ class GamePlay extends Scene {
   }
 
   update(dt: number, t: number) {
-    super.update(dt, t);
-
     const { _state } = this;
     _state.update(dt);
 
@@ -220,35 +223,59 @@ class GamePlay extends Scene {
               this._state.set(STATES.play);
             }
           };
-          this._dialog = new LoadingDialog(onDialogClose);
+          this._dialog = new ReadyDialog(onDialogClose);
           this._dialog.position.set(
             this.game.width / 2 - this._dialog.width / 2,
             this.game.height / 2 - this._dialog.height / 2
           );
           this._camera.add(this._dialog);
         }
+        super.update(dt, t);
         break;
+
       case STATES.play:
-        if (_state.first) {
-          this._camera.add(this._playerBullets);
-          this._camera.add(this._enemyBullets);
-          this._camera.add(this._enemies);
-        }
-        // do something
+        super.update(dt, t);
         this._play(dt, t);
+
+        if (!_state.is([STATES.pause]) && this.game.keyboard.key("KeyP")) {
+          _state.set(STATES.pause);
+          this.game.keyboard.active = false;
+        }
         break;
+
       case STATES.pause:
         if (_state.first) {
-          // do something
+          this._dialog = new PauseDialog(() => {});
+          this._dialog.position.set(
+            this.game.width / 2 - this._dialog.width / 2,
+            this.game.height / 2 - this._dialog.height / 2
+          );
+          this._camera.add(this._dialog);
         }
-        // do something
+        if (_state.is([STATES.pause]) && this.game.keyboard.key("Escape")) {
+          this.game.keyboard.active = false;
+          if (this._dialog) {
+            this._dialog.dead = true;
+            this.transitions.toStart();
+          }
+        }
+
+        if (_state.is([STATES.pause]) && this.game.keyboard.key("Enter")) {
+          this.game.keyboard.active = false;
+          if (this._dialog) {
+            this._dialog.dead = true;
+            _state.set(STATES.play);
+          }
+        }
         break;
+
       case STATES.loose:
         if (_state.first) {
           // do something
         }
         // do something
         break;
+
       case STATES.win:
         if (_state.first) {
           // do something

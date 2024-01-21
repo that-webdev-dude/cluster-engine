@@ -69,8 +69,6 @@ class GameWin extends Scene {
       this.game.keyboard.active = false;
       this.transitions.toNext();
     }
-
-    console.log(this.game.keyboard.active);
   }
 }
 

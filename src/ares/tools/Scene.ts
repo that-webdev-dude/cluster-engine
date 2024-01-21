@@ -2,6 +2,7 @@ import Game from "../core/Game";
 import Container from "../core/Container";
 
 const TRANSITION_DEFAULTS = {
+  toStart: () => {},
   toNext: () => {},
   toPrevious: () => {},
 };
@@ -9,6 +10,7 @@ const TRANSITION_DEFAULTS = {
 class Scene extends Container {
   public game: Game;
   public transitions: {
+    toStart: () => void;
     toNext: () => void;
     toPrevious: () => void;
   };
@@ -16,6 +18,7 @@ class Scene extends Container {
   constructor(
     game: Game,
     transitions?: {
+      toStart?: () => void;
       toNext?: () => void;
       toPrevious?: () => void;
     }
@@ -23,6 +26,7 @@ class Scene extends Container {
     super();
     this.game = game;
     this.transitions = {
+      toStart: transitions?.toStart || TRANSITION_DEFAULTS.toStart,
       toNext: transitions?.toNext || TRANSITION_DEFAULTS.toNext,
       toPrevious: transitions?.toPrevious || TRANSITION_DEFAULTS.toPrevious,
     };
