@@ -58,3 +58,9 @@ export default () => {
   startGameTitle();
   game.start();
 };
+
+// TODO
+// - add controller support
+// - add sounds
+// - add pickups
+// - add explosions
