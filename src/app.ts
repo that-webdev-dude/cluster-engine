@@ -63,7 +63,6 @@ export default () => {
 // - make the controller less specific to xbox
 // - add sounds
 // - add pickups
-// - add explosions
 // - add screen transitions
 // - add entity flash effect
 // - add camera flash effect

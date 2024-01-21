@@ -29,7 +29,7 @@ class Player extends Container {
     super();
     this._inputKeyboard = inputKeyboard;
     this._inputGamepad = inputGamepad || null;
-    this._speed = 200;
+    this._speed = 400;
     this._ship = new Ship(this);
     this._cannon = new Cannon({
       offset: new Vector(this.width, this.height / 2 - 6),

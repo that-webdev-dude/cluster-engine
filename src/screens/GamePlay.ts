@@ -15,6 +15,7 @@ import { Bullet } from "../entities/Bullet";
 import EnemySpawner from "../lib/EnemySpawner";
 import Background from "../entities/Background";
 import Player from "../entities/Player";
+import Explosion from "../entities/Explosion";
 import ReadyDialog from "../dialogs/ReadyDialog";
 import PauseDialog from "../dialogs/PauseDialog";
 
@@ -36,6 +37,7 @@ class GamePlay extends Scene {
   private _state: State<STATES>;
   private _dialog: Dialog | null;
   private _background: Background;
+  private _explosions: Container;
 
   scoresText: Text;
   playerLivesText: Text;
@@ -56,6 +58,7 @@ class GamePlay extends Scene {
     const playerBullets = new Container();
     const enemyBullets = new Container();
     const background = new Background({ width, height });
+    const explosions = new Container();
     const enemies = new Container();
     const player = new Player({
       inputKeyboard: game.keyboard,
@@ -71,6 +74,7 @@ class GamePlay extends Scene {
     this._playerBullets = playerBullets;
     this._enemyBullets = enemyBullets;
     this._background = background;
+    this._explosions = explosions;
     this._enemies = enemies;
     this._player = player;
     this._camera = camera;
@@ -111,6 +115,7 @@ class GamePlay extends Scene {
     this._camera.add(this._enemies);
     this._camera.add(this._enemyBullets);
     this._camera.add(this._playerBullets);
+    this._camera.add(this._explosions);
 
     // GUI
     this._camera.add(this.scoresText);
@@ -227,6 +232,7 @@ class GamePlay extends Scene {
             bullet.dead = true;
             enemy.hit(bullet.damage, () => {
               this.scoresText.text = `Scores: ${(this.globals.scores += 10)}`;
+              this._explosions.add(new Explosion(enemy.position));
             });
             if (enemy.health <= 0) {
               enemy.die(() => {
