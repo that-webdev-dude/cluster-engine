@@ -7,6 +7,7 @@ class GameTitle extends Scene {
 
   constructor(
     game: Game,
+    globals: any,
     transitions: {
       toNext: () => void;
     }
@@ -46,7 +47,7 @@ class GameTitle extends Scene {
       position: new Vector(width / 2, height - 100),
     });
 
-    super(game, transitions);
+    super(game, globals, transitions);
     this.add(background);
     this.add(gameTitleText);
     this.add(gameActionText);

@@ -5,7 +5,7 @@ import Ship from "./Ship";
 
 const MAX_HEALTH = 4;
 const MAX_LIVES = 3;
-const INVINCIBILITY_TIME = 3;
+const INVINCIBILITY_TIME = 1;
 
 const bulletPool = new Pool<Bullet>(() => new Bullet({}));
 
@@ -19,8 +19,8 @@ class Player extends Container {
   public lives: number;
   public active: Boolean;
 
-  constructor(config: { input: Keyboard }) {
-    const { input } = config;
+  constructor(config: { input: Keyboard; lives: number }) {
+    const { input, lives } = config;
     super();
     this._input = input;
     this._speed = 200;
@@ -33,7 +33,7 @@ class Player extends Container {
 
     this._invincibility = INVINCIBILITY_TIME;
     this.health = MAX_HEALTH;
-    this.lives = MAX_LIVES;
+    this.lives = lives;
     this.active = false;
 
     this.add(this._ship);

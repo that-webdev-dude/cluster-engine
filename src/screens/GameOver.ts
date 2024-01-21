@@ -1,7 +1,7 @@
 import { Scene, Game, Vector, Text, Timer } from "../ares";
 import Background from "../entities/Background";
 
-class GameWin extends Scene {
+class GameOver extends Scene {
   timer: Timer;
   gameActionText: Text;
 
@@ -18,7 +18,7 @@ class GameWin extends Scene {
     const background = new Background({ width, height });
 
     const gameWinText = new Text({
-      text: "You Win!",
+      text: "GAME OVER",
       align: "center",
       fill: "white",
       font: '52px "Press Start 2P"',
@@ -73,4 +73,4 @@ class GameWin extends Scene {
   }
 }
 
-export default GameWin;
+export default GameOver;

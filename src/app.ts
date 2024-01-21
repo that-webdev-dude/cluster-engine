@@ -2,6 +2,7 @@ import { Game } from "./ares";
 import GamePlay from "./screens/GamePlay";
 import GameTitle from "./screens/GameTitle";
 import GameWin from "./screens/GameWin";
+import GameOver from "./screens/GameOver";
 
 // GAME
 const game = new Game({
@@ -12,26 +13,33 @@ const game = new Game({
 });
 
 const defaults = () => ({
-  levelID: 1,
   scores: 0,
-  lives: 3,
-  timer: 120,
+  lives: 1,
 });
 let globals = defaults();
 
 const startGamePlay = () => {
   game.setScene(
-    new GamePlay(game, {
+    new GamePlay(game, globals, {
       toStart: startGameTitle, // go to main menu (from a dialog or something)
       toEnd: startGameWin, // player wins || player dies (maybe game over is a dialog)
       toNext: startGamePlay, // next level and here globals are changed
+      toPrevious: startGameOver,
     })
   );
 };
 
 const startGameWin = () => {
   game.setScene(
-    new GameWin(game, {
+    new GameWin(game, globals, {
+      toNext: startGameTitle,
+    })
+  );
+};
+
+const startGameOver = () => {
+  game.setScene(
+    new GameOver(game, globals, {
       toNext: startGameTitle,
     })
   );
@@ -40,22 +48,13 @@ const startGameWin = () => {
 const startGameTitle = () => {
   globals = defaults(); // reset globals
   game.setScene(
-    new GameTitle(game, {
+    new GameTitle(game, globals, {
       toNext: startGamePlay,
     })
   );
 };
 
 export default () => {
-  // startGameTitle();
-  // startGamePlay();
-  startGameWin();
+  startGameTitle();
   game.start();
 };
-
-/**
- * (S) gameTitle → (S) gamePlay →  (S) gameWin → gameTitle
- *               → (D) gameQuit →      gameTitle
- *               → (D) gameOver →      gameTitle
- *                              →      gamePlay
- */

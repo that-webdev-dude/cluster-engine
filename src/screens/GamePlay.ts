@@ -7,7 +7,8 @@ import {
   Cmath,
   Game, 
   State,
-  Dialog
+  Dialog,
+  Text,Vector
 } from "../ares";
 import { Enemy } from "../entities/Enemy";
 import { Bullet } from "../entities/Bullet";
@@ -36,21 +37,27 @@ class GamePlay extends Scene {
   private _dialog: Dialog | null;
   private _background: Background;
 
+  scoresText: Text;
+  playerLivesText: Text;
+  playerHealthText: Text;
+
   constructor(
     game: Game,
+    globals: any,
     transitions?: {
+      toPrevious?: () => void;
       toStart?: () => void;
       toNext?: () => void;
       toEnd?: () => void;
     }
   ) {
-    super(game, transitions);
+    super(game, globals, transitions);
     const { width, height } = game;
     const playerBullets = new Container();
     const enemyBullets = new Container();
     const background = new Background({ width, height });
     const enemies = new Container();
-    const player = new Player({ input: game.keyboard });
+    const player = new Player({ input: game.keyboard, lives: globals.lives });
     const camera = new Camera({
       worldSize: { width, height },
       viewSize: { width, height },
@@ -66,6 +73,24 @@ class GamePlay extends Scene {
     this._state = new State(STATES.load);
     this._dialog = null;
     this._enemySpawner = new EnemySpawner(game, this._enemies);
+
+    // GUI
+    this.scoresText = new Text({
+      text: `Scores: ${globals.scores}`,
+      fill: "white",
+      position: new Vector(game.width / 2, 48),
+    });
+    this.playerLivesText = new Text({
+      text: `Lives: ${this._player.lives}`,
+      fill: "white",
+      position: new Vector(100, game.height - 64),
+    });
+    this.playerHealthText = new Text({
+      text: `Shield: ${this._player.health}`,
+      fill: "white",
+      position: new Vector(game.width - 100, game.height - 120),
+    });
+
     this._initialize();
   }
 
@@ -80,6 +105,12 @@ class GamePlay extends Scene {
     this._camera.add(this._enemies);
     this._camera.add(this._enemyBullets);
     this._camera.add(this._playerBullets);
+
+    // GUI
+    this._camera.add(this.scoresText);
+    this._camera.add(this.playerLivesText);
+    this._camera.add(this.playerHealthText);
+
     this.add(this._camera);
   }
 
@@ -137,7 +168,6 @@ class GamePlay extends Scene {
     });
 
     // the enemy shoots back
-    // console.log(_enemies.children);
     _enemies.children.forEach((enemy) => {
       if (enemy instanceof Enemy) {
         const enemyBullets = enemy.fire();
@@ -154,13 +184,15 @@ class GamePlay extends Scene {
       if (enemy instanceof Enemy) {
         Entity.hit(_player, enemy, () => {
           if (enemy instanceof Enemy) {
-            _player.hit(1, () => {
-              this._camera.shake();
-              /* do something */
-            });
-            enemy.die(() => {
-              /* do something */
-            });
+            if (!_player.invincible) {
+              _player.hit(1, () => {
+                this._camera.shake();
+                this.playerHealthText.text = `Shield: ${this._player.health}`;
+              });
+              enemy.die(() => {
+                /* do something */
+              });
+            }
           }
         });
       }
@@ -170,11 +202,13 @@ class GamePlay extends Scene {
     _enemyBullets.children.forEach((bullet) => {
       Entity.hit(_player, bullet, () => {
         if (bullet instanceof Bullet) {
-          bullet.dead = true;
-          _player.hit(bullet.damage, () => {
-            this._camera.shake();
-            /* do something */
-          });
+          if (!_player.invincible) {
+            bullet.dead = true;
+            _player.hit(bullet.damage, () => {
+              this._camera.shake();
+              this.playerHealthText.text = `Shield: ${this._player.health}`;
+            });
+          }
         }
       });
     });
@@ -186,7 +220,7 @@ class GamePlay extends Scene {
           if (enemy instanceof Enemy && bullet instanceof Bullet) {
             bullet.dead = true;
             enemy.hit(bullet.damage, () => {
-              /* do something */
+              this.scoresText.text = `Scores: ${(this.globals.scores += 10)}`;
             });
             if (enemy.health <= 0) {
               enemy.die(() => {
@@ -201,12 +235,19 @@ class GamePlay extends Scene {
     // player dies with zero-health
     if (_player.health <= 0) {
       _player.die(() => {
+        this.playerLivesText.text = `Lives: ${_player.lives}`;
         _player.position.set(100, game.height / 2 - _player.height / 2);
       });
     }
 
-    // player with no more lives
-    // GAME OVER
+    if (_player.lives <= 0) {
+      this.transitions.toPrevious();
+    }
+
+    // player win condition
+    // if (this.globals.scores >= 100) {
+    //   this.transitions.toEnd();
+    // }
   }
 
   update(dt: number, t: number) {
