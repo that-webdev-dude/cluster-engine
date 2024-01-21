@@ -39,7 +39,7 @@ class GamePlay extends Scene {
 
   scoresText: Text;
   playerLivesText: Text;
-  playerHealthText: Text;
+  playerShieldText: Text;
 
   constructor(
     game: Game,
@@ -57,7 +57,11 @@ class GamePlay extends Scene {
     const enemyBullets = new Container();
     const background = new Background({ width, height });
     const enemies = new Container();
-    const player = new Player({ input: game.keyboard, lives: globals.lives });
+    const player = new Player({
+      inputKeyboard: game.keyboard,
+      inputGamepad: game.gamepad,
+      lives: globals.lives,
+    });
     const camera = new Camera({
       worldSize: { width, height },
       viewSize: { width, height },
@@ -83,12 +87,14 @@ class GamePlay extends Scene {
     this.playerLivesText = new Text({
       text: `Lives: ${this._player.lives}`,
       fill: "white",
-      position: new Vector(100, game.height - 64),
+      position: new Vector(game.width - 64, game.height - 64),
+      align: "right",
     });
-    this.playerHealthText = new Text({
+    this.playerShieldText = new Text({
       text: `Shield: ${this._player.health}`,
       fill: "white",
-      position: new Vector(game.width - 100, game.height - 120),
+      position: new Vector(64, game.height - 64),
+      align: "left",
     });
 
     this._initialize();
@@ -109,7 +115,7 @@ class GamePlay extends Scene {
     // GUI
     this._camera.add(this.scoresText);
     this._camera.add(this.playerLivesText);
-    this._camera.add(this.playerHealthText);
+    this._camera.add(this.playerShieldText);
 
     this.add(this._camera);
   }
@@ -136,7 +142,7 @@ class GamePlay extends Scene {
     // player shooting logic goes here
     // the player should return an array of bullets
     // or null if no bullets are fired
-    if (game.keyboard.action) {
+    if (game.keyboard.action || game.gamepad.buttonA) {
       const playerBullets = _player.fire();
       if (playerBullets) {
         playerBullets.forEach((bullet) => {
@@ -187,7 +193,7 @@ class GamePlay extends Scene {
             if (!_player.invincible) {
               _player.hit(1, () => {
                 this._camera.shake();
-                this.playerHealthText.text = `Shield: ${this._player.health}`;
+                this.playerShieldText.text = `Shield: ${this._player.health}`;
               });
               enemy.die(() => {
                 /* do something */
@@ -206,7 +212,7 @@ class GamePlay extends Scene {
             bullet.dead = true;
             _player.hit(bullet.damage, () => {
               this._camera.shake();
-              this.playerHealthText.text = `Shield: ${this._player.health}`;
+              this.playerShieldText.text = `Shield: ${this._player.health}`;
             });
           }
         }
@@ -278,9 +284,11 @@ class GamePlay extends Scene {
         super.update(dt, t);
         this._play(dt, t);
 
-        if (!_state.is([STATES.pause]) && this.game.keyboard.key("KeyP")) {
-          _state.set(STATES.pause);
-          this.game.keyboard.active = false;
+        if (!_state.is([STATES.pause])) {
+          if (this.game.keyboard.key("KeyP") || this.game.gamepad.buttonB) {
+            _state.set(STATES.pause);
+            this.game.keyboard.active = false;
+          }
         }
         break;
 
@@ -293,21 +301,25 @@ class GamePlay extends Scene {
           );
           this._camera.add(this._dialog);
         }
-        if (_state.is([STATES.pause]) && this.game.keyboard.key("Escape")) {
+        // if (_state.is([STATES.pause])) {
+        if (this.game.keyboard.key("Escape") || this.game.gamepad.buttonY) {
           this.game.keyboard.active = false;
           if (this._dialog) {
             this._dialog.dead = true;
             this.transitions.toStart();
           }
         }
+        // }
 
-        if (_state.is([STATES.pause]) && this.game.keyboard.key("Enter")) {
+        // if (_state.is([STATES.pause])) {
+        if (this.game.keyboard.key("Enter") || this.game.gamepad.buttonA) {
           this.game.keyboard.active = false;
           if (this._dialog) {
             this._dialog.dead = true;
             _state.set(STATES.play);
           }
         }
+        // }
         break;
 
       case STATES.loose:

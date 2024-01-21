@@ -66,7 +66,7 @@ class GameOver extends Scene {
       this.timer.update(dt);
     }
 
-    if (this.game.keyboard.key("Enter")) {
+    if (this.game.keyboard.key("Enter") || this.game.gamepad.buttonA) {
       this.game.keyboard.active = false;
       this.transitions.toNext();
     }

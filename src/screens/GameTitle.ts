@@ -73,6 +73,10 @@ class GameTitle extends Scene {
       this.game.keyboard.active = false;
       this.transitions.toNext();
     }
+
+    if (this.game.gamepad.buttonStart) {
+      this.transitions.toNext();
+    }
   }
 }
 

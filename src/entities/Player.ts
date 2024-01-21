@@ -1,4 +1,4 @@
-import { Container, Keyboard, Vector, Pool } from "../ares";
+import { Container, Keyboard, Gamepad, Vector, Pool } from "../ares";
 import { Bullet } from "./Bullet";
 import { Cannon } from "../lib/Cannon";
 import Ship from "./Ship";
@@ -10,7 +10,8 @@ const INVINCIBILITY_TIME = 1;
 const bulletPool = new Pool<Bullet>(() => new Bullet({}));
 
 class Player extends Container {
-  private _input: Keyboard;
+  private _inputKeyboard: Keyboard;
+  private _inputGamepad: Gamepad | null;
   private _cannon: Cannon;
   private _ship: Ship;
   private _speed: number;
@@ -19,10 +20,15 @@ class Player extends Container {
   public lives: number;
   public active: Boolean;
 
-  constructor(config: { input: Keyboard; lives: number }) {
-    const { input, lives } = config;
+  constructor(config: {
+    inputKeyboard: Keyboard;
+    inputGamepad?: Gamepad;
+    lives: number;
+  }) {
+    const { inputKeyboard, inputGamepad, lives } = config;
     super();
-    this._input = input;
+    this._inputKeyboard = inputKeyboard;
+    this._inputGamepad = inputGamepad || null;
     this._speed = 200;
     this._ship = new Ship(this);
     this._cannon = new Cannon({
@@ -94,11 +100,16 @@ class Player extends Container {
     super.update(dt, t);
 
     if (this.active) {
-      if (this._input.x) {
-        this.position.x += this._speed * dt * this._input.x;
+      if (this._inputKeyboard.x) {
+        this.position.x += this._speed * dt * this._inputKeyboard.x;
       }
-      if (this._input.y) {
-        this.position.y += this._speed * dt * this._input.y;
+      if (this._inputKeyboard.y) {
+        this.position.y += this._speed * dt * this._inputKeyboard.y;
+      }
+
+      if (this._inputGamepad) {
+        this.position.x += this._speed * dt * this._inputGamepad.x;
+        this.position.y += this._speed * dt * this._inputGamepad.y;
       }
 
       this._cannon.update(dt);

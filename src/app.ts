@@ -56,11 +56,14 @@ const startGameTitle = () => {
 
 export default () => {
   startGameTitle();
-  game.start();
+  game.start(() => {});
 };
 
 // TODO
-// - add controller support
+// - make the controller less specific to xbox
 // - add sounds
 // - add pickups
 // - add explosions
+// - add screen transitions
+// - add entity flash effect
+// - add camera flash effect

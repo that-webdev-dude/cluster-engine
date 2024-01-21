@@ -1,5 +1,6 @@
 import { EntityContainerType } from "../types";
 import KeyboardInput from "../input/Keyboard";
+import GamepadInput from "../input/Gamepad";
 import MouseInput from "../input/Mouse";
 import Renderer from "../renderer/Renderer";
 import Engine from "../engine/Engine";
@@ -20,6 +21,7 @@ class Game {
   private _engine: Engine;
   private _renderer: Renderer;
   private _mouseInput: MouseInput;
+  private _gamepadInput: GamepadInput;
   private _keyboardInput: KeyboardInput;
 
   constructor({
@@ -34,6 +36,7 @@ class Game {
     this._engine = new Engine();
     this._renderer = new Renderer({ width, height });
     this._mouseInput = new MouseInput(this._renderer.view);
+    this._gamepadInput = new GamepadInput();
     this._keyboardInput = new KeyboardInput();
     this._init();
   }
@@ -61,6 +64,10 @@ class Game {
 
   get mouse(): MouseInput {
     return this._mouseInput;
+  }
+
+  get gamepad(): GamepadInput {
+    return this._gamepadInput;
   }
 
   get keyboard(): KeyboardInput {

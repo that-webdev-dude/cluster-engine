@@ -19,4 +19,5 @@ export { default as Dialog } from "./tools/Dialog";
 
 // input
 export { default as Keyboard } from "./input/Keyboard";
+export { default as Gamepad } from "./input/Gamepad";
 export { default as Mouse } from "./input/Mouse";
