@@ -8,7 +8,9 @@ import {
   Game, 
   State,
   Dialog,
-  Text,Vector
+  Text,
+  Vector,
+  Sound
 } from "../ares";
 import { Enemy } from "../entities/Enemy";
 import { Bullet } from "../entities/Bullet";
@@ -18,6 +20,7 @@ import Player from "../entities/Player";
 import Explosion from "../entities/Explosion";
 import ReadyDialog from "../dialogs/ReadyDialog";
 import PauseDialog from "../dialogs/PauseDialog";
+import GameplaySoundURL from "../sounds/Gameplay.mp3";
 
 enum STATES {
   load,
@@ -26,6 +29,8 @@ enum STATES {
   loose,
   win,
 }
+
+const gameplaySound = new Sound(GameplaySoundURL);
 
 class GamePlay extends Scene {
   private _playerBullets: Container;
@@ -123,6 +128,8 @@ class GamePlay extends Scene {
     this._camera.add(this.playerShieldText);
 
     this.add(this._camera);
+
+    gameplaySound.play({ loop: true, volume: 0.5 });
   }
 
   private _play(dt: number, t: number) {
@@ -233,6 +240,7 @@ class GamePlay extends Scene {
             enemy.hit(bullet.damage, () => {
               this.scoresText.text = `Scores: ${(this.globals.scores += 10)}`;
               this._explosions.add(new Explosion(enemy.position));
+              this._camera.shake();
             });
             if (enemy.health <= 0) {
               enemy.die(() => {
