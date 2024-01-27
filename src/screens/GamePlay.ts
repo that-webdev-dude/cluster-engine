@@ -20,7 +20,12 @@ import Player from "../entities/Player";
 import Explosion from "../entities/Explosion";
 import ReadyDialog from "../dialogs/ReadyDialog";
 import PauseDialog from "../dialogs/PauseDialog";
-import GameplaySoundURL from "../sounds/Gameplay.mp3";
+import Pup from "../entities/Pup"; // pup
+import {
+  DefaultShootingStrategy,
+  DoubleShootingStrategy,
+} from "../lib/ShootingStrategy"; // pup
+// import GameplaySoundURL from "../sounds/Gameplay.mp3";
 
 enum STATES {
   load,
@@ -30,19 +35,22 @@ enum STATES {
   win,
 }
 
-const gameplaySound = new Sound(GameplaySoundURL);
+// const gameplaySound = new Sound(GameplaySoundURL);
+
+const pup = new Pup(new Vector(100, 100), new DoubleShootingStrategy()); // pup
 
 class GamePlay extends Scene {
   private _playerBullets: Container;
   private _enemyBullets: Container;
+  private _explosions: Container;
   private _enemies: Container;
+  private _pups: Container;
+  private _state: State<STATES>;
   private _player: Player;
   private _camera: Camera;
-  private _enemySpawner: EnemySpawner;
-  private _state: State<STATES>;
   private _dialog: Dialog | null;
   private _background: Background;
-  private _explosions: Container;
+  private _enemySpawner: EnemySpawner;
 
   scoresText: Text;
   playerLivesText: Text;
@@ -65,6 +73,7 @@ class GamePlay extends Scene {
     const background = new Background({ width, height });
     const explosions = new Container();
     const enemies = new Container();
+    const pups = new Container();
     const player = new Player({
       inputKeyboard: game.keyboard,
       inputGamepad: game.gamepad,
@@ -81,6 +90,7 @@ class GamePlay extends Scene {
     this._background = background;
     this._explosions = explosions;
     this._enemies = enemies;
+    this._pups = pups;
     this._player = player;
     this._camera = camera;
     this._state = new State(STATES.load);
@@ -121,6 +131,7 @@ class GamePlay extends Scene {
     this._camera.add(this._enemyBullets);
     this._camera.add(this._playerBullets);
     this._camera.add(this._explosions);
+    this._camera.add(this._pups); //pup
 
     // GUI
     this._camera.add(this.scoresText);
@@ -129,11 +140,13 @@ class GamePlay extends Scene {
 
     this.add(this._camera);
 
-    gameplaySound.play({ loop: true, volume: 0.5 });
+    // gameplaySound.play({ loop: true, volume: 0.5 });
+    this._pups.add(pup);
   }
 
   private _play(dt: number, t: number) {
-    const { _player, _enemies, _playerBullets, _enemyBullets, game } = this;
+    const { _player, _enemies, _pups, _playerBullets, _enemyBullets, game } =
+      this;
 
     // Update the enemy spawner
     this._enemySpawner.update(dt, t);
@@ -252,6 +265,16 @@ class GamePlay extends Scene {
       });
     });
 
+    // player-pup collision
+    _pups.children.forEach((pup) => {
+      Entity.hit(_player, pup, () => {
+        if (pup instanceof Pup) {
+          _player.cannon.shootingStrategy = pup.payload;
+          pup.dead = true;
+        }
+      });
+    });
+
     // player dies with zero-health
     if (_player.health <= 0) {
       _player.die(() => {
@@ -260,14 +283,10 @@ class GamePlay extends Scene {
       });
     }
 
+    // game over
     if (_player.lives <= 0) {
       this.transitions.toPrevious();
     }
-
-    // player win condition
-    // if (this.globals.scores >= 100) {
-    //   this.transitions.toEnd();
-    // }
   }
 
   update(dt: number, t: number) {

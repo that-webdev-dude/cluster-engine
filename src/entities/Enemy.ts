@@ -221,14 +221,4 @@ class Enemy extends TileSprite {
   }
 }
 
-// enemy sawner class definition
-interface IEnemySpawnerConfig {
-  spawnRate: number;
-  spawnPosition: Vector;
-  movement: IMovementStrategy;
-  frame: IEnemyFrame;
-  health?: number;
-  cannon?: boolean;
-}
-
 export { Enemy, EnemyFrame, LinearMovement, CurvedMovement };

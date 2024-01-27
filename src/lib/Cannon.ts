@@ -13,14 +13,14 @@ interface ICannonConfig {
 class Cannon {
   private readonly _offset: Vector;
   private readonly _owner: Positionable;
-  private _timer: seconds;
   private _shootingStrategy: ShootingStrategy;
+  private _reloadTime: seconds;
   public pool: Pool<Bullet>;
 
   constructor(config: ICannonConfig) {
     const { offset, owner, pool, shootingStrategy } = config;
     this._shootingStrategy = shootingStrategy || new DefaultShootingStrategy();
-    this._timer = this._shootingStrategy.reloadTime;
+    this._reloadTime = this._shootingStrategy.reloadTime;
     this._owner = owner;
     this._offset = offset;
     this.pool = pool;
@@ -31,11 +31,11 @@ class Cannon {
   }
 
   get ready(): boolean {
-    return this._timer <= 0;
+    return this._reloadTime <= 0;
   }
 
   private _reload(): void {
-    this._timer = this._shootingStrategy.reloadTime;
+    this._reloadTime = this._shootingStrategy.reloadTime;
   }
 
   set shootingStrategy(strategy: ShootingStrategy) {
@@ -51,7 +51,7 @@ class Cannon {
   }
 
   public update(dt: seconds) {
-    this._timer -= dt;
+    this._reloadTime -= dt;
   }
 }
 

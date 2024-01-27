@@ -21,9 +21,9 @@ let globals = defaults();
 const startGamePlay = () => {
   game.setScene(
     new GamePlay(game, globals, {
-      toStart: startGameTitle, // go to main menu (from a dialog or something)
-      toEnd: startGameWin, // player wins || player dies (maybe game over is a dialog)
-      toNext: startGamePlay, // next level and here globals are changed
+      toStart: startGameTitle,
+      toEnd: startGameWin,
+      toNext: startGamePlay,
       toPrevious: startGameOver,
     })
   );

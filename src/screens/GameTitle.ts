@@ -3,7 +3,7 @@ import Background from "../entities/Background";
 import TitleSoundURL from "../sounds/Title.mp3";
 // console.log("TitleSoundURL:", TitleSoundURL);
 
-const titleSoundtrack = new Sound(TitleSoundURL);
+// const titleSoundtrack = new Sound(TitleSoundURL);
 
 class GameTitle extends Scene {
   private _timer: Timer;
@@ -66,7 +66,7 @@ class GameTitle extends Scene {
     });
 
     // soundtrack
-    titleSoundtrack.play({ loop: true, volume: 0.5 });
+    // titleSoundtrack.play({ loop: true, volume: 0.5 });
   }
 
   update(dt: number, t: number): void {
