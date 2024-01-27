@@ -15,6 +15,7 @@ import {
 import { Enemy } from "../entities/Enemy";
 import { Bullet } from "../entities/Bullet";
 import EnemySpawner from "../lib/EnemySpawner";
+import TimedEmitter from "../lib/TimedEmitter";
 import Background from "../entities/Background";
 import Player from "../entities/Player";
 import Explosion from "../entities/Explosion";
@@ -38,6 +39,7 @@ enum STATES {
 // const gameplaySound = new Sound(GameplaySoundURL);
 
 const pup = new Pup(new Vector(100, 100), new DoubleShootingStrategy()); // pup
+const levelManager = new TimedEmitter(10);
 
 class GamePlay extends Scene {
   private _playerBullets: Container;
@@ -131,7 +133,6 @@ class GamePlay extends Scene {
     this._camera.add(this._enemyBullets);
     this._camera.add(this._playerBullets);
     this._camera.add(this._explosions);
-    this._camera.add(this._pups); //pup
 
     // GUI
     this._camera.add(this.scoresText);
@@ -147,6 +148,9 @@ class GamePlay extends Scene {
   private _play(dt: number, t: number) {
     const { _player, _enemies, _pups, _playerBullets, _enemyBullets, game } =
       this;
+
+    // update levelManager
+    levelManager.update(dt, t);
 
     // Update the enemy spawner
     this._enemySpawner.update(dt, t);
@@ -265,15 +269,15 @@ class GamePlay extends Scene {
       });
     });
 
-    // player-pup collision
-    _pups.children.forEach((pup) => {
-      Entity.hit(_player, pup, () => {
-        if (pup instanceof Pup) {
-          _player.cannon.shootingStrategy = pup.payload;
-          pup.dead = true;
-        }
-      });
-    });
+    // // player-pup collision
+    // _pups.children.forEach((pup) => {
+    //   Entity.hit(_player, pup, () => {
+    //     if (pup instanceof Pup) {
+    //       _player.cannon.shootingStrategy = pup.payload;
+    //       pup.dead = true;
+    //     }
+    //   });
+    // });
 
     // player dies with zero-health
     if (_player.health <= 0) {

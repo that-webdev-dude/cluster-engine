@@ -35,6 +35,7 @@ class Pup extends TileSprite {
 
   public update(dt: number, t: number): void {
     this.angle += Cmath.deg2rad(2);
+    this.position.x -= 20 * dt;
   }
 }
 

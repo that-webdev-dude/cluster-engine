@@ -56,7 +56,8 @@ const startGameTitle = () => {
 
 export default () => {
   startGameTitle();
-  game.start(() => {});
+
+  game.start((dt: number, t: number) => {});
 };
 
 // TODO

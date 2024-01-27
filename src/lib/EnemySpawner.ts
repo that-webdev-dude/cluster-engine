@@ -20,12 +20,26 @@ class EnemySpawner {
     this._lastSpawnTime = 0;
   }
 
+  // member function to decrease the spawnInterval by 100, every 10 seconds of gameplay
+  decreaseSpawnInterval() {
+    this._spawnInterval -= 10;
+    if (this._spawnInterval < 750) {
+      this._spawnInterval = 750;
+    }
+  }
+
   update(dt: number, t: number) {
     this._lastSpawnTime += dt * 1000; // Convert dt to milliseconds
 
     if (this._lastSpawnTime >= this._spawnInterval) {
       this._lastSpawnTime = 0;
       this.spawnEnemy();
+    }
+
+    // decrease spawnInterval once every 10 seconds of gameplay
+    if (t % 10 === 0) {
+      this.decreaseSpawnInterval();
+      console.log(this._spawnInterval);
     }
   }
 
