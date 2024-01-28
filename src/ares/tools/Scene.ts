@@ -1,6 +1,9 @@
 import Game from "../core/Game";
 import Container from "../core/Container";
 
+// TODO
+// - maybe only the transition toNext is worth leaving? all the rest look redundant
+
 const defaultTransitions = {
   toFirst: () => {},
   toLast: () => {},
