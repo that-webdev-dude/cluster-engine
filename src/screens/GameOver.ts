@@ -7,12 +7,11 @@ class GameOver extends Scene {
 
   constructor(
     game: Game,
-    globals: any,
     transitions?: {
       toNext: () => void;
     }
   ) {
-    super(game, globals, transitions);
+    super(game, transitions);
     const { width, height } = game;
 
     const background = new Background({ width, height });

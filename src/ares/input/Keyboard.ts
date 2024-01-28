@@ -41,6 +41,10 @@ class KeyboardInput {
     return this.key("Space");
   }
 
+  get pause(): boolean {
+    return this.key("KeyP");
+  }
+
   get x(): number {
     return (
       (Number(this.key("KeyD")) || Number(this.key("ArrowRight"))) -

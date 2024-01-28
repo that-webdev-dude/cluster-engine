@@ -1,33 +1,40 @@
-// prettier-ignore
-import { 
-  Container, 
-  Camera, 
-  Entity, 
-  Scene, 
-  Cmath,
-  Game, 
-  State,
-  Dialog,
-  Text,
-  Vector,
-  Sound
-} from "../ares";
-import { Enemy } from "../entities/Enemy";
-import { Bullet } from "../entities/Bullet";
-import EnemySpawner from "../lib/EnemySpawner";
-import TimedEmitter from "../lib/TimedEmitter";
-import Background from "../entities/Background";
-import Player from "../entities/Player";
-import Explosion from "../entities/Explosion";
-import ReadyDialog from "../dialogs/ReadyDialog";
-import PauseDialog from "../dialogs/PauseDialog";
-import Pup from "../entities/Pup"; // pup
+import { GAME_CONFIG } from "../config/GameConfig";
+import { GAME_GLOBALS } from "../globals/GameGlobals";
 import {
-  DefaultShootingStrategy,
-  DoubleShootingStrategy,
-} from "../lib/ShootingStrategy"; // pup
-// import GameplaySoundURL from "../sounds/Gameplay.mp3";
+  Container,
+  Camera,
+  Vector,
+  State,
+  Scene,
+  Game,
+  Rect,
+  Text,
+  Dialog,
+} from "../ares";
+import PauseDialog from "../dialogs/PauseDialog";
 
+// GUI components into a separate layer
+const { width, fontStyle } = GAME_CONFIG;
+class GUI extends Container {
+  private _timerText = new Text({
+    text: "",
+    align: "center",
+    fill: "black",
+    font: `20px ${fontStyle}`,
+    position: new Vector(width / 2, 32),
+  });
+
+  constructor() {
+    super();
+    this.add(this._timerText);
+  }
+
+  public update(dt: number, t: number): void {
+    this._timerText.text = `${Math.floor(GAME_GLOBALS.elapsedTime) + 1}`;
+  }
+}
+
+// gameplay states
 enum STATES {
   load,
   play,
@@ -36,344 +43,118 @@ enum STATES {
   win,
 }
 
-// const gameplaySound = new Sound(GameplaySoundURL);
-
-const pup = new Pup(new Vector(100, 100), new DoubleShootingStrategy()); // pup
-const levelManager = new TimedEmitter(10);
-
 class GamePlay extends Scene {
-  private _playerBullets: Container;
-  private _enemyBullets: Container;
-  private _explosions: Container;
-  private _enemies: Container;
-  private _pups: Container;
-  private _state: State<STATES>;
-  private _player: Player;
-  private _camera: Camera;
-  private _dialog: Dialog | null;
-  private _background: Background;
-  private _enemySpawner: EnemySpawner;
+  static playerSpeedX = 250;
+  static playerSpeedY = 250;
 
-  scoresText: Text;
-  playerLivesText: Text;
-  playerShieldText: Text;
+  state: State<STATES>;
+  camera: Camera;
+  player: Rect;
+  dialog: Dialog | null = null;
 
   constructor(
     game: Game,
-    globals: any,
-    transitions?: {
-      toPrevious?: () => void;
-      toStart?: () => void;
-      toNext?: () => void;
-      toEnd?: () => void;
+    transitions: {
+      toNext: () => void;
     }
   ) {
-    super(game, globals, transitions);
     const { width, height } = game;
-    const playerBullets = new Container();
-    const enemyBullets = new Container();
-    const background = new Background({ width, height });
-    const explosions = new Container();
-    const enemies = new Container();
-    const pups = new Container();
-    const player = new Player({
-      inputKeyboard: game.keyboard,
-      inputGamepad: game.gamepad,
-      lives: globals.lives,
+    super(game, transitions);
+    this.dialog = null;
+    this.state = new State(STATES.play);
+    this.player = new Rect({
+      width: 32,
+      height: 32,
+      fill: "grey",
+      position: new Vector(100, 100),
     });
-    const camera = new Camera({
-      worldSize: { width, height },
+    this.camera = new Camera({
       viewSize: { width, height },
-      subject: player,
+      worldSize: { width, height },
+      subject: this.player,
     });
 
-    this._playerBullets = playerBullets;
-    this._enemyBullets = enemyBullets;
-    this._background = background;
-    this._explosions = explosions;
-    this._enemies = enemies;
-    this._pups = pups;
-    this._player = player;
-    this._camera = camera;
-    this._state = new State(STATES.load);
-    this._dialog = null;
-    this._enemySpawner = new EnemySpawner(game, this._enemies);
+    this.camera.add(this.player);
+    this.camera.add(new GUI());
 
-    // GUI
-    this.scoresText = new Text({
-      text: `Scores: ${globals.scores}`,
-      fill: "white",
-      position: new Vector(game.width / 2, 48),
-    });
-    this.playerLivesText = new Text({
-      text: `Lives: ${this._player.lives}`,
-      fill: "white",
-      position: new Vector(game.width - 64, game.height - 64),
-      align: "right",
-    });
-    this.playerShieldText = new Text({
-      text: `Shield: ${this._player.health}`,
-      fill: "white",
-      position: new Vector(64, game.height - 64),
-      align: "left",
-    });
-
-    this._initialize();
+    this.add(this.camera);
   }
 
-  private _initialize() {
-    const { game } = this;
-    const playerPosX = 100;
-    const playerPosY = game.height / 2 - this._player.height / 2;
-    this._player.position.set(playerPosX, playerPosY);
-    this._player.active = false;
-    this._camera.add(this._background);
-    this._camera.add(this._player);
-    this._camera.add(this._enemies);
-    this._camera.add(this._enemyBullets);
-    this._camera.add(this._playerBullets);
-    this._camera.add(this._explosions);
+  private _updateGamePlay(dt: number, t: number): void {
+    super.update(dt, t);
 
-    // GUI
-    this._camera.add(this.scoresText);
-    this._camera.add(this.playerLivesText);
-    this._camera.add(this.playerShieldText);
+    // Game logic goes here
+    this.player.position.x += GamePlay.playerSpeedX * dt;
+    if (
+      this.player.position.x > this.game.width - this.player.width ||
+      this.player.position.x < 0
+    ) {
+      GamePlay.playerSpeedX *= -1;
+    }
+    this.player.position.y += GamePlay.playerSpeedY * dt;
+    if (
+      this.player.position.y > this.game.height - this.player.height ||
+      this.player.position.y < 0
+    ) {
+      GamePlay.playerSpeedY *= -1;
+    }
 
-    this.add(this._camera);
-
-    // gameplaySound.play({ loop: true, volume: 0.5 });
-    this._pups.add(pup);
-  }
-
-  private _play(dt: number, t: number) {
-    const { _player, _enemies, _pups, _playerBullets, _enemyBullets, game } =
-      this;
-
-    // update levelManager
-    levelManager.update(dt, t);
-
-    // Update the enemy spawner
-    this._enemySpawner.update(dt, t);
-
-    // clamping the player position to the screen size
-    // so it doesn't go offscreen
-    _player.position.x = Cmath.clamp(
-      _player.position.x,
-      24,
-      game.width - _player.width
-    );
-    _player.position.y = Cmath.clamp(
-      _player.position.y,
-      0,
-      game.height - _player.height
-    );
-
-    // player shooting logic goes here
-    // the player should return an array of bullets
-    // or null if no bullets are fired
-    if (game.keyboard.action || game.gamepad.buttonA) {
-      const playerBullets = _player.fire();
-      if (playerBullets) {
-        playerBullets.forEach((bullet) => {
-          _playerBullets.add(bullet);
-        });
+    if (GAME_GLOBALS.elapsedTime > 5) {
+      GAME_GLOBALS.isWin = true;
+      this.transitions.toNext();
+    }
+    if (!this.state.is([STATES.pause])) {
+      if (this.game.keyboard.pause) {
+        this.state.set(STATES.pause);
+        this.game.keyboard.active = false;
       }
     }
 
-    // all the bullets going offscreen are removed
-    // this should include all the entities that are not player
-    [..._playerBullets.children, ..._enemyBullets.children].forEach(
-      (bullet) => {
-        if (
-          bullet.position.x > game.width ||
-          bullet.position.x < 0 ||
-          bullet.position.y > game.height ||
-          bullet.position.y < 0
-        ) {
-          bullet.dead = true;
-        }
+    GAME_GLOBALS.elapsedTime += dt;
+  }
+
+  private _updateGamePause(dt: number, t: number): void {
+    if (this.state.is([STATES.pause])) {
+      if (this.game.keyboard.key("Enter")) {
+        if (this.dialog) this.camera.remove(this.dialog);
+        this.state.set(STATES.play);
+        this.game.keyboard.active = false;
       }
-    );
-    [..._enemies.children].forEach((enemy) => {
-      if (enemy instanceof Enemy) {
-        if (enemy.position.x + enemy.width < 0) {
-          enemy.dead = true;
-        }
-      }
-    });
-
-    // the enemy shoots back
-    _enemies.children.forEach((enemy) => {
-      if (enemy instanceof Enemy) {
-        const enemyBullets = enemy.fire();
-        if (enemyBullets) {
-          enemyBullets.forEach((bullet) => {
-            _enemyBullets.add(bullet);
-          });
-        }
-      }
-    });
-
-    // player-enemy collision
-    _enemies.children.forEach((enemy) => {
-      if (enemy instanceof Enemy) {
-        Entity.hit(_player, enemy, () => {
-          if (enemy instanceof Enemy) {
-            if (!_player.invincible) {
-              _player.hit(1, () => {
-                this._camera.shake();
-                this.playerShieldText.text = `Shield: ${this._player.health}`;
-              });
-              enemy.die(() => {
-                /* do something */
-              });
-            }
-          }
-        });
-      }
-    });
-
-    // player-enemyBullet collision
-    _enemyBullets.children.forEach((bullet) => {
-      Entity.hit(_player, bullet, () => {
-        if (bullet instanceof Bullet) {
-          if (!_player.invincible) {
-            bullet.dead = true;
-            _player.hit(bullet.damage, () => {
-              this._camera.shake();
-              this.playerShieldText.text = `Shield: ${this._player.health}`;
-            });
-          }
-        }
-      });
-    });
-
-    // playerBullet-enemy collision
-    _playerBullets.children.forEach((bullet) => {
-      _enemies.children.forEach((enemy) => {
-        Entity.hit(bullet, enemy, () => {
-          if (enemy instanceof Enemy && bullet instanceof Bullet) {
-            bullet.dead = true;
-            enemy.hit(bullet.damage, () => {
-              this.scoresText.text = `Scores: ${(this.globals.scores += 10)}`;
-              this._explosions.add(new Explosion(enemy.position));
-              this._camera.shake();
-            });
-            if (enemy.health <= 0) {
-              enemy.die(() => {
-                /* do something */
-              });
-            }
-          }
-        });
-      });
-    });
-
-    // // player-pup collision
-    // _pups.children.forEach((pup) => {
-    //   Entity.hit(_player, pup, () => {
-    //     if (pup instanceof Pup) {
-    //       _player.cannon.shootingStrategy = pup.payload;
-    //       pup.dead = true;
-    //     }
-    //   });
-    // });
-
-    // player dies with zero-health
-    if (_player.health <= 0) {
-      _player.die(() => {
-        this.playerLivesText.text = `Lives: ${_player.lives}`;
-        _player.position.set(100, game.height / 2 - _player.height / 2);
-      });
-    }
-
-    // game over
-    if (_player.lives <= 0) {
-      this.transitions.toPrevious();
     }
   }
 
-  update(dt: number, t: number) {
-    const { _state } = this;
-    _state.update(dt);
-
-    switch (_state.get()) {
+  update(dt: number, t: number): void {
+    this.state.update(dt);
+    switch (this.state.get()) {
+      // LOADING STATE
       case STATES.load:
-        if (_state.first) {
-          const onDialogClose = () => {
-            this._player.active = true;
-            if (this._dialog) {
-              this._dialog.dead = true;
-              this._state.set(STATES.play);
-            }
-          };
-          this._dialog = new ReadyDialog(onDialogClose);
-          this._dialog.position.set(
-            this.game.width / 2 - this._dialog.width / 2,
-            this.game.height / 2 - this._dialog.height / 2
-          );
-          this._camera.add(this._dialog);
-        }
-        super.update(dt, t);
         break;
 
+      // PLAYING STATE
       case STATES.play:
-        super.update(dt, t);
-        this._play(dt, t);
-
-        if (!_state.is([STATES.pause])) {
-          if (this.game.keyboard.key("KeyP") || this.game.gamepad.buttonB) {
-            _state.set(STATES.pause);
-            this.game.keyboard.active = false;
-          }
-        }
+        this._updateGamePlay(dt, t);
         break;
 
+      // PAUSED STATE
       case STATES.pause:
-        if (_state.first) {
-          this._dialog = new PauseDialog(() => {});
-          this._dialog.position.set(
-            this.game.width / 2 - this._dialog.width / 2,
-            this.game.height / 2 - this._dialog.height / 2
-          );
-          this._camera.add(this._dialog);
+        if (this.state.first) {
+          this.dialog = new PauseDialog(this.game);
+          this.camera.add(this.dialog);
         }
-        // if (_state.is([STATES.pause])) {
-        if (this.game.keyboard.key("Escape") || this.game.gamepad.buttonY) {
-          this.game.keyboard.active = false;
-          if (this._dialog) {
-            this._dialog.dead = true;
-            this.transitions.toStart();
-          }
-        }
-        // }
-
-        // if (_state.is([STATES.pause])) {
-        if (this.game.keyboard.key("Enter") || this.game.gamepad.buttonA) {
-          this.game.keyboard.active = false;
-          if (this._dialog) {
-            this._dialog.dead = true;
-            _state.set(STATES.play);
-          }
-        }
-        // }
+        this._updateGamePause(dt, t);
         break;
 
+      // GAME OVER STATE
       case STATES.loose:
-        if (_state.first) {
-          // do something
-        }
-        // do something
         break;
 
+      // GAME WON STATE
       case STATES.win:
-        if (_state.first) {
-          // do something
-        }
-        // do something
         break;
-      default:
-        break;
+    }
+
+    if (GamePlay.firstFrame) {
+      GamePlay.firstFrame = false;
     }
   }
 }

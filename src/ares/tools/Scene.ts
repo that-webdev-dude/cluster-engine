@@ -1,46 +1,56 @@
 import Game from "../core/Game";
 import Container from "../core/Container";
 
-const TRANSITION_DEFAULTS = {
-  toStart: () => {},
-  toEnd: () => {},
+const defaultTransitions = {
+  toFirst: () => {},
+  toLast: () => {},
   toNext: () => {},
   toPrevious: () => {},
+  toSelected: () => {},
 };
 
 class Scene extends Container {
+  public static firstFrame = true;
   public game: Game;
-  public globals: any;
   public transitions: {
-    toStart: () => void;
-    toEnd: () => void;
+    toFirst: () => void;
+    toLast: () => void;
     toNext: () => void;
     toPrevious: () => void;
+    toSelected: () => void;
   };
 
   constructor(
     game: Game,
-    globals: any,
     transitions?: {
-      toStart?: () => void;
-      toEnd?: () => void;
+      toFirst?: () => void;
+      toLast?: () => void;
       toNext?: () => void;
       toPrevious?: () => void;
+      toSelected?: () => void;
     }
   ) {
     super();
     this.game = game;
-    this.globals = globals;
+
     this.transitions = {
-      toStart: transitions?.toStart || TRANSITION_DEFAULTS.toStart,
-      toEnd: transitions?.toEnd || TRANSITION_DEFAULTS.toEnd,
-      toNext: transitions?.toNext || TRANSITION_DEFAULTS.toNext,
-      toPrevious: transitions?.toPrevious || TRANSITION_DEFAULTS.toPrevious,
+      toLast: transitions?.toLast || defaultTransitions.toLast,
+
+      toNext: transitions?.toNext || defaultTransitions.toNext,
+
+      toFirst: transitions?.toFirst || defaultTransitions.toFirst,
+
+      toPrevious: transitions?.toPrevious || defaultTransitions.toPrevious,
+
+      toSelected: transitions?.toSelected || defaultTransitions.toSelected,
     };
   }
 
   update(dt: number, t: number): void {
     super.update(dt, t);
+    if (Scene.firstFrame) {
+      Scene.firstFrame = false;
+    }
   }
 }
 
