@@ -10,7 +10,6 @@ class GUI extends Container {
     width: width,
     fill: "lightGrey",
   });
-
   private _gameTitleText = new Text({
     text: title,
     align: "center",
@@ -21,7 +20,6 @@ class GUI extends Container {
     alpha: 0,
     position: new Vector(width / 2, height / 2 - 104),
   });
-
   private _gameActionText = new Text({
     text: "NEW GAME",
     align: "center",
@@ -29,7 +27,6 @@ class GUI extends Container {
     font: `20px ${fontStyle}`,
     position: new Vector(width / 2, height / 2),
   });
-
   private _gameFooterText = new Text({
     text: `@${author} ${year}`,
     align: "center",
@@ -38,7 +35,6 @@ class GUI extends Container {
     font: `12px ${fontStyle}`,
     position: new Vector(width / 2, height - 32),
   });
-
   private _timer: Timer = new Timer({
     duration: 3,
     delay: 0.5,

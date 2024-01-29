@@ -45,6 +45,11 @@ class KeyboardInput {
     return this.key("KeyP");
   }
 
+  get quit(): boolean {
+    console.log(this.key("Escape"));
+    return this.key("Escape");
+  }
+
   get x(): number {
     return (
       (Number(this.key("KeyD")) || Number(this.key("ArrowRight"))) -

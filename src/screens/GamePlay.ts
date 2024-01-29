@@ -56,6 +56,7 @@ class GamePlay extends Scene {
     game: Game,
     transitions: {
       toNext: () => void;
+      toFirst: () => void;
     }
   ) {
     const { width, height } = game;
@@ -82,16 +83,14 @@ class GamePlay extends Scene {
 
   private _updateGamePlay(dt: number, t: number): void {
     super.update(dt, t);
-
-    // Game logic goes here
     this.player.position.x += GamePlay.playerSpeedX * dt;
+    this.player.position.y += GamePlay.playerSpeedY * dt;
     if (
       this.player.position.x > this.game.width - this.player.width ||
       this.player.position.x < 0
     ) {
       GamePlay.playerSpeedX *= -1;
     }
-    this.player.position.y += GamePlay.playerSpeedY * dt;
     if (
       this.player.position.y > this.game.height - this.player.height ||
       this.player.position.y < 0
@@ -99,25 +98,31 @@ class GamePlay extends Scene {
       GamePlay.playerSpeedY *= -1;
     }
 
-    if (GAME_GLOBALS.elapsedTime > 5) {
-      GAME_GLOBALS.isWin = true;
-      this.transitions.toNext();
+    // game pause
+    if (this.game.keyboard.pause) {
+      this.state.set(STATES.pause);
+      this.game.keyboard.active = false;
     }
-    if (!this.state.is([STATES.pause])) {
-      if (this.game.keyboard.pause) {
-        this.state.set(STATES.pause);
-        this.game.keyboard.active = false;
-      }
-    }
+
+    // game win
+
+    // game loose
 
     GAME_GLOBALS.elapsedTime += dt;
   }
 
   private _updateGamePause(dt: number, t: number): void {
-    if (this.state.is([STATES.pause])) {
-      if (this.game.keyboard.key("Enter")) {
-        if (this.dialog) this.camera.remove(this.dialog);
+    if (this.game.keyboard.key("Enter")) {
+      if (this.dialog) {
+        this.dialog.dead = true;
         this.state.set(STATES.play);
+        this.game.keyboard.active = false;
+      }
+    }
+    if (this.game.keyboard.key("Escape")) {
+      if (this.dialog) {
+        this.dialog.dead = true;
+        this.transitions.toFirst();
         this.game.keyboard.active = false;
       }
     }

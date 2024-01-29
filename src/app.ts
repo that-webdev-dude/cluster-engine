@@ -43,6 +43,7 @@ const startGamePlay = () => {
       // toStart: startGameTitle,
       // toEnd: startGameWin,
       toNext: startGameEnd,
+      toFirst: startGameTitle,
       // toPrevious: startGameOver,
     })
   );
