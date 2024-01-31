@@ -3,6 +3,7 @@ import Container from "../core/Container";
 
 // TODO
 // - maybe only the transition toNext is worth leaving? all the rest look redundant
+// - probably the game reference is redundant
 
 const defaultTransitions = {
   toFirst: () => {},
@@ -13,7 +14,7 @@ const defaultTransitions = {
 };
 
 class Scene extends Container {
-  public static firstFrame = true;
+  public firstFrame = true;
   public game: Game;
   public transitions: {
     toFirst: () => void;
@@ -51,8 +52,8 @@ class Scene extends Container {
 
   update(dt: number, t: number): void {
     super.update(dt, t);
-    if (Scene.firstFrame) {
-      Scene.firstFrame = false;
+    if (this.firstFrame) {
+      this.firstFrame = false;
     }
   }
 }

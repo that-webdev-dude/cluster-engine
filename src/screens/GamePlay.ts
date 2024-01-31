@@ -7,11 +7,14 @@ import {
   State,
   Scene,
   Game,
-  Rect,
   Text,
   Dialog,
+  Entity,
 } from "../ares";
 import PauseDialog from "../dialogs/PauseDialog";
+import Player from "../entities/Player";
+import Enemy from "../entities/Enemy";
+import Goal from "../entities/Goal";
 
 // GUI components into a separate layer
 const { width, fontStyle } = GAME_CONFIG;
@@ -36,11 +39,8 @@ class GUI extends Container {
 
 // gameplay states
 enum STATES {
-  load,
   play,
   pause,
-  loose,
-  win,
 }
 
 class GamePlay extends Scene {
@@ -49,7 +49,9 @@ class GamePlay extends Scene {
 
   state: State<STATES>;
   camera: Camera;
-  player: Rect;
+  player: Player;
+  enemy: Enemy;
+  goal: Goal;
   dialog: Dialog | null = null;
 
   constructor(
@@ -63,19 +65,18 @@ class GamePlay extends Scene {
     super(game, transitions);
     this.dialog = null;
     this.state = new State(STATES.play);
-    this.player = new Rect({
-      width: 32,
-      height: 32,
-      fill: "grey",
-      position: new Vector(100, 100),
-    });
+    this.player = new Player(game.keyboard, game.gamepad);
+    this.enemy = new Enemy();
+    this.goal = new Goal();
     this.camera = new Camera({
-      viewSize: { width, height },
       worldSize: { width, height },
+      viewSize: { width, height },
       subject: this.player,
     });
 
     this.camera.add(this.player);
+    this.camera.add(this.enemy);
+    this.camera.add(this.goal);
     this.camera.add(new GUI());
 
     this.add(this.camera);
@@ -83,30 +84,17 @@ class GamePlay extends Scene {
 
   private _updateGamePlay(dt: number, t: number): void {
     super.update(dt, t);
-    this.player.position.x += GamePlay.playerSpeedX * dt;
-    this.player.position.y += GamePlay.playerSpeedY * dt;
-    if (
-      this.player.position.x > this.game.width - this.player.width ||
-      this.player.position.x < 0
-    ) {
-      GamePlay.playerSpeedX *= -1;
-    }
-    if (
-      this.player.position.y > this.game.height - this.player.height ||
-      this.player.position.y < 0
-    ) {
-      GamePlay.playerSpeedY *= -1;
-    }
+    // game win if hit the goal
+    Entity.hit(this.player, this.goal, () => {
+      GAME_GLOBALS.isWin = true;
+      this.transitions.toNext();
+    });
 
-    // game pause
-    if (this.game.keyboard.pause) {
-      this.state.set(STATES.pause);
-      this.game.keyboard.active = false;
-    }
-
-    // game win
-
-    // game loose
+    // game loose if hit the enemy
+    Entity.hit(this.player, this.enemy, () => {
+      GAME_GLOBALS.isWin = false;
+      this.transitions.toNext();
+    });
 
     GAME_GLOBALS.elapsedTime += dt;
   }
@@ -131,13 +119,13 @@ class GamePlay extends Scene {
   update(dt: number, t: number): void {
     this.state.update(dt);
     switch (this.state.get()) {
-      // LOADING STATE
-      case STATES.load:
-        break;
-
       // PLAYING STATE
       case STATES.play:
         this._updateGamePlay(dt, t);
+        if (this.game.keyboard.pause) {
+          this.game.keyboard.active = false;
+          this.state.set(STATES.pause);
+        }
         break;
 
       // PAUSED STATE
@@ -148,18 +136,6 @@ class GamePlay extends Scene {
         }
         this._updateGamePause(dt, t);
         break;
-
-      // GAME OVER STATE
-      case STATES.loose:
-        break;
-
-      // GAME WON STATE
-      case STATES.win:
-        break;
-    }
-
-    if (GamePlay.firstFrame) {
-      GamePlay.firstFrame = false;
     }
   }
 }
