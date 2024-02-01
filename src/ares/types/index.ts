@@ -1,18 +1,23 @@
 import Vector from "../tools/Vector";
 
-type milliseconds = number;
+// type milliseconds = number;
+type Milliseconds = number;
 
-type seconds = number;
+// type seconds = number;
+type Seconds = number;
 
-type degrees = number;
+// type degrees = number;
+type Degrees = number;
 
-type radians = number;
+// type radians = number;
+type Radians = number;
 
-type pixels = number;
+// type pixels = number;
+type Pixels = number;
 
 type Locateable = {
-  x: pixels;
-  y: pixels;
+  x: Pixels;
+  y: Pixels;
 };
 
 type Positionable = {
@@ -21,8 +26,8 @@ type Positionable = {
 };
 
 type Sizeable = {
-  width?: pixels;
-  height?: pixels;
+  width?: Pixels;
+  height?: Pixels;
 };
 
 // type Sizeable = {
@@ -30,13 +35,13 @@ type Sizeable = {
 // };
 
 type Measurable = {
-  width: pixels;
-  height: pixels;
+  width: Pixels;
+  height: Pixels;
 };
 
 type Rotatable = {
   pivot: Vector;
-  angle: radians;
+  angle: Radians;
 };
 
 type Scalable = {
@@ -51,6 +56,10 @@ type Deadable = {
   dead: boolean;
 };
 
+type Visible = {
+  visible: boolean;
+};
+
 type Collidable = {
   hitbox?: Locateable & Sizeable; // made optional for now
 };
@@ -60,7 +69,7 @@ type Renderable = {
 };
 
 type Updateable = {
-  update: (delta: milliseconds, elapsed: seconds) => void;
+  update: (delta: Milliseconds, elapsed: Seconds) => void;
 };
 
 type Resetable = {
@@ -92,15 +101,21 @@ export {
   Scalable,
   Alphaable,
   Deadable,
+  Visible,
   Collidable,
   Renderable,
   Updateable,
   Resetable,
   EntityType,
   EntityContainerType,
-  milliseconds,
-  seconds,
-  degrees,
-  radians,
-  pixels,
+  // milliseconds, // not used
+  // seconds, // not used
+  // degrees, // not used
+  // radians, // not used
+  // pixels, // not used
+  Milliseconds,
+  Seconds,
+  Degrees,
+  Radians,
+  Pixels,
 };
