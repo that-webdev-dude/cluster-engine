@@ -1,18 +1,13 @@
 import Vector from "../tools/Vector";
 
-// type milliseconds = number;
 type Milliseconds = number;
 
-// type seconds = number;
 type Seconds = number;
 
-// type degrees = number;
 type Degrees = number;
 
-// type radians = number;
 type Radians = number;
 
-// type pixels = number;
 type Pixels = number;
 
 type Locateable = {
@@ -81,14 +76,14 @@ type EntityType = Positionable &
   Rotatable &
   Scalable &
   Alphaable &
-  Deadable &
   Collidable &
-  Renderable;
+  Renderable &
+  Deadable;
 
-type EntityContainerType = Positionable &
+type ContainerType = Positionable &
   Updateable &
   Deadable & {
-    children: Array<EntityType | EntityContainerType>;
+    children: Array<ContainerType | Deadable>;
     size: number;
   };
 
@@ -106,16 +101,11 @@ export {
   Renderable,
   Updateable,
   Resetable,
-  EntityType,
-  EntityContainerType,
-  // milliseconds, // not used
-  // seconds, // not used
-  // degrees, // not used
-  // radians, // not used
-  // pixels, // not used
   Milliseconds,
   Seconds,
   Degrees,
   Radians,
   Pixels,
 };
+
+export { ContainerType, EntityType };

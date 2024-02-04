@@ -1,7 +1,7 @@
 import { GAME_CONFIG } from "../config/GameConfig";
 import { GAME_GLOBALS } from "../globals/GameGlobals";
 import {
-  Container,
+  // Container,
   Camera,
   Vector,
   State,
@@ -11,6 +11,7 @@ import {
   Dialog,
   Entity,
 } from "../ares";
+import Container from "../ares/core/Container";
 import PauseDialog from "../dialogs/PauseDialog";
 import Player from "../entities/Player";
 import Enemy from "../entities/Enemy";

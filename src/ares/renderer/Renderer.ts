@@ -1,4 +1,4 @@
-import { EntityType, EntityContainerType } from "../types";
+import { EntityType, ContainerType } from "../types";
 
 type RendererConfig = {
   height?: number;
@@ -116,7 +116,7 @@ class Renderer {
     }
   }
 
-  private _renderRecursive(container: EntityContainerType) {
+  private _renderRecursive(container: ContainerType) {
     if (container.size === 0) return;
 
     this.context.save();
@@ -128,10 +128,10 @@ class Renderer {
       );
     }
 
-    container.children.forEach((child: EntityType | EntityContainerType) => {
-      // child is an array of EntityContainerType
+    container.children.forEach((child) => {
+      // child is an array of ContainerType
       if ("children" in child) {
-        this._renderRecursive(child as EntityContainerType);
+        this._renderRecursive(child as ContainerType);
       }
 
       // child is a EntityType
@@ -141,13 +141,13 @@ class Renderer {
     this.context.restore();
   }
 
-  public render(item: EntityContainerType | EntityType, clear: boolean = true) {
+  public render(item: ContainerType | EntityType, clear: boolean = true) {
     if (clear) {
       this.context.clearRect(0, 0, this.width, this.height);
     }
 
     if ("children" in item) {
-      this._renderRecursive(item as EntityContainerType);
+      this._renderRecursive(item as ContainerType);
     }
 
     this._render(item as EntityType);

@@ -1,4 +1,3 @@
-import { EntityContainerType } from "../types";
 import KeyboardInput from "../input/Keyboard";
 import GamepadInput from "../input/Gamepad";
 import MouseInput from "../input/Mouse";
@@ -17,7 +16,7 @@ type GameOptions = {
 class Game {
   readonly version: string;
   readonly title: string;
-  private _scene: EntityContainerType;
+  private _scene: Container;
   private _engine: Engine;
   private _renderer: Renderer;
   private _mouseInput: MouseInput;
@@ -58,7 +57,7 @@ class Game {
     return this._renderer.height;
   }
 
-  get scene(): EntityContainerType {
+  get scene(): Container {
     return this._scene;
   }
 

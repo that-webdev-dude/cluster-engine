@@ -1,40 +1,30 @@
-import { EntityContainerType, EntityType } from "../types";
+import {
+  Seconds,
+  Milliseconds,
+  Updateable,
+  Deadable,
+  ContainerType,
+} from "../types";
 import Vector from "../tools/Vector";
 
-interface IEntityContainer extends EntityContainerType {}
-interface IEntityContainerConfig {
-  // TODO: add to Container class constructor
-  position?: Vector;
-  anchor?: Vector;
-}
+type ChildType = Deadable & (Updateable | {});
 
-class Container implements IEntityContainer {
-  readonly position: Vector;
-  readonly anchor: Vector;
-  public dead: boolean;
-  public children: Array<EntityType | EntityContainerType>;
-
-  constructor() {
-    this.children = [];
-    this.position = new Vector();
-    this.anchor = new Vector();
-    this.dead = false;
-  }
+class Container implements ContainerType {
+  dead: boolean = false;
+  children: Array<ContainerType | ChildType> = [];
+  position: Vector = new Vector();
+  anchor: Vector = new Vector();
 
   get size(): number {
     return this.children.length;
   }
 
-  public add(
-    child: EntityType | EntityContainerType
-  ): EntityType | EntityContainerType {
+  public add(child: ChildType | ContainerType): ChildType | ContainerType {
     this.children.push(child);
     return child;
   }
 
-  public remove(
-    child: EntityType | EntityContainerType
-  ): EntityType | EntityContainerType {
+  public remove(child: ChildType | ContainerType): ChildType | ContainerType {
     const index = this.children.indexOf(child);
     if (index > -1) {
       this.children.splice(index, 1);
@@ -42,13 +32,17 @@ class Container implements IEntityContainer {
     return child;
   }
 
-  public update(dt: number, t: number) {
-    this.children = this.children.filter((child) => {
+  update(dt: Milliseconds, t: Seconds) {
+    for (let i = 0; i < this.children.length; i++) {
+      const child = this.children[i];
       if ("update" in child) {
         child.update(dt, t);
       }
-      return !("dead" in child && child.dead);
-    });
+      if (child.dead) {
+        this.children.splice(i, 1);
+        i--;
+      }
+    }
   }
 }
 
