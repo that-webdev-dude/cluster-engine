@@ -86,16 +86,16 @@ class GamePlay extends Scene {
   private _updateGamePlay(dt: number, t: number): void {
     super.update(dt, t);
     // game win if hit the goal
-    Entity.hit(this.player, this.goal, () => {
-      GAME_GLOBALS.isWin = true;
-      this.transitions.toNext();
-    });
+    // Entity.hit(this.player, this.goal, () => {
+    //   GAME_GLOBALS.isWin = true;
+    //   this.transitions.toNext();
+    // });
 
-    // game loose if hit the enemy
-    Entity.hit(this.player, this.enemy, () => {
-      GAME_GLOBALS.isWin = false;
-      this.transitions.toNext();
-    });
+    // // game loose if hit the enemy
+    // Entity.hit(this.player, this.enemy, () => {
+    //   GAME_GLOBALS.isWin = false;
+    //   this.transitions.toNext();
+    // });
 
     GAME_GLOBALS.elapsedTime += dt;
   }
