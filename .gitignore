@@ -6,6 +6,7 @@ snippets.txt
 vendor
 tiled
 changes.patch
+.vscode
 
 # Logs
 logs
