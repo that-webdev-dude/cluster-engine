@@ -71,22 +71,6 @@ type Resetable = {
   reset: () => void;
 };
 
-type EntityType = Positionable &
-  Sizeable &
-  Rotatable &
-  Scalable &
-  Alphaable &
-  Collidable &
-  Renderable &
-  Deadable;
-
-type ContainerType = Positionable &
-  Updateable &
-  Deadable & {
-    children: Array<ContainerType | Deadable>;
-    size: number;
-  };
-
 export {
   Locateable,
   Positionable,
@@ -107,5 +91,21 @@ export {
   Radians,
   Pixels,
 };
+
+type EntityType = Positionable &
+  Sizeable &
+  Rotatable &
+  Scalable &
+  Alphaable &
+  Collidable &
+  Renderable &
+  Deadable;
+
+type ContainerType = Positionable &
+  Updateable &
+  Deadable & {
+    children: Array<ContainerType | Deadable>;
+    size: number;
+  };
 
 export { ContainerType, EntityType };
