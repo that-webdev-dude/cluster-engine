@@ -70,6 +70,13 @@ class Vector {
     return this.multiply(scalar);
   }
 
+  public swap(): this {
+    let x = this.x;
+    this.x = this.y;
+    this.y = x;
+    return this;
+  }
+
   public reverse(): this {
     return this.scale(-1);
   }

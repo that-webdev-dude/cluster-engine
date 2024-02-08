@@ -52,6 +52,7 @@ class Scene extends Container {
 
   update(dt: number, t: number): void {
     super.update(dt, t);
+    // this.game.mouse.update();
     if (this.firstFrame) {
       this.firstFrame = false;
     }

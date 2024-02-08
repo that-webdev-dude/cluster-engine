@@ -5,7 +5,7 @@ export { default as Sound } from "./core/Sound";
 export { default as Game } from "./core/Game";
 export { default as Text } from "./core/Text";
 export { default as State } from "./core/State";
-export { Rect, Circle } from "./core/Shape";
+export { Line, Rect, Circle } from "./core/Shape";
 export { Sprite, TileSprite } from "./core/Sprite";
 
 // tools

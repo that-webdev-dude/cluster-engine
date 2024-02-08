@@ -58,15 +58,39 @@ class Shape implements IShape {
     this.lineWidth = lineWidth;
   }
 
-  // get width(): number {
-  //   return 0;
-  // }
-
-  // get height(): number {
-  //   return 0;
-  // }
-
   public render(ctx: CanvasRenderingContext2D) {}
+}
+
+// LINE CLASS DEFINITION
+interface ILineConfig extends IShapeConfig {
+  start: Vector;
+  end: Vector;
+  stroke?: string;
+}
+
+class Line extends Shape {
+  public start: Vector;
+  public end: Vector;
+  public stroke: string;
+
+  constructor({ start, end, stroke = "black", ...superConfig }: ILineConfig) {
+    super(superConfig);
+    this.start = start;
+    this.end = end;
+    this.stroke = stroke;
+  }
+
+  // get direction(): Vector {
+  //   return this.end.clone().subtract(this.start).normalize();
+  // }
+
+  public render(context: CanvasRenderingContext2D) {
+    context.beginPath();
+    context.moveTo(this.start.x, this.start.y);
+    context.lineTo(this.end.x, this.end.y);
+    context.strokeStyle = this.stroke;
+    context.stroke();
+  }
 }
 
 // RECT CLASS DEFINITION
@@ -147,4 +171,4 @@ class Circle extends Shape {
   }
 }
 
-export { Rect, Circle };
+export { Line, Rect, Circle };
