@@ -1,7 +1,6 @@
 import { GAME_CONFIG } from "../config/GameConfig";
 import { GAME_GLOBALS } from "../globals/GameGlobals";
 import {
-  // Container,
   Camera,
   Vector,
   State,
@@ -9,9 +8,9 @@ import {
   Game,
   Text,
   Rect,
-  Line,
   Dialog,
-  Entity,
+  Physics,
+  Cmath,
 } from "../ares";
 import Container from "../ares/core/Container";
 import PauseDialog from "../dialogs/PauseDialog";
@@ -43,54 +42,63 @@ enum STATES {
   pause,
 }
 
-const obstacle = new Rect({
-  width: 100,
-  height: 100,
-  fill: "transparent",
-  stroke: "blue",
-  // position: new Vector(width / 2 - 64, height / 2 - 64),
-  position: new Vector(400, 400),
-});
-
-const rectangle = new Rect({
-  width: 32,
-  height: 32,
-  fill: "transparent",
-  stroke: "red",
-  position: new Vector(width / 2, height / 2),
-});
-
-const line = new Line({
-  start: new Vector(20, 500),
-  end: new Vector(100, 100),
-  stroke: "green",
-});
-
-class Ray {
-  start: Vector;
-  end: Vector;
-  constructor(start: Vector, end: Vector) {
-    this.start = start;
-    this.end = end;
-  }
-  public get direction(): Vector {
-    const dx = this.end.x - this.start.x;
-    const dy = this.end.y - this.start.y;
-    // const distance = Math.sqrt(dx * dx + dy * dy);
-    let dirX = (this.end.x - this.start.x) / 1;
-    let dirY = (this.end.y - this.start.y) / 1;
-    return new Vector(dirX, dirY);
+class Player extends Rect {
+  size = new Vector();
+  center = new Vector();
+  velocity = new Vector();
+  acceleration = new Vector();
+  direction = new Vector();
+  constructor() {
+    super({
+      width: 50,
+      height: 50,
+      fill: "transparent",
+      stroke: "red",
+      position: new Vector(0, 0),
+    });
   }
 
-  public get inverseDirection(): Vector {
-    const dx = this.end.x - this.start.x;
-    const dy = this.end.y - this.start.y;
-    // const distance = Math.sqrt(dx * dx + dy * dy);
-    let dirX = (this.start.x - this.end.x) / 1;
-    let dirY = (this.start.y - this.end.y) / 1;
-    return new Vector(dirX, dirY);
+  public update(dt: number, t: number): void {
+    this.center.x = this.position.x + this.width / 2;
+    this.center.y = this.position.y + this.height / 2;
+
+    this.size.x = this.width;
+    this.size.y = this.height;
+
+    this.direction.copy(this.velocity).normalize();
   }
 }
+
+class Obstacle extends Rect {
+  constructor(position: Vector) {
+    super({
+      width: 200,
+      height: 500,
+      fill: "transparent",
+      stroke: "blue",
+      position: position,
+    });
+    this.dead = false;
+  }
+  public update(dt: number, t: number): void {}
+}
+
+type Collision = {
+  collision: boolean;
+  contact?: Vector | null;
+  normal?: Vector | null;
+  time?: number | 0;
+};
+
+type StaticEntity = {
+  position: Vector;
+  width: number;
+  height: number;
+};
+
+const nullCollision: Collision = {
+  collision: false,
+};
 
 class GamePlay extends Scene {
   static playerSpeedX = 250;
@@ -99,8 +107,9 @@ class GamePlay extends Scene {
   state: State<STATES> = new State(STATES.play);
   dialog: Dialog | null = null;
   camera: Camera;
-  ray: Ray;
-  dbText: Text;
+  player: Player = new Player();
+  obstaclesContainer: Container = new Container();
+  obstacle = new Obstacle(new Vector(500, 100));
 
   constructor(
     game: Game,
@@ -116,72 +125,155 @@ class GamePlay extends Scene {
       worldSize: { width, height },
       viewSize: { width, height },
     });
+
+    this.obstaclesContainer.add(this.obstacle);
     this.camera.add(new GUI());
-    this.camera.add(obstacle);
-    this.camera.add(line);
+    this.camera.add(this.player);
+    this.camera.add(this.obstaclesContainer);
     this.add(this.camera);
-
-    this.ray = new Ray(new Vector(35, 150), new Vector(0, 0));
-    line.start = this.ray.start;
-    line.end = this.ray.end;
-
-    this.dbText = new Text({
-      text: "db",
-      align: "center",
-      fill: "black",
-      font: `20px ${fontStyle}`,
-      position: new Vector(width / 2, GAME_CONFIG.height - 32),
-    });
-    this.camera.add(this.dbText);
   }
 
-  pointVsRect(point: { x: number; y: number }, rect: Rect): boolean {
-    const { position, width, height } = rect;
-    const { x, y } = position;
-    return (
-      point.x >= x &&
-      point.x <= x + width &&
-      point.y >= y &&
-      point.y <= y + height
+  _detect(rayOrigin: Vector, rayDirection: Vector, target: Rect): Collision {
+    const { position, width, height } = target;
+
+    let tNearX = (position.x - rayOrigin.x) / rayDirection.x;
+    let tNearY = (position.y - rayOrigin.y) / rayDirection.y;
+    let tFarX = (position.x + width - rayOrigin.x) / rayDirection.x;
+    let tFarY = (position.y + height - rayOrigin.y) / rayDirection.y;
+    if (tNearX > tFarX) {
+      [tNearX, tFarX] = [tFarX, tNearX];
+    }
+    if (tNearY > tFarY) {
+      [tNearY, tFarY] = [tFarY, tNearY];
+    }
+    if (tNearX > tFarY || tNearY > tFarX) return nullCollision;
+
+    let tHitNear = Math.max(tNearX, tNearY);
+    let tHitFar = Math.min(tFarX, tFarY);
+    if (tHitFar < 0) return nullCollision;
+
+    // if (tHitNear <= 1) {
+    let contact = new Vector(
+      rayOrigin.x + rayDirection.x * tHitNear,
+      rayOrigin.y + rayDirection.y * tHitNear
     );
-  }
 
-  rectVsRect(rectA: Rect, rectB: Rect): boolean {
+    let normal = new Vector(0, 0);
+    if (contact.y === target.position.y) {
+      normal.y = -1;
+    }
+    if (contact.y === target.position.y + target.height) {
+      normal.y = 1;
+    }
+    if (contact.x === target.position.x) {
+      normal.x = -1;
+    }
+    if (contact.x === target.position.x + target.width) {
+      normal.x = 1;
+    }
+
     return (
-      rectA.position.x + rectA.width >= rectB.position.x &&
-      rectA.position.x <= rectB.position.x + rectB.width &&
-      rectA.position.y + rectA.height >= rectB.position.y &&
-      rectA.position.y <= rectB.position.y + rectB.height
+      this,
+      {
+        collision: true,
+        contact: contact,
+        normal: normal,
+        time: tHitNear,
+      }
     );
-  }
-
-  rayVsRect(rect: Rect, ray: Ray): boolean {
-    let tx1 = (rect.position.x - ray.start.x) / ray.inverseDirection.x;
-    let tx2 =
-      (rect.position.x + rect.width - ray.start.x) / ray.inverseDirection.x;
-    let tmin = Math.min(tx1, tx2);
-    let tmax = Math.max(tx1, tx2);
-    let ty1 = (rect.position.y - ray.start.y) / ray.inverseDirection.y;
-    let ty2 =
-      (rect.position.y + rect.height - ray.start.y) / ray.inverseDirection.y;
-    tmin = Math.max(tmin, Math.min(ty1, ty2));
-    tmax = Math.min(tmax, Math.max(ty1, ty2));
-    this.dbText.text = `x: ${tmin.toFixed(4)}, y: ${tmax.toFixed(4)}`;
-    return tmax >= tmin && Math.abs(tmax) <= 1;
+    // }
+    // return nullCollision;
   }
 
   private _updateGamePlay(dt: number, t: number): void {
     super.update(dt, t);
+    const { player } = this;
+    const { keyboard, mouse } = this.game;
 
-    const { mouse } = this.game;
-    this.ray.end.x = mouse.position.x;
-    this.ray.end.y = mouse.position.y;
+    // Assuming there are constants for maxSpeed and friction
+    const MAX_SPEED = 300; // Max speed
+    const FRICTION = 0.95; // Friction factor, should be < 1
 
-    if (this.rayVsRect(obstacle, this.ray)) {
-      line.stroke = "red";
+    player.acceleration.x += keyboard.x * 1000;
+    player.acceleration.y += keyboard.y * 1000;
+
+    // Apply friction to the velocity to simulate resistance
+    player.velocity.x *= FRICTION;
+    player.velocity.y *= FRICTION;
+
+    // Update velocity with acceleration
+    player.velocity.x += player.acceleration.x * dt;
+    player.velocity.y += player.acceleration.y * dt;
+
+    // Clamp the velocity to prevent it from exceeding max speed
+    player.velocity.x = Math.max(
+      Math.min(player.velocity.x, MAX_SPEED),
+      -MAX_SPEED
+    );
+    player.velocity.y = Math.max(
+      Math.min(player.velocity.y, MAX_SPEED),
+      -MAX_SPEED
+    );
+
+    // Collision detection logic...
+    // Predict the new position
+    let predictedPosition = {
+      x: player.position.x + player.velocity.x * dt,
+      y: player.position.y + player.velocity.y * dt,
+    };
+    // Get the player's center and direction for raycasting
+    let rOrigin = player.center; // Assuming player has a center property
+    let rDirection = player.direction; // Assuming player.velocity has a unit method
+    let { collision, contact, normal, time } = this._detect(
+      rOrigin,
+      rDirection,
+      this.obstacle
+    );
+    // If a collision is detected and it will occur within this time step
+    if (collision && contact && normal && time && time <= 1) {
+      // Resolve the collision
+      // Move the player to the point of contact
+      player.position.x = contact.x;
+      player.position.y = contact.y;
+
+      // Reflect the velocity off the collision normal
+      // Assuming there is a reflect method that reflects the velocity vector
+      player.velocity.set(0, 0);
+      // player.velocity = player.velocity.reflect(normal);
+
+      // Optionally apply some restitution (bounciness)
+      // const restitution = 0.8; // Restitution coefficient
+      // player.velocity.x *= restitution;
+      // player.velocity.y *= restitution;
     } else {
-      line.stroke = "black";
+      // If no collision, update the player position normally
+      player.position.x = predictedPosition.x;
+      player.position.y = predictedPosition.y;
     }
+
+    // Reset acceleration after applying it to the velocity
+    player.acceleration.x = 0;
+    player.acceleration.y = 0;
+
+    player.position.x = Cmath.clamp(player.position.x, 0, width - player.width);
+    player.position.y = Cmath.clamp(
+      player.position.y,
+      0,
+      height - player.height
+    );
+
+    // if (keyboard.x || keyboard.y) {
+    //   Physics.applyForce(player, {
+    //     x: keyboard.x * 8000,
+    //     y: keyboard.y * 8000,
+    //   });
+    // }
+    // Physics.applyFriction(player, 10);
+    // Physics.updateWithCollisions(
+    //   player,
+    //   this.obstaclesContainer.children as unknown as [StaticEntity],
+    //   dt
+    // );
 
     // game win if hit the goal
     // Entity.hit(this.player, this.goal, () => {
@@ -196,7 +288,7 @@ class GamePlay extends Scene {
     // });
 
     GAME_GLOBALS.elapsedTime += dt;
-    this.game.mouse.update();
+    mouse.update();
   }
 
   private _updateGamePause(dt: number, t: number): void {

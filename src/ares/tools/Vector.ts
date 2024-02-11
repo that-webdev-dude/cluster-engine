@@ -60,14 +60,22 @@ class Vector {
     return this;
   }
 
-  public multiply(scalar: number = 1): this {
-    this.x *= scalar;
-    this.y *= scalar;
+  public multiply({ x, y }: Vector): this {
+    this.x *= x;
+    this.y *= y;
     return this;
   }
 
+  // public multiply(scalar: number = 1): this {
+  //   this.x *= scalar;
+  //   this.y *= scalar;
+  //   return this;
+  // }
+
   public scale(scalar: number = 1): this {
-    return this.multiply(scalar);
+    this.x *= scalar;
+    this.y *= scalar;
+    return this;
   }
 
   public swap(): this {
@@ -92,6 +100,17 @@ class Vector {
 
   public unit(): this {
     return this.normalize();
+  }
+
+  // Reflect this vector off a surface with the given normal
+  public reflect(normal: Vector): Vector {
+    // Calculate the dot product of this vector and the normal
+    const dotProduct = this.dot(normal);
+    // Return the reflected vector
+    return new Vector(
+      this.x - 2 * dotProduct * normal.x,
+      this.y - 2 * dotProduct * normal.y
+    );
   }
 
   public dot({ x, y }: Vector): number {
