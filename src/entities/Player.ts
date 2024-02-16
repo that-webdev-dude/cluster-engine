@@ -1,3 +1,39 @@
+import { GAME_CONFIG } from "../config/GameConfig";
+import { Vector, Rect } from "../ares";
+
+class Player extends Rect {
+  velocity = new Vector();
+  acceleration = new Vector();
+  constructor() {
+    super({
+      width: 50,
+      height: 50,
+      fill: "black",
+      position: new Vector(100, 300),
+    });
+    this.hitbox = {
+      x: this.position.x,
+      y: this.position.y,
+      width: this.width,
+      height: this.height,
+    };
+  }
+  get center(): Vector {
+    return new Vector(
+      this.position.x + this.width * 0.5,
+      this.position.y + this.height * 0.5
+    );
+  }
+  get direction(): Vector {
+    return this.velocity.clone().normalize();
+  }
+  get size(): Vector {
+    return new Vector(this.width, this.height);
+  }
+}
+
+export default Player;
+
 // import { GAME_CONFIG } from "../config/GameConfig";
 // import {
 //   Cmath,

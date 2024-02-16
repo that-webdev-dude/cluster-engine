@@ -141,26 +141,6 @@ class AABB {
 
     return AABB.nullCollision;
   }
-
-  // pointVsRect(point: { x: number; y: number }, rect: Rect): boolean {
-  //   const { position, width, height } = rect;
-  //   const { x, y } = position;
-  //   return (
-  //     point.x >= x &&
-  //     point.x <= x + width &&
-  //     point.y >= y &&
-  //     point.y <= y + height
-  //   );
-  // }
-
-  // rectVsRect(rectA: Rect, rectB: Rect): boolean {
-  //   return (
-  //     rectA.position.x + rectA.width >= rectB.position.x &&
-  //     rectA.position.x <= rectB.position.x + rectB.width &&
-  //     rectA.position.y + rectA.height >= rectB.position.y &&
-  //     rectA.position.y <= rectB.position.y + rectB.height
-  //   );
-  // }
 }
 
 // ============================================================

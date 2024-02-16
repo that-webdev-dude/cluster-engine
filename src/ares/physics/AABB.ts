@@ -25,24 +25,6 @@ class AABB {
     collision: false,
   };
 
-  public static pointVsRect(point: Vector, rect: StaticEntity): boolean {
-    return (
-      point.x >= rect.position.x &&
-      point.x <= rect.position.x + rect.width &&
-      point.y >= rect.position.y &&
-      point.y <= rect.position.y + rect.height
-    );
-  }
-
-  public static rectVsRect(rectA: DynamicEntity, rectB: StaticEntity): boolean {
-    return (
-      rectA.position.x + rectA.width > rectB.position.x &&
-      rectA.position.x < rectB.position.x + rectB.width &&
-      rectA.position.y + rectA.height > rectB.position.y &&
-      rectA.position.y < rectB.position.y + rectB.height
-    );
-  }
-
   private static _rayVsRectCollisionContact(
     origin: Vector,
     direction: Vector,
@@ -74,8 +56,7 @@ class AABB {
     return normal;
   }
 
-  // LONE CODER IMPLEMENTATION
-  public static _rayVsRectV1(
+  public static rayVsRect(
     rayOrigin: Vector,
     rayDirection: Vector,
     target: StaticEntity
@@ -126,54 +107,22 @@ class AABB {
     return AABB.NULL_COLLISION;
   }
 
-  // SOME NERD ONLINE IMPLEMENTATION
-  public static _rayVsRectV2(
-    rayOrigin: Vector,
-    direction: Vector,
-    target: StaticEntity
-  ): Collision {
-    const { position, width, height } = target;
-
-    let minIntersectionTime = 0;
-    let maxIntersectionTime = 0;
-
-    let tNearX = (position.x - rayOrigin.x) / -direction.x;
-    let tNearY = (position.y - rayOrigin.y) / -direction.y;
-
-    let tFarX = (position.x + width - rayOrigin.x) / -direction.x;
-    let tFarY = (position.y + height - rayOrigin.y) / -direction.y;
-
-    // check for infinity
-
-    minIntersectionTime = Math.max(
-      Math.min(tNearX, tFarX),
-      Math.min(tNearY, tFarY)
+  public static pointVsRect(point: Vector, rect: StaticEntity): boolean {
+    return (
+      point.x >= rect.position.x &&
+      point.x <= rect.position.x + rect.width &&
+      point.y >= rect.position.y &&
+      point.y <= rect.position.y + rect.height
     );
-    maxIntersectionTime = Math.min(
-      Math.max(tNearX, tFarX),
-      Math.max(tNearY, tFarY)
+  }
+
+  public static rectVsRect(rectA: DynamicEntity, rectB: StaticEntity): boolean {
+    return (
+      rectA.position.x + rectA.width > rectB.position.x &&
+      rectA.position.x < rectB.position.x + rectB.width &&
+      rectA.position.y + rectA.height > rectB.position.y &&
+      rectA.position.y < rectB.position.y + rectB.height
     );
-
-    if (
-      Math.abs(maxIntersectionTime) <= AABB.RAY_LENGTH_LIMIT &&
-      maxIntersectionTime >= minIntersectionTime
-    ) {
-      let contact = AABB._rayVsRectCollisionContact(
-        rayOrigin,
-        direction,
-        maxIntersectionTime
-      );
-      let normal = AABB._rayVsRectCollisionNormal(contact, target);
-
-      return {
-        collision: true,
-        contact,
-        normal,
-        time: maxIntersectionTime,
-      };
-    }
-
-    return AABB.NULL_COLLISION;
   }
 }
 
