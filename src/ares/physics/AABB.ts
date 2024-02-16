@@ -26,23 +26,20 @@ class AABB {
   };
 
   public static pointVsRect(point: Vector, rect: StaticEntity): boolean {
-    if (
+    return (
       point.x >= rect.position.x &&
       point.x <= rect.position.x + rect.width &&
       point.y >= rect.position.y &&
       point.y <= rect.position.y + rect.height
-    ) {
-      return true;
-    }
-    return false;
+    );
   }
 
-  public _rectVsRect(rectA: DynamicEntity, rectB: StaticEntity): boolean {
+  public static rectVsRect(rectA: DynamicEntity, rectB: StaticEntity): boolean {
     return (
-      rectA.position.x + rectA.width >= rectB.position.x &&
-      rectA.position.x <= rectB.position.x + rectB.width &&
-      rectA.position.y + rectA.height >= rectB.position.y &&
-      rectA.position.y <= rectB.position.y + rectB.height
+      rectA.position.x + rectA.width > rectB.position.x &&
+      rectA.position.x < rectB.position.x + rectB.width &&
+      rectA.position.y + rectA.height > rectB.position.y &&
+      rectA.position.y < rectB.position.y + rectB.height
     );
   }
 
@@ -87,7 +84,6 @@ class AABB {
 
     if (rayDirection.x === 0 && rayDirection.y === 0)
       return AABB.NULL_COLLISION;
-    console.log("rayDirection:", rayDirection);
 
     let tNearX = (position.x - rayOrigin.x) / rayDirection.x;
     let tNearY = (position.y - rayOrigin.y) / rayDirection.y;
@@ -108,26 +104,26 @@ class AABB {
     let tHitFar = Math.min(tFarX, tFarY);
     if (tHitFar < 0) return AABB.NULL_COLLISION;
 
-    // if (tHitNear <= AABB.RAY_LENGTH_LIMIT) {
-    let contact = AABB._rayVsRectCollisionContact(
-      rayOrigin,
-      rayDirection,
-      tHitNear
-    );
+    if (tHitNear < AABB.RAY_LENGTH_LIMIT) {
+      let contact = AABB._rayVsRectCollisionContact(
+        rayOrigin,
+        rayDirection,
+        tHitNear
+      );
 
-    let normal = AABB._rayVsRectCollisionNormal(contact, target);
+      let normal = AABB._rayVsRectCollisionNormal(contact, target);
 
-    return (
-      this,
-      {
-        collision: true,
-        contact: contact,
-        normal: normal,
-        time: tHitNear,
-      }
-    );
-    // }
-    // return AABB.NULL_COLLISION;
+      return (
+        this,
+        {
+          collision: true,
+          contact: contact,
+          normal: normal,
+          time: tHitNear,
+        }
+      );
+    }
+    return AABB.NULL_COLLISION;
   }
 
   // SOME NERD ONLINE IMPLEMENTATION

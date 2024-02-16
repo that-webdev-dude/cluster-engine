@@ -45,17 +45,14 @@ enum STATES {
 }
 
 class Player extends Rect {
-  center = new Vector();
   velocity = new Vector();
   acceleration = new Vector();
-  direction = new Vector();
   prevPosition = new Vector();
   constructor() {
     super({
       width: 50,
       height: 50,
-      fill: "transparent",
-      stroke: "red",
+      fill: "black",
       position: new Vector(100, 300),
     });
     this.hitbox = {
@@ -65,24 +62,27 @@ class Player extends Rect {
       height: this.height,
     };
   }
+  get center(): Vector {
+    return new Vector(
+      this.position.x + this.width * 0.5,
+      this.position.y + this.height * 0.5
+    );
+  }
+  get direction(): Vector {
+    return this.velocity.clone().normalize();
+  }
   get size(): Vector {
     return new Vector(this.width, this.height);
-  }
-
-  public update(dt: number, t: number): void {
-    this.center.x = this.position.x + this.width / 2;
-    this.center.y = this.position.y + this.height / 2;
-    this.direction.copy(this.velocity).normalize();
   }
 }
 
 class Obstacle extends Rect {
+  walkable = false;
   constructor(position: Vector) {
     super({
       width: 200,
-      height: 300,
-      fill: "transparent",
-      stroke: "blue",
+      height: 200,
+      fill: "blue",
       position: position,
     });
     this.hitbox = {
@@ -92,10 +92,15 @@ class Obstacle extends Rect {
       height: this.height,
     };
   }
+  get center(): Vector {
+    return new Vector(
+      this.position.x + this.width / 2,
+      this.position.y + this.height / 2
+    );
+  }
   get size(): Vector {
     return new Vector(this.width, this.height);
   }
-  public update(dt: number, t: number): void {}
 }
 
 class GamePlay extends Scene {
@@ -106,7 +111,7 @@ class GamePlay extends Scene {
   camera: Camera;
   player: Player = new Player();
   obstaclesContainer: Container = new Container();
-  obstacle = new Obstacle(new Vector(200, 200));
+  obstacle = new Obstacle(new Vector(400, 200));
   dbLine1 = new Line({
     stroke: "red",
     start: new Vector(0, 0),
@@ -147,13 +152,26 @@ class GamePlay extends Scene {
     });
 
     this.obstaclesContainer.add(this.obstacle);
+    this.camera.add(this.obstaclesContainer);
+    this.camera.add(this.player);
     this.camera.add(new GUI());
-    this.camera.add(this.obstacle);
-    this.camera.add(this.dbLine1);
-    this.camera.add(this.dbLine2);
-    this.camera.add(this.dbText);
-    this.camera.add(this.dbPoint);
     this.add(this.camera);
+
+    this.camera.add(this.dbText);
+    this.camera.add(this.dbLine1);
+    this.camera.add(
+      new Rect({
+        width: this.obstacle.width + this.player.width,
+        height: this.obstacle.height + this.player.height,
+        fill: "transparent",
+        stroke: "green",
+        position: this.obstacle.position
+          .clone()
+          .subtract(new Vector(this.player.width / 2, this.player.height / 2)),
+      })
+    );
+    // this.camera.add(this.dbLine2);
+    // this.camera.add(this.dbPoint);
   }
 
   private _updateGamePlay(dt: number, t: number): void {
@@ -162,20 +180,64 @@ class GamePlay extends Scene {
     const { keyboard, mouse } = this.game;
     const { dbLine1, dbLine2, dbText, dbPoint } = this;
 
-    if (keyboard.action) {
-      dbPoint.position.set(Cmath.randf(0, width), Cmath.randf(0, height));
-      keyboard.active = false;
-    }
+    const ACCELERATION = 3200;
+    const FRICTION = 0.9;
 
-    // dbPoint.position.set(250, 250);
-    if (AABB.pointVsRect(dbPoint.position, obstacle)) {
-      dbPoint.scale.set(3, 3);
-      dbPoint.fill = "lightgreen";
-      dbText.text = "hit";
-    } else {
-      dbPoint.scale.set(1, 1);
-      dbPoint.fill = "red";
-      dbText.text = "miss";
+    // euler physics
+    // player.velocity.x += keyboard.x * ACCELERATION * dt;
+    // player.velocity.y += keyboard.y * ACCELERATION * dt;
+    // player.velocity.x *= FRICTION;
+    // player.velocity.y *= FRICTION;
+    // player.position.x += player.velocity.x * dt;
+    // player.position.y += player.velocity.y * dt;
+    // player.acceleration.set(0, 0);
+
+    // verlet physics
+    player.acceleration.x = keyboard.x * ACCELERATION;
+    player.acceleration.y = keyboard.y * ACCELERATION;
+    player.velocity.x *= FRICTION;
+    player.velocity.y *= FRICTION;
+    let vx = player.velocity.x + player.acceleration.x * dt;
+    let vy = player.velocity.y + player.acceleration.y * dt;
+    let dx = (player.velocity.x + vx) * 0.5 * dt;
+    let dy = (player.velocity.y + vy) * 0.5 * dt;
+    player.position.x += dx;
+    player.position.y += dy;
+    player.velocity.x = vx;
+    player.velocity.y = vy;
+    player.acceleration.set(0, 0);
+
+    dbLine1.start.set(player.center.x, player.center.y);
+    dbLine1.end.set(
+      player.center.x + player.direction.x * 100,
+      player.center.y + player.direction.y * 100
+    );
+    dbText.text = `${player.direction.x.toPrecision(
+      3
+    )}, ${player.direction.y.toPrecision(3)}`;
+
+    let extObstacle = new Rect({
+      width: obstacle.width + player.width,
+      height: obstacle.height + player.height,
+      fill: "transparent",
+      stroke: "green",
+      position: obstacle.position
+        .clone()
+        .subtract(new Vector(player.width / 2, player.height / 2)),
+    });
+    let { collision, time, normal, contact } = AABB._rayVsRectV1(
+      player.center,
+      player.direction,
+      extObstacle
+    );
+    if (collision && normal && contact && time && time < 1) {
+      if (normal.x !== 0) {
+        player.position.x = contact.x - player.width * 0.5;
+      }
+      if (normal.y !== 0) {
+        player.position.y = contact.y - player.height * 0.5;
+      }
+      dbText.text = `${contact.x}, ${contact.y}`;
     }
 
     // game win if hit the goal
