@@ -7,8 +7,6 @@ import {
   Text,
   Rect,
   Dialog,
-  Line,
-  Circle,
   Container,
 } from "../ares";
 import { GAME_CONFIG } from "../config/GameConfig";
@@ -17,6 +15,7 @@ import PauseDialog from "../dialogs/PauseDialog";
 import Platform from "../entities/Platform";
 import Player from "../entities/Player";
 import AABB from "../ares/physics/AABB";
+import Physics from "../ares/physics/Physics";
 
 // GUI components into a separate layer
 const { width, height, fontStyle } = GAME_CONFIG;
@@ -78,8 +77,8 @@ class GamePlay extends Scene {
     const { player, obstacle } = this;
     const { keyboard, mouse } = this.game;
 
-    const ACCELERATION = 3200;
-    const FRICTION = 0.9;
+    const ACCELERATION = 4000;
+    const FRICTION = 5;
 
     // euler physics
     // player.velocity.x += keyboard.x * ACCELERATION * dt;
@@ -91,42 +90,35 @@ class GamePlay extends Scene {
     // player.acceleration.set(0, 0);
 
     // verlet physics
-    player.acceleration.x = keyboard.x * ACCELERATION;
-    player.acceleration.y = keyboard.y * ACCELERATION;
-    player.velocity.x *= FRICTION;
-    player.velocity.y *= FRICTION;
-    let vx = player.velocity.x + player.acceleration.x * dt;
-    let vy = player.velocity.y + player.acceleration.y * dt;
-    let dx = (player.velocity.x + vx) * 0.5 * dt;
-    let dy = (player.velocity.y + vy) * 0.5 * dt;
-    player.position.x += dx;
-    player.position.y += dy;
-    player.velocity.x = vx;
-    player.velocity.y = vy;
-    player.acceleration.set(0, 0);
+    Physics.applyForce(player, {
+      x: keyboard.x * ACCELERATION,
+      y: keyboard.y * ACCELERATION,
+    })
+      .applyFriction(player, FRICTION)
+      .verletIntegrator(player, dt);
 
-    let extObstacle = new Rect({
-      width: obstacle.width + player.width,
-      height: obstacle.height + player.height,
-      fill: "transparent",
-      stroke: "green",
-      position: obstacle.position
-        .clone()
-        .subtract(new Vector(player.width / 2, player.height / 2)),
-    });
-    let { collision, time, normal, contact } = AABB.rayVsRect(
-      player.center,
-      player.direction,
-      extObstacle
-    );
-    if (collision && normal && contact && time && time < 1) {
-      if (normal.x !== 0) {
-        player.position.x = contact.x - player.width * 0.5;
-      }
-      if (normal.y !== 0) {
-        player.position.y = contact.y - player.height * 0.5;
-      }
-    }
+    // let extObstacle = new Rect({
+    //   width: obstacle.width + player.width,
+    //   height: obstacle.height + player.height,
+    //   fill: "transparent",
+    //   stroke: "green",
+    //   position: obstacle.position
+    //     .clone()
+    //     .subtract(new Vector(player.width / 2, player.height / 2)),
+    // });
+    // let { collision, time, normal, contact } = AABB.rayVsRect(
+    //   player.center,
+    //   player.direction,
+    //   extObstacle
+    // );
+    // if (collision && normal && contact && time && time < 1) {
+    //   if (normal.x !== 0) {
+    //     player.position.x = contact.x - player.width * 0.5 - 0.5;
+    //   }
+    //   if (normal.y !== 0) {
+    //     player.position.y = contact.y - player.height * 0.5 - 0.5;
+    //   }
+    // }
 
     // game win if hit the goal
     // Entity.hit(this.player, this.goal, () => {

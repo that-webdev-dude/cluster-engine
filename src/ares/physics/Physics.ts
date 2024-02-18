@@ -1,9 +1,16 @@
 import Vector from "../tools/Vector";
 import AABB from "./AABB";
 
-type Force = {
+type PhysicsForce = {
   x: number;
   y: number;
+};
+
+type PhysicsEntity = {
+  mass?: number;
+  acceleration: Vector;
+  velocity: Vector;
+  position: Vector;
 };
 
 type Collision = {
@@ -29,21 +36,21 @@ type DynamicEntity = StaticEntity & {
 // Physics Lib
 // ============================================================
 class Physics {
-  static Detector = AABB;
-
-  static applyImpulse(entity: DynamicEntity, force: Force, dt: number) {
+  static applyImpulse(entity: PhysicsEntity, force: PhysicsForce, dt: number) {
     this.applyForce(entity, { x: force.x / dt, y: force.y / dt });
     return this;
   }
 
-  static applyForce(entity: DynamicEntity, force: Force) {
+  static applyForce(entity: PhysicsEntity, force: PhysicsForce) {
     const { acceleration: acc, mass = 1 } = entity;
     acc.x += force.x / mass;
     acc.y += force.y / mass;
     return this;
   }
 
-  static applyFriction(entity: DynamicEntity, friction: number) {
+  static applyFriction(entity: PhysicsEntity, friction: number) {
+    // player.velocity.x *= FRICTION;
+    // player.velocity.y *= FRICTION;
     const { acceleration: acc, velocity: vel } = entity;
     let frictionForceX = -vel.x * friction;
     let frictionForceY = -vel.y * friction;
@@ -52,11 +59,33 @@ class Physics {
     return this;
   }
 
-  static applyGravity(entity: DynamicEntity, gravity: number) {
-    const { acceleration: acc } = entity;
-    acc.y += gravity;
+  static eulerIntegrator(entity: PhysicsEntity, dt: number) {
+    entity.velocity.x += entity.acceleration.x * dt;
+    entity.velocity.y += entity.acceleration.y * dt;
+    entity.position.x += entity.velocity.x * dt;
+    entity.position.y += entity.velocity.y * dt;
+    entity.acceleration.set(0, 0);
     return this;
   }
+
+  static verletIntegrator(entity: PhysicsEntity, dt: number) {
+    let vx = entity.velocity.x + entity.acceleration.x * dt;
+    let vy = entity.velocity.y + entity.acceleration.y * dt;
+    let dx = (entity.velocity.x + vx) * 0.5 * dt;
+    let dy = (entity.velocity.y + vy) * 0.5 * dt;
+    entity.position.x += dx;
+    entity.position.y += dy;
+    entity.velocity.x = vx;
+    entity.velocity.y = vy;
+    entity.acceleration.set(0, 0);
+    return this;
+  }
+
+  // static applyGravity(entity: DynamicEntity, gravity: number) {
+  //   const { acceleration: acc } = entity;
+  //   acc.y += gravity;
+  //   return this;
+  // }
 
   // static updateWithCollisions(
   //   entity: DynamicEntity,

@@ -5,14 +5,14 @@ class Platform extends Rect {
   walkable = false;
   constructor(position: Vector) {
     super({
-      width: 200,
-      height: 200,
+      width: GAME_CONFIG.width,
+      height: 2.5,
       fill: "blue",
-      position: position,
+      position: new Vector(0, 500),
     });
     this.hitbox = {
-      x: this.position.x,
-      y: this.position.y,
+      x: position.x,
+      y: position.y,
       width: this.width,
       height: this.height,
     };
