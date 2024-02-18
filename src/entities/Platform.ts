@@ -2,13 +2,12 @@ import { GAME_CONFIG } from "../config/GameConfig";
 import { Vector, Rect } from "../ares";
 
 class Platform extends Rect {
-  walkable = false;
-  constructor(position: Vector) {
+  constructor(position: Vector, size: Vector) {
     super({
-      width: GAME_CONFIG.width,
-      height: 2.5,
+      width: size.x,
+      height: size.y,
       fill: "blue",
-      position: new Vector(0, 500),
+      position: position,
     });
     this.hitbox = {
       x: position.x,
@@ -17,6 +16,7 @@ class Platform extends Rect {
       height: this.height,
     };
   }
+
   get center(): Vector {
     return new Vector(
       this.position.x + this.width / 2,

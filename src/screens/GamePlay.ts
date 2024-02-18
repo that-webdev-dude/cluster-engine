@@ -48,9 +48,10 @@ class GamePlay extends Scene {
   state: State<STATES> = new State(STATES.play);
   dialog: Dialog | null = null;
   camera: Camera;
+  staticEntities = new Container();
+  physicsEntities = new Container();
   player: Player = new Player();
-  obstacle = new Platform(new Vector(400, 200));
-
+  ground = new Platform(new Vector(0, 500), new Vector(GAME_CONFIG.width, 10));
   constructor(
     game: Game,
     transitions: {
@@ -65,60 +66,60 @@ class GamePlay extends Scene {
       worldSize: { width, height },
       viewSize: { width, height },
     });
-
-    this.camera.add(this.obstacle);
-    this.camera.add(this.player);
+    // this.camera.add(this.ground);
+    // this.camera.add(this.player);
+    this.staticEntities.add(this.ground);
+    this.physicsEntities.add(this.player);
+    this.camera.add(this.staticEntities);
+    this.camera.add(this.physicsEntities);
     this.camera.add(new GUI());
     this.add(this.camera);
   }
 
   private _updateGamePlay(dt: number, t: number): void {
     super.update(dt, t);
-    const { player, obstacle } = this;
+    const { player, ground } = this;
     const { keyboard, mouse } = this.game;
 
     const ACCELERATION = 4000;
     const FRICTION = 5;
-
-    // euler physics
-    // player.velocity.x += keyboard.x * ACCELERATION * dt;
-    // player.velocity.y += keyboard.y * ACCELERATION * dt;
-    // player.velocity.x *= FRICTION;
-    // player.velocity.y *= FRICTION;
-    // player.position.x += player.velocity.x * dt;
-    // player.position.y += player.velocity.y * dt;
-    // player.acceleration.set(0, 0);
-
-    // verlet physics
     Physics.applyForce(player, {
       x: keyboard.x * ACCELERATION,
       y: keyboard.y * ACCELERATION,
-    })
-      .applyFriction(player, FRICTION)
-      .verletIntegrator(player, dt);
+    }).applyFriction(player, FRICTION);
 
-    // let extObstacle = new Rect({
-    //   width: obstacle.width + player.width,
-    //   height: obstacle.height + player.height,
-    //   fill: "transparent",
-    //   stroke: "green",
-    //   position: obstacle.position
-    //     .clone()
-    //     .subtract(new Vector(player.width / 2, player.height / 2)),
-    // });
-    // let { collision, time, normal, contact } = AABB.rayVsRect(
-    //   player.center,
-    //   player.direction,
-    //   extObstacle
-    // );
-    // if (collision && normal && contact && time && time < 1) {
-    //   if (normal.x !== 0) {
-    //     player.position.x = contact.x - player.width * 0.5 - 0.5;
-    //   }
-    //   if (normal.y !== 0) {
-    //     player.position.y = contact.y - player.height * 0.5 - 0.5;
-    //   }
-    // }
+    if (keyboard.action) {
+      Physics.applyImpulse(player, { x: 0, y: -1000 }, dt);
+      keyboard.active = false;
+    }
+
+    // Physics.applyGravity(player, 2000).verletIntegrator(player, dt);
+    Physics.updateEntity(player, dt);
+
+    let extObstacle = new Rect({
+      width: ground.width + player.width,
+      height: ground.height + player.height,
+      fill: "transparent",
+      stroke: "green",
+      position: ground.position
+        .clone()
+        .subtract(new Vector(player.width / 2, player.height / 2)),
+    });
+    let { collision, time, normal, contact } = AABB.rayVsRect(
+      player.center,
+      player.direction,
+      extObstacle
+    );
+    if (collision && normal && contact && time && time < 1) {
+      if (normal.x !== 0) {
+        player.position.x = contact.x - player.width * 0.5 + normal.x * 0.1;
+        player.velocity.x = 0;
+      }
+      if (normal.y !== 0) {
+        player.position.y = contact.y - player.height * 0.5 + normal.y * 0.1;
+        player.velocity.y = 0;
+      }
+    }
 
     // game win if hit the goal
     // Entity.hit(this.player, this.goal, () => {

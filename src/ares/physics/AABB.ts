@@ -1,15 +1,9 @@
 import Vector from "../tools/Vector";
 
-type StaticEntity = {
+type RectEntity = {
   position: Vector;
-  width: number;
   height: number;
-};
-
-type DynamicEntity = StaticEntity & {
-  acceleration: Vector;
-  velocity: Vector;
-  mass?: number;
+  width: number;
 };
 
 type Collision = {
@@ -38,7 +32,7 @@ class AABB {
 
   private static _rayVsRectCollisionNormal(
     collisionPoint: Vector,
-    target: StaticEntity
+    target: RectEntity
   ): Vector {
     let normal = new Vector(0, 0);
     if (collisionPoint.y === target.position.y) {
@@ -59,7 +53,7 @@ class AABB {
   public static rayVsRect(
     rayOrigin: Vector,
     rayDirection: Vector,
-    target: StaticEntity
+    target: RectEntity
   ): Collision {
     const { position, width, height } = target;
 
@@ -107,23 +101,23 @@ class AABB {
     return AABB.NULL_COLLISION;
   }
 
-  public static pointVsRect(point: Vector, rect: StaticEntity): boolean {
-    return (
-      point.x >= rect.position.x &&
-      point.x <= rect.position.x + rect.width &&
-      point.y >= rect.position.y &&
-      point.y <= rect.position.y + rect.height
-    );
-  }
+  // public static rectVsRect(main: DynamicEntity, target: RectEntity): boolean {
+  //   return (
+  //     main.position.x + main.width > target.position.x &&
+  //     main.position.x < target.position.x + target.width &&
+  //     main.position.y + main.height > target.position.y &&
+  //     main.position.y < target.position.y + target.height
+  //   );
+  // }
 
-  public static rectVsRect(rectA: DynamicEntity, rectB: StaticEntity): boolean {
-    return (
-      rectA.position.x + rectA.width > rectB.position.x &&
-      rectA.position.x < rectB.position.x + rectB.width &&
-      rectA.position.y + rectA.height > rectB.position.y &&
-      rectA.position.y < rectB.position.y + rectB.height
-    );
-  }
+  // public static pointVsRect(point: Vector, rect: RectEntity): boolean {
+  //   return (
+  //     point.x >= rect.position.x &&
+  //     point.x <= rect.position.x + rect.width &&
+  //     point.y >= rect.position.y &&
+  //     point.y <= rect.position.y + rect.height
+  //   );
+  // }
 }
 
 export default AABB;

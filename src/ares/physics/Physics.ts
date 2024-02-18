@@ -5,87 +5,87 @@ type PhysicsForce = {
   x: number;
   y: number;
 };
-
 type PhysicsEntity = {
   mass?: number;
   acceleration: Vector;
   velocity: Vector;
   position: Vector;
+  physicsType: PhysicsType;
 };
+enum PhysicsType {
+  KINEMAIC,
+  DYNAMIC,
+}
 
-type Collision = {
-  collision: boolean;
-  contact?: Vector | null;
-  normal?: Vector | null;
-  time?: number | 0;
-};
-
-type StaticEntity = {
-  position: Vector;
-  width: number;
-  height: number;
-};
-
-type DynamicEntity = StaticEntity & {
-  acceleration: Vector;
-  velocity: Vector;
-  mass?: number;
-};
-
-// ============================================================
-// Physics Lib
-// ============================================================
+// physics engine
 class Physics {
-  static applyImpulse(entity: PhysicsEntity, force: PhysicsForce, dt: number) {
-    this.applyForce(entity, { x: force.x / dt, y: force.y / dt });
-    return this;
-  }
-
   static applyForce(entity: PhysicsEntity, force: PhysicsForce) {
-    const { acceleration: acc, mass = 1 } = entity;
-    acc.x += force.x / mass;
-    acc.y += force.y / mass;
+    const { mass = 1 } = entity;
+    entity.acceleration.x += force.x / mass;
+    entity.acceleration.y += force.y / mass;
     return this;
   }
 
   static applyFriction(entity: PhysicsEntity, friction: number) {
-    // player.velocity.x *= FRICTION;
-    // player.velocity.y *= FRICTION;
-    const { acceleration: acc, velocity: vel } = entity;
-    let frictionForceX = -vel.x * friction;
-    let frictionForceY = -vel.y * friction;
-    acc.x += frictionForceX; // / mass
-    acc.y += frictionForceY; // / mass
+    this.applyForce(entity, {
+      x: -entity.velocity.x * friction,
+      y: -entity.velocity.y * friction,
+    });
+    return this;
+  }
+
+  static applyGravity(entity: PhysicsEntity, gravity: number) {
+    this.applyForce(entity, {
+      x: 0,
+      y: gravity,
+    });
+    return this;
+  }
+
+  static applyImpulse(entity: PhysicsEntity, force: PhysicsForce, dt: number) {
+    this.applyForce(entity, {
+      x: force.x / dt,
+      y: force.y / dt,
+    });
     return this;
   }
 
   static eulerIntegrator(entity: PhysicsEntity, dt: number) {
-    entity.velocity.x += entity.acceleration.x * dt;
-    entity.velocity.y += entity.acceleration.y * dt;
-    entity.position.x += entity.velocity.x * dt;
-    entity.position.y += entity.velocity.y * dt;
-    entity.acceleration.set(0, 0);
+    if (entity.acceleration.x !== 0 || entity.acceleration.y !== 0) {
+      entity.velocity.x += entity.acceleration.x * dt;
+      entity.velocity.y += entity.acceleration.y * dt;
+      entity.position.x += entity.velocity.x * dt;
+      entity.position.y += entity.velocity.y * dt;
+      entity.acceleration.set(0, 0);
+    }
     return this;
   }
 
   static verletIntegrator(entity: PhysicsEntity, dt: number) {
-    let vx = entity.velocity.x + entity.acceleration.x * dt;
-    let vy = entity.velocity.y + entity.acceleration.y * dt;
-    let dx = (entity.velocity.x + vx) * 0.5 * dt;
-    let dy = (entity.velocity.y + vy) * 0.5 * dt;
-    entity.position.x += dx;
-    entity.position.y += dy;
-    entity.velocity.x = vx;
-    entity.velocity.y = vy;
-    entity.acceleration.set(0, 0);
+    if (entity.acceleration.x !== 0 || entity.acceleration.y !== 0) {
+      let vx = entity.velocity.x + entity.acceleration.x * dt;
+      let vy = entity.velocity.y + entity.acceleration.y * dt;
+      let dx = (entity.velocity.x + vx) * 0.5 * dt;
+      let dy = (entity.velocity.y + vy) * 0.5 * dt;
+      entity.position.x += dx;
+      entity.position.y += dy;
+      entity.velocity.x = vx;
+      entity.velocity.y = vy;
+      entity.acceleration.set(0, 0);
+    }
     return this;
   }
 
-  // static applyGravity(entity: DynamicEntity, gravity: number) {
-  //   const { acceleration: acc } = entity;
-  //   acc.y += gravity;
-  //   return this;
-  // }
+  static updateEntity(entity: PhysicsEntity, dt: number) {
+    switch (entity.physicsType) {
+      case PhysicsType.DYNAMIC:
+        this.applyGravity(entity, 1000).verletIntegrator(entity, dt);
+        break;
+      case PhysicsType.KINEMAIC:
+        this.eulerIntegrator(entity, dt);
+        break;
+    }
+  }
 
   // static updateWithCollisions(
   //   entity: DynamicEntity,

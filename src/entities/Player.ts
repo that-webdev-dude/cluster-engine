@@ -1,9 +1,15 @@
 import { GAME_CONFIG } from "../config/GameConfig";
 import { Vector, Rect } from "../ares";
 
+enum PhysicsType {
+  KINEMAIC,
+  DYNAMIC,
+}
+
 class Player extends Rect {
   velocity = new Vector();
   acceleration = new Vector();
+  physicsType = PhysicsType.DYNAMIC;
   constructor() {
     super({
       width: 50,
@@ -18,17 +24,20 @@ class Player extends Rect {
       height: this.height,
     };
   }
+
+  get direction(): Vector {
+    return this.velocity.clone().normalize();
+  }
   get center(): Vector {
     return new Vector(
       this.position.x + this.width * 0.5,
       this.position.y + this.height * 0.5
     );
   }
-  get direction(): Vector {
-    return this.velocity.clone().normalize();
-  }
-  get size(): Vector {
-    return new Vector(this.width, this.height);
+
+  update(dt: number, t: number): void {
+    if (this.acceleration.magnitude < 0.1) this.acceleration.set(0, 0);
+    if (this.velocity.magnitude < 0.1) this.velocity.set(0, 0);
   }
 }
 
