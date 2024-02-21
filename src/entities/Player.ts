@@ -1,43 +1,69 @@
 import { GAME_CONFIG } from "../config/GameConfig";
-import { Vector, Rect } from "../ares";
+import { Vector, Keyboard, Physics, Cmath } from "../ares";
+import PhysicsRect from "./PhysicsRect";
 
-enum PhysicsType {
-  KINEMAIC,
-  DYNAMIC,
-}
+const ACCELERATION = 4000;
+const FRICTION = 5;
+const SPEED = 700;
 
-class Player extends Rect {
-  velocity = new Vector();
-  acceleration = new Vector();
-  physicsType = PhysicsType.DYNAMIC;
-  constructor() {
+class Player extends PhysicsRect {
+  keyboard: Keyboard;
+  constructor(keyboard: Keyboard) {
     super({
-      width: 50,
-      height: 50,
+      physicsType: 1, // dynamic
+      position: new Vector(100, 100),
+      height: 10,
+      width: 10,
       fill: "black",
-      position: new Vector(100, 300),
+      mass: 0,
     });
-    this.hitbox = {
-      x: this.position.x,
-      y: this.position.y,
-      width: this.width,
-      height: this.height,
-    };
-  }
 
-  get direction(): Vector {
-    return this.velocity.clone().normalize();
-  }
-  get center(): Vector {
-    return new Vector(
-      this.position.x + this.width * 0.5,
-      this.position.y + this.height * 0.5
-    );
+    this.keyboard = keyboard;
   }
 
   update(dt: number, t: number): void {
-    if (this.acceleration.magnitude < 0.1) this.acceleration.set(0, 0);
-    if (this.velocity.magnitude < 0.1) this.velocity.set(0, 0);
+    const { keyboard } = this;
+    if (Math.abs(this.velocity.x) < SPEED) {
+      Physics.applyForce(this, {
+        x: keyboard.x * ACCELERATION,
+        y: keyboard.y * ACCELERATION,
+      });
+    }
+    Physics.applyFriction(this, FRICTION); // game engine responsability?
+    if (keyboard.action) {
+      Physics.applyImpulse(this, { x: 0, y: -1000 }, dt);
+      keyboard.active = false;
+    }
+    // Physics.updateEntity(this, dt);
+
+    if (this.acceleration.magnitude < 0.1) {
+      this.acceleration.set(0, 0);
+    }
+    if (this.velocity.magnitude < 0.1) {
+      this.velocity.set(0, 0);
+    }
+    if (
+      this.position.x <= 0 ||
+      this.position.x >= GAME_CONFIG.width - this.width
+    ) {
+      this.velocity.x = 0;
+      this.position.x = Cmath.clamp(
+        this.position.x,
+        0,
+        GAME_CONFIG.width - this.width
+      );
+    }
+    if (
+      this.position.y <= 0 ||
+      this.position.y >= GAME_CONFIG.height - this.height
+    ) {
+      this.velocity.y = 0;
+      this.position.y = Cmath.clamp(
+        this.position.y,
+        0,
+        GAME_CONFIG.height - this.height
+      );
+    }
   }
 }
 

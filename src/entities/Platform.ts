@@ -1,30 +1,37 @@
 import { GAME_CONFIG } from "../config/GameConfig";
-import { Vector, Rect } from "../ares";
+import { Vector, Physics, Cmath } from "../ares";
+import PhysicsRect from "./PhysicsRect";
 
-class Platform extends Rect {
-  constructor(position: Vector, size: Vector) {
+const SPEED = 200;
+
+class Platform extends PhysicsRect {
+  constructor(position: Vector, width: number, height: number) {
     super({
-      width: size.x,
-      height: size.y,
-      fill: "blue",
+      physicsType: 0, // kinematic
       position: position,
+      height: height,
+      width: width,
+      fill: "grey",
     });
-    this.hitbox = {
-      x: position.x,
-      y: position.y,
-      width: this.width,
-      height: this.height,
-    };
+
+    this.velocity.set(SPEED, 0);
   }
 
-  get center(): Vector {
-    return new Vector(
-      this.position.x + this.width / 2,
-      this.position.y + this.height / 2
-    );
-  }
-  get size(): Vector {
-    return new Vector(this.width, this.height);
+  update(dt: number, t: number): void {
+    Physics.applyForce(this, { x: 1, y: 0 });
+    Physics.updateEntity(this, dt);
+
+    if (
+      this.position.x <= 0 ||
+      this.position.x >= GAME_CONFIG.width - this.width
+    ) {
+      this.velocity.x = -this.velocity.x;
+      this.position.x = Cmath.clamp(
+        this.position.x,
+        0,
+        GAME_CONFIG.width - this.width
+      );
+    }
   }
 }
 

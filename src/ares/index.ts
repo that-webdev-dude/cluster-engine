@@ -16,7 +16,9 @@ export { default as Vector } from "./tools/Vector";
 export { default as Entity } from "./tools/Entity";
 export { default as Timer } from "./tools/Timer";
 export { default as Dialog } from "./tools/Dialog";
-export { default as Physics } from "./tools/Physics";
+
+// physics
+export { default as Physics } from "./physics/Physics";
 
 // input
 export { default as Keyboard } from "./input/Keyboard";

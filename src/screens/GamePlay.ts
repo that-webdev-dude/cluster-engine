@@ -14,8 +14,10 @@ import { GAME_GLOBALS } from "../globals/GameGlobals";
 import PauseDialog from "../dialogs/PauseDialog";
 import Platform from "../entities/Platform";
 import Player from "../entities/Player";
+import Ground from "../entities/Ground";
 import AABB from "../ares/physics/AABB";
 import Physics from "../ares/physics/Physics";
+// import { Container2 } from "../ares/core/Container";
 
 // GUI components into a separate layer
 const { width, height, fontStyle } = GAME_CONFIG;
@@ -48,10 +50,12 @@ class GamePlay extends Scene {
   state: State<STATES> = new State(STATES.play);
   dialog: Dialog | null = null;
   camera: Camera;
-  staticEntities = new Container();
-  physicsEntities = new Container();
-  player: Player = new Player();
-  ground = new Platform(new Vector(0, 500), new Vector(GAME_CONFIG.width, 10));
+
+  platform1 = new Platform(new Vector(100, 300), 100, 20);
+  platform2 = new Platform(new Vector(600, 200), 150, 10);
+  platforms = new Container<Platform>();
+  player = new Player(this.game.keyboard);
+  ground = new Ground();
   constructor(
     game: Game,
     transitions: {
@@ -66,35 +70,30 @@ class GamePlay extends Scene {
       worldSize: { width, height },
       viewSize: { width, height },
     });
-    // this.camera.add(this.ground);
-    // this.camera.add(this.player);
-    this.staticEntities.add(this.ground);
-    this.physicsEntities.add(this.player);
-    this.camera.add(this.staticEntities);
-    this.camera.add(this.physicsEntities);
+    // platforms
+    this.platforms.add(this.platform1);
+    this.platforms.add(this.platform2);
+    // background
+    this.camera.add(
+      new Rect({
+        width,
+        height,
+        fill: "lightGrey",
+      })
+    );
+    this.camera.add(this.ground);
+    this.camera.add(this.platforms);
+    this.camera.add(this.player);
     this.camera.add(new GUI());
     this.add(this.camera);
   }
 
   private _updateGamePlay(dt: number, t: number): void {
     super.update(dt, t);
-    const { player, ground } = this;
-    const { keyboard, mouse } = this.game;
+    const { player, ground, platforms } = this;
+    const { mouse } = this.game;
 
-    const ACCELERATION = 4000;
-    const FRICTION = 5;
-    Physics.applyForce(player, {
-      x: keyboard.x * ACCELERATION,
-      y: keyboard.y * ACCELERATION,
-    }).applyFriction(player, FRICTION);
-
-    if (keyboard.action) {
-      Physics.applyImpulse(player, { x: 0, y: -1000 }, dt);
-      keyboard.active = false;
-    }
-
-    // Physics.applyGravity(player, 2000).verletIntegrator(player, dt);
-    Physics.updateEntity(player, dt);
+    Physics.updateEntities([player, this.platforms.children], dt);
 
     let extObstacle = new Rect({
       width: ground.width + player.width,

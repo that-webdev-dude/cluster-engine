@@ -9,9 +9,46 @@ import Vector from "../tools/Vector";
 
 type ChildType = Deadable & (Updateable | {});
 
-class Container implements ContainerType {
+// class Container implements ContainerType {
+//   dead: boolean = false;
+//   children: Array<ContainerType | ChildType> = [];
+//   position: Vector = new Vector();
+//   anchor: Vector = new Vector();
+
+//   get size(): number {
+//     return this.children.length;
+//   }
+
+//   public add(child: ChildType | ContainerType): ChildType | ContainerType {
+//     this.children.push(child);
+//     return child;
+//   }
+
+//   public remove(child: ChildType | ContainerType): ChildType | ContainerType {
+//     const index = this.children.indexOf(child);
+//     if (index > -1) {
+//       this.children.splice(index, 1);
+//     }
+//     return child;
+//   }
+
+//   update(dt: Milliseconds, t: Seconds) {
+//     for (let i = 0; i < this.children.length; i++) {
+//       const child = this.children[i];
+//       if ("update" in child) {
+//         child.update(dt, t);
+//       }
+//       if (child.dead) {
+//         this.children.splice(i, 1);
+//         i--;
+//       }
+//     }
+//   }
+// }
+
+class Container<T extends ChildType = ChildType> implements ContainerType {
   dead: boolean = false;
-  children: Array<ContainerType | ChildType> = [];
+  children: Array<T> = [];
   position: Vector = new Vector();
   anchor: Vector = new Vector();
 
@@ -19,12 +56,12 @@ class Container implements ContainerType {
     return this.children.length;
   }
 
-  public add(child: ChildType | ContainerType): ChildType | ContainerType {
+  public add(child: T): T {
     this.children.push(child);
     return child;
   }
 
-  public remove(child: ChildType | ContainerType): ChildType | ContainerType {
+  public remove(child: T): T {
     const index = this.children.indexOf(child);
     if (index > -1) {
       this.children.splice(index, 1);
@@ -46,4 +83,5 @@ class Container implements ContainerType {
   }
 }
 
+// export { Container, Container2 };
 export default Container;

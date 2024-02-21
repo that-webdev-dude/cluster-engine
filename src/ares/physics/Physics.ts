@@ -1,16 +1,18 @@
 import Vector from "../tools/Vector";
-import AABB from "./AABB";
 
-type PhysicsForce = {
-  x: number;
-  y: number;
-};
+type PhysicsEntityArray = Array<PhysicsEntity | PhysicsEntityArray>;
+// type PhysicsEntityArray = Array<PhysicsEntity>;
 type PhysicsEntity = {
-  mass?: number;
+  physicsType: PhysicsType;
   acceleration: Vector;
   velocity: Vector;
   position: Vector;
-  physicsType: PhysicsType;
+  mass?: number;
+  dead: boolean;
+};
+type PhysicsForce = {
+  x: number;
+  y: number;
 };
 enum PhysicsType {
   KINEMAIC,
@@ -77,14 +79,25 @@ class Physics {
   }
 
   static updateEntity(entity: PhysicsEntity, dt: number) {
-    switch (entity.physicsType) {
-      case PhysicsType.DYNAMIC:
-        this.applyGravity(entity, 1000).verletIntegrator(entity, dt);
-        break;
-      case PhysicsType.KINEMAIC:
-        this.eulerIntegrator(entity, dt);
-        break;
+    if (entity.physicsType === PhysicsType.DYNAMIC) {
+      this.applyGravity(entity, 1000);
     }
+    this.verletIntegrator(entity, dt);
+  }
+
+  static updateEntities(entities: PhysicsEntityArray, dt: number) {
+    for (const item of entities) {
+      if (Array.isArray(item)) {
+        this.updateEntities(item, dt);
+      } else {
+        this.updateEntity(item, dt);
+      }
+    }
+
+    // detect
+    // player vs ground → displace player (with ground velocity)
+    // player vs platform → displace player (with platform velocity)
+    // platform vs ground → displace platform (invert platform velocity)
   }
 
   // static updateWithCollisions(
