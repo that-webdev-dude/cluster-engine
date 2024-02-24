@@ -93,32 +93,38 @@ class GamePlay extends Scene {
     const { player, ground, platforms } = this;
     const { mouse } = this.game;
 
-    Physics.updateEntities([player, this.platforms.children], dt);
+    Physics.updateEntities([player, platforms.children], dt);
 
-    let extObstacle = new Rect({
-      width: ground.width + player.width,
-      height: ground.height + player.height,
-      fill: "transparent",
-      stroke: "green",
-      position: ground.position
-        .clone()
-        .subtract(new Vector(player.width / 2, player.height / 2)),
-    });
-    let { collision, time, normal, contact } = AABB.rayVsRect(
-      player.center,
-      player.direction,
-      extObstacle
-    );
-    if (collision && normal && contact && time && time < 1) {
+    AABB.detect(player, ground, (contact, normal) => {
       if (normal.x !== 0) {
         player.position.x = contact.x - player.width * 0.5 + normal.x * 0.1;
-        player.velocity.x = 0;
+        player.velocity.x = ground.velocity.x;
       }
       if (normal.y !== 0) {
         player.position.y = contact.y - player.height * 0.5 + normal.y * 0.1;
-        player.velocity.y = 0;
+        player.velocity.y = ground.velocity.y;
       }
-    }
+    });
+
+    AABB.detect(player, platforms.children[0], (contact, normal) => {
+      // if (normal.x !== 0) {
+      //   player.position.x = contact.x - player.width * 0.5 + normal.x * 0.1;
+      // }
+      if (normal.y !== 0) {
+        player.position.y = contact.y - player.height * 0.5 + normal.y * 0.1;
+        player.position.x += platforms.children[0].velocity.x * dt;
+      }
+    });
+
+    AABB.detect(player, platforms.children[1], (contact, normal) => {
+      // if (normal.x !== 0) {
+      //   player.position.x = contact.x - player.width * 0.5 + normal.x * 0.1;
+      // }
+      if (normal.y !== 0) {
+        player.position.y = contact.y - player.height * 0.5 + normal.y * 0.1;
+        player.position.x += platforms.children[1].velocity.x * dt;
+      }
+    });
 
     // game win if hit the goal
     // Entity.hit(this.player, this.goal, () => {

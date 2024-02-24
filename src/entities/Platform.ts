@@ -2,7 +2,8 @@ import { GAME_CONFIG } from "../config/GameConfig";
 import { Vector, Physics, Cmath } from "../ares";
 import PhysicsRect from "./PhysicsRect";
 
-const SPEED = 200;
+let SPEED = 200;
+let FORCE = 100;
 
 class Platform extends PhysicsRect {
   constructor(position: Vector, width: number, height: number) {
@@ -20,11 +21,11 @@ class Platform extends PhysicsRect {
   update(dt: number, t: number): void {
     Physics.applyForce(this, { x: 1, y: 0 });
     Physics.updateEntity(this, dt);
-
     if (
       this.position.x <= 0 ||
       this.position.x >= GAME_CONFIG.width - this.width
     ) {
+      // console.log((SPEED *= -1));
       this.velocity.x = -this.velocity.x;
       this.position.x = Cmath.clamp(
         this.position.x,

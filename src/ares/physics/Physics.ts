@@ -1,7 +1,6 @@
 import Vector from "../tools/Vector";
 
 type PhysicsEntityArray = Array<PhysicsEntity | PhysicsEntityArray>;
-// type PhysicsEntityArray = Array<PhysicsEntity>;
 type PhysicsEntity = {
   physicsType: PhysicsType;
   acceleration: Vector;

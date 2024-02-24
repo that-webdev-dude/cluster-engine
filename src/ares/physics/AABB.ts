@@ -1,9 +1,16 @@
 import Vector from "../tools/Vector";
 
+type Ray = {
+  origin: Vector;
+  direction: Vector;
+};
+
 type RectEntity = {
   position: Vector;
   height: number;
   width: number;
+  center: Vector;
+  direction: Vector;
 };
 
 type Collision = {
@@ -50,7 +57,7 @@ class AABB {
     return normal;
   }
 
-  public static rayVsRect(
+  private static _rayVsRect(
     rayOrigin: Vector,
     rayDirection: Vector,
     target: RectEntity
@@ -79,26 +86,52 @@ class AABB {
     let tHitFar = Math.min(tFarX, tFarY);
     if (tHitFar < 0) return AABB.NULL_COLLISION;
 
-    if (tHitNear < AABB.RAY_LENGTH_LIMIT) {
-      let contact = AABB._rayVsRectCollisionContact(
-        rayOrigin,
-        rayDirection,
-        tHitNear
-      );
+    let contact = AABB._rayVsRectCollisionContact(
+      rayOrigin,
+      rayDirection,
+      tHitNear
+    );
 
-      let normal = AABB._rayVsRectCollisionNormal(contact, target);
+    let normal = AABB._rayVsRectCollisionNormal(contact, target);
 
-      return (
-        this,
-        {
-          collision: true,
-          contact: contact,
-          normal: normal,
-          time: tHitNear,
-        }
-      );
+    return (
+      this,
+      {
+        collision: true,
+        contact: contact,
+        normal: normal,
+        time: tHitNear,
+      }
+    );
+  }
+
+  public static detect(
+    source: RectEntity,
+    target: RectEntity,
+    resolver: (contact: Vector, normal: Vector, time: number) => void
+  ) {
+    // this can be cached if needs to be done here
+    let targetRect = {
+      position: target.position
+        .clone()
+        .subtract(new Vector(source.width * 0.5, source.height * 0.5)),
+      width: target.width + source.width,
+      height: target.height + source.height,
+      center: target.center,
+      direction: target.direction,
+    };
+    let rayOrigin = source.center;
+    let rayDirection = source.direction;
+
+    let { collision, contact, normal, time } = AABB._rayVsRect(
+      rayOrigin,
+      rayDirection,
+      targetRect
+    );
+
+    if (collision && contact && normal && time && time < 1) {
+      resolver(contact, normal, time);
     }
-    return AABB.NULL_COLLISION;
   }
 
   // public static rectVsRect(main: DynamicEntity, target: RectEntity): boolean {
