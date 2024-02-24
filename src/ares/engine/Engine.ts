@@ -6,6 +6,9 @@ interface IEngineConfig {
   fps?: number;
 }
 
+/**
+ * The Engine class represents a game engine that handles the game loop and updates/rendering.
+ */
 class Engine {
   private _frameRequest: number | null;
   private _currentTime: number | null;
