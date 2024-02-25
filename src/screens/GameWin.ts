@@ -4,9 +4,10 @@ import { Game, Text, Vector, Rect, Scene } from "../ares";
 class GameWin extends Scene {
   private _background = new Rect({
     position: new Vector(0, 0),
-    width: GAME_CONFIG.width,
-    height: GAME_CONFIG.height,
-    fill: "black",
+    size: new Vector(GAME_CONFIG.width, GAME_CONFIG.height),
+    style: {
+      fill: "black",
+    },
     alpha: 0.75,
   });
   private _winText = new Text({

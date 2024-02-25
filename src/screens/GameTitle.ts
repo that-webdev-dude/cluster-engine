@@ -6,9 +6,10 @@ import { Scene, Game, Vector, Text, Timer, Rect, Container } from "../ares";
 const { width, height, title, author, year, fontStyle } = GAME_CONFIG;
 class GUI extends Container {
   private _background = new Rect({
-    height: height,
-    width: width,
-    fill: "lightGrey",
+    size: new Vector(width, height),
+    style: {
+      fill: "lightGrey",
+    },
   });
   private _gameTitleText = new Text({
     text: title,

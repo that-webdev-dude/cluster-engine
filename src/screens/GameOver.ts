@@ -4,10 +4,10 @@ import { Game, Text, Vector, Rect, Scene } from "../ares";
 class GameOver extends Scene {
   private _background = new Rect({
     position: new Vector(0, 0),
-    width: GAME_CONFIG.width,
-    height: GAME_CONFIG.height,
-    fill: "red",
-    alpha: 0.75,
+    size: new Vector(GAME_CONFIG.width, GAME_CONFIG.height),
+    style: {
+      fill: "black",
+    },
   });
   private _winText = new Text({
     position: new Vector(GAME_CONFIG.width / 2, GAME_CONFIG.height / 2 - 64),

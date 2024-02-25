@@ -1,16 +1,18 @@
 import { GAME_CONFIG } from "../config/GameConfig";
-import { Vector, Physics, Cmath } from "../ares";
-import PhysicsRect from "./PhysicsRect";
+import { Vector, Physics, Cmath, Rect } from "../ares";
 
-class Ground extends PhysicsRect {
+class Ground extends Rect {
   constructor() {
     super({
-      physicsType: 0, // kinematic
-      position: new Vector(0, 500),
-      height: 5,
-      width: GAME_CONFIG.width,
-      fill: "grey",
+      position: new Vector(0, GAME_CONFIG.height - 50),
+      size: new Vector(GAME_CONFIG.width, 10),
+      style: {
+        fill: "grey",
+      },
+      physics: { mass: 2 },
     });
+
+    console.log(this);
   }
 }
 

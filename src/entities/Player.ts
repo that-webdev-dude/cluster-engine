@@ -1,24 +1,26 @@
 import { GAME_CONFIG } from "../config/GameConfig";
-import { Vector, Keyboard, Physics, Cmath } from "../ares";
-import PhysicsRect from "./PhysicsRect";
+import { Vector, Keyboard, Physics, Cmath, Rect } from "../ares";
 
 const ACCELERATION = 4000;
 const FRICTION = 5;
 const SPEED = 700;
 
-class Player extends PhysicsRect {
+class Player extends Rect {
   keyboard: Keyboard;
+  physicsType: number;
+  mass: number;
   constructor(keyboard: Keyboard) {
     super({
-      physicsType: 1, // dynamic
       position: new Vector(100, 100),
-      height: 10,
-      width: 10,
-      fill: "black",
-      mass: 0,
+      size: new Vector(32, 32),
+      style: {
+        fill: "black",
+      },
     });
 
+    this.physicsType = 1; // dynamic
     this.keyboard = keyboard;
+    this.mass = 1;
   }
 
   update(dt: number, t: number): void {

@@ -1,21 +1,23 @@
 import { GAME_CONFIG } from "../config/GameConfig";
-import { Vector, Physics, Cmath } from "../ares";
+import { Vector, Physics, Cmath, Rect } from "../ares";
 import PhysicsRect from "./PhysicsRect";
 
 let SPEED = 200;
 let FORCE = 100;
 
-class Platform extends PhysicsRect {
+class Platform extends Rect {
+  physicsType: number; // kinematic
   constructor(position: Vector, width: number, height: number) {
     super({
-      physicsType: 0, // kinematic
       position: position,
-      height: height,
-      width: width,
-      fill: "grey",
+      size: new Vector(width, height),
+      style: {
+        fill: "grey",
+      },
     });
 
     this.velocity.set(SPEED, 0);
+    this.physicsType = 0;
   }
 
   update(dt: number, t: number): void {

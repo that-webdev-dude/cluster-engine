@@ -74,17 +74,17 @@ class GamePlay extends Scene {
     this.platforms.add(this.platform1);
     this.platforms.add(this.platform2);
     // background
-    this.camera.add(
-      new Rect({
-        width,
-        height,
-        fill: "lightGrey",
-      })
-    );
+    // this.camera.add(
+    //   new Rect({
+    //     width,
+    //     height,
+    //     fill: "lightGrey",
+    //   })
+    // );
     this.camera.add(this.ground);
     this.camera.add(this.platforms);
     this.camera.add(this.player);
-    this.camera.add(new GUI());
+    // this.camera.add(new GUI());
     this.add(this.camera);
   }
 

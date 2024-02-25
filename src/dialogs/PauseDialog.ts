@@ -4,9 +4,10 @@ import { Game, Dialog, Text, Vector, Rect } from "../ares";
 class PauseDialog extends Dialog {
   private _background = new Rect({
     position: new Vector(0, 0),
-    width: this.width,
-    height: this.height,
-    fill: "black",
+    size: new Vector(this.width, this.height),
+    style: {
+      fill: "black",
+    },
     alpha: 0.75,
   });
   private _quitText = new Text({

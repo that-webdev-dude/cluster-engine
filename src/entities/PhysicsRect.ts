@@ -24,20 +24,21 @@ class PhysicsRect extends Rect {
   constructor(config: PhysicsRectConfig) {
     super({
       position: config.position,
-      height: config.height,
-      width: config.width,
-      fill: config.fill,
+      size: new Vector(config.width, config.height),
+      style: {
+        fill: config.fill,
+      },
     });
     this.mass = config.mass || 1;
     this.velocity = config.velocity || new Vector();
     this.acceleration = config.acceleration || new Vector();
     this.physicsType = config.physicsType || PhysicsType.KINEMAIC;
-    this.hitbox = {
-      x: this.position.x,
-      y: this.position.y,
-      width: this.width,
-      height: this.height,
-    };
+    // this.hitbox = {
+    //   x: this.position.x,
+    //   y: this.position.y,
+    //   width: this.width,
+    //   height: this.height,
+    // };
   }
 
   get direction(): Vector {
