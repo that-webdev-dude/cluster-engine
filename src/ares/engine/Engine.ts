@@ -1,14 +1,13 @@
+// 2024 @that-webdev-dude
+// Engine.ts
+// A fixed time step game loop that uses requestAnimationFrame to update and render the game at a consistent frame rate.
+
 interface IEngineConfig {
   update?: (dt: number, t: number) => void;
   render?: () => void;
-  updateCb?: (dt: number, t: number) => void;
-  renderCb?: () => void;
   fps?: number;
 }
 
-/**
- * The Engine class represents a game engine that handles the game loop and updates/rendering.
- */
 class Engine {
   private _frameRequest: number | null;
   private _currentTime: number | null;
@@ -19,18 +18,14 @@ class Engine {
   private _update: (dt: number, t: number) => void;
   private _render: () => void;
 
-  constructor({
-    update = () => {},
-    render = () => {},
-    fps = 60,
-  }: IEngineConfig = {}) {
+  constructor(config: IEngineConfig = {}) {
+    const { update = () => {}, render = () => {}, fps = 60 } = config;
     this._frameRequest = null;
     this._currentTime = null;
     this._elapsedTime = 0;
     this._updated = false;
-    this._updates = 0;
-    this._updates = 0;
     this._timeStep = 1000 / fps;
+    this._updates = 0;
     this._update = update;
     this._render = render;
   }
@@ -71,13 +66,16 @@ class Engine {
   };
 
   public start() {
-    this._currentTime = window.performance.now();
-    this._frameRequest = window.requestAnimationFrame(this._run);
+    if (this._frameRequest === null) {
+      this._currentTime = window.performance.now();
+      this._frameRequest = window.requestAnimationFrame(this._run);
+    }
   }
 
   public stop() {
     if (this._frameRequest !== null) {
       window.cancelAnimationFrame(this._frameRequest);
+      this._frameRequest = null;
     }
   }
 }

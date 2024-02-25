@@ -1,5 +1,7 @@
 import { EntityType, ContainerType } from "../types";
 
+// render
+
 type RendererConfig = {
   height?: number;
   width?: number;
@@ -108,9 +110,7 @@ class Renderer {
         this.context.translate(-px, -py);
       }
 
-      if ("render" in child && child.render) {
-        child.render(this.context);
-      }
+      child.render(this.context);
 
       this.context.restore();
     }
