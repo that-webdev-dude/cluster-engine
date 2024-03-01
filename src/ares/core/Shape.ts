@@ -1,28 +1,22 @@
 import Vector from "../tools/Vector";
-import { Entity, EntityConfig, EntityType } from "./Entity";
+import { Entity, EntityConfig } from "./Entity";
+import { CircleType } from "../types";
+import { RectType } from "../types";
+import { LineType } from "../types";
 
-// // RECT ENTITY
-type RectType = EntityType & {
-  height: number;
-  width: number;
-  fill: string;
-  stroke: string;
-  lineWidth: number;
-  hitbox: {
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-  };
+const DEFAULT_STYLE = {
+  fill: "lightBlue",
+  stroke: "transparent",
+  lineWidth: 1,
 };
 
 type RectConfig = EntityConfig &
   Partial<{
-    height?: number;
-    width?: number;
     fill?: string;
     stroke?: string;
     lineWidth?: number;
+    height?: number;
+    width?: number;
     hitbox?: {
       x: number;
       y: number;
@@ -32,51 +26,61 @@ type RectConfig = EntityConfig &
   }>;
 
 class Rect extends Entity implements RectType {
+  readonly tag: string;
   private _width: number;
   private _height: number;
-  fill: string;
-  stroke: string;
-  lineWidth: number;
-  hitbox: {
+  private _hitbox: {
     x: number;
     y: number;
     width: number;
     height: number;
-  };
+  } | null;
+  fill: string;
+  stroke: string;
+  lineWidth: number;
+
   constructor(config: RectConfig = {}) {
     const {
+      fill = DEFAULT_STYLE.fill,
+      stroke = DEFAULT_STYLE.stroke,
+      lineWidth = DEFAULT_STYLE.lineWidth,
       height = 32,
       width = 32,
-      fill = "black",
-      stroke = "black",
-      lineWidth = 1,
       hitbox,
     } = config;
 
     super(config);
-    this._height = height;
-    this._width = width;
+    this.tag = "rect";
     this.fill = fill;
     this.stroke = stroke;
     this.lineWidth = lineWidth;
-    this.hitbox = hitbox || {
-      x: 0,
-      y: 0,
-      width: this.width,
-      height: this.height,
-    };
+    this._height = height;
+    this._width = width;
+    this._hitbox = hitbox || null;
   }
 
-  set width(width: number) {
-    this._width = width;
+  get hitbox(): {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  } {
+    return (
+      this._hitbox || {
+        x: 0,
+        y: 0,
+        width: this.width,
+        height: this.height,
+      }
+    );
+  }
+
+  set hitbox(hitbox: { x: number; y: number; width: number; height: number }) {
+    this._hitbox = hitbox;
   }
 
   get width(): number {
     return this._width * this.scale.x;
-  }
-
-  set height(height: number) {
-    this._height = height;
   }
 
   get height(): number {
@@ -85,9 +89,13 @@ class Rect extends Entity implements RectType {
 
   get center(): Vector {
     return new Vector(
-      this.position.x + this.width / 2,
-      this.position.y + this.height / 2
+      this.position.x + this.width * 0.5,
+      this.position.y + this.height * 0.5
     );
+  }
+
+  get direction(): Vector {
+    return Vector.clone(this.velocity).normalize();
   }
 
   get hitBounds(): { x: number; y: number; width: number; height: number } {
@@ -98,44 +106,47 @@ class Rect extends Entity implements RectType {
       height: this.hitbox.height,
     };
   }
+
+  public render(context: CanvasRenderingContext2D) {
+    context.beginPath();
+    context.rect(0, 0, this.width, this.height);
+    context.fillStyle = this.fill;
+    context.fill();
+    context.lineWidth = this.lineWidth;
+    context.strokeStyle = this.stroke;
+    context.stroke();
+  }
 }
 
 // CIRCLE ENTITY
-interface ICircleConfig extends EntityConfig {
-  radius?: number;
-  style: Partial<{
+type CircleConfig = EntityConfig &
+  Partial<{
+    radius: number;
     fill: string;
     stroke: string;
     lineWidth: number;
   }>;
-  tag: string;
-}
 
-const CIRCLE_DEFAULTS = {
-  radius: 100,
-  style: {
-    fill: "black",
-    stroke: "transparent",
-    lineWidth: 1,
-  },
-};
+class Circle extends Entity implements CircleType {
+  readonly tag: string;
+  radius: number;
+  fill: string;
+  stroke: string;
+  lineWidth: number;
+  constructor(config: CircleConfig) {
+    const {
+      radius = 100,
+      fill = DEFAULT_STYLE.fill,
+      stroke = DEFAULT_STYLE.stroke,
+      lineWidth = DEFAULT_STYLE.lineWidth,
+    } = config;
 
-class Circle extends Entity {
-  public radius: number;
-  public style: {
-    fill: string;
-    stroke: string;
-    lineWidth: number;
-  };
-  constructor(config: ICircleConfig) {
     super(config);
-    const radius = config.radius || CIRCLE_DEFAULTS.radius;
-    const style = {
-      ...CIRCLE_DEFAULTS.style,
-      ...config.style,
-    };
+    this.tag = "circle";
     this.radius = radius;
-    this.style = style;
+    this.fill = fill || DEFAULT_STYLE.fill;
+    this.stroke = stroke || DEFAULT_STYLE.stroke;
+    this.lineWidth = lineWidth || DEFAULT_STYLE.lineWidth;
   }
 
   get width(): number {
@@ -153,56 +164,50 @@ class Circle extends Entity {
     );
   }
 
+  get direction(): Vector {
+    return Vector.clone(this.velocity).normalize();
+  }
+
   public render(context: CanvasRenderingContext2D) {
-    if (!this.style.fill || !this.style.stroke || !this.style.lineWidth) return;
     context.beginPath();
     context.arc(0, 0, this.radius, 0, Math.PI * 2, false);
-    context.fillStyle = this.style.fill;
+    context.fillStyle = this.fill;
     context.fill();
-    context.lineWidth = this.style.lineWidth;
-    context.strokeStyle = this.style.stroke;
+    context.lineWidth = this.lineWidth;
+    context.strokeStyle = this.stroke;
     context.stroke();
   }
 }
 
 // LINE ENTITY
-interface ILineConfig extends EntityConfig {
-  start?: Vector;
-  end?: Vector;
-  style: Partial<{
+type LineConfig = EntityConfig &
+  Partial<{
+    start: Vector;
+    end: Vector;
     stroke: string;
     lineWidth: number;
   }>;
-}
 
-const LINE_DEFAULTS = {
-  start: new Vector(),
-  end: new Vector(100, 100),
-  style: {
-    stroke: "black",
-    lineWidth: 1,
-  },
-};
+class Line extends Entity implements LineType {
+  readonly tag: string;
+  start: Vector;
+  end: Vector;
+  stroke: string;
+  lineWidth: number;
+  constructor(config: LineConfig) {
+    const {
+      start = new Vector(),
+      end = new Vector(100, 100),
+      stroke = "black",
+      lineWidth = 1,
+    } = config;
 
-class Line extends Entity {
-  public start: Vector;
-  public end: Vector;
-  public style: {
-    stroke: string;
-    lineWidth: number;
-  };
-  constructor(config: ILineConfig) {
     super(config);
-    const start = config.start || LINE_DEFAULTS.start;
-    const end = config.end || LINE_DEFAULTS.end;
-    const style = {
-      ...LINE_DEFAULTS.style,
-      ...config.style,
-    };
     this.start = start;
     this.end = end;
-    this.style = style;
-    this.position = start;
+    this.tag = "line";
+    this.stroke = stroke;
+    this.lineWidth = lineWidth;
   }
 
   get width(): number {
@@ -220,13 +225,16 @@ class Line extends Entity {
     );
   }
 
+  get direction(): Vector {
+    return Vector.clone(this.velocity).normalize();
+  }
+
   public render(context: CanvasRenderingContext2D) {
-    if (!this.style.stroke || !this.style.lineWidth) return;
     context.beginPath();
     context.moveTo(0, 0);
     context.lineTo(this.end.x, this.end.y);
-    context.lineWidth = this.style.lineWidth;
-    context.strokeStyle = this.style.stroke;
+    context.lineWidth = this.lineWidth;
+    context.strokeStyle = this.stroke;
     context.stroke();
   }
 }

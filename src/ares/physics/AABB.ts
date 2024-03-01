@@ -112,9 +112,12 @@ class AABB {
   ) {
     // this can be cached if needs to be done here
     let targetRect = {
-      position: target.position
-        .clone()
-        .subtract(new Vector(source.width * 0.5, source.height * 0.5)),
+      // position: target.position
+      //   .clone()
+      //   .subtract(new Vector(source.width * 0.5, source.height * 0.5)),
+      position: Vector.clone(target.position).subtract(
+        new Vector(source.width * 0.5, source.height * 0.5)
+      ),
       width: target.width + source.width,
       height: target.height + source.height,
       center: target.center,

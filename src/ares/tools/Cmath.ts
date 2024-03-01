@@ -81,6 +81,21 @@ class Cmath {
   }
 
   /**
+   * Generate a random string id with given length.
+   * @param {number} length length of the id
+   * @returns {string} random string id
+   */
+  static randId(length: number): string {
+    const characters = "abcdefghijklmnopqrstuvwxyz0123456789";
+    let result = "";
+    for (let i = 0; i < length; i++) {
+      const randomIndex = Math.floor(Math.random() * characters.length);
+      result += characters[randomIndex];
+    }
+    return `_${result}`;
+  }
+
+  /**
    * Compute the euclidean distance between point a & b.
    * Points passed in must be Object type with x & y properties.
    * @param {Object} a x/y coordinate object

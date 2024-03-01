@@ -1,40 +1,21 @@
-import { Camera, State, Scene, Game, Dialog } from "../ares";
-import { GAME_CONFIG } from "../config/GameConfig";
-import { GAME_GLOBALS } from "../globals/GameGlobals";
-
-// GUI components into a separate layer
-// const { width, height, fontStyle } = GAME_CONFIG;
-// class GUI extends Container {
-//   private _timerText = new Text({
-//     text: "",
-//     position: new Vector(width / 2, 32),
-//     style: {
-//       align: "center",
-//       fill: "black",
-//       font: `20px ${fontStyle}`,
-//     },
-//   });
-
-//   constructor() {
-//     super();
-//     this.add(this._timerText);
-//   }
-
-//   public update(dt: number, t: number): void {
-//     this._timerText.text = `${Math.floor(GAME_GLOBALS.elapsedTime) + 1}`;
-//   }
-// }
-
-// gameplay states
-enum STATES {
-  play,
-  pause,
-}
+import { Camera, Scene, Game } from "../ares";
+import { Vector } from "../ares";
+import { Rect } from "../ares";
+import { Circle } from "../ares";
+import { Line } from "../ares";
+import { Text } from "../ares";
+import { Sprite, TileSprite } from "../ares";
+import spritesheetImageURL from "../images/spritesheet.png";
+import barrelImageURL from "../images/barrel.png";
 
 class GamePlay extends Scene {
-  state: State<STATES> = new State(STATES.play);
-  dialog: Dialog | null = null;
   camera: Camera;
+  r1: Rect;
+  c1: Circle;
+  l1: Line;
+  t1: Text;
+  sp1: Sprite;
+  tsp1: TileSprite;
   constructor(
     game: Game,
     transitions: {
@@ -44,63 +25,83 @@ class GamePlay extends Scene {
   ) {
     const { width, height } = game;
     super(game, transitions);
-    this.dialog = null;
     this.camera = new Camera({
       worldSize: { width, height },
       viewSize: { width, height },
     });
     this.add(this.camera);
-  }
 
-  private _updateGamePlay(dt: number, t: number): void {
-    super.update(dt, t);
-    // const { player, ground, platforms } = this;
-    const { mouse } = this.game;
+    this.r1 = new Rect({
+      position: new Vector(200, 200),
+      pivot: new Vector(50, 50),
+      width: 100,
+      height: 100,
+      fill: "blue",
+    });
 
-    // ...
+    this.c1 = new Circle({
+      anchor: new Vector(50, 50),
+      radius: 50,
+      fill: "red",
+    });
 
-    GAME_GLOBALS.elapsedTime += dt;
-    mouse.update();
-  }
+    this.l1 = new Line({
+      start: new Vector(0, 0),
+      end: new Vector(100, 100),
+      stroke: "black",
+    });
 
-  private _updateGamePause(dt: number, t: number): void {
-    if (this.game.keyboard.key("Enter")) {
-      if (this.dialog) {
-        this.dialog.dead = true;
-        this.state.set(STATES.play);
-        this.game.keyboard.active = false;
-      }
-    }
-    if (this.game.keyboard.key("Escape")) {
-      if (this.dialog) {
-        this.dialog.dead = true;
-        this.transitions.toFirst();
-        this.game.keyboard.active = false;
-      }
-    }
+    this.t1 = new Text({
+      position: new Vector(400, 400),
+      text: "Hello World",
+      fill: "black",
+    });
+
+    this.sp1 = new Sprite({
+      position: new Vector(500, 300),
+      scale: new Vector(2, 2),
+      textureURL: barrelImageURL,
+      hitbox: {
+        x: 2,
+        y: 2,
+        width: 28,
+        height: 28,
+      },
+    });
+
+    this.tsp1 = new TileSprite({
+      position: new Vector(100, 500),
+      textureURL: spritesheetImageURL,
+      tileW: 32,
+      tileH: 32,
+      frame: { x: 0, y: 0 },
+    });
+    this.tsp1.animation.add(
+      "idle",
+      [
+        { x: 4, y: 0 },
+        { x: 5, y: 0 },
+      ],
+      0.25
+    );
+    this.tsp1.animation.play("idle");
+
+    // console.table(this.r1);
+    // console.table(this.c1);
+    // console.table(this.l1);
+    console.table(this.sp1);
+
+    this.camera.add(this.r1);
+    this.camera.add(this.c1);
+    this.camera.add(this.l1);
+    this.camera.add(this.t1);
+    this.camera.add(this.sp1);
+    this.camera.add(this.tsp1);
   }
 
   update(dt: number, t: number): void {
-    this.state.update(dt);
-    switch (this.state.get()) {
-      // PLAYING STATE
-      case STATES.play:
-        this._updateGamePlay(dt, t);
-        if (this.game.keyboard.pause) {
-          this.game.keyboard.active = false;
-          this.state.set(STATES.pause);
-        }
-        break;
-
-      // PAUSED STATE
-      // case STATES.pause:
-      //   if (this.state.first) {
-      //     this.dialog = new PauseDialog(this.game);
-      //     this.camera.add(this.dialog);
-      //   }
-      //   this._updateGamePause(dt, t);
-      //   break;
-    }
+    super.update(dt, t);
+    this.r1.angle += 0.025;
   }
 }
 

@@ -1,79 +1,59 @@
 import Animation from "./Animation";
 import Assets from "./Assets";
 import Vector from "../tools/Vector";
-import { EntityType } from "../types";
+import { Entity, EntityConfig } from "./Entity";
+import { SpriteType, TileSpriteType } from "../types";
 
-// SPRITE CLASS DEFINITION
-interface ISprite extends EntityType {
-  image: HTMLImageElement;
-}
-
-interface ISpriteConfig {
-  textureURL: string;
-  position?: Vector;
-  anchor?: Vector;
-  scale?: Vector;
-  pivot?: Vector;
-  angle?: number;
-  alpha?: number;
-  dead?: boolean;
-  acceleration?: Vector;
-  velocity?: Vector;
-  mass?: number;
-  tag?: string;
-  visible?: boolean;
-}
-
-class Sprite implements ISprite {
-  public position: Vector;
-  public anchor: Vector;
-  public scale: Vector;
-  public pivot: Vector;
-  public angle: number;
-  public alpha: number;
-  public dead: boolean;
-  public acceleration: Vector;
-  public velocity: Vector;
-  public mass: number;
-  public tag: string;
-  public visible: boolean;
-  public hitbox: { x: number; y: number; width: number; height: number };
-  readonly image: HTMLImageElement;
-
-  constructor({
-    textureURL,
-    position = new Vector(),
-    anchor = new Vector(),
-    scale = new Vector(1, 1),
-    pivot = new Vector(),
-    angle = 0,
-    alpha = 1,
-    dead = false,
-    acceleration = new Vector(),
-    velocity = new Vector(),
-    mass = 1,
-    tag = "Sprite",
-    visible = true,
-  }: ISpriteConfig) {
-    this.position = position;
-    this.anchor = anchor;
-    this.scale = scale;
-    this.pivot = pivot;
-    this.angle = angle;
-    this.alpha = alpha;
-    this.dead = dead;
-    this.acceleration = acceleration;
-    this.velocity = velocity;
-    this.mass = mass;
-    this.tag = tag;
-    this.visible = visible;
-    this.image = Assets.image(textureURL);
-    this.hitbox = {
-      x: 0,
-      y: 0,
-      width: this.image.width,
-      height: this.image.height,
+type SpriteConfig = EntityConfig &
+  Partial<{
+    textureURL: string;
+    hitbox?: {
+      x: number;
+      y: number;
+      width: number;
+      height: number;
     };
+  }>;
+
+class Sprite extends Entity implements SpriteType {
+  readonly image: HTMLImageElement;
+  readonly tag: string;
+  private _hitbox: {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  } | null;
+
+  constructor(config: SpriteConfig = {}) {
+    const { textureURL, hitbox } = config;
+
+    if (!textureURL) throw new Error("Sprite requires a textureURL");
+
+    super(config);
+    this.tag = "sprite";
+    this.image = Assets.image(textureURL);
+    this._hitbox = hitbox || null;
+  }
+
+  get hitbox(): {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+  } {
+    return (
+      this._hitbox || {
+        x: 0,
+        y: 0,
+        width: this.width,
+        height: this.height,
+      }
+    );
+  }
+
+  set hitbox(hitbox: { x: number; y: number; width: number; height: number }) {
+    this._hitbox = hitbox;
   }
 
   get width(): number {
@@ -84,35 +64,60 @@ class Sprite implements ISprite {
     return this.image.height * this.scale.y;
   }
 
+  get center(): Vector {
+    return new Vector(
+      this.position.x + this.width * 0.5,
+      this.position.y + this.height * 0.5
+    );
+  }
+
+  get direction(): Vector {
+    return Vector.clone(this.velocity).normalize();
+  }
+
+  get hitBounds(): { x: number; y: number; width: number; height: number } {
+    return {
+      x: this.position.x + this.hitbox.x,
+      y: this.position.y + this.hitbox.y,
+      width: this.hitbox.width,
+      height: this.hitbox.height,
+    };
+  }
+
   public render(context: CanvasRenderingContext2D) {
     context.drawImage(this.image, 0, 0);
   }
 }
 
-// TILESPRITE CLASS DEFINITION
-interface ITileSpriteConfig extends ISpriteConfig {
-  tileW: number;
-  tileH: number;
-  frame?: { x: number; y: number };
-}
+type TileSpriteConfig = SpriteConfig &
+  Partial<{
+    tileW: number;
+    tileH: number;
+    frame: { x: number; y: number };
+  }>;
 
-class TileSprite extends Sprite {
+class TileSprite extends Sprite implements TileSpriteType {
   private _tileW: number;
   private _tileH: number;
   private _frame: { x: number; y: number };
   readonly animation: Animation;
+  readonly tag: string;
 
   constructor({
-    tileW,
-    tileH,
+    tileW = 0,
+    tileH = 0,
     frame = { x: 0, y: 0 },
     ...superConfig
-  }: ITileSpriteConfig) {
+  }: TileSpriteConfig) {
+    if (tileW === 0 || tileH === 0)
+      throw new Error("TileSprite requires tileW and tileH");
+
     super(superConfig);
     this._tileW = tileW;
     this._tileH = tileH;
     this._frame = frame;
     this.animation = new Animation({ frame: this._frame });
+    this.tag = "tileSprite";
   }
 
   get frame(): { x: number; y: number } {

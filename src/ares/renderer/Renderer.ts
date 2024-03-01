@@ -1,7 +1,7 @@
 /**
  * that.webdev.dude - 2024
  */
-
+import { Rect } from "../core/Shape";
 import { EntityType, ContainerType } from "../types";
 
 type RendererConfig = {

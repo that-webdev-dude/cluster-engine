@@ -3,10 +3,44 @@ class Vector {
   private _y: number;
   private _magnitude: number | null;
 
+  // static methods
   static from({ x, y }: Vector): Vector {
     return new Vector(x, y);
   }
 
+  static dot(v1: Vector, v2: Vector): number {
+    return v1.x * v2.x + v1.y * v2.y;
+  }
+
+  static cross(v1: Vector, v2: Vector): number {
+    return v1.x * v2.y - v1.y * v2.x;
+  }
+
+  static clone(v: Vector): Vector {
+    return Vector.from(v);
+  }
+
+  static connect(v1: Vector, v2: Vector): Vector {
+    return Vector.from(v1).subtract(v2).reverse();
+  }
+
+  static distanceBetween(v1: Vector, v2: Vector): number {
+    return Vector.from(v1).subtract(v2).reverse().magnitude;
+  }
+
+  static angleBetween(v1: Vector, v2: Vector): number {
+    const dotProduct = this.dot(v1, v2);
+    const magnitudeProduct = v1.magnitude * v2.magnitude;
+    return Math.acos(dotProduct / magnitudeProduct);
+  }
+
+  static normal(v1: Vector): Vector {
+    let x = -v1.y;
+    let y = v1.x;
+    return v1.set(x, y).unit();
+  }
+
+  // instance
   constructor(x: number = 0, y: number = 0) {
     this._x = x;
     this._y = y;
@@ -66,12 +100,6 @@ class Vector {
     return this;
   }
 
-  // public multiply(scalar: number = 1): this {
-  //   this.x *= scalar;
-  //   this.y *= scalar;
-  //   return this;
-  // }
-
   public scale(scalar: number = 1): this {
     this.x *= scalar;
     this.y *= scalar;
@@ -100,49 +128,6 @@ class Vector {
 
   public unit(): this {
     return this.normalize();
-  }
-
-  // Reflect this vector off a surface with the given normal
-  public reflect(normal: Vector): Vector {
-    // Calculate the dot product of this vector and the normal
-    const dotProduct = this.dot(normal);
-    // Return the reflected vector
-    return new Vector(
-      this.x - 2 * dotProduct * normal.x,
-      this.y - 2 * dotProduct * normal.y
-    );
-  }
-
-  public dot({ x, y }: Vector): number {
-    return this.x * x + this.y * y;
-  }
-
-  public cross({ x, y }: Vector): number {
-    return this.x * y - this.y * x;
-  }
-
-  public angleTo({ x, y }: Vector): number {
-    const dotProduct = this.x * x + this.y * y;
-    const magnitudeProduct = this.magnitude * Math.sqrt(x * x + y * y);
-    return Math.acos(dotProduct / magnitudeProduct);
-  }
-
-  public normal(): Vector {
-    let x = -this.y;
-    let y = this.x;
-    return this.set(x, y).unit();
-  }
-
-  public clone(): Vector {
-    return Vector.from(this);
-  }
-
-  public distance(vector: Vector): Vector {
-    return Vector.from(this).subtract(vector).reverse();
-  }
-
-  public to(vector: Vector): Vector {
-    return Vector.from(this).subtract(vector).reverse();
   }
 }
 

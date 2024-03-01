@@ -1,4 +1,5 @@
 import Vector from "../tools/Vector";
+import Animation from "../core/Animation";
 
 // utility types
 type Milliseconds = number;
@@ -58,40 +59,22 @@ type Deadable = {
   dead: boolean;
 };
 
+type Hittable = {
+  hitbox: Coordinates & Measurable;
+  hitBounds: Coordinates & Measurable;
+};
+
 type Taggable = {
   tag: string;
 };
 
-type Hittable = {
-  hitbox: Coordinates & Measurable;
+type Identifiable = {
+  id: string;
 };
 
-type Collidable = {
-  hitbox: Coordinates & Measurable; // made optional for now
-};
-
-export {
-  Positionable,
-  Moveable,
-  Measurable,
-  Sizeable,
-  Rotatable,
-  Scalable,
-  Alphaable,
-  Deadable,
-  Visible,
-  Taggable,
-  Hittable,
-  Collidable,
-  Coordinates,
-  Milliseconds,
-  Seconds,
-  Degrees,
-  Radians,
-  Pixels,
-};
-
+// entity types
 type EntityType = Positionable &
+  Identifiable &
   Moveable &
   Rotatable &
   Alphaable &
@@ -103,6 +86,64 @@ type EntityType = Positionable &
     reset?: () => void;
   };
 
+type RectType = EntityType &
+  Measurable &
+  Hittable &
+  Taggable & {
+    fill: string;
+    stroke: string;
+    lineWidth: number;
+    direction: Vector;
+    center: Vector;
+  };
+
+type CircleType = EntityType &
+  Measurable &
+  Taggable & {
+    radius: number;
+    fill: string;
+    stroke: string;
+    lineWidth: number;
+    direction: Vector;
+    center: Vector;
+  };
+
+type LineType = EntityType &
+  Measurable &
+  Taggable & {
+    start: Vector;
+    end: Vector;
+    stroke: string;
+    lineWidth: number;
+    direction: Vector;
+    center: Vector;
+  };
+
+type TextType = EntityType &
+  Taggable & {
+    text: string;
+    font: string;
+    fill: string;
+    align: string;
+    stroke: string;
+    lineWidth: number;
+  };
+
+type SpriteType = EntityType &
+  Measurable &
+  Hittable &
+  Taggable & {
+    image: HTMLImageElement;
+    direction: Vector;
+    center: Vector;
+  };
+
+type TileSpriteType = SpriteType & {
+  animation: Animation;
+  frame: { x: number; y: number };
+};
+
+// containers
 type ContainerType = Positionable &
   Deadable &
   Sizeable & {
@@ -110,4 +151,28 @@ type ContainerType = Positionable &
     update?: (dt: Milliseconds, t: Seconds) => void;
   };
 
-export { ContainerType, EntityType };
+export { Coordinates, Milliseconds, Seconds, Degrees, Radians, Pixels };
+
+export {
+  Positionable,
+  Moveable,
+  Measurable,
+  Sizeable,
+  Rotatable,
+  Scalable,
+  Alphaable,
+  Deadable,
+  Visible,
+  Hittable,
+};
+
+export {
+  ContainerType,
+  EntityType,
+  RectType,
+  CircleType,
+  LineType,
+  TextType,
+  SpriteType,
+  TileSpriteType,
+};

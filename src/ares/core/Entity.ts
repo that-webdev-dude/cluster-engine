@@ -1,3 +1,4 @@
+import Cmath from "../tools/Cmath";
 import Vector from "../tools/Vector";
 import { EntityType } from "../types";
 
@@ -16,6 +17,7 @@ type EntityConfig = Partial<{
 }>;
 
 abstract class Entity implements EntityType {
+  readonly id: string;
   acceleration: Vector;
   velocity: Vector;
   position: Vector;
@@ -43,6 +45,7 @@ abstract class Entity implements EntityType {
       visible = true,
     } = { ...config };
 
+    this.id = Cmath.randId(9);
     this.acceleration = acceleration;
     this.velocity = velocity;
     this.position = position;
@@ -56,10 +59,8 @@ abstract class Entity implements EntityType {
     this.visible = visible;
   }
 
-  abstract get center(): Vector;
-
-  get direction(): Vector {
-    return this.velocity.clone().normalize();
+  get type(): string {
+    return this.constructor.name;
   }
 }
 

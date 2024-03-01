@@ -1,11 +1,8 @@
-import { GAME_GLOBALS } from "./globals/GameGlobals";
 import { GAME_CONFIG } from "./config/GameConfig";
 import { Game } from "./ares";
 import GamePlay from "./screens/GamePlay";
 
-// // GAME
 const game = new Game({ ...GAME_CONFIG });
-
 const startGamePlay = () => {
   game.setScene(
     new GamePlay(game, {
