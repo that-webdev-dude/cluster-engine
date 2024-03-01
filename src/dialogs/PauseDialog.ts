@@ -13,17 +13,17 @@ class PauseDialog extends Dialog {
   private _quitText = new Text({
     position: new Vector(this.width / 2, this.height / 2 + 32),
     text: "ESC TO QUIT",
-    fill: "white",
+    style: { fill: "white" },
   });
   private _pauseText = new Text({
     position: new Vector(this.width / 2, this.height / 2 - 32),
     text: "PAUSED",
-    fill: "white",
+    style: { fill: "white" },
   });
   private _resumeText = new Text({
     position: new Vector(this.width / 2, this.height / 2),
     text: "ENTER TO RESUME",
-    fill: "white",
+    style: { fill: "white" },
   });
 
   game: Game;

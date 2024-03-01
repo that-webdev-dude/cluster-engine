@@ -1,5 +1,6 @@
 import Vector from "../tools/Vector";
 
+// utility types
 type Milliseconds = number;
 
 type Seconds = number;
@@ -10,24 +11,26 @@ type Radians = number;
 
 type Pixels = number;
 
-type Locateable = {
+type Coordinates = {
   x: Pixels;
   y: Pixels;
 };
 
+// component types
 type Positionable = {
   position: Vector;
   anchor: Vector;
 };
 
-type Sizeable = {
-  width?: Pixels;
-  height?: Pixels;
+type Moveable = {
+  acceleration: Vector;
+  velocity: Vector;
+  mass: number;
 };
 
-// type Sizeable = {
-//   size: number;
-// };
+type Sizeable = {
+  size: number;
+};
 
 type Measurable = {
   width: Pixels;
@@ -47,33 +50,29 @@ type Alphaable = {
   alpha: number;
 };
 
-type Deadable = {
-  dead: boolean;
-};
-
 type Visible = {
   visible: boolean;
 };
 
+type Deadable = {
+  dead: boolean;
+};
+
+type Taggable = {
+  tag: string;
+};
+
+type Hittable = {
+  hitbox: Coordinates & Measurable;
+};
+
 type Collidable = {
-  hitbox?: Locateable & Sizeable; // made optional for now
-};
-
-type Renderable = {
-  render: (context: CanvasRenderingContext2D) => void;
-};
-
-type Updateable = {
-  update: (delta: Milliseconds, elapsed: Seconds) => void;
-};
-
-type Resetable = {
-  reset: () => void;
+  hitbox: Coordinates & Measurable; // made optional for now
 };
 
 export {
-  Locateable,
   Positionable,
+  Moveable,
   Measurable,
   Sizeable,
   Rotatable,
@@ -81,10 +80,10 @@ export {
   Alphaable,
   Deadable,
   Visible,
+  Taggable,
+  Hittable,
   Collidable,
-  Renderable,
-  Updateable,
-  Resetable,
+  Coordinates,
   Milliseconds,
   Seconds,
   Degrees,
@@ -93,19 +92,22 @@ export {
 };
 
 type EntityType = Positionable &
-  Sizeable &
+  Moveable &
   Rotatable &
-  Scalable &
   Alphaable &
-  Collidable &
-  Renderable &
-  Deadable;
+  Scalable &
+  Deadable &
+  Visible & {
+    update?: (dt: number, t: number) => void;
+    render?: (context: CanvasRenderingContext2D) => void;
+    reset?: () => void;
+  };
 
 type ContainerType = Positionable &
-  Updateable &
-  Deadable & {
-    children: Array<ContainerType | Deadable>;
-    size: number;
+  Deadable &
+  Sizeable & {
+    children: Array<ContainerType | EntityType>;
+    update?: (dt: Milliseconds, t: Seconds) => void;
   };
 
 export { ContainerType, EntityType };

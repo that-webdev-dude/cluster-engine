@@ -1,8 +1,8 @@
 import Cmath from "./Cmath";
 import Vector from "./Vector";
-import { EntityType, Positionable, Sizeable, Collidable } from "../types";
+import { EntityType, Positionable, Measurable, Collidable } from "../types";
 
-type CollidableEntity = Positionable & Sizeable & Collidable;
+type CollidableEntity = Positionable & Measurable & Collidable;
 
 class Entity {
   /**
@@ -11,7 +11,7 @@ class Entity {
    * @param {Object} entity entity type object
    * @returns {Object} the x/y coordinates of the entity's center
    */
-  static center(entity: Positionable & Sizeable) {
+  static center(entity: Positionable & Measurable) {
     const { position, width, height } = entity;
     if (!width || !height) {
       throw new Error("Entity must have width and height");
@@ -27,8 +27,8 @@ class Entity {
    * @returns {Number} the distance between the entities
    */
   static distance(
-    entity1: Positionable & Sizeable,
-    entity2: Positionable & Sizeable
+    entity1: Positionable & Measurable,
+    entity2: Positionable & Measurable
   ) {
     return Cmath.distance(this.center(entity1), this.center(entity2));
   }
@@ -41,8 +41,8 @@ class Entity {
    * @returns {Number} the angle between the entities
    */
   static angle(
-    entity1: Positionable & Sizeable,
-    entity2: Positionable & Sizeable
+    entity1: Positionable & Measurable,
+    entity2: Positionable & Measurable
   ) {
     return Cmath.angle(this.center(entity1), this.center(entity2));
   }

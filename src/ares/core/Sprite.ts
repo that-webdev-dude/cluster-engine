@@ -17,6 +17,11 @@ interface ISpriteConfig {
   angle?: number;
   alpha?: number;
   dead?: boolean;
+  acceleration?: Vector;
+  velocity?: Vector;
+  mass?: number;
+  tag?: string;
+  visible?: boolean;
 }
 
 class Sprite implements ISprite {
@@ -27,6 +32,12 @@ class Sprite implements ISprite {
   public angle: number;
   public alpha: number;
   public dead: boolean;
+  public acceleration: Vector;
+  public velocity: Vector;
+  public mass: number;
+  public tag: string;
+  public visible: boolean;
+  public hitbox: { x: number; y: number; width: number; height: number };
   readonly image: HTMLImageElement;
 
   constructor({
@@ -38,6 +49,11 @@ class Sprite implements ISprite {
     angle = 0,
     alpha = 1,
     dead = false,
+    acceleration = new Vector(),
+    velocity = new Vector(),
+    mass = 1,
+    tag = "Sprite",
+    visible = true,
   }: ISpriteConfig) {
     this.position = position;
     this.anchor = anchor;
@@ -46,7 +62,18 @@ class Sprite implements ISprite {
     this.angle = angle;
     this.alpha = alpha;
     this.dead = dead;
+    this.acceleration = acceleration;
+    this.velocity = velocity;
+    this.mass = mass;
+    this.tag = tag;
+    this.visible = visible;
     this.image = Assets.image(textureURL);
+    this.hitbox = {
+      x: 0,
+      y: 0,
+      width: this.image.width,
+      height: this.image.height,
+    };
   }
 
   get width(): number {

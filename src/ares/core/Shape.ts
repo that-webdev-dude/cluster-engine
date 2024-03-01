@@ -1,194 +1,114 @@
 import Vector from "../tools/Vector";
-import Cmath from "../tools/Cmath";
+import { Entity, EntityConfig, EntityType } from "./Entity";
 
-// FIX THIS
-// alpha shoud be on the style object?
-// text need the w/h properties computed properly
-// EXPORT THIS TEXT CLASS
-
-interface IPhysics {
-  mass: number;
-}
-
-interface IEntityConfig {
-  acceleration?: Vector;
-  velocity?: Vector;
-  position?: Vector;
-  anchor?: Vector;
-  scale?: Vector;
-  pivot?: Vector;
-  angle?: number;
-  dead?: boolean;
-  alpha?: number;
-  visible?: boolean;
-  physics?: Partial<IPhysics>;
-}
-
-abstract class GameEntity {
-  public acceleration: Vector;
-  public velocity: Vector;
-  public position: Vector;
-  public anchor: Vector;
-  public scale: Vector;
-  public pivot: Vector;
-  public angle: number;
-  public dead: boolean;
-  public alpha: number;
-  public visible: boolean;
-  public physics: Partial<IPhysics>;
-
-  constructor(config: IEntityConfig) {
-    const {
-      acceleration = new Vector(0, 0),
-      velocity = new Vector(0, 0),
-      position = new Vector(0, 0),
-      anchor = new Vector(0, 0),
-      scale = new Vector(1, 1),
-      pivot = new Vector(0, 0),
-      angle = 0,
-      dead = false,
-      alpha = 1,
-      visible = true,
-      physics = {},
-    } = config;
-
-    this.acceleration = acceleration;
-    this.velocity = velocity;
-    this.position = position;
-    this.anchor = anchor;
-    this.scale = scale;
-    this.pivot = pivot;
-    this.angle = angle;
-    this.dead = dead;
-    this.alpha = alpha;
-    this.visible = visible;
-
-    const { mass = 1 } = physics;
-    this.physics = { mass };
-  }
-
-  get direction(): Vector {
-    return this.velocity.clone().normalize();
-  }
-
-  distanceTo(entity: GameEntity): number {
-    return Cmath.distance(this.center, entity.center);
-  }
-
-  angleTo(entity: GameEntity): number {
-    return Cmath.angle(this.center, entity.center);
-  }
-
-  abstract get width(): number;
-  abstract get height(): number;
-  abstract get center(): Vector;
-  abstract render(context: CanvasRenderingContext2D): void;
-}
-
-// RECT ENTITY
-interface IRectConfig extends IEntityConfig {
-  size?: Vector;
-  style?: Partial<{
-    fill: string;
-    stroke: string;
-    lineWidth: number;
-  }>;
-  hitbox?: Partial<{
+// // RECT ENTITY
+type RectType = EntityType & {
+  height: number;
+  width: number;
+  fill: string;
+  stroke: string;
+  lineWidth: number;
+  hitbox: {
     x: number;
     y: number;
     width: number;
     height: number;
-  }>;
-}
-
-const RECT_DEFAULTS = {
-  size: new Vector(50, 50),
-  style: {
-    fill: "black",
-    stroke: "transparent",
-    lineWidth: 1,
-  },
+  };
 };
 
-class Rect extends GameEntity {
-  public size: Vector;
-  public style: {
-    fill: string;
-    stroke: string;
-    lineWidth: number;
-  };
-  public hitbox: {
+type RectConfig = EntityConfig &
+  Partial<{
+    height?: number;
+    width?: number;
+    fill?: string;
+    stroke?: string;
+    lineWidth?: number;
+    hitbox?: {
+      x: number;
+      y: number;
+      width: number;
+      height: number;
+    };
+  }>;
+
+class Rect extends Entity implements RectType {
+  private _width: number;
+  private _height: number;
+  fill: string;
+  stroke: string;
+  lineWidth: number;
+  hitbox: {
     x: number;
     y: number;
     width: number;
     height: number;
   };
-  constructor(config: IRectConfig) {
+  constructor(config: RectConfig = {}) {
+    const {
+      height = 32,
+      width = 32,
+      fill = "black",
+      stroke = "black",
+      lineWidth = 1,
+      hitbox,
+    } = config;
+
     super(config);
-    const size = config.size || RECT_DEFAULTS.size;
-    const style = {
-      ...RECT_DEFAULTS.style,
-      ...config.style,
+    this._height = height;
+    this._width = width;
+    this.fill = fill;
+    this.stroke = stroke;
+    this.lineWidth = lineWidth;
+    this.hitbox = hitbox || {
+      x: 0,
+      y: 0,
+      width: this.width,
+      height: this.height,
     };
-    const hitbox = {
-      ...{ x: 0, y: 0, width: size.x, height: size.y }, // default hitbox
-      ...config.hitbox,
-    };
-    this.size = size;
-    this.style = style;
-    this.hitbox = hitbox;
+  }
+
+  set width(width: number) {
+    this._width = width;
   }
 
   get width(): number {
-    return this.size.x * this.scale.x;
+    return this._width * this.scale.x;
+  }
+
+  set height(height: number) {
+    this._height = height;
   }
 
   get height(): number {
-    return this.size.y * this.scale.y;
+    return this._height * this.scale.y;
   }
 
   get center(): Vector {
     return new Vector(
-      this.position.x + this.width * 0.5,
-      this.position.y + this.height * 0.5
+      this.position.x + this.width / 2,
+      this.position.y + this.height / 2
     );
   }
 
-  get hitBounds(): {
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-  } {
-    const { position, hitbox } = this;
+  get hitBounds(): { x: number; y: number; width: number; height: number } {
     return {
-      x: position.x + hitbox.x,
-      y: position.y + hitbox.y,
-      width: hitbox.width,
-      height: hitbox.height,
+      x: this.position.x + this.hitbox.x,
+      y: this.position.y + this.hitbox.y,
+      width: this.hitbox.width,
+      height: this.hitbox.height,
     };
-  }
-
-  public render(context: CanvasRenderingContext2D) {
-    if (!this.style.fill || !this.style.stroke || !this.style.lineWidth) return;
-    context.beginPath();
-    context.rect(0, 0, this.width, this.height);
-    context.fillStyle = this.style.fill;
-    context.fill();
-    context.lineWidth = this.style.lineWidth;
-    context.strokeStyle = this.style.stroke;
-    context.stroke();
   }
 }
 
 // CIRCLE ENTITY
-interface ICircleConfig extends IEntityConfig {
+interface ICircleConfig extends EntityConfig {
   radius?: number;
   style: Partial<{
     fill: string;
     stroke: string;
     lineWidth: number;
   }>;
+  tag: string;
 }
 
 const CIRCLE_DEFAULTS = {
@@ -200,7 +120,7 @@ const CIRCLE_DEFAULTS = {
   },
 };
 
-class Circle extends GameEntity {
+class Circle extends Entity {
   public radius: number;
   public style: {
     fill: string;
@@ -246,7 +166,7 @@ class Circle extends GameEntity {
 }
 
 // LINE ENTITY
-interface ILineConfig extends IEntityConfig {
+interface ILineConfig extends EntityConfig {
   start?: Vector;
   end?: Vector;
   style: Partial<{
@@ -264,7 +184,7 @@ const LINE_DEFAULTS = {
   },
 };
 
-class Line extends GameEntity {
+class Line extends Entity {
   public start: Vector;
   public end: Vector;
   public style: {
@@ -308,74 +228,6 @@ class Line extends GameEntity {
     context.lineWidth = this.style.lineWidth;
     context.strokeStyle = this.style.stroke;
     context.stroke();
-  }
-}
-
-// TEXT ENTITY
-interface ITextConfig extends IEntityConfig {
-  text: string;
-  style: Partial<{
-    font: string;
-    fill: string;
-    stroke: string;
-    lineWidth: number;
-    align: CanvasTextAlign;
-  }>;
-}
-
-const TEXT_DEFAULTS = {
-  text: " ",
-  style: {
-    font: "20px Arial",
-    fill: "black",
-    stroke: "transparent",
-    lineWidth: 1,
-    align: "center" as CanvasTextAlign,
-  },
-};
-
-class Text extends GameEntity {
-  public text: string;
-  public style: {
-    font: string;
-    fill: string;
-    stroke: string;
-    lineWidth: number;
-    align: CanvasTextAlign;
-  };
-  constructor(config: ITextConfig) {
-    super(config);
-    const text = config.text || TEXT_DEFAULTS.text;
-    const style = {
-      ...TEXT_DEFAULTS.style,
-      ...config.style,
-    };
-    this.text = text;
-    this.style = style;
-  }
-
-  get width(): number {
-    return 0;
-  }
-
-  get height(): number {
-    return 0;
-  }
-
-  get center(): Vector {
-    return new Vector(0, 0);
-  }
-
-  public render(context: CanvasRenderingContext2D) {
-    const { text } = this;
-    const { font, fill, stroke, lineWidth, align } = this.style;
-    context.font = font;
-    context.fillStyle = fill;
-    context.strokeStyle = stroke;
-    context.lineWidth = lineWidth;
-    context.textAlign = align;
-    context.strokeText(text, 0, 0);
-    context.fillText(text, 0, 0);
   }
 }
 

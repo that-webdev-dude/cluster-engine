@@ -1,6 +1,8 @@
-import { EntityType, ContainerType } from "../types";
+/**
+ * that.webdev.dude - 2024
+ */
 
-// render
+import { EntityType, ContainerType } from "../types";
 
 type RendererConfig = {
   height?: number;
@@ -67,20 +69,20 @@ class Renderer {
       // TODO: Fix this
       // This is a hack to prevent rendering of entities that are outside the viewport
       // This is not a good solution because it will not work for games with world size bigger that camera size
-      if ("width" in child && "height" in child) {
-        const { width, height } = child as EntityType & {
-          width: number;
-          height: number;
-        };
-        if (
-          child.position.x + width < 0 ||
-          child.position.x > this.width ||
-          child.position.y + height < 0 ||
-          child.position.y > this.height
-        ) {
-          return;
-        }
-      }
+      // if ("width" in child && "height" in child) {
+      //   const { width, height } = child as EntityType & {
+      //     width: number;
+      //     height: number;
+      //   };
+      //   if (
+      //     child.position.x + width < 0 ||
+      //     child.position.x > this.width ||
+      //     child.position.y + height < 0 ||
+      //     child.position.y > this.height
+      //   ) {
+      //     return;
+      //   }
+      // }
 
       this.context.save();
 
@@ -110,7 +112,9 @@ class Renderer {
         this.context.translate(-px, -py);
       }
 
-      child.render(this.context);
+      if ("render" in child && child.render) {
+        child.render(this.context);
+      }
 
       this.context.restore();
     }

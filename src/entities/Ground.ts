@@ -9,10 +9,8 @@ class Ground extends Rect {
       style: {
         fill: "grey",
       },
-      physics: { mass: 2 },
+      // physics: { mass: 2 },
     });
-
-    console.log(this);
   }
 }
 
