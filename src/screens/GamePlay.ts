@@ -4,18 +4,17 @@ import { Rect } from "../ares";
 import { Circle } from "../ares";
 import { Line } from "../ares";
 import { Text } from "../ares";
-import { Sprite, TileSprite } from "../ares";
+import { Sprite } from "../ares";
 import spritesheetImageURL from "../images/spritesheet.png";
 import barrelImageURL from "../images/barrel.png";
+import { RectType } from "../ares/types";
 
 class GamePlay extends Scene {
   camera: Camera;
-  r1: Rect;
-  c1: Circle;
-  l1: Line;
-  t1: Text;
-  sp1: Sprite;
-  tsp1: TileSprite;
+  e: Sprite;
+  debugBounds: Rect;
+  debugPoint: Circle;
+  debugHitBounds: Rect;
   constructor(
     game: Game,
     transitions: {
@@ -31,77 +30,80 @@ class GamePlay extends Scene {
     });
     this.add(this.camera);
 
-    this.r1 = new Rect({
-      position: new Vector(200, 200),
-      pivot: new Vector(50, 50),
-      width: 100,
-      height: 100,
-      fill: "blue",
-    });
-
-    this.c1 = new Circle({
-      anchor: new Vector(50, 50),
-      radius: 50,
-      fill: "red",
-    });
-
-    this.l1 = new Line({
-      start: new Vector(0, 0),
-      end: new Vector(100, 100),
-      stroke: "black",
-    });
-
-    this.t1 = new Text({
-      position: new Vector(400, 400),
-      text: "Hello World",
-      fill: "black",
-    });
-
-    this.sp1 = new Sprite({
-      position: new Vector(500, 300),
+    this.e = new Sprite({
+      imageURL: spritesheetImageURL,
+      position: new Vector(100, 100),
       scale: new Vector(2, 2),
-      textureURL: barrelImageURL,
       hitbox: {
-        x: 2,
-        y: 2,
-        width: 28,
-        height: 28,
+        x: 4,
+        y: 4,
+        width: 24,
+        height: 24,
       },
-    });
-
-    this.tsp1 = new TileSprite({
-      position: new Vector(100, 500),
-      textureURL: spritesheetImageURL,
-      tileW: 32,
       tileH: 32,
-      frame: { x: 0, y: 0 },
+      tileW: 32,
+      tile: { x: 3, y: 1 },
     });
-    this.tsp1.animation.add(
-      "idle",
-      [
-        { x: 4, y: 0 },
-        { x: 5, y: 0 },
-      ],
-      0.25
+
+    this.debugPoint = new Circle({
+      radius: 4,
+      fill: "black",
+      anchor: new Vector(),
+    });
+
+    this.debugBounds = new Rect({
+      stroke: "lightgreen",
+      fill: "transparent",
+      lineWidth: 2,
+    });
+
+    this.debugHitBounds = new Rect({
+      stroke: "transparent",
+      alpha: 0.5,
+      fill: "cyan",
+    });
+
+    this.camera.add(this.e);
+    this.camera.add(this.debugPoint);
+    this.camera.add(this.debugBounds);
+    this.camera.add(this.debugHitBounds);
+    this.camera.add(
+      new Text({
+        text: "Hello World",
+        position: new Vector(500, 100),
+      })
     );
-    this.tsp1.animation.play("idle");
+  }
 
-    // console.table(this.r1);
-    // console.table(this.c1);
-    // console.table(this.l1);
-    console.table(this.sp1);
-
-    this.camera.add(this.r1);
-    this.camera.add(this.c1);
-    this.camera.add(this.l1);
-    this.camera.add(this.t1);
-    this.camera.add(this.sp1);
-    this.camera.add(this.tsp1);
+  pointVsRect(point: Vector, rect: RectType): boolean {
+    return (
+      point.x >= rect.position.x &&
+      point.x <= rect.position.x + rect.width &&
+      point.y >= rect.position.y &&
+      point.y <= rect.position.y + rect.height
+    );
   }
 
   update(dt: number, t: number): void {
     super.update(dt, t);
-    this.r1.angle += 0.025;
+    if (this.game.keyboard.x) {
+      this.e.position.x += this.game.keyboard.x * 5;
+    }
+    if (this.game.keyboard.y) {
+      this.e.position.y += this.game.keyboard.y * 5;
+    }
+
+    this.debugBounds.position = Vector.from(this.e.bounds);
+    this.debugBounds.size.x = this.e.bounds.width;
+    this.debugBounds.size.y = this.e.bounds.height;
+
+    this.debugHitBounds.position = Vector.from(this.e.hitBounds);
+    this.debugHitBounds.size.x = this.e.hitBounds.width;
+    this.debugHitBounds.size.y = this.e.hitBounds.height;
+
+    this.debugPoint.position = this.e.center;
+
+    this.game.mouse.update();
   }
 }
 

@@ -1,5 +1,5 @@
 import { GAME_CONFIG } from "./config/GameConfig";
-import { Game } from "./ares";
+import { Game, Vector } from "./ares";
 import GamePlay from "./screens/GamePlay";
 
 const game = new Game({ ...GAME_CONFIG });

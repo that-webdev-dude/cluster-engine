@@ -38,7 +38,7 @@ class Container<
   update(dt: Milliseconds, t: Seconds) {
     for (let i = 0; i < this.children.length; i++) {
       const child = this.children[i];
-      if (child.update) {
+      if ("update" in child && child.update) {
         child.update(dt, t);
       }
       if (child.dead) {

@@ -1,4 +1,6 @@
-import { Coordinates } from "../types";
+import { Point } from "../types";
+
+type Coordinates = Point;
 
 /**
  * @class AnimationItem
@@ -114,6 +116,9 @@ class Animation {
 
   public play(animationName: string): void {
     if (this._currentAnimationName === animationName) return;
+    if (!this._animations[animationName]) {
+      throw new Error(`Animation: "${animationName}" not found`);
+    }
     this._currentAnimationName = animationName;
     this._animations[animationName].reset();
   }

@@ -2,177 +2,201 @@ import Vector from "../tools/Vector";
 import Animation from "../core/Animation";
 
 // utility types
-type Milliseconds = number;
+export type Milliseconds = number;
 
-type Seconds = number;
+export type Seconds = number;
 
-type Degrees = number;
+export type Degrees = number;
 
-type Radians = number;
+export type Radians = number;
 
-type Pixels = number;
+export type Pixels = number;
 
-type Coordinates = {
+export type Point = {
   x: Pixels;
   y: Pixels;
 };
 
+export type size = {
+  width: Pixels;
+  height: Pixels;
+};
+
+export type Box = Point & size;
+
 // component types
-type Positionable = {
+export type Positionable = {
   position: Vector;
   anchor: Vector;
 };
 
-type Moveable = {
+export type Moveable = {
   acceleration: Vector;
   velocity: Vector;
   mass: number;
 };
 
-type Sizeable = {
+export type Sizeable = {
   size: number;
 };
 
-type Measurable = {
+export type Measurable = {
   width: Pixels;
   height: Pixels;
 };
 
-type Rotatable = {
+export type Rotatable = {
   pivot: Vector;
   angle: Radians;
 };
 
-type Scalable = {
+export type Scalable = {
   scale: Vector;
 };
 
-type Alphaable = {
+export type Alphaable = {
   alpha: number;
 };
 
-type Visible = {
+export type Visible = {
   visible: boolean;
 };
 
-type Deadable = {
+export type Deadable = {
   dead: boolean;
 };
 
-type Hittable = {
-  hitbox: Coordinates & Measurable;
-  hitBounds: Coordinates & Measurable;
+export type Hittable = {
+  hitbox: Point & Measurable;
+  hitBounds: Point & Measurable;
 };
 
-type Taggable = {
+export type Taggable = {
   tag: string;
 };
 
-type Identifiable = {
+export type Identifiable = {
   id: string;
 };
 
 // entity types
-type EntityType = Positionable &
-  Identifiable &
-  Moveable &
-  Rotatable &
-  Alphaable &
-  Scalable &
-  Deadable &
-  Visible & {
-    update?: (dt: number, t: number) => void;
-    render?: (context: CanvasRenderingContext2D) => void;
-    reset?: () => void;
-  };
+export type EntityType = {
+  id: string;
+  position: Vector;
+  anchor: Vector;
+  scale: Vector;
+  pivot: Vector;
+  angle: Radians;
+  alpha: number;
+  dead: boolean;
+  visible: boolean;
+};
 
-type RectType = EntityType &
-  Measurable &
-  Hittable &
-  Taggable & {
-    fill: string;
-    stroke: string;
-    lineWidth: number;
-    direction: Vector;
-    center: Vector;
-  };
+export type RectType = EntityType & {
+  tag: string;
+  size: Vector;
+  fill: string;
+  stroke: string;
+  lineWidth: number;
+  hitbox: Box;
+} & {
+  width: number;
+  height: number;
+  x: number;
+  y: number;
+  left: number;
+  right: number;
+  top: number;
+  bottom: number;
+  centerX: number;
+  centerY: number;
+  center: Vector;
+  bounds: Box;
+  hitBounds: Box;
+};
 
-type CircleType = EntityType &
-  Measurable &
-  Taggable & {
-    radius: number;
-    fill: string;
-    stroke: string;
-    lineWidth: number;
-    direction: Vector;
-    center: Vector;
-  };
+export type CircleType = EntityType & {
+  tag: string;
+  radius: number;
+  fill: string;
+  stroke: string;
+  lineWidth: number;
+} & {
+  diameter: number;
+  width: number;
+  height: number;
+  x: number;
+  y: number;
+  left: number;
+  right: number;
+  top: number;
+  bottom: number;
+  centerX: number;
+  centerY: number;
+  center: Vector;
+  bounds: Box;
+  hitBounds: Box;
+};
 
-type LineType = EntityType &
-  Measurable &
-  Taggable & {
-    start: Vector;
-    end: Vector;
-    stroke: string;
-    lineWidth: number;
-    direction: Vector;
-    center: Vector;
-  };
+export type LineType = EntityType & {
+  tag: string;
+  start: Vector;
+  end: Vector;
+  stroke: string;
+  lineWidth: number;
+} & {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  centerX: number;
+  centerY: number;
+  center: Vector;
+  bounds: Box;
+};
 
-type TextType = EntityType &
-  Taggable & {
-    text: string;
-    font: string;
-    fill: string;
-    align: string;
-    stroke: string;
-    lineWidth: number;
-  };
+export type TextType = EntityType & {
+  tag: string;
+  text: string;
+  font: string;
+  fill: string;
+  stroke: string;
+  lineWidth: number;
+  align: CanvasTextAlign;
+};
 
-type SpriteType = EntityType &
-  Measurable &
-  Hittable &
-  Taggable & {
-    image: HTMLImageElement;
-    direction: Vector;
-    center: Vector;
-  };
-
-type TileSpriteType = SpriteType & {
+export type SpriteType = EntityType & {
+  tag: string;
+  image: HTMLImageElement;
   animation: Animation;
-  frame: { x: number; y: number };
+  tileW: number;
+  tileH: number;
+  tile: Point;
+} & {
+  frame: Point;
+  width: number;
+  height: number;
+  x: number;
+  y: number;
+  left: number;
+  right: number;
+  top: number;
+  bottom: number;
+  centerX: number;
+  centerY: number;
+  center: Vector;
+  bounds: Box;
+  hitBounds: Box;
+} & {
+  update: (dt: Milliseconds, t: Seconds) => void;
 };
 
 // containers
-type ContainerType = Positionable &
-  Deadable &
-  Sizeable & {
-    children: Array<ContainerType | EntityType>;
-    update?: (dt: Milliseconds, t: Seconds) => void;
-  };
-
-export { Coordinates, Milliseconds, Seconds, Degrees, Radians, Pixels };
-
-export {
-  Positionable,
-  Moveable,
-  Measurable,
-  Sizeable,
-  Rotatable,
-  Scalable,
-  Alphaable,
-  Deadable,
-  Visible,
-  Hittable,
-};
-
-export {
-  ContainerType,
-  EntityType,
-  RectType,
-  CircleType,
-  LineType,
-  TextType,
-  SpriteType,
-  TileSpriteType,
+export type ContainerType = {
+  position: Vector;
+  anchor: Vector;
+  dead: boolean;
+  size: number;
+  children: Array<ContainerType | EntityType>;
+  update: (dt: Milliseconds, t: Seconds) => void;
 };

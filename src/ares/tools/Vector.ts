@@ -4,7 +4,7 @@ class Vector {
   private _magnitude: number | null;
 
   // static methods
-  static from({ x, y }: Vector): Vector {
+  static from({ x, y }: Vector | { x: number; y: number }): Vector {
     return new Vector(x, y);
   }
 

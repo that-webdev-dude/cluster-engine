@@ -1,8 +1,95 @@
 /**
  * that.webdev.dude - 2024
  */
-import { Rect } from "../core/Shape";
-import { EntityType, ContainerType } from "../types";
+
+import {
+  EntityType,
+  ContainerType,
+  CircleType,
+  RectType,
+  LineType,
+  TextType,
+  SpriteType,
+} from "../types";
+
+class CanvasArtist {
+  static drawCircle(ctx: CanvasRenderingContext2D, circle: CircleType) {
+    ctx.beginPath();
+    ctx.arc(0, 0, circle.radius, 0, Math.PI * 2, false);
+    ctx.fillStyle = circle.fill;
+    ctx.fill();
+    ctx.lineWidth = circle.lineWidth;
+    ctx.strokeStyle = circle.stroke;
+    ctx.stroke();
+  }
+
+  static drawRect(ctx: CanvasRenderingContext2D, rect: RectType) {
+    ctx.beginPath();
+    ctx.rect(0, 0, rect.width / rect.scale.x, rect.height / rect.scale.y);
+    ctx.fillStyle = rect.fill;
+    ctx.fill();
+    ctx.lineWidth = rect.lineWidth;
+    ctx.strokeStyle = rect.stroke;
+    ctx.stroke();
+  }
+
+  static drawLine(ctx: CanvasRenderingContext2D, line: LineType) {
+    ctx.beginPath();
+    ctx.moveTo(line.start.x, line.start.y);
+    ctx.lineTo(line.end.x, line.end.y);
+    ctx.lineWidth = line.lineWidth;
+    ctx.strokeStyle = line.stroke;
+    ctx.stroke();
+  }
+
+  static drawText(ctx: CanvasRenderingContext2D, text: TextType) {
+    ctx.font = text.font;
+    ctx.fillStyle = text.fill;
+    ctx.strokeStyle = text.stroke;
+    ctx.lineWidth = text.lineWidth;
+    ctx.textAlign = text.align as CanvasTextAlign;
+    ctx.strokeText(text.text, 0, 0);
+    ctx.fillText(text.text, 0, 0);
+  }
+
+  static drawSprite(ctx: CanvasRenderingContext2D, tileSprite: SpriteType) {
+    ctx.drawImage(
+      tileSprite.image,
+      (tileSprite.frame.x * tileSprite.width) / tileSprite.scale.x,
+      (tileSprite.frame.y * tileSprite.height) / tileSprite.scale.y,
+      tileSprite.width / tileSprite.scale.x,
+      tileSprite.height / tileSprite.scale.y,
+      0,
+      0,
+      tileSprite.width / tileSprite.scale.x,
+      tileSprite.height / tileSprite.scale.y
+    );
+  }
+
+  static draw(ctx: CanvasRenderingContext2D, entity: EntityType) {
+    if ("tag" in entity && entity.tag) {
+      switch (entity.tag) {
+        case "rect":
+          this.drawRect(ctx, entity as RectType);
+          break;
+        case "circle":
+          this.drawCircle(ctx, entity as CircleType);
+          break;
+        case "line":
+          this.drawLine(ctx, entity as LineType);
+          break;
+        case "text":
+          this.drawText(ctx, entity as TextType);
+          break;
+        case "sprite":
+          this.drawSprite(ctx, entity as SpriteType);
+          break;
+        default:
+          break;
+      }
+    }
+  }
+}
 
 type RendererConfig = {
   height?: number;
@@ -61,63 +148,59 @@ class Renderer {
   }
 
   private _render(child: EntityType) {
-    if ("render" in child && child.render) {
-      if (child.alpha <= 0) {
-        return;
-      }
-
-      // TODO: Fix this
-      // This is a hack to prevent rendering of entities that are outside the viewport
-      // This is not a good solution because it will not work for games with world size bigger that camera size
-      // if ("width" in child && "height" in child) {
-      //   const { width, height } = child as EntityType & {
-      //     width: number;
-      //     height: number;
-      //   };
-      //   if (
-      //     child.position.x + width < 0 ||
-      //     child.position.x > this.width ||
-      //     child.position.y + height < 0 ||
-      //     child.position.y > this.height
-      //   ) {
-      //     return;
-      //   }
-      // }
-
-      this.context.save();
-
-      if (child.alpha) {
-        this.context.globalAlpha = child.alpha;
-      }
-
-      if (child.position.x !== 0 || child.position.y !== 0) {
-        this.context.translate(
-          Math.round(child.position.x),
-          Math.round(child.position.y)
-        );
-      }
-
-      if (child.anchor.x !== 0 || child.anchor.y !== 0) {
-        this.context.translate(child.anchor.x, child.anchor.y);
-      }
-
-      if (child.scale.x !== 1 || child.scale.y !== 1) {
-        this.context.scale(child.scale.x, child.scale.y);
-      }
-
-      if (child.angle !== 0) {
-        const { x: px, y: py } = child.pivot || { x: 0, y: 0 };
-        this.context.translate(px, py);
-        this.context.rotate(child.angle);
-        this.context.translate(-px, -py);
-      }
-
-      if ("render" in child && child.render) {
-        child.render(this.context);
-      }
-
-      this.context.restore();
+    if (child.alpha <= 0) {
+      return;
     }
+
+    // TODO: Fix this
+    // This is a hack to prevent rendering of entities that are outside the viewport
+    // This is not a good solution because it will not work for games with world size bigger that camera size
+    // if ("width" in child && "height" in child) {
+    //   const { width, height } = child as EntityType & {
+    //     width: number;
+    //     height: number;
+    //   };
+    //   if (
+    //     child.position.x + width < 0 ||
+    //     child.position.x > this.width ||
+    //     child.position.y + height < 0 ||
+    //     child.position.y > this.height
+    //   ) {
+    //     return;
+    //   }
+    // }
+
+    this.context.save();
+
+    if (child.alpha) {
+      this.context.globalAlpha = child.alpha;
+    }
+
+    if (child.position.x !== 0 || child.position.y !== 0) {
+      this.context.translate(
+        Math.round(child.position.x),
+        Math.round(child.position.y)
+      );
+    }
+
+    if (child.anchor.x !== 0 || child.anchor.y !== 0) {
+      this.context.translate(child.anchor.x, child.anchor.y);
+    }
+
+    if (child.scale.x !== 1 || child.scale.y !== 1) {
+      this.context.scale(child.scale.x, child.scale.y);
+    }
+
+    if (child.angle !== 0) {
+      const { x: px, y: py } = child.pivot || { x: 0, y: 0 };
+      this.context.translate(px, py);
+      this.context.rotate(child.angle);
+      this.context.translate(-px, -py);
+    }
+
+    CanvasArtist.draw(this.context, child);
+
+    this.context.restore();
   }
 
   private _renderRecursive(container: ContainerType) {
@@ -133,13 +216,11 @@ class Renderer {
     }
 
     container.children.forEach((child) => {
-      // child is an array of ContainerType
       if ("children" in child) {
         this._renderRecursive(child as ContainerType);
+      } else {
+        this._render(child as EntityType);
       }
-
-      // child is a EntityType
-      this._render(child as EntityType);
     });
 
     this.context.restore();
@@ -152,9 +233,9 @@ class Renderer {
 
     if ("children" in item) {
       this._renderRecursive(item as ContainerType);
+    } else {
+      this._render(item as EntityType);
     }
-
-    this._render(item as EntityType);
   }
 }
 
