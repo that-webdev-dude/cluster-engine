@@ -5,6 +5,13 @@ import Animation from "./ares/core/Animation";
 import barrelImageURL from "./images/barrel.png";
 import spritesheetImageURL from "./images/spritesheet.png";
 
+// Your TypeScript code is well-structured and follows good practices. However, there are a few areas where you could make improvements for elegance and potentially performance:
+// Use of Properties<T> type: This type is essentially equivalent to T itself. You can directly use the type T instead of Properties<T>.
+// Use of EntityConfig and EntityContainerConfig: These types are equivalent to Entity and EntityContainer respectively. You can directly use Entity and EntityContainer instead of EntityConfig and EntityContainerConfig.
+// Use of Omit<T, "tag">: This is unnecessary because the tag property is not optional in the Entity type. You can remove the Omit usage.
+// Use of Object.assign(this, config): This is a potential performance bottleneck. It would be more performant to manually assign each property in the constructor.
+// Use of Array.splice() in EntityContainer.update(): This can be performance-intensive for large arrays. Consider using a different data structure, like a linked list, for better performance when removing elements.
+
 //
 //
 // ENTITY -------------------------------------------------------------
@@ -12,6 +19,9 @@ namespace CLUSTER {
   export type Properties<T> = {
     [K in keyof T]: T[K];
   };
+  export type Milliseconds = number;
+
+  export type Seconds = number;
 
   export type Point = {
     x: number;
@@ -53,6 +63,11 @@ namespace CLUSTER {
       visible?: boolean;
     }
   >;
+
+  export type EntityContainerConfig = Omit<Entity, "tag">;
+  export type EntityContainer = Properties<Entity> & {
+    children: Array<Entity | EntityContainer>;
+  };
 
   export type RectConfig = Omit<Rect, "tag">;
   export type Rect = Properties<
@@ -223,6 +238,40 @@ class TileSprite extends Sprite implements CLUSTER.TileSprite {
   }
 }
 
+class EntityContainer extends Entity implements CLUSTER.EntityContainer {
+  readonly tag: string = "container"; // Discriminant property
+  public children: Array<Entity | EntityContainer>;
+  constructor(config: CLUSTER.EntityContainerConfig = {}) {
+    super(config as CLUSTER.EntityConfig);
+    this.children = [];
+  }
+
+  add(entity: Entity | EntityContainer): Entity | EntityContainer {
+    this.children.push(entity);
+    return entity;
+  }
+
+  remove(entity: Entity | EntityContainer): Entity | EntityContainer {
+    const index = this.children.indexOf(entity);
+    if (index > -1) {
+      this.children.splice(index, 1);
+    }
+    return entity;
+  }
+
+  update(dt: CLUSTER.Milliseconds, t: CLUSTER.Seconds) {
+    for (let i = 0; i < this.children.length; i++) {
+      const child = this.children[i];
+      if ("update" in child && child.update) {
+        child.update(dt, t);
+      }
+      if ("dead" in child && child.dead) {
+        this.children.splice(i, 1);
+        i--;
+      }
+    }
+  }
+}
 // ENTITY -------------------------------------------------------------
 //
 //
@@ -238,7 +287,8 @@ const STYLES = {
   fill: "lightblue",
 };
 
-type Renderable = Omit<CLUSTER.Entity, "acceleration" | "velocity">;
+type Renderable = CLUSTER.Entity;
+type RenderableContainer = CLUSTER.EntityContainer;
 type RendererConfig = {
   parentElementId?: string;
   height?: number;
@@ -359,6 +409,13 @@ class Renderer {
     }
   }
 
+  setTransform(renderable: Renderable) {
+    this.setTransformPosition(renderable);
+    this.setTransformAnchor(renderable);
+    this.setTransformScale(renderable);
+    this.setTransformAngle(renderable);
+  }
+
   drawRectangle(renderable: CLUSTER.Rect) {
     this.context.fillStyle = renderable.style?.fill || STYLES.fill;
     this.context.lineWidth = renderable.style?.lineWidth || STYLES.lineWidth;
@@ -457,6 +514,32 @@ class Renderer {
     this.context.restore();
   }
 
+  renderRenderableContainer(renderable: RenderableContainer): void {
+    if (renderable.children.length === 0) {
+      return;
+    }
+
+    this.context.save();
+
+    this.setTransform(renderable);
+
+    renderable.children.forEach((child: Renderable) => {
+      if (Array.isArray(child) && child.length !== 0) {
+        this.renderRenderableArray(child as Renderable[]);
+      } else if (
+        "children" in child &&
+        Array.isArray(child.children) &&
+        child.children.length !== 0
+      ) {
+        this.renderRenderableArray(child.children);
+      } else {
+        this.renderRenderable(child as Renderable);
+      }
+    });
+
+    this.context.restore();
+  }
+
   renderRenderableArray(renderables: Renderable[]): void {
     if (renderables.length === 0) {
       return;
@@ -481,13 +564,23 @@ class Renderer {
   // add support for container
   render(renderable: Renderable, clear?: boolean): void;
   render(renderable: Renderable[], clear?: boolean): void;
+  render(renderable: RenderableContainer, clear?: boolean): void;
   render(renderable: Renderable | Renderable[], clear: boolean = true): void {
     if (clear) {
       this.context.clearRect(0, 0, this.width, this.height);
     }
 
+    // TODO
+    // refactor these into small functions
+    // for the entity container case, transform the context
     if (Array.isArray(renderable) && renderable.length !== 0) {
       this.renderRenderableArray(renderable as Renderable[]);
+    } else if (
+      "children" in renderable &&
+      Array.isArray(renderable.children) &&
+      renderable.children.length !== 0
+    ) {
+      this.renderRenderableContainer(renderable as RenderableContainer);
     } else {
       this.renderRenderable(renderable as Renderable);
     }
@@ -547,6 +640,16 @@ tileSprite.animation.add(
 );
 tileSprite.animation.play("idle");
 
+const scene = new EntityContainer({
+  position: new Vector(200, 0),
+});
+scene.add(rectangle);
+scene.add(circle);
+scene.add(line);
+scene.add(image);
+scene.add(text);
+scene.add(tileSprite);
+
 const renderer = new Renderer({
   width: 800,
   height: 600,
@@ -554,10 +657,10 @@ const renderer = new Renderer({
 });
 const engine = new Engine({
   update: (dt, t) => {
-    tileSprite.update(dt);
+    scene.update(dt, t);
   },
   render: () => {
-    renderer.render([text, rectangle, image, circle, line, tileSprite]);
+    renderer.render(scene);
   },
 });
 
