@@ -35,7 +35,7 @@ namespace CLUSTER {
   export type EntityConfig = Properties<Entity>;
   export type Entity = Properties<
     {
-      type: string; // REQUIRED discriminant property
+      tag: string; // REQUIRED discriminant property
     } & {
       acceleration?: Vector;
       velocity?: Vector;
@@ -50,7 +50,7 @@ namespace CLUSTER {
     }
   >;
 
-  export type RectConfig = Omit<Rect, "type">;
+  export type RectConfig = Omit<Rect, "tag">;
   export type Rect = Properties<
     Entity & {
       width: number;
@@ -59,7 +59,7 @@ namespace CLUSTER {
     }
   >;
 
-  export type CircleConfig = Omit<Circle, "type">;
+  export type CircleConfig = Omit<Circle, "tag">;
   export type Circle = Properties<
     Entity & {
       radius: number;
@@ -67,7 +67,7 @@ namespace CLUSTER {
     }
   >;
 
-  export type LineConfig = Omit<Line, "type">;
+  export type LineConfig = Omit<Line, "tag">;
   export type Line = Properties<
     Entity & {
       start: Vector;
@@ -76,7 +76,7 @@ namespace CLUSTER {
     }
   >;
 
-  export type TextConfig = Omit<Text, "type">;
+  export type TextConfig = Omit<Text, "tag">;
   export type Text = Properties<
     Entity & {
       text: string;
@@ -84,7 +84,7 @@ namespace CLUSTER {
     }
   >;
 
-  export type SpriteConfig = Omit<Sprite, "type">;
+  export type SpriteConfig = Omit<Sprite, "tag">;
   export type Sprite = Properties<
     Entity & {
       image: HTMLImageElement;
@@ -101,7 +101,7 @@ namespace CLUSTER {
 }
 
 abstract class Entity implements CLUSTER.Entity {
-  abstract readonly type: string; // Discriminant property
+  abstract readonly tag: string; // Discriminant property
   acceleration?: Vector | undefined;
   velocity?: Vector | undefined;
   position?: Vector | undefined;
@@ -117,7 +117,7 @@ abstract class Entity implements CLUSTER.Entity {
   }
 }
 class Rect extends Entity implements CLUSTER.Rect {
-  readonly type: CLUSTER.EntityTag = CLUSTER.EntityTag.RECT; // Discriminant property
+  readonly tag: CLUSTER.EntityTag = CLUSTER.EntityTag.RECT; // Discriminant property
   public style: CLUSTER.ShapeStyle;
   public width: number;
   public height: number;
@@ -130,7 +130,7 @@ class Rect extends Entity implements CLUSTER.Rect {
   }
 }
 class Circle extends Entity implements CLUSTER.Circle {
-  readonly type: CLUSTER.EntityTag = CLUSTER.EntityTag.CIRCLE; // Discriminant property
+  readonly tag: CLUSTER.EntityTag = CLUSTER.EntityTag.CIRCLE; // Discriminant property
   public style: CLUSTER.ShapeStyle;
   public radius: number;
   constructor(config: CLUSTER.CircleConfig) {
@@ -141,7 +141,7 @@ class Circle extends Entity implements CLUSTER.Circle {
   }
 }
 class Line extends Entity implements CLUSTER.Line {
-  readonly type: CLUSTER.EntityTag = CLUSTER.EntityTag.LINE; // Discriminant property
+  readonly tag: CLUSTER.EntityTag = CLUSTER.EntityTag.LINE; // Discriminant property
   public style: CLUSTER.LineStyle;
   public start: Vector;
   public end: Vector;
@@ -159,7 +159,7 @@ class Line extends Entity implements CLUSTER.Line {
   }
 }
 class Text extends Entity implements CLUSTER.Text {
-  readonly type: CLUSTER.EntityTag = CLUSTER.EntityTag.TEXT; // Discriminant property
+  readonly tag: CLUSTER.EntityTag = CLUSTER.EntityTag.TEXT; // Discriminant property
   public style: CLUSTER.TextStyle;
   public text: string;
   constructor(config: CLUSTER.TextConfig) {
@@ -170,7 +170,7 @@ class Text extends Entity implements CLUSTER.Text {
   }
 }
 class Sprite extends Entity implements CLUSTER.Sprite {
-  readonly type: CLUSTER.EntityTag = CLUSTER.EntityTag.SPRITE; // Discriminant property
+  readonly tag: CLUSTER.EntityTag = CLUSTER.EntityTag.SPRITE; // Discriminant property
   public image: HTMLImageElement;
   constructor(config: CLUSTER.SpriteConfig) {
     const { image = new Image(), ...optionals } = config;
@@ -373,7 +373,7 @@ class Renderer {
     this.setTransformScale(renderable);
     this.setTransformAngle(renderable);
 
-    switch (renderable.type as CLUSTER.EntityTag) {
+    switch (renderable.tag as CLUSTER.EntityTag) {
       case CLUSTER.EntityTag.RECT:
         this.drawRectangle(renderable as CLUSTER.Rect);
         break;
