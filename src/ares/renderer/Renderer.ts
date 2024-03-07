@@ -2,6 +2,57 @@
  * that.webdev.dude - 2024
  */
 
+type Renderable = {
+  type: string;
+} & Partial<{
+  position: { x: number; y: number };
+  anchor: { x: number; y: number };
+  scale: { x: number; y: number };
+  pivot: { x: number; y: number };
+  angle: number;
+  alpha: number;
+  visible: boolean;
+}>;
+
+type RenderableRect = Renderable & {
+  width: number;
+  height: number;
+  style: Partial<{
+    fill: string;
+    stroke: string;
+    lineWidth: number;
+  }>;
+};
+
+type RenderableImage = Renderable & {
+  width: number;
+  height: number;
+  image: HTMLImageElement;
+};
+
+type RenderableText = Renderable & {
+  text: string;
+  style: Partial<{
+    font: string;
+    fill: string;
+    stroke: string;
+    lineWidth: number;
+    align: CanvasTextAlign;
+  }>;
+};
+
+type RenderableEntity = RenderableRect | RenderableImage | RenderableText;
+
+function drawText(ctx: CanvasRenderingContext2D, renderable: RenderableText) {
+  ctx.font = renderable.style.font || '24px "Press Start 2P"';
+  ctx.fillStyle = renderable.style.fill || "black";
+  ctx.strokeStyle = renderable.style.stroke || "black";
+  ctx.lineWidth = renderable.style.lineWidth || 1;
+  ctx.textAlign = renderable.style.align || "center";
+  ctx.strokeText(renderable.text, 0, 0);
+  ctx.fillText(renderable.text, 0, 0);
+}
+
 import {
   EntityType,
   ContainerType,
@@ -109,12 +160,8 @@ class Renderer {
       throw new Error("Failed to get 2D context");
     }
 
-    // const devicePixelRatio = window.devicePixelRatio || 1;
-    // canvas.width = width * devicePixelRatio;
-    // canvas.height = height * devicePixelRatio;
-    // canvas.style.width = `${width}px`;
-    // canvas.style.height = `${height}px`;
-    // context.scale(devicePixelRatio, devicePixelRatio);
+    // TODO: Fix this
+    // neet to account for the pixel ratio?
 
     canvas.width = width;
     canvas.height = height;
@@ -153,22 +200,7 @@ class Renderer {
     }
 
     // TODO: Fix this
-    // This is a hack to prevent rendering of entities that are outside the viewport
-    // This is not a good solution because it will not work for games with world size bigger that camera size
-    // if ("width" in child && "height" in child) {
-    //   const { width, height } = child as EntityType & {
-    //     width: number;
-    //     height: number;
-    //   };
-    //   if (
-    //     child.position.x + width < 0 ||
-    //     child.position.x > this.width ||
-    //     child.position.y + height < 0 ||
-    //     child.position.y > this.height
-    //   ) {
-    //     return;
-    //   }
-    // }
+    // find a hack to prevent rendering of entities that are outside the viewport
 
     this.context.save();
 
@@ -236,6 +268,103 @@ class Renderer {
     } else {
       this._render(item as EntityType);
     }
+  }
+
+  // DEV
+  // a way to test/improve the renderer
+  // ------------------------------------------------------------------------------------------
+  private _drawRect(rect: RenderableRect) {
+    this.context.beginPath();
+    this.context.rect(0, 0, rect.width, rect.height);
+    this.context.fillStyle = rect.style.fill || "black";
+    this.context.fill();
+    this.context.lineWidth = rect.style.lineWidth || 1;
+    this.context.strokeStyle = rect.style.stroke || "black";
+    this.context.stroke();
+  }
+
+  private _drawImage(renderable: RenderableImage) {
+    this.context.drawImage(
+      renderable.image,
+      0,
+      0,
+      renderable.width,
+      renderable.height
+    );
+  }
+
+  private _drawText(renderable: RenderableText) {
+    const { text, style } = renderable;
+    if (!text) throw new Error("Text is required");
+    this.context.font = renderable.style.font || '24px "Press Start 2P"';
+    this.context.fillStyle = renderable.style.fill || "black";
+    this.context.strokeStyle = renderable.style.stroke || "black";
+    this.context.lineWidth = renderable.style.lineWidth || 1;
+    this.context.textAlign = renderable.style.align || "center";
+    this.context.strokeText(renderable.text, 0, 0);
+    this.context.fillText(renderable.text, 0, 0);
+  }
+
+  public d_render(renderable: Renderable, clear: boolean = true) {
+    if (clear) {
+      this.context.clearRect(0, 0, this.width, this.height);
+    }
+
+    if (renderable.alpha && renderable.alpha <= 0) {
+      return;
+    }
+
+    if (renderable.visible === false) {
+      console.log("not visible");
+      return;
+    }
+
+    this.context.save();
+
+    if (renderable.alpha && renderable.alpha < 1) {
+      this.context.globalAlpha = renderable.alpha;
+    }
+
+    if (renderable.position) {
+      this.context.translate(
+        Math.round(renderable.position.x),
+        Math.round(renderable.position.y)
+      );
+    }
+
+    if (renderable.anchor) {
+      if (renderable.anchor.x !== 0 || renderable.anchor.y !== 0) {
+        this.context.translate(renderable.anchor.x, renderable.anchor.y);
+      }
+    }
+
+    if (renderable.scale) {
+      if (renderable.scale.x !== 1 || renderable.scale.y !== 1) {
+        this.context.scale(renderable.scale.x, renderable.scale.y);
+      }
+    }
+
+    if (renderable.angle) {
+      const { x: px, y: py } = renderable.pivot || { x: 0, y: 0 };
+      this.context.translate(px, py);
+      this.context.rotate(renderable.angle);
+      this.context.translate(-px, -py);
+    }
+
+    // here draws the entity
+    if ("type" in renderable && renderable.type === "Rect") {
+      this._drawRect(renderable as RenderableRect);
+    }
+
+    if ("type" in renderable && renderable.type === "Image") {
+      this._drawImage(renderable as RenderableImage);
+    }
+
+    if ("type" in renderable && renderable.type === "Text") {
+      // this._drawText(renderable as RenderableText);
+    }
+
+    this.context.restore();
   }
 }
 
