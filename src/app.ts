@@ -1,7 +1,9 @@
 import Engine from "./ares/engine/Engine";
 import Vector from "./ares/tools/Vector";
 import Assets from "./ares/core/Assets";
+import Animation from "./ares/core/Animation";
 import barrelImageURL from "./images/barrel.png";
+import spritesheetImageURL from "./images/spritesheet.png";
 
 //
 //
@@ -9,6 +11,11 @@ import barrelImageURL from "./images/barrel.png";
 namespace CLUSTER {
   export type Properties<T> = {
     [K in keyof T]: T[K];
+  };
+
+  export type Point = {
+    x: number;
+    y: number;
   };
 
   export type LineStyle = {
@@ -29,9 +36,6 @@ namespace CLUSTER {
     } & ShapeStyle
   >;
 
-  // TODO
-  // change the "type" to "tag" to avoid confusion with the built-in "type" property
-  // use the tag enum to avoid typos
   export type EntityConfig = Properties<Entity>;
   export type Entity = Properties<
     {
@@ -91,12 +95,25 @@ namespace CLUSTER {
     }
   >;
 
+  export type TileSpriteConfig = SpriteConfig & {
+    tileWidth: number;
+    tileHeight: number;
+  };
+  export type TileSprite = Properties<
+    Sprite & {
+      tileWidth: number;
+      tileHeight: number;
+      frame: Point;
+    }
+  >;
+
   export enum EntityTag {
     CIRCLE = "circle",
     RECT = "rectangle",
     LINE = "line",
     TEXT = "text",
     SPRITE = "sprite",
+    TILESPRITE = "tileSprite",
   }
 }
 
@@ -178,6 +195,34 @@ class Sprite extends Entity implements CLUSTER.Sprite {
     this.image = image;
   }
 }
+class TileSprite extends Sprite implements CLUSTER.TileSprite {
+  readonly tag: CLUSTER.EntityTag = CLUSTER.EntityTag.TILESPRITE; // Discriminant property
+  readonly tileWidth: number;
+  readonly tileHeight: number;
+  readonly animation: Animation;
+  constructor(config: CLUSTER.TileSpriteConfig) {
+    const { tileWidth = 32, tileHeight = 32, ...optionals } = config;
+    super(optionals as CLUSTER.SpriteConfig);
+    this.tileWidth = tileWidth;
+    this.tileHeight = tileHeight;
+    this.animation = new Animation({
+      frame: { x: 0, y: 0 },
+    });
+  }
+
+  get frame() {
+    return this.animation.frame;
+  }
+
+  set frame(frame) {
+    this.animation.frame = frame;
+  }
+
+  public update(dt: number) {
+    this.animation.update(dt);
+  }
+}
+
 // ENTITY -------------------------------------------------------------
 //
 //
@@ -185,8 +230,6 @@ class Sprite extends Entity implements CLUSTER.Sprite {
 //
 //
 // RENDERER -----------------------------------------------------------
-// TODO
-// better defaults for shapes ant text?
 const STYLES = {
   lineWidth: 1,
   stroke: "black",
@@ -348,7 +391,7 @@ class Renderer {
   drawText(renderable: CLUSTER.Text) {
     this.context.font = renderable.style?.font || STYLES.font;
     this.context.fillStyle = renderable.style?.fill || STYLES.fill;
-    this.context.strokeStyle = renderable.style?.stroke || STYLES.stroke;
+    this.context.strokeStyle = renderable.style?.stroke || "transparent";
     this.context.lineWidth = renderable.style?.lineWidth || STYLES.lineWidth;
     this.context.textAlign =
       (renderable.style?.align as CanvasTextAlign) || STYLES.align;
@@ -358,6 +401,21 @@ class Renderer {
 
   drawSprite(renderable: CLUSTER.Sprite) {
     this.context.drawImage(renderable.image, 0, 0);
+  }
+
+  drawTileSprite(renderable: CLUSTER.TileSprite) {
+    const { tileWidth, tileHeight, frame, image } = renderable;
+    this.context.drawImage(
+      image,
+      frame.x * tileWidth,
+      frame.y * tileHeight,
+      tileWidth,
+      tileHeight,
+      0,
+      0,
+      tileWidth,
+      tileHeight
+    );
   }
 
   renderRenderable(renderable: Renderable): void {
@@ -388,6 +446,9 @@ class Renderer {
         break;
       case CLUSTER.EntityTag.TEXT:
         this.drawText(renderable as CLUSTER.Text);
+        break;
+      case CLUSTER.EntityTag.TILESPRITE:
+        this.drawTileSprite(renderable as CLUSTER.TileSprite);
         break;
       default:
         throw new Error("Unknown renderable type");
@@ -468,15 +529,35 @@ const text = new Text({
   text: "Hello, World!",
 });
 
+// TODO
+// need a container update for a TileSprite
+const tileSprite = new TileSprite({
+  image: Assets.image(spritesheetImageURL),
+  position: new Vector(500, 200),
+  tileWidth: 32,
+  tileHeight: 32,
+});
+tileSprite.animation.add(
+  "idle",
+  [
+    { x: 4, y: 0 },
+    { x: 5, y: 0 },
+  ],
+  0.25
+);
+tileSprite.animation.play("idle");
+
 const renderer = new Renderer({
   width: 800,
   height: 600,
   parentElementId: "#app",
 });
 const engine = new Engine({
-  update: (dt, t) => {},
+  update: (dt, t) => {
+    tileSprite.update(dt);
+  },
   render: () => {
-    renderer.render([text, rectangle, image, circle, line]);
+    renderer.render([text, rectangle, image, circle, line, tileSprite]);
   },
 });
 
