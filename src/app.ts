@@ -4,220 +4,72 @@ import Assets from "./ares/core/Assets";
 import Animation from "./ares/core/Animation";
 import barrelImageURL from "./images/barrel.png";
 import spritesheetImageURL from "./images/spritesheet.png";
+import { Cluster } from "./cluster.types";
 
-// Your TypeScript code is well-structured and follows good practices. However, there are a few areas where you could make improvements for elegance and potentially performance:
-// Use of Properties<T> type: This type is essentially equivalent to T itself. You can directly use the type T instead of Properties<T>.
-// Use of EntityConfig and EntityContainerConfig: These types are equivalent to Entity and EntityContainer respectively. You can directly use Entity and EntityContainer instead of EntityConfig and EntityContainerConfig.
-// Use of Omit<T, "tag">: This is unnecessary because the tag property is not optional in the Entity type. You can remove the Omit usage.
-// Use of Object.assign(this, config): This is a potential performance bottleneck. It would be more performant to manually assign each property in the constructor.
-// Use of Array.splice() in EntityContainer.update(): This can be performance-intensive for large arrays. Consider using a different data structure, like a linked list, for better performance when removing elements.
-
-//
-//
 // ENTITY -------------------------------------------------------------
-namespace CLUSTER {
-  export type Properties<T> = {
-    [K in keyof T]: T[K];
-  };
-  export type Milliseconds = number;
-
-  export type Seconds = number;
-
-  export type Point = {
-    x: number;
-    y: number;
-  };
-
-  export type LineStyle = {
-    stroke?: string;
-  };
-
-  export type ShapeStyle = Properties<
-    {
-      fill?: string;
-      lineWidth?: number;
-    } & LineStyle
-  >;
-
-  export type TextStyle = Properties<
-    {
-      font?: string;
-      align?: CanvasTextAlign;
-    } & ShapeStyle
-  >;
-
-  export type EntityConfig = Properties<Entity>;
-  export type Entity = Properties<
-    {
-      tag: string; // REQUIRED discriminant property
-    } & {
-      acceleration?: Vector;
-      velocity?: Vector;
-      position?: Vector;
-      anchor?: Vector;
-      scale?: Vector;
-      pivot?: Vector;
-      angle?: number;
-      alpha?: number;
-      dead?: boolean;
-      visible?: boolean;
-    }
-  >;
-
-  export type EntityContainerConfig = Omit<Entity, "tag">;
-  export type EntityContainer = Properties<Entity> & {
-    children: Array<Entity | EntityContainer>;
-  };
-
-  export type RectConfig = Omit<Rect, "tag">;
-  export type Rect = Properties<
-    Entity & {
-      width: number;
-      height: number;
-      style?: ShapeStyle;
-    }
-  >;
-
-  export type CircleConfig = Omit<Circle, "tag">;
-  export type Circle = Properties<
-    Entity & {
-      radius: number;
-      style?: ShapeStyle;
-    }
-  >;
-
-  export type LineConfig = Omit<Line, "tag">;
-  export type Line = Properties<
-    Entity & {
-      start: Vector;
-      end: Vector;
-      style?: LineStyle;
-    }
-  >;
-
-  export type TextConfig = Omit<Text, "tag">;
-  export type Text = Properties<
-    Entity & {
-      text: string;
-      style?: TextStyle;
-    }
-  >;
-
-  export type SpriteConfig = Omit<Sprite, "tag">;
-  export type Sprite = Properties<
-    Entity & {
-      image: HTMLImageElement;
-    }
-  >;
-
-  export type TileSpriteConfig = SpriteConfig & {
-    tileWidth: number;
-    tileHeight: number;
-  };
-  export type TileSprite = Properties<
-    Sprite & {
-      tileWidth: number;
-      tileHeight: number;
-      frame: Point;
-    }
-  >;
-
-  export enum EntityTag {
-    CIRCLE = "circle",
-    RECT = "rectangle",
-    LINE = "line",
-    TEXT = "text",
-    SPRITE = "sprite",
-    TILESPRITE = "tileSprite",
+abstract class EntityClass implements Cluster.EntityType {
+  readonly tag: Cluster.EntityTag; // Discriminant property
+  constructor(tag: Cluster.EntityTag, options: Cluster.EntityOptions = {}) {
+    Object.assign(this, options);
+    this.tag = tag;
   }
 }
-
-abstract class Entity implements CLUSTER.Entity {
-  abstract readonly tag: string; // Discriminant property
-  acceleration?: Vector | undefined;
-  velocity?: Vector | undefined;
-  position?: Vector | undefined;
-  anchor?: Vector | undefined;
-  scale?: Vector | undefined;
-  pivot?: Vector | undefined;
-  angle?: number | undefined;
-  alpha?: number | undefined;
-  dead?: boolean | undefined;
-  visible?: boolean | undefined;
-  constructor(config: CLUSTER.EntityConfig) {
-    Object.assign(this, config);
-  }
-}
-class Rect extends Entity implements CLUSTER.Rect {
-  readonly tag: CLUSTER.EntityTag = CLUSTER.EntityTag.RECT; // Discriminant property
-  public style: CLUSTER.ShapeStyle;
+class RectClass extends EntityClass implements Cluster.RectType {
   public width: number;
   public height: number;
-  constructor(config: CLUSTER.RectConfig) {
-    const { style = {}, width = 32, height = 32, ...optionals } = config;
-    super(optionals as CLUSTER.EntityConfig);
-    this.style = style;
+  constructor(options: Cluster.RectOptions) {
+    const { width = 32, height = 32, ...optionals } = options;
+    super(Cluster.EntityTag.RECT, optionals as Cluster.EntityOptions);
     this.width = width;
     this.height = height;
   }
 }
-class Circle extends Entity implements CLUSTER.Circle {
-  readonly tag: CLUSTER.EntityTag = CLUSTER.EntityTag.CIRCLE; // Discriminant property
-  public style: CLUSTER.ShapeStyle;
+class CircleClass extends EntityClass implements Cluster.CircleType {
   public radius: number;
-  constructor(config: CLUSTER.CircleConfig) {
-    const { style = {}, radius = 16, ...optionals } = config;
-    super(optionals as CLUSTER.EntityConfig);
-    this.style = style;
+  constructor(options: Cluster.CircleOptions) {
+    const { radius = 16, ...optionals } = options;
+    super(Cluster.EntityTag.CIRCLE, optionals as Cluster.EntityOptions);
     this.radius = radius;
   }
 }
-class Line extends Entity implements CLUSTER.Line {
-  readonly tag: CLUSTER.EntityTag = CLUSTER.EntityTag.LINE; // Discriminant property
-  public style: CLUSTER.LineStyle;
+class LineClass extends EntityClass implements Cluster.LineType {
   public start: Vector;
   public end: Vector;
-  constructor(config: CLUSTER.LineConfig) {
+  constructor(options: Cluster.LineOptions) {
     const {
-      style = {},
       start = new Vector(0, 0),
       end = new Vector(32, 32),
       ...optionals
-    } = config;
-    super(optionals as CLUSTER.EntityConfig);
-    this.style = style;
+    } = options;
+    super(Cluster.EntityTag.LINE, optionals as Cluster.EntityOptions);
     this.start = start;
     this.end = end;
   }
 }
-class Text extends Entity implements CLUSTER.Text {
-  readonly tag: CLUSTER.EntityTag = CLUSTER.EntityTag.TEXT; // Discriminant property
-  public style: CLUSTER.TextStyle;
+class TextClass extends EntityClass implements Cluster.TextType {
   public text: string;
-  constructor(config: CLUSTER.TextConfig) {
-    const { style = {}, text = "text", ...optionals } = config;
-    super(optionals as CLUSTER.EntityConfig);
-    this.style = style;
+  constructor(options: Cluster.TextOptions) {
+    const { text = "text", ...optionals } = options;
+    super(Cluster.EntityTag.TEXT, optionals as Cluster.EntityOptions);
     this.text = text;
   }
 }
-class Sprite extends Entity implements CLUSTER.Sprite {
-  readonly tag: CLUSTER.EntityTag = CLUSTER.EntityTag.SPRITE; // Discriminant property
+class SpriteClass extends EntityClass implements Cluster.SpriteType {
   public image: HTMLImageElement;
-  constructor(config: CLUSTER.SpriteConfig) {
-    const { image = new Image(), ...optionals } = config;
-    super(optionals as CLUSTER.EntityConfig);
+  constructor(options: Cluster.SpriteOptions) {
+    const { image = new Image(), ...optionals } = options;
+    super(Cluster.EntityTag.SPRITE, optionals as Cluster.EntityOptions);
     this.image = image;
   }
 }
-class TileSprite extends Sprite implements CLUSTER.TileSprite {
-  readonly tag: CLUSTER.EntityTag = CLUSTER.EntityTag.TILESPRITE; // Discriminant property
+class TileSpriteClass extends SpriteClass implements Cluster.TileSpriteType {
+  readonly tag: Cluster.EntityTag = Cluster.EntityTag.TILESPRITE; // Shadowing the sprite tag
   readonly tileWidth: number;
   readonly tileHeight: number;
   readonly animation: Animation;
-  constructor(config: CLUSTER.TileSpriteConfig) {
-    const { tileWidth = 32, tileHeight = 32, ...optionals } = config;
-    super(optionals as CLUSTER.SpriteConfig);
+  constructor(options: Cluster.TileSpriteOptions) {
+    const { tileWidth = 32, tileHeight = 32, ...optionals } = options;
+    super(optionals as Cluster.SpriteOptions);
     this.tileWidth = tileWidth;
     this.tileHeight = tileHeight;
     this.animation = new Animation({
@@ -237,21 +89,26 @@ class TileSprite extends Sprite implements CLUSTER.TileSprite {
     this.animation.update(dt);
   }
 }
-
-class EntityContainer extends Entity implements CLUSTER.EntityContainer {
-  readonly tag: string = "container"; // Discriminant property
-  public children: Array<Entity | EntityContainer>;
-  constructor(config: CLUSTER.EntityContainerConfig = {}) {
-    super(config as CLUSTER.EntityConfig);
+class EntityContainerClass
+  extends EntityClass
+  implements Cluster.EntityContainerType
+{
+  public children: Array<Cluster.EntityType | Cluster.EntityContainerType>;
+  constructor(options: Cluster.EntityContainerOptions = {}) {
+    super(Cluster.EntityTag.CONTAINER, options as Cluster.EntityOptions);
     this.children = [];
   }
 
-  add(entity: Entity | EntityContainer): Entity | EntityContainer {
+  add(
+    entity: Cluster.EntityType | Cluster.EntityContainerType
+  ): Cluster.EntityType | Cluster.EntityContainerType {
     this.children.push(entity);
     return entity;
   }
 
-  remove(entity: Entity | EntityContainer): Entity | EntityContainer {
+  remove(
+    entity: Cluster.EntityType | Cluster.EntityContainerType
+  ): Cluster.EntityType | Cluster.EntityContainerType {
     const index = this.children.indexOf(entity);
     if (index > -1) {
       this.children.splice(index, 1);
@@ -259,12 +116,18 @@ class EntityContainer extends Entity implements CLUSTER.EntityContainer {
     return entity;
   }
 
-  update(dt: CLUSTER.Milliseconds, t: CLUSTER.Seconds) {
+  update(dt: number, t: number) {
     for (let i = 0; i < this.children.length; i++) {
       const child = this.children[i];
       if ("update" in child && child.update) {
-        child.update(dt, t);
+        (child.update as (dt: number, t: number) => void)(dt, t);
       }
+
+      // TODO
+      // Use of Array.splice() in EntityContainer.update():
+      // This can be performance-intensive for large arrays.
+      // Consider using a different data structure, like a linked list,
+      // for better performance when removing elements.
       if ("dead" in child && child.dead) {
         this.children.splice(i, 1);
         i--;
@@ -273,11 +136,7 @@ class EntityContainer extends Entity implements CLUSTER.EntityContainer {
   }
 }
 // ENTITY -------------------------------------------------------------
-//
-//
 
-//
-//
 // RENDERER -----------------------------------------------------------
 const STYLES = {
   lineWidth: 1,
@@ -287,8 +146,8 @@ const STYLES = {
   fill: "lightblue",
 };
 
-type Renderable = CLUSTER.Entity;
-type RenderableContainer = CLUSTER.EntityContainer;
+type Renderable = Cluster.EntityType;
+type RenderableContainer = Cluster.EntityContainerType;
 type RendererConfig = {
   parentElementId?: string;
   height?: number;
@@ -416,7 +275,7 @@ class Renderer {
     this.setTransformAngle(renderable);
   }
 
-  drawRectangle(renderable: CLUSTER.Rect) {
+  drawRectangle(renderable: Cluster.RectType) {
     this.context.fillStyle = renderable.style?.fill || STYLES.fill;
     this.context.lineWidth = renderable.style?.lineWidth || STYLES.lineWidth;
     this.context.strokeStyle = renderable.style?.stroke || STYLES.stroke;
@@ -426,17 +285,17 @@ class Renderer {
     this.context.stroke();
   }
 
-  drawCircle(renderable: CLUSTER.Circle) {
+  drawCircle(renderable: Cluster.CircleType) {
     this.context.fillStyle = renderable.style?.fill || STYLES.fill;
     this.context.lineWidth = renderable.style?.lineWidth || STYLES.lineWidth;
     this.context.strokeStyle = renderable.style?.stroke || STYLES.stroke;
     this.context.beginPath();
-    this.context.arc(0, 0, circle.radius, 0, Math.PI * 2, false);
+    this.context.arc(0, 0, renderable.radius, 0, Math.PI * 2, false);
     this.context.fill();
     this.context.stroke();
   }
 
-  drawLine(renderable: CLUSTER.Line) {
+  drawLine(renderable: Cluster.LineType) {
     this.context.strokeStyle = renderable.style?.stroke || STYLES.stroke;
     this.context.beginPath();
     this.context.moveTo(renderable.start.x, renderable.start.y);
@@ -445,7 +304,7 @@ class Renderer {
     this.context.stroke();
   }
 
-  drawText(renderable: CLUSTER.Text) {
+  drawText(renderable: Cluster.TextType) {
     this.context.font = renderable.style?.font || STYLES.font;
     this.context.fillStyle = renderable.style?.fill || STYLES.fill;
     this.context.strokeStyle = renderable.style?.stroke || "transparent";
@@ -456,11 +315,11 @@ class Renderer {
     this.context.fillText(renderable.text, 0, 0);
   }
 
-  drawSprite(renderable: CLUSTER.Sprite) {
+  drawSprite(renderable: Cluster.SpriteType) {
     this.context.drawImage(renderable.image, 0, 0);
   }
 
-  drawTileSprite(renderable: CLUSTER.TileSprite) {
+  drawTileSprite(renderable: Cluster.TileSpriteType) {
     const { tileWidth, tileHeight, frame, image } = renderable;
     this.context.drawImage(
       image,
@@ -488,24 +347,24 @@ class Renderer {
     this.setTransformScale(renderable);
     this.setTransformAngle(renderable);
 
-    switch (renderable.tag as CLUSTER.EntityTag) {
-      case CLUSTER.EntityTag.RECT:
-        this.drawRectangle(renderable as CLUSTER.Rect);
+    switch (renderable.tag as Cluster.EntityTag) {
+      case Cluster.EntityTag.RECT:
+        this.drawRectangle(renderable as Cluster.RectType);
         break;
-      case CLUSTER.EntityTag.CIRCLE:
-        this.drawCircle(renderable as CLUSTER.Circle);
+      case Cluster.EntityTag.CIRCLE:
+        this.drawCircle(renderable as Cluster.CircleType);
         break;
-      case CLUSTER.EntityTag.LINE:
-        this.drawLine(renderable as CLUSTER.Line);
+      case Cluster.EntityTag.LINE:
+        this.drawLine(renderable as Cluster.LineType);
         break;
-      case CLUSTER.EntityTag.SPRITE:
-        this.drawSprite(renderable as CLUSTER.Sprite);
+      case Cluster.EntityTag.SPRITE:
+        this.drawSprite(renderable as Cluster.SpriteType);
         break;
-      case CLUSTER.EntityTag.TEXT:
-        this.drawText(renderable as CLUSTER.Text);
+      case Cluster.EntityTag.TEXT:
+        this.drawText(renderable as Cluster.TextType);
         break;
-      case CLUSTER.EntityTag.TILESPRITE:
-        this.drawTileSprite(renderable as CLUSTER.TileSprite);
+      case Cluster.EntityTag.TILESPRITE:
+        this.drawTileSprite(renderable as Cluster.TileSpriteType);
         break;
       default:
         throw new Error("Unknown renderable type");
@@ -524,14 +383,8 @@ class Renderer {
     this.setTransform(renderable);
 
     renderable.children.forEach((child: Renderable) => {
-      if (Array.isArray(child) && child.length !== 0) {
-        this.renderRenderableArray(child as Renderable[]);
-      } else if (
-        "children" in child &&
-        Array.isArray(child.children) &&
-        child.children.length !== 0
-      ) {
-        this.renderRenderableArray(child.children);
+      if ("tag" in child && child.tag === "container") {
+        this.renderRenderableContainer(child as RenderableContainer);
       } else {
         this.renderRenderable(child as Renderable);
       }
@@ -540,32 +393,10 @@ class Renderer {
     this.context.restore();
   }
 
-  renderRenderableArray(renderables: Renderable[]): void {
-    if (renderables.length === 0) {
-      return;
-    }
-
-    this.context.save();
-
-    // if there's a position property in the array, then translate the context
-    // this will work only for a container case
-
-    renderables.forEach((renderable: Renderable[] | Renderable) => {
-      if (Array.isArray(renderable) && renderable.length !== 0) {
-        this.renderRenderableArray(renderable as Renderable[]);
-      } else {
-        this.renderRenderable(renderable as Renderable);
-      }
-    });
-
-    this.context.restore();
-  }
-
-  // add support for container
-  render(renderable: Renderable, clear?: boolean): void;
-  render(renderable: Renderable[], clear?: boolean): void;
-  render(renderable: RenderableContainer, clear?: boolean): void;
-  render(renderable: Renderable | Renderable[], clear: boolean = true): void {
+  render(
+    renderable: Renderable | RenderableContainer,
+    clear: boolean = true
+  ): void {
     if (clear) {
       this.context.clearRect(0, 0, this.width, this.height);
     }
@@ -573,13 +404,7 @@ class Renderer {
     // TODO
     // refactor these into small functions
     // for the entity container case, transform the context
-    if (Array.isArray(renderable) && renderable.length !== 0) {
-      this.renderRenderableArray(renderable as Renderable[]);
-    } else if (
-      "children" in renderable &&
-      Array.isArray(renderable.children) &&
-      renderable.children.length !== 0
-    ) {
+    if ("tag" in renderable && renderable.tag === "container") {
       this.renderRenderableContainer(renderable as RenderableContainer);
     } else {
       this.renderRenderable(renderable as Renderable);
@@ -587,50 +412,14 @@ class Renderer {
   }
 }
 // RENDERER -----------------------------------------------------------
-//
-//
 
-const rectangle = new Rect({
-  position: new Vector(100, 100),
-  width: 100,
-  height: 100,
-});
-
-const circle = new Circle({
-  position: new Vector(400, 400),
-  radius: 50,
-  alpha: 0.5,
-  style: {
-    fill: "lightgreen",
-    stroke: "darkgreen",
-  },
-});
-
-const line = new Line({
-  start: new Vector(50, 0),
-  end: new Vector(100, 100),
-  position: new Vector(100, 200),
-});
-
-const image = new Sprite({
-  position: new Vector(200, 200),
-  image: Assets.image(barrelImageURL),
-});
-
-const text = new Text({
-  position: new Vector(200, 400),
-  text: "Hello, World!",
-});
-
-// TODO
-// need a container update for a TileSprite
-const tileSprite = new TileSprite({
+const e = new TileSpriteClass({
   image: Assets.image(spritesheetImageURL),
   position: new Vector(500, 200),
   tileWidth: 32,
   tileHeight: 32,
 });
-tileSprite.animation.add(
+e.animation.add(
   "idle",
   [
     { x: 4, y: 0 },
@@ -638,23 +427,17 @@ tileSprite.animation.add(
   ],
   0.25
 );
-tileSprite.animation.play("idle");
+e.animation.play("idle");
 
-const scene = new EntityContainer({
-  position: new Vector(200, 0),
-});
-scene.add(rectangle);
-scene.add(circle);
-scene.add(line);
-scene.add(image);
-scene.add(text);
-scene.add(tileSprite);
+const scene = new EntityContainerClass();
+scene.add(e);
 
 const renderer = new Renderer({
   width: 800,
   height: 600,
   parentElementId: "#app",
 });
+
 const engine = new Engine({
   update: (dt, t) => {
     scene.update(dt, t);
