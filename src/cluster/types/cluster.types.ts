@@ -1,4 +1,4 @@
-import { Vector } from "./ares";
+import { Vector } from "../tools/Vector";
 
 export namespace Cluster {
   export type Properties<T> = {
@@ -39,6 +39,8 @@ export namespace Cluster {
     CONTAINER = "container",
   }
 
+  // TODO
+  // maybe replace this enum with something safer?
   export type EntityOptions = Partial<{
     position: Vector;
     anchor: Vector;
@@ -95,7 +97,7 @@ export namespace Cluster {
   type SpriteSpecifics = {
     image: HTMLImageElement;
   };
-  export type SpriteOptions = Properties<EntityOptions & SpriteSpecifics>;
+  export type SpriteOptions = Properties<EntityOptions & { imageURL: string }>;
   export type SpriteType = Properties<EntityType & SpriteSpecifics>;
 
   type TileSpriteSpecifics = {
