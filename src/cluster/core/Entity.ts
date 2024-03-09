@@ -1,7 +1,7 @@
 import { Vector } from "../tools/Vector";
 import { Cluster } from "../types/cluster.types";
 
-export abstract class Entity implements Cluster.EntityType {
+export class Entity implements Cluster.EntityType {
   readonly tag: Cluster.EntityTag; // Discriminant property
   position: Vector;
   anchor: Vector;

@@ -131,3 +131,5 @@ export const Assets = {
     );
   },
 };
+
+export default Assets;

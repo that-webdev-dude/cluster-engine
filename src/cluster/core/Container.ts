@@ -45,3 +45,5 @@ export class Container extends Entity implements Cluster.EntityContainerType {
     }
   }
 }
+
+export default Container;
