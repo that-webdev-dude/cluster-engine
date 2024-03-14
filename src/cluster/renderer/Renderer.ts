@@ -39,8 +39,8 @@ class Renderer {
     }
 
     this.context = context;
-    this.height = canvas.height;
-    this.width = canvas.width;
+    this.height = height;
+    this.width = width;
     this.view = canvas;
 
     this.initialize();

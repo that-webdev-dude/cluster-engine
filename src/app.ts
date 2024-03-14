@@ -1,61 +1,153 @@
-import { TileSprite, TileMap, Vector, Game } from "./cluster";
-import spritesheetImageURL from "./images/spritesheet.png";
+import { GAME_CONFIG } from "./config/GameConfig";
+import { Player } from "./entities/Player";
+import { Zombie } from "./entities/Zombie";
+import { Background } from "./entities/Background";
+import {
+  Container,
+  Game,
+  Cmath,
+  Vector,
+  Entity,
+  Rect,
+  Sprite,
+  Circle,
+  Line,
+  TileSprite,
+  // TileMap,
+} from "./cluster";
 
-const game = new Game();
+// tilemap stuff
 
-const mapSpritesheet = spritesheetImageURL;
-const mapLayout = [
-  ["0", "0", "0", "0", "0"],
-  ["0", "1", "1", "1", "0"],
-  ["0", "1", "1", "1", "0"],
-  ["0", "1", "1", "1", "0"],
-  ["0", "0", "0", "0", "0"],
-];
-const mapDictionary = {
-  "0": { x: 2, y: 3 },
-  "1": { x: 4, y: 3 },
-} as const;
-const map = new TileMap(mapSpritesheet, mapDictionary, mapLayout, 32, 32);
+// game instance
+const game = new Game({
+  width: GAME_CONFIG.width,
+  height: GAME_CONFIG.height,
+});
 
-class Player extends TileSprite {
-  constructor() {
-    super({
-      imageURL: spritesheetImageURL,
-      position: new Vector(0, 0),
-      tileWidth: 32,
-      tileHeight: 32,
-      anchor: new Vector(-16, 0),
+const entityReposition = (entity: Entity | Container, dt: number) => {
+  if (entity.velocity.magnitude) {
+    entity.position.x += entity.velocity.x * dt;
+    entity.position.y += entity.velocity.y * dt;
+  }
+  if (entity instanceof Container && entity.children.length > 0) {
+    entity.children.forEach((child) => {
+      entityReposition(child as Container, dt);
     });
-    this.animation.add(
-      "idle",
-      [
-        { x: 4, y: 0 },
-        { x: 5, y: 0 },
-      ],
-      0.25
-    );
-    this.animation.play("idle");
+  }
+};
+
+const entityDestroy = (entity: Entity, done?: Function) => {
+  entity.dead = true;
+  if (done) done();
+};
+
+const rectUpdatePosition = (entity: Rect | Sprite, dt: number) => {
+  if (entity.velocity.magnitude) {
+    entity.position.x += entity.velocity.x * dt;
+    entity.position.y += entity.velocity.y * dt;
+  }
+};
+
+const rectClampPosition = (
+  entity: Rect | Sprite,
+  minX: number,
+  minY: number,
+  maxX: number,
+  maxY: number
+) => {
+  entity.position.set(
+    Cmath.clamp(entity.position.x, minX, maxX - entity.width),
+    Cmath.clamp(entity.position.y, minY, maxY - entity.height)
+  );
+};
+
+const rectCollision = (source: Rect | Sprite, target: Rect | Sprite) => {
+  return (
+    source.position.x < target.position.x + target.width &&
+    source.position.x + source.width > target.position.x &&
+    source.position.y < target.position.y + target.height &&
+    source.position.y + source.height > target.position.y
+  );
+};
+
+// gameplay scene
+class GamePlay extends Container {
+  background: Background = new Background();
+  zombies: Container = new Container();
+  player: Player = new Player(new Vector(100, 100), game.keyboard);
+  // level: TileMap = new TileMap(
+  //   GAME_CONFIG.levels[0].spritesheetURL,
+  //   GAME_CONFIG.levels[0].dictionary,
+  //   GAME_CONFIG.levels[0].layout,
+  //   32,
+  //   32
+  // );
+
+  constructor() {
+    super();
+    this.add(this.background);
+    // this.add(this.level);
+    this.add(this.player);
+    this.add(this.zombies);
+    this.init();
+
+    // debug grid
+    // for (let i = 0; i < GAME_CONFIG.width; i += 32) {
+    //   this.add(
+    //     new Line({
+    //       start: new Vector(i, 0),
+    //       end: new Vector(i, GAME_CONFIG.height),
+    //       style: { stroke: "grey" },
+    //     })
+    //   );
+    // }
+    // for (let i = 0; i < GAME_CONFIG.height; i += 32) {
+    //   this.add(
+    //     new Line({
+    //       start: new Vector(0, i),
+    //       end: new Vector(GAME_CONFIG.width, i),
+    //       style: { stroke: "grey" },
+    //     })
+    //   );
+    // }
   }
 
-  public update(dt: number): void {
-    super.update(dt);
-    const { keyboard } = game;
-    if (keyboard.x) {
-      this.scale.x = keyboard.x;
-      this.anchor.x = -keyboard.x * 16;
-    }
-    if (keyboard.x || keyboard.y) {
-      this.position.x += keyboard.x * dt * 200;
-      this.position.y += keyboard.y * dt * 200;
-    }
+  init(): void {
+    this.zombies.add(new Zombie(new Vector(200, 200)));
+  }
+
+  public update(dt: number, t: number): void {
+    super.update(dt, t);
+
+    // repositioning
+    [this.player, ...this.zombies.children].forEach((entity) => {
+      rectUpdatePosition(entity as Rect, dt);
+    });
+
+    // collision tests & resolution
+    [...this.zombies.children].forEach((zombie) => {
+      if (rectCollision(this.player as Sprite, zombie as Sprite)) {
+        entityDestroy(zombie as Entity, () => {
+          console.log("zombie destroyed");
+        });
+      }
+    });
+
+    // clamping to screen (more of a resolution)
+    [this.player, ...this.zombies.children].forEach((entity) => {
+      rectClampPosition(
+        entity as Rect,
+        0,
+        0,
+        GAME_CONFIG.width,
+        GAME_CONFIG.height
+      );
+    });
   }
 }
 
-const player = new Player();
-
 export default () => {
-  game.scene.add(map);
-  game.scene.add(player);
+  game.setScene(new GamePlay());
   game.start();
 };
 

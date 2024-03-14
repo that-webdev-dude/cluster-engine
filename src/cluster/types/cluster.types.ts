@@ -17,14 +17,14 @@ export namespace Cluster {
     height: number;
   };
 
-  type LineStyle = {
+  export type LineStyle = {
     stroke?: string;
   };
-  type ShapeStyle = LineStyle & {
+  export type ShapeStyle = LineStyle & {
     fill?: string;
     lineWidth?: number;
   };
-  type TextStyle = ShapeStyle & {
+  export type TextStyle = ShapeStyle & {
     font?: string;
     align?: CanvasTextAlign;
   };
@@ -42,6 +42,8 @@ export namespace Cluster {
   // TODO
   // maybe replace this enum with something safer?
   export type EntityOptions = Partial<{
+    acceleration: Vector;
+    velocity: Vector;
     position: Vector;
     anchor: Vector;
     scale: Vector;

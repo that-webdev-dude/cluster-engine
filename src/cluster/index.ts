@@ -2,6 +2,12 @@
 export { Container } from "./core/Container";
 export { Assets } from "./core/Assets";
 export { Game } from "./core/Game";
+export { Entity } from "./core/Entity";
+
+// input
+export { Keyboard } from "./input/Keyboard";
+export { Mouse } from "./input/Mouse";
+export { Gamepad } from "./input/Gamepad";
 
 // tools
 export { Cmath } from "./tools/Cmath";

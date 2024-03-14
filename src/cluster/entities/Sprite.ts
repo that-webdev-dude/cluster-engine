@@ -2,10 +2,8 @@ import { Animation } from "../core/Animation";
 import { Container } from "../core/Container";
 import { Entity } from "../core/Entity";
 import { Assets } from "../core/Assets";
-import { Cluster } from "../types/cluster.types";
-
-import spritesheetImageURL from "../../images/spritesheet.png";
 import { Vector } from "../tools/Vector";
+import { Cluster } from "../types/cluster.types";
 
 // TODO
 // maybe a tilesprite is a sprite? sprite redundant?
@@ -17,6 +15,14 @@ export class Sprite extends Entity implements Cluster.SpriteType {
     const { imageURL, ...optionals } = options;
     super(Cluster.EntityTag.SPRITE, optionals as Cluster.EntityOptions);
     this.image = Assets.image(imageURL);
+  }
+
+  get width() {
+    return this.image.width;
+  }
+
+  get height() {
+    return this.image.height;
   }
 }
 
@@ -31,9 +37,18 @@ export class TileSprite extends Sprite implements Cluster.TileSpriteType {
     super(optionals as Cluster.SpriteOptions);
     this.tileWidth = tileWidth;
     this.tileHeight = tileHeight;
+
     this.animation = new Animation({
       frame: { x: 0, y: 0 },
     });
+  }
+
+  get width() {
+    return this.tileWidth;
+  }
+
+  get height() {
+    return this.tileHeight;
   }
 
   get frame() {
@@ -49,13 +64,17 @@ export class TileSprite extends Sprite implements Cluster.TileSpriteType {
   }
 }
 
-type MapData = TileSprite[][];
+type TileFrame = { x: number; y: number; walkable?: boolean };
 type MapLayout = string[][];
-type MapDictionary = { [key: string]: { x: number; y: number } };
+type MapDictionary = {
+  [key: string]: TileFrame;
+};
 export class TileMap extends Container {
   tileHeight: number;
   tileWidth: number;
-  mapData: MapData = [];
+  noRows: number;
+  noCols: number;
+  // mapData: MapData = [];
 
   constructor(
     mapSpritesheetURL: string,
@@ -65,20 +84,66 @@ export class TileMap extends Container {
     tileHeight: number
   ) {
     super();
-
     this.tileWidth = tileWidth;
     this.tileHeight = tileHeight;
+
+    this.noRows = mapLayout.length;
+    this.noCols = mapLayout[0].length;
+
     mapLayout.forEach((row, y) => {
-      return row.map((cell, x) => {
-        const tile = new TileSprite({
-          position: new Vector(x * tileWidth, y * tileHeight),
-          imageURL: mapSpritesheetURL,
-          tileWidth,
-          tileHeight,
-        });
-        tile.frame = mapDictionary[cell];
-        this.add(tile);
+      return row.forEach((cell, x) => {
+        const frame = mapDictionary[cell];
+        if (frame) {
+          const tile = new TileSprite({
+            position: new Vector(x * tileWidth, y * tileHeight),
+            imageURL: mapSpritesheetURL,
+            tileWidth,
+            tileHeight,
+          });
+          // const { x: frameX, y: frameY, walkable = true } = frame;
+          // tile.frame = { x: frameX, y: frameY, walkable } as TileFrame;
+          tile.frame = frame as TileFrame;
+          this.add(tile);
+        }
       });
     });
+
+    if (this.children[0] instanceof TileSprite) {
+      let frame = this.children[0].frame as TileFrame;
+      console.log(frame);
+    }
+  }
+
+  /**
+   * pixelToMapPosition():
+   * converts a pixel position to a map position
+   * @param pixelPosition the pixel position to convert to map position
+   * @returns the map position
+   */
+  pixelToMapPosition(pixelPosition: Cluster.Point): Cluster.Point {
+    const { tileWidth, tileHeight } = this;
+    return {
+      x: Math.floor(pixelPosition.x / tileWidth),
+      y: Math.floor(pixelPosition.y / tileHeight),
+    };
+  }
+
+  /**
+   * mapToPixelPosition():
+   * converts a map position to a pixel position
+   * @param mapPosition the map position to convert to pixel position
+   * @returns the pixel position
+   */
+  mapToPixelPosition(mapPosition: Cluster.Point): Cluster.Point {
+    const { tileWidth, tileHeight } = this;
+    return {
+      x: mapPosition.x * tileWidth,
+      y: mapPosition.y * tileHeight,
+    };
+  }
+
+  tileAtMapPosition(mapPosition: Cluster.Point): void {
+    // console.log(mapPosition);
+    // return this.children[mapPosition.y * this.noCols + mapPosition.x];
   }
 }
