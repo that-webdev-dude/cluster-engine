@@ -40,6 +40,10 @@ export class Vector {
     return v1.set(x, y).unit();
   }
 
+  static direction(v1: Vector) {
+    return Vector.from(v1).unit();
+  }
+
   // instance
   constructor(x: number = 0, y: number = 0) {
     this._x = x;

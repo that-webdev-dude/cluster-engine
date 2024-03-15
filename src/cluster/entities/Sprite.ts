@@ -72,10 +72,19 @@ type MapDictionary = {
 export class TileMap extends Container {
   tileHeight: number;
   tileWidth: number;
-  noRows: number;
-  noCols: number;
-  // mapData: MapData = [];
+  mapHeight: number;
+  mapWidth: number;
+  tiles: Map<number, TileSprite> = new Map();
 
+  /**
+   * TileMap():
+   * creates a tilemap from a given spritesheet and map layout
+   * @param mapSpritesheetURL the URL of the spritesheet to use for the tilemap
+   * @param mapDictionary the dictionary of tile frames to use for the tilemap
+   * @param mapLayout the layout of the tilemap
+   * @param tileWidth the width of each tile
+   * @param tileHeight the height of each tile
+   */
   constructor(
     mapSpritesheetURL: string,
     mapDictionary: MapDictionary,
@@ -87,30 +96,35 @@ export class TileMap extends Container {
     this.tileWidth = tileWidth;
     this.tileHeight = tileHeight;
 
-    this.noRows = mapLayout.length;
-    this.noCols = mapLayout[0].length;
+    // check for mapWidth to ensure the map is rectangular
+    this.mapHeight = mapLayout.length;
+    this.mapWidth = mapLayout[0].length;
+    for (let i = 1; i < mapLayout.length; i++) {
+      if (mapLayout[i].length !== this.mapWidth) {
+        throw new Error("Map layout is not rectangular");
+      }
+    }
 
-    mapLayout.forEach((row, y) => {
-      return row.forEach((cell, x) => {
+    for (let y = 0; y < this.mapHeight; y++) {
+      for (let x = 0; x < this.mapWidth; x++) {
+        const cell = mapLayout[y][x];
         const frame = mapDictionary[cell];
         if (frame) {
-          const tile = new TileSprite({
-            position: new Vector(x * tileWidth, y * tileHeight),
+          let index = y * this.mapWidth + x;
+          let row = Math.floor(index / this.mapWidth);
+          let col = index % this.mapWidth;
+          let position = new Vector(col * tileWidth, row * tileHeight);
+          let tileSprite = new TileSprite({
             imageURL: mapSpritesheetURL,
+            position,
             tileWidth,
             tileHeight,
           });
-          // const { x: frameX, y: frameY, walkable = true } = frame;
-          // tile.frame = { x: frameX, y: frameY, walkable } as TileFrame;
-          tile.frame = frame as TileFrame;
-          this.add(tile);
+          tileSprite.frame = frame;
+          this.tiles.set(index, tileSprite);
+          this.add(tileSprite);
         }
-      });
-    });
-
-    if (this.children[0] instanceof TileSprite) {
-      let frame = this.children[0].frame as TileFrame;
-      console.log(frame);
+      }
     }
   }
 
@@ -142,8 +156,100 @@ export class TileMap extends Container {
     };
   }
 
-  tileAtMapPosition(mapPosition: Cluster.Point): void {
-    // console.log(mapPosition);
-    // return this.children[mapPosition.y * this.noCols + mapPosition.x];
+  /**
+   * tileAtMapPosition():
+   * returns the tile at a given map position
+   * @param mapPosition the map position to check for a tile
+   * @returns the tile at the map position
+   */
+  tileAtMapPosition(mapPosition: Cluster.Point): TileSprite | undefined {
+    return this.tiles.get(mapPosition.y * this.mapWidth + mapPosition.x);
+  }
+
+  /**
+   * tileAtPixelPosition():
+   * returns the tile at a given pixel position
+   * @param pixelPosition the pixel position to check for a tile
+   * @returns the tile at the pixel position
+   */
+  tileAtPixelPosition(pixelPosition: Cluster.Point): TileSprite | undefined {
+    return this.tileAtMapPosition(this.pixelToMapPosition(pixelPosition));
+  }
+
+  /**
+   * setFrameAtMapPosition():
+   * sets the frame of the tile at a given map position
+   * @param mapPosition the map position to set the frame of the tile
+   * @param frame the frame to set the tile to at the map position
+   */
+  setFrameAtMapPosition(mapPosition: Cluster.Point, frame: TileFrame) {
+    const tile = this.tileAtMapPosition(mapPosition);
+    if (tile) {
+      tile.frame = frame;
+    }
+  }
+
+  /**
+   * setFrameAtPixelPosition():
+   * sets the frame of the tile at a given pixel position
+   * @param pixelPosition the pixel position to set the frame of the tile
+   * @param frame the frame to set the tile to at the pixel position
+   */
+  setFrameAtPixelPosition(pixelPosition: Cluster.Point, frame: TileFrame) {
+    this.setFrameAtMapPosition(this.pixelToMapPosition(pixelPosition), frame);
+  }
+
+  /**
+   * deleteTileAtMapPosition():
+   * deletes the tile at a given map position
+   * @param mapPosition the map position to delete the tile
+   */
+  deleteTileAtMapPosition(mapPosition: Cluster.Point) {
+    const tile = this.tileAtMapPosition(mapPosition);
+    if (tile) {
+      this.remove(tile);
+      tile.dead = true;
+    }
+  }
+
+  /**
+   * deleteTileAtPixelPosition():
+   * deletes the tile at a given pixel position
+   * @param pixelPosition the pixel position to delete the tile
+   */
+  deleteTileAtPixelPosition(pixelPosition: Cluster.Point) {
+    this.deleteTileAtMapPosition(this.pixelToMapPosition(pixelPosition));
+  }
+
+  /**
+   * tilesAtRectCorners():
+   * returns the tiles at the corners of a given bounding box
+   * @param x the x position of the bounding box
+   * @param y the y position of the bounding box
+   * @param width the width of the bounding box
+   * @param height the height of the bounding box
+   * @param offsetX the x offset of the bounding box
+   * @param offsetY the y offset of the bounding box
+   * @returns the tiles within the bounding box
+   */
+  tilesAtBoxCorners(
+    pixelPosition: Cluster.Point,
+    width: number,
+    height: number,
+    offsetX: number = 0,
+    offsetY: number = 0
+  ): (TileSprite | undefined)[] {
+    let { x, y } = pixelPosition;
+    return [
+      [x, y], // top left
+      [x + width, y], // top right
+      [x, y + height], // bottom left
+      [x + width, y + height], // bottom right
+    ].map(([x, y]) =>
+      this.tileAtPixelPosition({
+        x: x + offsetX,
+        y: y + offsetY,
+      })
+    );
   }
 }

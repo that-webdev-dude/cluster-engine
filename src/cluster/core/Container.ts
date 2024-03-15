@@ -1,24 +1,22 @@
 import { Cluster } from "../types/cluster.types";
 import { Entity } from "./Entity";
 
+type ChildType = Cluster.EntityType | Cluster.EntityContainerType;
+
 export class Container extends Entity implements Cluster.EntityContainerType {
-  public children: Array<Cluster.EntityType | Cluster.EntityContainerType>;
+  public children: Array<ChildType>;
 
   constructor(options: Cluster.EntityContainerOptions = {}) {
     super(Cluster.EntityTag.CONTAINER, options as Cluster.EntityOptions);
     this.children = [];
   }
 
-  add(
-    entity: Cluster.EntityType | Cluster.EntityContainerType
-  ): Cluster.EntityType | Cluster.EntityContainerType {
+  add(entity: ChildType): ChildType {
     this.children.push(entity);
     return entity;
   }
 
-  remove(
-    entity: Cluster.EntityType | Cluster.EntityContainerType
-  ): Cluster.EntityType | Cluster.EntityContainerType {
+  remove(entity: ChildType): ChildType {
     const index = this.children.indexOf(entity);
     if (index > -1) {
       this.children.splice(index, 1);

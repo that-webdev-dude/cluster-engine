@@ -35,10 +35,7 @@ export class GAME_CONFIG {
       ],
       spritesheetURL: spritesheetImageURL,
       dictionary: {
-        W: {
-          frame: { x: 0, y: 0 },
-          walkable: false,
-        },
+        W: { x: 0, y: 3, walkable: false },
       },
     },
   ];
