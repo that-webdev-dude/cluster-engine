@@ -4,7 +4,7 @@ import MouseInput from "../input/Mouse";
 import Renderer from "../renderer/Renderer";
 import Engine from "../engine/Engine";
 import Assets from "./Assets";
-import Container from "./Container";
+import { Container } from "./Container";
 
 type GameOptions = {
   title?: string;

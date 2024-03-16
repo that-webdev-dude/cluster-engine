@@ -1,16 +1,28 @@
+import { Vector } from "../tools/Vector";
 import { Entity } from "../core/Entity";
 import { Cluster } from "../types/cluster.types";
 
-export class Rect extends Entity implements Cluster.RectType {
-  public width: number;
-  public height: number;
-  public style: Cluster.ShapeStyle;
+// implementation of a Rect Entity class
+export class Rect
+  extends Entity
+  implements Cluster.EntityType<Cluster.RectOptions>
+{
+  readonly tag = Cluster.EntityTag.RECT; // Discriminant property
+  width: number;
+  height: number;
+  style: Cluster.ShapeStyle;
 
   constructor(options: Cluster.RectOptions) {
-    const { width = 32, height = 32, style = {}, ...optionals } = options;
-    super(Cluster.EntityTag.RECT, optionals as Cluster.EntityOptions);
-    this.width = width;
-    this.height = height;
-    this.style = style;
+    super(Cluster.EntityTag.RECT, options);
+    this.width = options.width;
+    this.height = options.height;
+    this.style = options.style || {};
+  }
+
+  get center() {
+    return new Vector(
+      this.position.x + this.width / 2,
+      this.position.y + this.height / 2
+    );
   }
 }

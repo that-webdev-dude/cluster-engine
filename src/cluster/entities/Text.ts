@@ -1,14 +1,37 @@
+import { Vector } from "../tools/Vector";
 import { Entity } from "../core/Entity";
 import { Cluster } from "../types/cluster.types";
 
-export class Text extends Entity implements Cluster.TextType {
-  public text: string;
-  public style: Cluster.TextStyle;
+// implementation of a Text Entity class
+export class Text
+  extends Entity
+  implements Cluster.EntityType<Cluster.TextOptions>
+{
+  readonly tag = Cluster.EntityTag.TEXT; // Discriminant property
+  text: string;
+  style: Cluster.TextStyle;
 
   constructor(options: Cluster.TextOptions) {
-    const { text = "text", style = {}, ...optionals } = options;
-    super(Cluster.EntityTag.TEXT, optionals as Cluster.EntityOptions);
-    this.text = text;
-    this.style = style;
+    super(Cluster.EntityTag.TEXT, options);
+    this.text = options.text;
+    this.style = options.style || {};
+  }
+
+  // TODO
+  // need to measure the text width and height
+  get width() {
+    return 0;
+  }
+
+  // TODO
+  // need to measure the text width and height
+  get height() {
+    return 0;
+  }
+
+  // TODO
+  // need to measure the text width and height
+  get center() {
+    return new Vector(0, 0);
   }
 }

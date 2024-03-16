@@ -1,34 +1,61 @@
+import { Vector } from "../tools/Vector";
 import { Cluster } from "../types/cluster.types";
-import { Entity } from "./Entity";
 
-type ChildType = Cluster.EntityType | Cluster.EntityContainerType;
+// implementation of a Container Entity class
+export class Container
+  implements Cluster.EntityContainerType<Cluster.BaseEntityOptions>
+{
+  readonly tag = Cluster.EntityTag.CONTAINER; // Discriminant property
+  acceleration: Vector;
+  velocity: Vector;
+  position: Vector;
+  anchor: Vector;
+  scale: Vector;
+  pivot: Vector;
+  angle: number;
+  alpha: number;
+  dead: boolean;
+  visible: boolean;
+  children: Array<
+    | Cluster.EntityType<Cluster.BaseEntityOptions>
+    | Cluster.EntityContainerType<Cluster.BaseEntityOptions>
+  >;
 
-export class Container extends Entity implements Cluster.EntityContainerType {
-  public children: Array<ChildType>;
-
-  constructor(options: Cluster.EntityContainerOptions = {}) {
-    super(Cluster.EntityTag.CONTAINER, options as Cluster.EntityOptions);
+  constructor(options: Cluster.BaseEntityOptions = {}) {
+    this.acceleration = options.acceleration || new Vector(0, 0);
+    this.velocity = options.velocity || new Vector(0, 0);
+    this.position = options.position || new Vector(0, 0);
+    this.anchor = options.anchor || new Vector(0, 0);
+    this.scale = options.scale || new Vector(1, 1);
+    this.pivot = options.pivot || new Vector(0, 0);
+    this.angle = options.angle || 0;
+    this.alpha = options.alpha || 1;
+    this.dead = options.dead || false;
+    this.visible = options.visible || true;
     this.children = [];
   }
 
-  add(entity: ChildType): ChildType {
+  add(entity: Cluster.EntityType<Cluster.BaseEntityOptions>) {
     this.children.push(entity);
-    return entity;
   }
 
-  remove(entity: ChildType): ChildType {
+  remove(entity: Cluster.EntityType<Cluster.BaseEntityOptions>) {
     const index = this.children.indexOf(entity);
     if (index > -1) {
       this.children.splice(index, 1);
     }
-    return entity;
   }
 
-  update(dt: number, t: number) {
+  update(dt: Cluster.Milliseconds, t: Cluster.Milliseconds) {
     for (let i = 0; i < this.children.length; i++) {
       const child = this.children[i];
       if ("update" in child && child.update) {
-        (child.update as (dt: number, t: number) => void)(dt, t);
+        (
+          child.update as (
+            dt: Cluster.Milliseconds,
+            t: Cluster.Milliseconds
+          ) => void
+        )(dt, t);
       }
 
       // TODO
@@ -43,5 +70,3 @@ export class Container extends Entity implements Cluster.EntityContainerType {
     }
   }
 }
-
-export default Container;

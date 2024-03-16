@@ -1,20 +1,23 @@
+import { Vector } from "../tools/Vector";
+import { Entity } from "../core/Entity";
+import { Cluster } from "../types/cluster.types";
+import { Assets } from "../core/Assets";
 import { Animation } from "../core/Animation";
 import { Container } from "../core/Container";
-import { Entity } from "../core/Entity";
-import { Assets } from "../core/Assets";
-import { Vector } from "../tools/Vector";
-import { Cluster } from "../types/cluster.types";
 
-// TODO
-// maybe a tilesprite is a sprite? sprite redundant?
-
-export class Sprite extends Entity implements Cluster.SpriteType {
-  public image: HTMLImageElement;
+// implementation of a Sprite Entity class
+export class Sprite
+  extends Entity
+  implements Cluster.EntityType<Cluster.SpriteOptions>
+{
+  readonly tag = Cluster.EntityTag.SPRITE; // Discriminant property
+  readonly image: HTMLImageElement;
+  readonly imageURL: string;
 
   constructor(options: Cluster.SpriteOptions) {
-    const { imageURL, ...optionals } = options;
-    super(Cluster.EntityTag.SPRITE, optionals as Cluster.EntityOptions);
-    this.image = Assets.image(imageURL);
+    super(Cluster.EntityTag.SPRITE, options);
+    this.image = Assets.image(options.imageURL);
+    this.imageURL = options.imageURL;
   }
 
   get width() {
@@ -24,20 +27,33 @@ export class Sprite extends Entity implements Cluster.SpriteType {
   get height() {
     return this.image.height;
   }
+
+  get center() {
+    return new Vector(
+      this.position.x + this.width / 2,
+      this.position.y + this.height / 2
+    );
+  }
 }
 
-export class TileSprite extends Sprite implements Cluster.TileSpriteType {
-  readonly tag: Cluster.EntityTag = Cluster.EntityTag.TILESPRITE; // Shadowing the sprite tag
+// implementation of a Sprite Entity class
+export class TileSprite
+  extends Entity
+  implements Cluster.EntityType<Cluster.TileSpriteOptions>
+{
+  readonly tag = Cluster.EntityTag.TILESPRITE; // Discriminant property
+  readonly image: HTMLImageElement;
+  readonly imageURL: string;
   readonly tileWidth: number;
   readonly tileHeight: number;
   readonly animation: Animation;
 
   constructor(options: Cluster.TileSpriteOptions) {
-    const { tileWidth = 32, tileHeight = 32, ...optionals } = options;
-    super(optionals as Cluster.SpriteOptions);
-    this.tileWidth = tileWidth;
-    this.tileHeight = tileHeight;
-
+    super(Cluster.EntityTag.TILESPRITE, options);
+    this.image = Assets.image(options.imageURL);
+    this.imageURL = options.imageURL;
+    this.tileWidth = options.tileWidth;
+    this.tileHeight = options.tileHeight;
     this.animation = new Animation({
       frame: { x: 0, y: 0 },
     });
@@ -49,6 +65,13 @@ export class TileSprite extends Sprite implements Cluster.TileSpriteType {
 
   get height() {
     return this.tileHeight;
+  }
+
+  get center() {
+    return new Vector(
+      this.position.x + this.width / 2,
+      this.position.y + this.height / 2
+    );
   }
 
   get frame() {
@@ -64,6 +87,46 @@ export class TileSprite extends Sprite implements Cluster.TileSpriteType {
   }
 }
 
+// // implementation of a Tile Sprite Entity class
+// export class TileSprite
+//   extends Sprite
+//   implements Cluster.EntityType<Cluster.TileSpriteOptions>
+// {
+//   readonly tileWidth: number;
+//   readonly tileHeight: number;
+//   readonly animation: Animation;
+
+//   constructor(options: Cluster.TileSpriteOptions) {
+//     super(options);
+//     this.tileWidth = options.tileWidth;
+//     this.tileHeight = options.tileHeight;
+//     this.animation = new Animation({
+//       frame: { x: 0, y: 0 },
+//     });
+//   }
+
+//   get width() {
+//     return this.tileWidth;
+//   }
+
+//   get height() {
+//     return this.tileHeight;
+//   }
+
+//   get frame() {
+//     return this.animation.frame;
+//   }
+
+//   set frame(frame) {
+//     this.animation.frame = frame;
+//   }
+
+//   public update(dt: number) {
+//     this.animation.update(dt);
+//   }
+// }
+
+// implementation of TileMap
 type TileFrame = { x: number; y: number; walkable?: boolean };
 type MapLayout = string[][];
 type MapDictionary = {

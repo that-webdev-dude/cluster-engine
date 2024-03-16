@@ -1,7 +1,10 @@
 import { Vector } from "../tools/Vector";
 import { Cluster } from "../types/cluster.types";
 
-export class Entity implements Cluster.EntityType {
+// implementation of a Base Entity class
+export abstract class Entity
+  implements Cluster.EntityType<Cluster.BaseEntityOptions>
+{
   readonly tag: Cluster.EntityTag; // Discriminant property
   acceleration: Vector;
   velocity: Vector;
@@ -14,7 +17,7 @@ export class Entity implements Cluster.EntityType {
   dead: boolean;
   visible: boolean;
 
-  constructor(tag: Cluster.EntityTag, options: Cluster.EntityOptions = {}) {
+  constructor(tag: Cluster.EntityTag, options: Cluster.BaseEntityOptions = {}) {
     this.tag = tag;
     this.acceleration = options.acceleration || new Vector(0, 0);
     this.velocity = options.velocity || new Vector(0, 0);
@@ -27,4 +30,12 @@ export class Entity implements Cluster.EntityType {
     this.dead = options.dead || false;
     this.visible = options.visible || true;
   }
+
+  get direction() {
+    return Vector.direction(this.velocity);
+  }
+
+  abstract get center(): Vector;
+  abstract get width(): number;
+  abstract get height(): number;
 }

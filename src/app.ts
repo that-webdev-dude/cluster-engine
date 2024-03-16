@@ -20,7 +20,10 @@ class Debugger {
   private static _visualizePoint(
     point: Vector,
     scene: Container,
-    style: { fill: string; stroke: string }
+    style: {
+      fill: string;
+      stroke: string;
+    }
   ) {
     scene.add(
       new Circle({
@@ -68,7 +71,9 @@ class Debugger {
         new Line({
           start: new Vector(i, 0),
           end: new Vector(i, height),
-          style: { stroke: "grey" },
+          style: {
+            stroke: "grey",
+          },
         })
       );
     }
@@ -83,38 +88,6 @@ class Debugger {
     }
   }
 }
-
-import {
-  DevRect,
-  DevCircle,
-  DevLine,
-  DevContainer,
-} from "./cluster/types/cluster.dev";
-const devEntities = new DevContainer({ position: new Vector(0, 0) });
-const r = new DevRect({
-  width: 64,
-  height: 64,
-  position: new Vector(64, 64),
-  style: { fill: "blue", stroke: "red" },
-});
-const c = new DevCircle({
-  radius: 32,
-  position: new Vector(128, 128),
-  style: {
-    fill: "green",
-    stroke: "red",
-  },
-});
-const l = new DevLine({
-  start: new Vector(0, 0),
-  end: new Vector(64, 64),
-  style: { stroke: "red" },
-});
-l.position.set(256, 256);
-console.table(l);
-devEntities.add(r);
-devEntities.add(c);
-devEntities.add(l);
 
 // game instance
 const game = new Game({
@@ -290,13 +263,12 @@ const rectCollisionResolution = (
 
   if (done) done();
 };
-type TileFrame = { x: number; y: number; walkable?: boolean };
 
 // gameplay scene
 class GamePlay extends Container {
   background: Background = new Background();
   zombies: Container = new Container();
-  player: Player = new Player(new Vector(100, 100), game.keyboard);
+  player: Player = new Player(new Vector(128, 128), game.keyboard);
   level: TileMap = new TileMap(
     GAME_CONFIG.levels[0].spritesheetURL,
     GAME_CONFIG.levels[0].dictionary,
@@ -317,9 +289,7 @@ class GamePlay extends Container {
     Debugger.visualizePosition(this.player, this);
     Debugger.visualizeVelocity(this.player, this);
     Debugger.showGrid(this, GAME_CONFIG.width, GAME_CONFIG.height, 32);
-
-    Debugger.visualizePosition(r, this);
-    this.add(devEntities);
+    // Debugger.visualizeVelocity(this.player, this);
   }
 
   init(): void {
@@ -389,18 +359,18 @@ class GamePlay extends Container {
     super.update(dt, t);
 
     // repositioning
-    [this.player].forEach((entity) => {
-      rectReposition(entity, dt);
-      rectWallslide(entity, this.level);
-    });
+    // [this.player].forEach((entity) => {
+    //   rectReposition(entity, dt);
+    //   rectWallslide(entity, this.level);
+    // });
 
-    // collision tests & resolution
-    [...this.zombies.children].forEach((zombie) => {
-      let collisionInfo = rectCollisionDetection(this.player, zombie as Sprite);
-      if (collisionInfo) {
-        rectCollisionResolution(this.player, collisionInfo);
-      }
-    });
+    // // collision tests & resolution
+    // [...this.zombies.children].forEach((zombie) => {
+    //   let collisionInfo = rectCollisionDetection(this.player, zombie as Sprite);
+    //   if (collisionInfo) {
+    //     rectCollisionResolution(this.player, collisionInfo);
+    //   }
+    // });
 
     // clamping
     // [this.player, ...this.zombies.children].forEach((entity) => {

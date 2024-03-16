@@ -1,4 +1,11 @@
 import { Cluster } from "../types/cluster.types";
+import { Entity } from "../core/Entity";
+import { Container } from "../core/Container";
+import { Rect } from "../entities/Rect";
+import { Circle } from "../entities/Circle";
+import { Line } from "../entities/Line";
+import { Text } from "../entities/Text";
+import { Sprite, TileSprite } from "../entities/Sprite";
 
 const STYLES = {
   lineWidth: 1,
@@ -8,13 +15,14 @@ const STYLES = {
   fill: "lightblue",
 };
 
-type Renderable = Cluster.EntityType;
-type RenderableContainer = Cluster.EntityContainerType;
+type Renderable = Entity | Container;
+type RenderableContainer = Container;
 type RendererOptions = {
   parentElementId?: string;
   height?: number;
   width?: number;
 };
+
 class Renderer {
   readonly height: number;
   readonly width: number;
@@ -144,7 +152,7 @@ class Renderer {
     this.setTransformAngle(renderable);
   }
 
-  drawRectangle(renderable: Cluster.RectType) {
+  drawRectangle(renderable: Rect) {
     this.context.fillStyle = renderable.style?.fill || STYLES.fill;
     this.context.lineWidth = renderable.style?.lineWidth || STYLES.lineWidth;
     this.context.strokeStyle = renderable.style?.stroke || STYLES.stroke;
@@ -154,7 +162,7 @@ class Renderer {
     this.context.stroke();
   }
 
-  drawCircle(renderable: Cluster.CircleType) {
+  drawCircle(renderable: Circle) {
     this.context.fillStyle = renderable.style?.fill || STYLES.fill;
     this.context.lineWidth = renderable.style?.lineWidth || STYLES.lineWidth;
     this.context.strokeStyle = renderable.style?.stroke || STYLES.stroke;
@@ -164,7 +172,7 @@ class Renderer {
     this.context.stroke();
   }
 
-  drawLine(renderable: Cluster.LineType) {
+  drawLine(renderable: Line) {
     this.context.strokeStyle = renderable.style?.stroke || STYLES.stroke;
     this.context.beginPath();
     this.context.moveTo(renderable.start.x, renderable.start.y);
@@ -173,7 +181,7 @@ class Renderer {
     this.context.stroke();
   }
 
-  drawText(renderable: Cluster.TextType) {
+  drawText(renderable: Text) {
     this.context.font = renderable.style?.font || STYLES.font;
     this.context.fillStyle = renderable.style?.fill || STYLES.fill;
     this.context.strokeStyle = renderable.style?.stroke || "transparent";
@@ -184,11 +192,11 @@ class Renderer {
     this.context.fillText(renderable.text, 0, 0);
   }
 
-  drawSprite(renderable: Cluster.SpriteType) {
+  drawSprite(renderable: Sprite) {
     this.context.drawImage(renderable.image, 0, 0);
   }
 
-  drawTileSprite(renderable: Cluster.TileSpriteType) {
+  drawTileSprite(renderable: TileSprite) {
     const { tileWidth, tileHeight, frame, image } = renderable;
     this.context.drawImage(
       image,
@@ -216,22 +224,22 @@ class Renderer {
     if ("tag" in renderable && renderable.tag) {
       switch (renderable.tag as Cluster.EntityTag) {
         case Cluster.EntityTag.RECT:
-          this.drawRectangle(renderable as Cluster.RectType);
+          this.drawRectangle(renderable as Rect);
           break;
         case Cluster.EntityTag.CIRCLE:
-          this.drawCircle(renderable as Cluster.CircleType);
+          this.drawCircle(renderable as Circle);
           break;
         case Cluster.EntityTag.LINE:
-          this.drawLine(renderable as Cluster.LineType);
+          this.drawLine(renderable as Line);
           break;
         case Cluster.EntityTag.SPRITE:
-          this.drawSprite(renderable as Cluster.SpriteType);
+          this.drawSprite(renderable as Sprite);
           break;
         case Cluster.EntityTag.TEXT:
-          this.drawText(renderable as Cluster.TextType);
+          this.drawText(renderable as Text);
           break;
         case Cluster.EntityTag.TILESPRITE:
-          this.drawTileSprite(renderable as Cluster.TileSpriteType);
+          this.drawTileSprite(renderable as TileSprite);
           break;
         default:
           throw new Error("Unknown renderable type");
@@ -251,7 +259,7 @@ class Renderer {
     this.setAlpha(renderable);
     this.setTransform(renderable);
 
-    renderable.children.forEach((child: Renderable) => {
+    renderable.children.forEach((child) => {
       if ("tag" in child && child.tag === "container") {
         this.renderRenderableContainer(child as RenderableContainer);
       } else {
@@ -262,10 +270,7 @@ class Renderer {
     this.context.restore();
   }
 
-  render(
-    renderable: Renderable | RenderableContainer,
-    clear: boolean = true
-  ): void {
+  render(renderable: Renderable, clear: boolean = true): void {
     if (clear) {
       this.context.clearRect(0, 0, this.width, this.height);
     }
@@ -273,7 +278,7 @@ class Renderer {
     if (this.isContainer(renderable)) {
       this.renderRenderableContainer(renderable as RenderableContainer);
     } else {
-      this.renderRenderable(renderable as Renderable);
+      this.renderRenderable(renderable);
     }
   }
 }
