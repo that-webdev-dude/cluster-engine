@@ -38,4 +38,5 @@ export abstract class Entity
   abstract get center(): Vector;
   abstract get width(): number;
   abstract get height(): number;
+  abstract get boundingBox(): Cluster.Box;
 }

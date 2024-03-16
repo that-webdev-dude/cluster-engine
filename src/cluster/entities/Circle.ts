@@ -32,4 +32,13 @@ export class Circle
   get center() {
     return Vector.from(this.position);
   }
+
+  get boundingBox() {
+    return {
+      x: this.position.x,
+      y: this.position.y,
+      width: this.width,
+      height: this.height,
+    };
+  }
 }

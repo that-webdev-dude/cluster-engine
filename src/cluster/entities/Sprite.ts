@@ -34,6 +34,15 @@ export class Sprite
       this.position.y + this.height / 2
     );
   }
+
+  get boundingBox() {
+    return {
+      x: this.position.x,
+      y: this.position.y,
+      width: this.width,
+      height: this.height,
+    };
+  }
 }
 
 // implementation of a Sprite Entity class
@@ -59,6 +68,14 @@ export class TileSprite
     });
   }
 
+  get frame() {
+    return this.animation.frame;
+  }
+
+  set frame(frame) {
+    this.animation.frame = frame;
+  }
+
   get width() {
     return this.tileWidth;
   }
@@ -74,12 +91,13 @@ export class TileSprite
     );
   }
 
-  get frame() {
-    return this.animation.frame;
-  }
-
-  set frame(frame) {
-    this.animation.frame = frame;
+  get boundingBox() {
+    return {
+      x: this.position.x,
+      y: this.position.y,
+      width: this.width,
+      height: this.height,
+    };
   }
 
   public update(dt: number) {

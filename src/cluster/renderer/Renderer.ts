@@ -167,7 +167,13 @@ class Renderer {
     this.context.lineWidth = renderable.style?.lineWidth || STYLES.lineWidth;
     this.context.strokeStyle = renderable.style?.stroke || STYLES.stroke;
     this.context.beginPath();
-    this.context.arc(0, 0, renderable.radius, 0, Math.PI * 2, false);
+    this.context.roundRect(
+      0,
+      0,
+      renderable.width,
+      renderable.height,
+      renderable.radius
+    );
     this.context.fill();
     this.context.stroke();
   }

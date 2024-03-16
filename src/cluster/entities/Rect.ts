@@ -25,4 +25,13 @@ export class Rect
       this.position.y + this.height / 2
     );
   }
+
+  get boundingBox() {
+    return {
+      x: this.position.x,
+      y: this.position.y,
+      width: this.width,
+      height: this.height,
+    };
+  }
 }

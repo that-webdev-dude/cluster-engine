@@ -12,100 +12,18 @@ import {
   Sprite,
   TileMap,
   Circle,
+  Text,
   Line,
+  TileSprite,
 } from "./cluster";
-
-type DebugLine = Line & { update: (dt: number, t: number) => void };
-class Debugger {
-  private static _visualizePoint(
-    point: Vector,
-    scene: Container,
-    style: {
-      fill: string;
-      stroke: string;
-    }
-  ) {
-    scene.add(
-      new Circle({
-        position: point,
-        radius: 5,
-        style,
-      })
-    );
-  }
-
-  static visualizePosition(entity: Entity, scene: Container) {
-    Debugger._visualizePoint(entity.position, scene, {
-      fill: "red",
-      stroke: "red",
-    });
-  }
-
-  static visualizeVelocity(
-    entity: Entity,
-    scene: Container,
-    scalar: number = 1
-  ) {
-    let debugLine = new Line({
-      start: entity.position,
-      end: Vector.clone(entity.position).add(entity.velocity).scale(scalar),
-      style: { stroke: "red" },
-    }) as DebugLine;
-    debugLine.update = (dt: number, t: number) => {
-      debugLine.end.set(
-        entity.position.x + entity.velocity.x * scalar,
-        entity.position.y + entity.velocity.y * scalar
-      );
-    };
-    scene.add(debugLine);
-  }
-
-  static showGrid(
-    scene: Container,
-    width: number,
-    height: number,
-    size: number
-  ) {
-    for (let i = 0; i < width; i += size) {
-      scene.add(
-        new Line({
-          start: new Vector(i, 0),
-          end: new Vector(i, height),
-          style: {
-            stroke: "grey",
-          },
-        })
-      );
-    }
-    for (let i = 0; i < height; i += size) {
-      scene.add(
-        new Line({
-          start: new Vector(0, i),
-          end: new Vector(width, i),
-          style: { stroke: "grey" },
-        })
-      );
-    }
-  }
-}
+import { World } from "./World";
+import { Debugger } from "./Debugger";
 
 // game instance
 const game = new Game({
   width: GAME_CONFIG.width,
   height: GAME_CONFIG.height,
 });
-
-const entityReposition = (entity: Entity | Container, dt: number) => {
-  if (entity.velocity.magnitude) {
-    entity.position.x += entity.velocity.x * dt;
-    entity.position.y += entity.velocity.y * dt;
-  }
-  if (entity instanceof Container && entity.children.length > 0) {
-    entity.children.forEach((child) => {
-      entityReposition(child as Container, dt);
-    });
-  }
-};
 
 const getEntityDisplacement = (
   entity: Entity,
@@ -285,11 +203,25 @@ class GamePlay extends Container {
     this.add(this.zombies);
     this.init();
 
+    const c = new Line({
+      start: new Vector(32, 32),
+      end: new Vector(64, 64),
+      style: { stroke: "red" },
+    });
+    this.add(c);
+
+    const t = new Text({
+      text: "Hello World",
+      position: new Vector(64, 64),
+      style: { fill: "red", align: "left" },
+    });
+    this.add(t);
+
     // debug
-    Debugger.visualizePosition(this.player, this);
-    Debugger.visualizeVelocity(this.player, this);
     Debugger.showGrid(this, GAME_CONFIG.width, GAME_CONFIG.height, 32);
-    // Debugger.visualizeVelocity(this.player, this);
+    Debugger.showBoundingBox(this.player, this);
+    Debugger.showBoundingBox(c, this);
+    Debugger.showBoundingBox(t, this);
   }
 
   init(): void {
@@ -358,19 +290,24 @@ class GamePlay extends Container {
   public update(dt: number, t: number): void {
     super.update(dt, t);
 
+    const { player, zombies, level } = this;
+
     // repositioning
-    // [this.player].forEach((entity) => {
-    //   rectReposition(entity, dt);
-    //   rectWallslide(entity, this.level);
-    // });
+    World.reposition(this, dt);
 
     // // collision tests & resolution
-    // [...this.zombies.children].forEach((zombie) => {
-    //   let collisionInfo = rectCollisionDetection(this.player, zombie as Sprite);
-    //   if (collisionInfo) {
-    //     rectCollisionResolution(this.player, collisionInfo);
-    //   }
-    // });
+    [...zombies.children].forEach((zombie) => {
+      let { collision, overlap, nx, ny } = World.Collider.detect(
+        player as TileSprite,
+        zombie as TileSprite
+      );
+      if (collision) {
+        console.log(overlap, nx, ny);
+        this.background.style.fill = "red";
+      } else {
+        this.background.style.fill = "lightBlue";
+      }
+    });
 
     // clamping
     // [this.player, ...this.zombies.children].forEach((entity) => {

@@ -11,7 +11,6 @@ export class Line
   start: Vector;
   end: Vector;
   style: Cluster.LineStyle;
-
   constructor(options: Cluster.LineOptions) {
     super(Cluster.EntityTag.LINE, options);
     this.start = options.start;
@@ -24,14 +23,23 @@ export class Line
   }
 
   get width() {
-    return this.end.x - this.start.x;
+    return Math.abs(this.end.x - this.start.x);
   }
 
   get height() {
-    return this.end.y - this.start.y;
+    return Math.abs(this.end.y - this.start.y);
   }
 
   get center() {
     return Vector.from(this.start).add(this.end).scale(0.5);
+  }
+
+  get boundingBox() {
+    return {
+      x: Math.min(this.start.x, this.end.x),
+      y: Math.min(this.start.y, this.end.y),
+      width: this.width,
+      height: this.height,
+    };
   }
 }
