@@ -2,7 +2,9 @@ import { Vector } from "../tools/Vector";
 import { Entity } from "../core/Entity";
 import { Cluster } from "../types/cluster.types";
 
-// implementation of a Circle Entity class
+/**
+ * implementation of a Circle Entity class
+ */
 export class Circle
   extends Entity
   implements Cluster.EntityType<Cluster.CircleOptions>

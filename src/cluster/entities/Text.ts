@@ -46,7 +46,9 @@ const textHeight = (text: string, style: Cluster.TextStyle) => {
     : 0;
 };
 
-// implementation of a Text Entity class
+/**
+ * implementation of a Text Entity class
+ */
 export class Text
   extends Entity
   implements Cluster.EntityType<Cluster.TextOptions>
@@ -61,20 +63,14 @@ export class Text
     this.style = options.style || {};
   }
 
-  // TODO
-  // need to measure the text width and height
   get width() {
     return textWidth(this.text, this.style);
   }
 
-  // TODO
-  // need to measure the text width and height
   get height() {
     return textHeight(this.text, this.style);
   }
 
-  // TODO
-  // need to measure the text width and height
   get center() {
     return new Vector(
       this.position.x + this.width / 2,
@@ -82,8 +78,6 @@ export class Text
     );
   }
 
-  // TODO
-  // need to measure the text width and height
   get boundingBox() {
     return {
       x: this.position.x,

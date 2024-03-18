@@ -1,4 +1,26 @@
-import { Container, Vector, Line, Entity, Rect } from "./cluster";
+import { Cluster } from "./cluster/types/cluster.types";
+import { Container, Vector, Entity, Line, Rect, Text } from "./cluster";
+
+/**
+ * represents an updateable line
+ */
+type DebugLine = Line & {
+  update?: (dt: Cluster.Milliseconds, t: Cluster.Seconds) => void;
+};
+
+/**
+ * represents an updateable rect
+ */
+type DebugRect = Rect & {
+  update?: (dt: Cluster.Milliseconds, t: Cluster.Seconds) => void;
+};
+
+/**
+ * represents an updateable text
+ */
+type DebugText = Text & {
+  update?: (dt: Cluster.Milliseconds, t: Cluster.Seconds) => void;
+};
 
 /**
  * Debugger:
@@ -45,14 +67,25 @@ export class Debugger {
    * @param entity the entity to show the bounding box of
    * @param scene the scene to add the bounding box to
    */
-  static showBoundingBox(entity: Entity, scene: Container) {
-    scene.add(
-      new Rect({
-        position: new Vector(entity.boundingBox.x, entity.boundingBox.y),
-        width: entity.boundingBox.width,
-        height: entity.boundingBox.height,
-        style: { fill: "transparent", stroke: "red" },
-      })
-    );
+  static showBoundingBox(entity: Entity, scene: Container, stroke = "green") {
+    const rect = new Rect({
+      position: new Vector(entity.boundingBox.x, entity.boundingBox.y),
+      // velocity: entity.velocity,
+      width: entity.boundingBox.width,
+      height: entity.boundingBox.height,
+      style: {
+        stroke,
+        fill: "transparent",
+      },
+    }) as DebugRect;
+    rect.update = (dt, t) => {
+      rect.position.x = entity.boundingBox.x;
+      rect.position.y = entity.boundingBox.y;
+      if (entity instanceof Line) {
+        rect.width = entity.boundingBox.width;
+        rect.height = entity.boundingBox.height;
+      }
+    };
+    scene.add(rect);
   }
 }

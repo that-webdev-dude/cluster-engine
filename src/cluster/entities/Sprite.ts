@@ -95,8 +95,8 @@ export class TileSprite
     return {
       x: this.position.x,
       y: this.position.y,
-      width: this.width,
-      height: this.height,
+      width: this.tileWidth,
+      height: this.tileHeight,
     };
   }
 
@@ -207,6 +207,14 @@ export class TileMap extends Container {
         }
       }
     }
+  }
+
+  get width() {
+    return this.mapWidth * this.tileWidth;
+  }
+
+  get height() {
+    return this.mapHeight * this.tileHeight;
   }
 
   /**

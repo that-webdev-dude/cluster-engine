@@ -58,6 +58,12 @@ export namespace Cluster {
     CONTAINER = "container",
   }
 
+  export enum EntityPhysics {
+    STATIC = "static",
+    DYNAMIC = "dynamic",
+    KINEMATIC = "kinematic",
+  }
+
   /** Represents options for an entity. */
   export interface BaseEntityOptions {
     /** Acceleration vector. */
@@ -80,6 +86,8 @@ export namespace Cluster {
     dead?: boolean;
     /** Indicates if the entity is visible. */
     visible?: boolean;
+    /** Indicates if the entity is solid. */
+    mass?: number;
   }
 
   /** Represents specific properties of a rectangle entity. */

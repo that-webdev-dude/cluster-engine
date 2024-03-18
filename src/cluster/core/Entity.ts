@@ -14,9 +14,9 @@ export abstract class Entity
   pivot: Vector;
   angle: number;
   alpha: number;
+  mass: number;
   dead: boolean;
   visible: boolean;
-
   constructor(tag: Cluster.EntityTag, options: Cluster.BaseEntityOptions = {}) {
     this.tag = tag;
     this.acceleration = options.acceleration || new Vector(0, 0);
@@ -27,6 +27,7 @@ export abstract class Entity
     this.pivot = options.pivot || new Vector(0, 0);
     this.angle = options.angle || 0;
     this.alpha = options.alpha || 1;
+    this.mass = options.mass || 1;
     this.dead = options.dead || false;
     this.visible = options.visible || true;
   }

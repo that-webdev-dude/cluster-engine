@@ -3,6 +3,7 @@ export { Container } from "./core/Container";
 export { Assets } from "./core/Assets";
 export { Game } from "./core/Game";
 export { Entity } from "./core/Entity";
+export { Camera } from "./core/Camera";
 
 // input
 export { Keyboard } from "./input/Keyboard";
