@@ -19,6 +19,7 @@ import {
 } from "./cluster";
 import { World } from "./World";
 import { Debugger } from "./Debugger";
+import { sources } from "webpack";
 
 // game instance
 const game = new Game({
@@ -47,7 +48,6 @@ class GamePlay extends Container {
     32,
     32
   );
-
   camera: Camera;
 
   constructor() {
@@ -68,6 +68,7 @@ class GamePlay extends Container {
     // debug
 
     Debugger.showBoundingBox(this.player, this.camera);
+    Debugger.showVelocity(this.player, this.camera);
     this.zombies.children.forEach((z) => {
       Debugger.showBoundingBox(z as Entity, this.camera, "red");
     });
@@ -83,40 +84,14 @@ class GamePlay extends Container {
 
   public update(dt: number, t: number): void {
     super.update(dt, t);
+    const { player, level } = this;
 
-    const { player, zombies, level } = this;
-
-    // repositioning
-    World.reposition(this, dt);
-
-    // collision tests & resolution
-    World.Collider.detectOneToMany(
-      player as TileSprite,
-      zombies.children as TileSprite[]
-    ).forEach((collisionInfo) => {
+    let ci = World.Collider.detectWallCollision(player, level);
+    ci.forEach((collisionInfo) => {
       World.Collider.resolve(collisionInfo as CollisionInfo, (c) => {
-        c.target.dead = true;
+        player.hitMapTile(c.direction);
       });
     });
-
-    World.Collider.detectWallCollision(player, level).forEach(
-      (collisionInfo) => {
-        World.Collider.resolve(collisionInfo as CollisionInfo, (c) => {
-          // ...
-        });
-      }
-    );
-
-    // clamping
-    // [this.player, ...this.zombies.children].forEach((entity) => {
-    //   rectClampPosition(
-    //     entity as Rect,
-    //     0,
-    //     0,
-    //     GAME_CONFIG.width,
-    //     GAME_CONFIG.height
-    //   );
-    // });
   }
 }
 

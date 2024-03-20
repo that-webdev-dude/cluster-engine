@@ -4,6 +4,7 @@ export { Assets } from "./core/Assets";
 export { Game } from "./core/Game";
 export { Entity } from "./core/Entity";
 export { Camera } from "./core/Camera";
+export { State } from "./core/State";
 
 // input
 export { Keyboard } from "./input/Keyboard";

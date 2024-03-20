@@ -100,16 +100,16 @@ export class World {
           }
         }
         if (entity.direction.x > 0 && topRight && bottomRight) {
-          if (tiles[1]) {
+          if (tiles[3]) {
             let overlap = Math.abs(
-              tiles[1].position.x - entity.position.x - entity.width
+              tiles[3].position.x - entity.position.x - entity.width
             );
             collisionInfo.push({
               collision: true,
               overlap,
               direction: "right",
               source: entity,
-              target: tiles[1],
+              target: tiles[3],
             });
           }
         }

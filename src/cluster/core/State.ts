@@ -1,4 +1,4 @@
-class State<T> {
+export class State<T> {
   private _current: T;
   private _previous: T | null;
   private _changed: boolean;

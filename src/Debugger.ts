@@ -69,8 +69,7 @@ export class Debugger {
    */
   static showBoundingBox(entity: Entity, scene: Container, stroke = "green") {
     const rect = new Rect({
-      position: new Vector(entity.boundingBox.x, entity.boundingBox.y),
-      // velocity: entity.velocity,
+      position: new Vector(),
       width: entity.boundingBox.width,
       height: entity.boundingBox.height,
       style: {
@@ -79,13 +78,34 @@ export class Debugger {
       },
     }) as DebugRect;
     rect.update = (dt, t) => {
-      rect.position.x = entity.boundingBox.x;
-      rect.position.y = entity.boundingBox.y;
-      if (entity instanceof Line) {
-        rect.width = entity.boundingBox.width;
-        rect.height = entity.boundingBox.height;
-      }
+      rect.position.x = entity.position.x;
+      rect.position.y = entity.position.y;
+      // if (entity instanceof Line) {
+      //   rect.width = entity.boundingBox.width;
+      //   rect.height = entity.boundingBox.height;
+      // }
     };
     scene.add(rect);
+  }
+
+  /**
+   * this method is used to show the velocity of an entity
+   * @param entity the entity to show the velocity of
+   * @param scene the scene to add the velocity to
+   */
+  static showVelocity(entity: Entity, scene: Container, stroke = "blue") {
+    const line = new Line({
+      start: new Vector(),
+      end: new Vector(),
+      style: {
+        stroke,
+      },
+    }) as DebugLine;
+    line.update = (dt, t) => {
+      let scaledVelocity = Vector.from(entity.velocity).scale(0.5);
+      line.start = entity.center;
+      line.end = Vector.clone(entity.center).add(scaledVelocity);
+    };
+    scene.add(line);
   }
 }
