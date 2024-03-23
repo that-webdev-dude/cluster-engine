@@ -1,12 +1,12 @@
 import {
   Container,
-  Camera,
-  Vector,
   Entity,
+  Camera,
   Game,
-  Debugger,
+  Text,
   Cmath,
   World,
+  Vector,
 } from "../cluster";
 import { GAME_CONFIG } from "../config/GameConfig";
 import { Background } from "../entities/Background";
@@ -14,20 +14,35 @@ import { Bird } from "../entities/Bird";
 import { Pipe } from "../entities/Pipe";
 
 export class GamePlay extends Container {
+  gui: Text;
   game: Game;
   camera: Camera;
+  scores: number;
+  timer: number;
+  spawnRate: number;
   background: Background;
   pipes: Container;
   bird: Bird;
-  timer = 1;
-  spawnRate = 1;
 
   constructor(game: Game) {
     super();
     this.game = game;
+    this.scores = 0;
+    this.timer = 1;
+    this.spawnRate = 1;
     this.background = new Background();
     this.pipes = new Container();
     this.bird = new Bird(game.keyboard);
+    this.gui = new Text({
+      position: new Vector(GAME_CONFIG.width / 2, 32),
+      text: this.scores.toString(),
+      style: {
+        fill: "white",
+        font: `32px ${GAME_CONFIG.fontStyle}`,
+        align: "center",
+        stroke: "black",
+      },
+    });
     this.camera = new Camera({
       viewSize: { width: GAME_CONFIG.width, height: GAME_CONFIG.height },
       worldSize: { width: GAME_CONFIG.width, height: GAME_CONFIG.height },
@@ -36,12 +51,8 @@ export class GamePlay extends Container {
     this.camera.add(this.background);
     this.camera.add(this.pipes);
     this.camera.add(this.bird);
+    this.camera.add(this.gui);
     this.add(this.camera);
-
-    const DEBUGGER = new Debugger();
-    DEBUGGER.showEntityVelocityLine(this.bird, 0.1);
-    DEBUGGER.logEntityVelocity(this.bird);
-    this.camera.add(DEBUGGER);
   }
 
   spawnPipes() {
@@ -57,7 +68,8 @@ export class GamePlay extends Container {
   }
 
   score() {
-    console.log("score");
+    this.scores += 0.5;
+    this.gui.text = this.scores.toString();
   }
 
   public update(dt: number, t: number): void {
@@ -72,21 +84,19 @@ export class GamePlay extends Container {
 
     this.forEach((entity) => World.reposition(entity as Entity, dt));
 
-    // edge handling
     pipes.forEach((pipe: Pipe) => {
       if (World.detectRectVsRectCollision(bird, pipe)) {
         this.game.setScene("gameOver");
       }
-
       if (bird.center.x > pipe.center.x && !pipe.scored) {
         pipe.scored = true;
         this.score();
       }
-
       if (World.offscreen(pipe, GAME_CONFIG.width, GAME_CONFIG.height)) {
         pipe.dead = true;
       }
     });
+
     if (World.hitScreen(this.bird, GAME_CONFIG.width, GAME_CONFIG.height)) {
       World.screenContain(this.bird, GAME_CONFIG.width, GAME_CONFIG.height);
     }
