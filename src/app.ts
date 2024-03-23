@@ -25,3 +25,9 @@ export default () => {
 // - add screen transitions
 // - add entity flash effect
 // - add camera flash effect
+
+// ADDITIONAL NOTES
+// - the game is not yet optimized for mobile
+// - the game is not yet optimized for performance
+// - the game is not yet optimized for accessibility
+// - the game is not yet optimized for search engines
