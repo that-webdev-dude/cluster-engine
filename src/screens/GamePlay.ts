@@ -18,13 +18,11 @@ export class GamePlay extends Container {
   background: Background;
   pipes: Container;
   bird: Bird;
-  scores = 0;
   timer = 1;
   spawnRate = 1;
 
   constructor(game: Game) {
     super();
-
     this.background = new Background();
     this.pipes = new Container();
     this.bird = new Bird(game.keyboard);
@@ -57,7 +55,7 @@ export class GamePlay extends Container {
   }
 
   score() {
-    this.scores += 0.5;
+    console.log("score");
   }
 
   public update(dt: number, t: number): void {

@@ -1,6 +1,5 @@
 import { Game } from "./cluster";
 import { GAME_CONFIG } from "./config/GameConfig";
-
 import { GamePlay } from "./screens/GamePlay";
 
 // game instance
@@ -9,13 +8,9 @@ const game = new Game({
   height: GAME_CONFIG.height,
 });
 
-const gamePlay = () => {
-  return new GamePlay(game);
-};
-
-// gameplay scene
+// start the game
 export default () => {
-  game.setScene(gamePlay());
+  game.setScene(new GamePlay(game));
   game.start();
 };
 
