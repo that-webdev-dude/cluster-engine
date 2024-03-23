@@ -11,7 +11,7 @@ const DEFAULT_DELAY = 0;
 type TimerCallback = (ratio: number) => void;
 type SimpleCallback = () => void;
 
-class Timer {
+export class Timer {
   private _duration: number;
   private _onTick: TimerCallback;
   private _onDone: SimpleCallback | undefined;
@@ -63,5 +63,3 @@ class Timer {
     this._dead = false;
   }
 }
-
-export default Timer;

@@ -22,8 +22,8 @@ export class GamePlay extends Container {
   timer: number;
   spawnRate: number;
   background: Background;
-  pipes: Container;
   bird: Bird;
+  pipes: Container;
   pipePool: Pool<Pipe>;
 
   constructor(game: Game) {
@@ -33,8 +33,6 @@ export class GamePlay extends Container {
     this.timer = 1;
     this.spawnRate = 1;
     this.background = new Background();
-    this.pipes = new Container();
-    this.bird = new Bird(game.keyboard);
     this.gui = new Text({
       position: new Vector(GAME_CONFIG.width / 2, 32),
       text: this.scores.toString(),
@@ -45,15 +43,17 @@ export class GamePlay extends Container {
         stroke: "black",
       },
     });
-    this.camera = new Camera({
-      viewSize: { width: GAME_CONFIG.width, height: GAME_CONFIG.height },
-      worldSize: { width: GAME_CONFIG.width, height: GAME_CONFIG.height },
-    });
 
+    this.bird = new Bird(game.keyboard);
+    this.pipes = new Container();
     this.pipePool = new Pool<Pipe>(
       () => new Pipe(new Vector(0, GAME_CONFIG.width), 0)
     );
 
+    this.camera = new Camera({
+      viewSize: { width: GAME_CONFIG.width, height: GAME_CONFIG.height },
+      worldSize: { width: GAME_CONFIG.width, height: GAME_CONFIG.height },
+    });
     this.camera.add(this.background);
     this.camera.add(this.pipes);
     this.camera.add(this.bird);

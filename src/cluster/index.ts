@@ -17,6 +17,8 @@ export { Vector } from "./tools/Vector";
 export { Debugger } from "./tools/Debugger";
 export { World } from "./tools/World";
 export { Pool } from "./tools/Pool";
+export { Timer } from "./tools/Timer";
+export { Dialog } from "./tools/Dialog";
 
 // entities
 export { Rect } from "./entities/Rect";
