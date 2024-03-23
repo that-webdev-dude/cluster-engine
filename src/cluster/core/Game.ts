@@ -16,6 +16,7 @@ type GameOptions = {
 export class Game {
   readonly version: string;
   readonly title: string;
+  private _scenes: Map<string, () => Container>;
   private _scene: Container;
   private _engine: Engine;
   private _renderer: Renderer;
@@ -31,6 +32,7 @@ export class Game {
   }: GameOptions = {}) {
     this.version = version;
     this.title = title;
+    this._scenes = new Map();
     this._scene = new Container();
     this._engine = new Engine();
     this._renderer = new Renderer({ width, height, parentElementId: "#app" });
@@ -73,9 +75,22 @@ export class Game {
     return this._keyboardInput;
   }
 
+  public addScene(name: string, scene: () => Container) {
+    this._scenes.set(name, scene);
+  }
+
+  public removeScene(name: string) {
+    this._scenes.delete(name);
+  }
+
   // TODO: Add screen transition
-  public setScene(scene: Container, transitionDuration: number = 0) {
-    this._scene = scene;
+  public setScene(name: string) {
+    const sceneGenerator = this._scenes.get(name);
+    if (sceneGenerator) {
+      this._scene = sceneGenerator();
+    } else {
+      throw new Error(`[Game.ts:setScene] Scene ${name} does not exist`);
+    }
   }
 
   public start(updateCb: (dt: number, t: number) => void = () => {}): void {

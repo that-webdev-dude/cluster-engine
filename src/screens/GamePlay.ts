@@ -14,6 +14,7 @@ import { Bird } from "../entities/Bird";
 import { Pipe } from "../entities/Pipe";
 
 export class GamePlay extends Container {
+  game: Game;
   camera: Camera;
   background: Background;
   pipes: Container;
@@ -23,6 +24,7 @@ export class GamePlay extends Container {
 
   constructor(game: Game) {
     super();
+    this.game = game;
     this.background = new Background();
     this.pipes = new Container();
     this.bird = new Bird(game.keyboard);
@@ -73,9 +75,7 @@ export class GamePlay extends Container {
     // edge handling
     pipes.forEach((pipe: Pipe) => {
       if (World.detectRectVsRectCollision(bird, pipe)) {
-        pipe.style.stroke = "red";
-      } else {
-        pipe.style.stroke = "white";
+        this.game.setScene("gameOver");
       }
 
       if (bird.center.x > pipe.center.x && !pipe.scored) {
