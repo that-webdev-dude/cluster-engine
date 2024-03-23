@@ -16,6 +16,7 @@ export { Cmath } from "./tools/Cmath";
 export { Vector } from "./tools/Vector";
 export { Debugger } from "./tools/Debugger";
 export { World } from "./tools/World";
+export { Pool } from "./tools/Pool";
 
 // entities
 export { Rect } from "./entities/Rect";

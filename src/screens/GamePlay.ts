@@ -7,6 +7,7 @@ import {
   Cmath,
   World,
   Vector,
+  Pool,
 } from "../cluster";
 import { GAME_CONFIG } from "../config/GameConfig";
 import { Background } from "../entities/Background";
@@ -23,6 +24,7 @@ export class GamePlay extends Container {
   background: Background;
   pipes: Container;
   bird: Bird;
+  pipePool: Pool<Pipe>;
 
   constructor(game: Game) {
     super();
@@ -48,6 +50,10 @@ export class GamePlay extends Container {
       worldSize: { width: GAME_CONFIG.width, height: GAME_CONFIG.height },
     });
 
+    this.pipePool = new Pool<Pipe>(
+      () => new Pipe(new Vector(0, GAME_CONFIG.width), 0)
+    );
+
     this.camera.add(this.background);
     this.camera.add(this.pipes);
     this.camera.add(this.bird);
@@ -58,11 +64,18 @@ export class GamePlay extends Container {
   spawnPipes() {
     const gapHeight = 200;
     const gapPosition = Cmath.rand(100, GAME_CONFIG.height - 300);
-    const pipe1 = new Pipe(new Vector(GAME_CONFIG.width, 0), gapPosition);
-    const pipe2 = new Pipe(
-      new Vector(GAME_CONFIG.width, gapPosition + gapHeight),
-      GAME_CONFIG.height - gapPosition - gapHeight
-    );
+    const pipe1 = this.pipePool.next((pipe) => {
+      pipe.position.set(GAME_CONFIG.width, 0);
+      pipe.height = gapPosition;
+      pipe.scored = false;
+      pipe.dead = false;
+    });
+    const pipe2 = this.pipePool.next((pipe) => {
+      pipe.position.set(GAME_CONFIG.width, gapPosition + gapHeight);
+      pipe.height = GAME_CONFIG.height - gapPosition - gapHeight;
+      pipe.scored = false;
+      pipe.dead = false;
+    });
     this.pipes.add(pipe1);
     this.pipes.add(pipe2);
   }
