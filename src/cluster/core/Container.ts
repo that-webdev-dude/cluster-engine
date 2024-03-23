@@ -1,5 +1,11 @@
 import { Vector } from "../tools/Vector";
 import { Cluster } from "../types/cluster.types";
+import { Entity } from "./Entity";
+
+// type ContainerChlid =
+//   | Cluster.EntityType<Cluster.BaseEntityOptions>
+//   | Cluster.EntityContainerType<Cluster.BaseEntityOptions>;
+type ContainerChild = Entity | Container;
 
 // implementation of a Container Entity class
 export class Container
@@ -16,10 +22,7 @@ export class Container
   alpha: number;
   dead: boolean;
   visible: boolean;
-  children: Array<
-    | Cluster.EntityType<Cluster.BaseEntityOptions>
-    | Cluster.EntityContainerType<Cluster.BaseEntityOptions>
-  >;
+  children: Array<ContainerChild>;
 
   constructor(options: Cluster.BaseEntityOptions = {}) {
     this.acceleration = options.acceleration || new Vector(0, 0);
@@ -35,14 +38,25 @@ export class Container
     this.children = [];
   }
 
-  add(entity: Cluster.EntityType<Cluster.BaseEntityOptions>) {
+  add(entity: ContainerChild) {
     this.children.push(entity);
   }
 
-  remove(entity: Cluster.EntityType<Cluster.BaseEntityOptions>) {
+  remove(entity: ContainerChild) {
     const index = this.children.indexOf(entity);
     if (index > -1) {
       this.children.splice(index, 1);
+    }
+  }
+
+  forEach<T>(callback: (entity: T) => void) {
+    for (let i = 0; i < this.children.length; i++) {
+      const child = this.children[i];
+      if (child.tag !== Cluster.EntityTag.CONTAINER) {
+        callback(child as T);
+      } else {
+        (child as Container).forEach(callback);
+      }
     }
   }
 

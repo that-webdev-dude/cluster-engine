@@ -14,6 +14,8 @@ export { Gamepad } from "./input/Gamepad";
 // tools
 export { Cmath } from "./tools/Cmath";
 export { Vector } from "./tools/Vector";
+export { Debugger } from "./tools/Debugger";
+export { World } from "./tools/World";
 
 // entities
 export { Rect } from "./entities/Rect";

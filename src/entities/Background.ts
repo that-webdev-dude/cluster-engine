@@ -7,6 +7,7 @@ export class Background extends Rect {
       width: GAME_CONFIG.width,
       height: GAME_CONFIG.height,
       style: {
+        fill: "rgba(0, 0, 0, 0.90)",
         stroke: "transparent",
       },
     });

@@ -76,7 +76,7 @@ export class Cmath {
    * @param {Array} items target array
    * @returns {*} picked array item
    */
-  static randOneFrom(items = []) {
+  static randOneFrom<T>(items: T[]): T {
     return items[Math.floor(Math.random() * items.length)];
   }
 
