@@ -1,21 +1,17 @@
 import { Game } from "./cluster";
 import { GAME_CONFIG } from "./config/GameConfig";
-import { GamePlay } from "./screens/GamePlay";
-import { GameTitle } from "./screens/GameTitle";
 
-// game instance
+// ... game instance
 const game = new Game({
   width: GAME_CONFIG.width,
   height: GAME_CONFIG.height,
 });
 game.addScenes({
-  gamePlay: () => new GamePlay(game),
-  gameTitle: () => new GameTitle(game),
+  // ... add scenes here
 });
 
-// start the game
+// ... start the game
 export default () => {
-  game.setScene("gameTitle");
   game.start();
 };
 

@@ -4,6 +4,6 @@ export class GAME_CONFIG {
   static readonly width = 832;
   static readonly height = 640;
   static readonly version = "0.0.1";
-  static readonly title = "Sloppy Bird";
+  static readonly title = "Cluster Game";
   static readonly fontStyle = '"Press Start 2P"';
 }
