@@ -79,8 +79,20 @@ export class Game {
     this._scenes.set(name, scene);
   }
 
+  public addScenes(scenes: { [key: string]: () => Container }) {
+    for (let name in scenes) {
+      this.addScene(name, scenes[name]);
+    }
+  }
+
   public removeScene(name: string) {
     this._scenes.delete(name);
+  }
+
+  public removeScenes(names: string[]) {
+    names.forEach((name) => {
+      this.removeScene(name);
+    });
   }
 
   // TODO: Add screen transition

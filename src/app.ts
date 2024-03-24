@@ -8,8 +8,10 @@ const game = new Game({
   width: GAME_CONFIG.width,
   height: GAME_CONFIG.height,
 });
-game.addScene("gamePlay", () => new GamePlay(game));
-game.addScene("gameTitle", () => new GameTitle(game));
+game.addScenes({
+  gamePlay: () => new GamePlay(game),
+  gameTitle: () => new GameTitle(game),
+});
 
 // start the game
 export default () => {
