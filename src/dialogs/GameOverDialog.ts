@@ -1,7 +1,7 @@
 import { GAME_CONFIG } from "../config/GameConfig";
 import { Dialog, Text, Vector, Rect } from "../cluster";
 
-export class PauseDialog extends Dialog {
+export class GameOverDialog extends Dialog {
   quitText: Text;
   pauseText: Text;
   resumeText: Text;
@@ -21,7 +21,7 @@ export class PauseDialog extends Dialog {
     });
     this.pauseText = new Text({
       position: new Vector(this.width / 2, this.height / 2 - 64),
-      text: "PAUSED",
+      text: "GAME OVER",
       style: {
         fill: "transparent",
         font: `32px ${GAME_CONFIG.fontStyle}`,
@@ -30,7 +30,7 @@ export class PauseDialog extends Dialog {
     });
     this.resumeText = new Text({
       position: new Vector(this.width / 2, this.height / 2),
-      text: "[ENTER] to resume",
+      text: "[ENTER] new game",
       style: {
         fill: "white",
         font: `16px ${GAME_CONFIG.fontStyle}`,
@@ -38,7 +38,7 @@ export class PauseDialog extends Dialog {
     });
     this.quitText = new Text({
       position: new Vector(this.width / 2, this.height / 2 + 32),
-      text: "[ESC] to quit",
+      text: "[ESC] main menu",
       style: {
         fill: "white",
         font: `16px ${GAME_CONFIG.fontStyle}`,

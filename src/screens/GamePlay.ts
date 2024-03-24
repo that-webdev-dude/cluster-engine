@@ -8,11 +8,21 @@ import {
   World,
   Vector,
   Pool,
+  Dialog,
+  State,
 } from "../cluster";
 import { GAME_CONFIG } from "../config/GameConfig";
 import { Background } from "../entities/Background";
 import { Bird } from "../entities/Bird";
 import { Pipe } from "../entities/Pipe";
+import { PauseDialog } from "../dialogs/PauseDialog";
+import { GameOverDialog } from "../dialogs/GameOverDialog";
+
+enum states {
+  PLAY,
+  PAUSED,
+  GAMEOVER,
+}
 
 export class GamePlay extends Container {
   gui: Text;
@@ -25,6 +35,8 @@ export class GamePlay extends Container {
   bird: Bird;
   pipes: Container;
   pipePool: Pool<Pipe>;
+  dialog: Dialog | null = null;
+  private state: State<states> = new State(states.PLAY);
 
   constructor(game: Game) {
     super();
@@ -59,6 +71,8 @@ export class GamePlay extends Container {
     this.camera.add(this.bird);
     this.camera.add(this.gui);
     this.add(this.camera);
+
+    this.dialog = null;
   }
 
   spawnPipes() {
@@ -85,9 +99,8 @@ export class GamePlay extends Container {
     this.gui.text = this.scores.toString();
   }
 
-  public update(dt: number, t: number): void {
+  updateGamePlay(dt: number, t: number) {
     super.update(dt, t);
-
     const { bird, pipes } = this;
     this.timer -= dt;
     if (this.timer <= 0) {
@@ -99,7 +112,8 @@ export class GamePlay extends Container {
 
     pipes.forEach((pipe: Pipe) => {
       if (World.detectRectVsRectCollision(bird, pipe)) {
-        this.game.setScene("gameOver");
+        // this.game.setScene("gameOver");
+        this.state.set(states.GAMEOVER);
       }
       if (bird.center.x > pipe.center.x && !pipe.scored) {
         pipe.scored = true;
@@ -113,5 +127,62 @@ export class GamePlay extends Container {
     if (World.hitScreen(this.bird, GAME_CONFIG.width, GAME_CONFIG.height)) {
       World.screenContain(this.bird, GAME_CONFIG.width, GAME_CONFIG.height);
     }
+  }
+
+  public update(dt: number, t: number): void {
+    switch (this.state.get()) {
+      case states.PLAY:
+        this.updateGamePlay(dt, t);
+        if (this.game.keyboard.pause) {
+          this.state.set(states.PAUSED);
+        }
+        break;
+      case states.PAUSED:
+        if (this.state.first) {
+          this.dialog = new PauseDialog(() => {
+            // this.state.set(states.PLAY);
+          });
+          this.camera.add(this.dialog);
+        }
+
+        if (this.game.keyboard.quit) {
+          this.game.setScene("gameTitle");
+        }
+
+        if (this.game.keyboard.enter) {
+          this.state.set(states.PLAY);
+          if (this.dialog !== null) {
+            this.camera.remove(this.dialog);
+            this.dialog = null;
+          }
+        }
+        break;
+      case states.GAMEOVER:
+        if (this.state.first) {
+          this.dialog = new GameOverDialog(() => {
+            // this.state.set(states.PLAY);
+          });
+          this.camera.add(this.dialog);
+        }
+
+        if (this.game.keyboard.enter) {
+          if (this.dialog !== null) {
+            this.camera.remove(this.dialog);
+            this.dialog = null;
+          }
+          this.game.setScene("gamePlay");
+        }
+
+        if (this.game.keyboard.quit) {
+          if (this.dialog !== null) {
+            this.camera.remove(this.dialog);
+            this.dialog = null;
+          }
+          this.game.setScene("gameTitle");
+        }
+        break;
+    }
+
+    this.state.update(dt);
   }
 }

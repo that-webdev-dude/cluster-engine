@@ -46,8 +46,11 @@ export class Keyboard {
   }
 
   get quit(): boolean {
-    console.log(this.key("Escape"));
     return this.key("Escape");
+  }
+
+  get enter(): boolean {
+    return this.key("Enter");
   }
 
   get x(): number {

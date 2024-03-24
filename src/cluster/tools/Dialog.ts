@@ -1,6 +1,8 @@
 import { Container } from "../core/Container";
+import { Vector } from "./Vector";
 
 type DialogConfig = {
+  position: Vector;
   width: number;
   height: number;
   onClose(): void;
@@ -15,6 +17,7 @@ export class Dialog extends Container {
   private _onUpdate() {}
 
   constructor({
+    position = new Vector(0, 0),
     width = 0,
     height = 0,
     onClose = () => {},
@@ -23,7 +26,7 @@ export class Dialog extends Container {
     if (!width || !height)
       throw new Error("Dialog: width and height are required!");
 
-    super();
+    super({ position });
     this.width = width;
     this.height = height;
     this._onClose = onClose;
