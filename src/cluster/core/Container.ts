@@ -2,9 +2,6 @@ import { Vector } from "../tools/Vector";
 import { Cluster } from "../types/cluster.types";
 import { Entity } from "./Entity";
 
-// type ContainerChlid =
-//   | Cluster.EntityType<Cluster.BaseEntityOptions>
-//   | Cluster.EntityContainerType<Cluster.BaseEntityOptions>;
 type ContainerChild = Entity | Container;
 
 // implementation of a Container Entity class
