@@ -3,12 +3,7 @@ import Assets from "./Assets";
 /**
  * AUDIO OBJECT
  * TODO
- * extend this to have two separate channels
- * sfx channel
- * music channel
- * both connected to a master channel
- * to control all the relevant sfx & music
- * sounds independently
+ * extend this to have two separate channels sfx channel music channel both connected to a master channel to control all the relevant sfx & music sounds independently and globally
  */
 class Audio {
   private static _hasWebAudio = !!window.AudioContext;

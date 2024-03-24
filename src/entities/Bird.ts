@@ -1,7 +1,7 @@
 import { Rect, Vector, World, Keyboard, Sound } from "../cluster";
 import JumpSoundURL from "../sounds/Jump.wav";
 
-const jumpSound = new Sound(JumpSoundURL, { volume: 0.5 });
+const JUMP_SOUND = new Sound(JumpSoundURL, { volume: 0.5 });
 
 export class Bird extends Rect {
   keyboard: Keyboard;
@@ -24,7 +24,7 @@ export class Bird extends Rect {
     World.applyFriction(this);
     World.applyGravity(this);
     if (keyboard.action) {
-      jumpSound.play();
+      JUMP_SOUND.play();
       World.applyImpulse(this, { x: 0, y: -1000 }, dt);
       keyboard.active = false;
     }
