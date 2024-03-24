@@ -14,7 +14,6 @@
   "devDependencies": {
     "css-loader": "^6.8.1",
     "html-webpack-plugin": "^5.5.3",
-    "jsdoc": "^4.0.2",
     "mini-css-extract-plugin": "^2.7.6",
     "postcss": "^8.4.4",
     "postcss-loader": "^7.3.3",
