@@ -17,7 +17,7 @@ export class GameOverDialog extends Dialog {
     this.background = new Rect({
       width: this.width,
       height: this.height,
-      style: { fill: "rgba(0, 0, 0, 0.25)" },
+      style: { fill: "rgba(0, 0, 0, 0.5)" },
     });
     this.pauseText = new Text({
       position: new Vector(this.width / 2, this.height / 2 - 64),

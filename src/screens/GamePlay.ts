@@ -10,6 +10,7 @@ import {
   Pool,
   Dialog,
   State,
+  Sound,
 } from "../cluster";
 import { GAME_CONFIG } from "../config/GameConfig";
 import { Background } from "../entities/Background";
@@ -17,6 +18,12 @@ import { Bird } from "../entities/Bird";
 import { Pipe } from "../entities/Pipe";
 import { PauseDialog } from "../dialogs/PauseDialog";
 import { GameOverDialog } from "../dialogs/GameOverDialog";
+import ScoreSoundURL from "../sounds/Score.wav";
+import HitSoundURL from "../sounds/Hit.wav";
+
+// sounds
+const scoreSound = new Sound(ScoreSoundURL, { volume: 0.125 });
+const hitSound = new Sound(HitSoundURL);
 
 enum states {
   PLAY,
@@ -112,11 +119,12 @@ export class GamePlay extends Container {
 
     pipes.forEach((pipe: Pipe) => {
       if (World.detectRectVsRectCollision(bird, pipe)) {
-        // this.game.setScene("gameOver");
+        hitSound.play();
         this.state.set(states.GAMEOVER);
       }
       if (bird.center.x > pipe.center.x && !pipe.scored) {
         pipe.scored = true;
+        scoreSound.play();
         this.score();
       }
       if (World.offscreen(pipe, GAME_CONFIG.width, GAME_CONFIG.height)) {

@@ -62,7 +62,7 @@ const SOUND_DEFAULTS = {
   // filter: {},
 };
 
-class Sound {
+export class Sound {
   private _buffer: AudioBuffer | null = null;
   private _sourceNode: AudioBufferSourceNode | null = null;
   private _filterNode: BiquadFilterNode | null = null;
@@ -141,8 +141,6 @@ class Sound {
     this._sourceNode = null;
   }
 }
-
-export default Sound;
 
 /**
  * example of an highpass filter
