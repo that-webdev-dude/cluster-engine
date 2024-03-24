@@ -1,6 +1,9 @@
 import { Container } from "../core/Container";
 import { Entity } from "../core/Entity";
 import { Cmath } from "./Cmath";
+import { Vector } from "./Vector";
+
+type Displacement = { dx: number; dy: number };
 
 export class World {
   static GRAVITY = 2000;
@@ -146,6 +149,9 @@ export class World {
   }
 
   // collision detection
+  /**
+   * @deprecated
+   */
   static detectRectVsRectCollision(rect1: Entity, rect2: Entity): boolean {
     return (
       rect1.position.x < rect2.position.x + rect2.width &&
@@ -153,6 +159,65 @@ export class World {
       rect1.position.y < rect2.position.y + rect2.height &&
       rect1.position.y + rect1.height > rect2.position.y
     );
+  }
+
+  static detectAABBCollision(
+    rect1: Entity,
+    rect2: Entity
+  ): Displacement | null {
+    if (
+      rect1.position.x < rect2.position.x + rect2.width &&
+      rect1.position.x + rect1.width > rect2.position.x &&
+      rect1.position.y < rect2.position.y + rect2.height &&
+      rect1.position.y + rect1.height > rect2.position.y
+    ) {
+      let minSizeX = rect1.width + rect2.width;
+      let minSizeY = rect1.height + rect2.height;
+
+      let x1 = Math.abs(
+        rect1.position.x + rect1.width - rect2.position.x - minSizeX
+      );
+      let x2 = Math.abs(
+        rect2.position.x + rect2.width - rect1.position.x - minSizeX
+      );
+      let dx = Math.min(x1, x2);
+
+      let y1 = Math.abs(
+        rect1.position.y + rect1.height - rect2.position.y - minSizeY
+      );
+      let y2 = Math.abs(
+        rect2.position.y + rect2.height - rect1.position.y - minSizeY
+      );
+      let dy = Math.min(y1, y2);
+
+      if (Math.abs(dx) < Math.abs(dy)) {
+        dy = 0;
+      } else {
+        dx = 0;
+      }
+
+      dx = Math.sign(rect1.position.x - rect2.position.x) * dx;
+      dy = Math.sign(rect1.position.y - rect2.position.y) * dy;
+
+      return { dx, dy };
+    }
+    return null;
+  }
+
+  // collision resolution
+  static resolveDisplace(rect: Entity, displacement: Displacement) {
+    rect.position.x += displacement.dx;
+    rect.position.y += displacement.dy;
+  }
+
+  static resolveBounce(rect: Entity, displacement: Displacement) {
+    World.resolveDisplace(rect, displacement);
+    let { dx } = displacement;
+    if (dx !== 0) {
+      rect.velocity.x *= -1;
+    } else {
+      rect.velocity.y *= -1;
+    }
   }
 }
 
