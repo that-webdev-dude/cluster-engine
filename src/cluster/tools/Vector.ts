@@ -25,7 +25,7 @@ export class Vector {
   }
 
   static distanceBetween(v1: Vector, v2: Vector): number {
-    return Vector.from(v1).subtract(v2).reverse().magnitude;
+    return Vector.connect(v1, v2).magnitude;
   }
 
   static angleBetween(v1: Vector, v2: Vector): number {
