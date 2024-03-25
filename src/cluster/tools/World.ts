@@ -161,32 +161,38 @@ export class World {
     );
   }
 
+  /**
+   * Detects AABB collision between two Entities
+   * @param main First Entity to check for collision
+   * @param target Second Entity to check for collision
+   * @returns Returns a Displacement object if a collision is detected, otherwise null
+   */
   static detectAABBCollision(
-    rect1: Entity,
-    rect2: Entity
+    main: Entity,
+    target: Entity
   ): Displacement | null {
     if (
-      rect1.position.x < rect2.position.x + rect2.width &&
-      rect1.position.x + rect1.width > rect2.position.x &&
-      rect1.position.y < rect2.position.y + rect2.height &&
-      rect1.position.y + rect1.height > rect2.position.y
+      main.position.x < target.position.x + target.width &&
+      main.position.x + main.width > target.position.x &&
+      main.position.y < target.position.y + target.height &&
+      main.position.y + main.height > target.position.y
     ) {
-      let minSizeX = rect1.width + rect2.width;
-      let minSizeY = rect1.height + rect2.height;
+      let minSizeX = main.width + target.width;
+      let minSizeY = main.height + target.height;
 
       let x1 = Math.abs(
-        rect1.position.x + rect1.width - rect2.position.x - minSizeX
+        main.position.x + main.width - target.position.x - minSizeX
       );
       let x2 = Math.abs(
-        rect2.position.x + rect2.width - rect1.position.x - minSizeX
+        target.position.x + target.width - main.position.x - minSizeX
       );
       let dx = Math.min(x1, x2);
 
       let y1 = Math.abs(
-        rect1.position.y + rect1.height - rect2.position.y - minSizeY
+        main.position.y + main.height - target.position.y - minSizeY
       );
       let y2 = Math.abs(
-        rect2.position.y + rect2.height - rect1.position.y - minSizeY
+        target.position.y + target.height - main.position.y - minSizeY
       );
       let dy = Math.min(y1, y2);
 
@@ -196,16 +202,44 @@ export class World {
         dx = 0;
       }
 
-      dx = Math.sign(rect1.position.x - rect2.position.x) * dx;
-      dy = Math.sign(rect1.position.y - rect2.position.y) * dy;
+      dx = Math.sign(main.position.x - target.position.x) * dx;
+      dy = Math.sign(main.position.y - target.position.y) * dy;
 
       return { dx, dy };
     }
     return null;
   }
 
+  /**
+   * Detects AABB collisions between a main Entity and an Array of target Entities
+   * @param rect Main Entity to check for collisions
+   * @param targets Array of target Entities to check for collisions
+   * @returns Returns a Displacement object if a collision is detected, otherwise null
+   */
+  static detectAABBCollisions(
+    main: Entity,
+    targets: Entity[]
+  ): Displacement | null {
+    let target = targets.reduce((a, b) => {
+      return Vector.distanceBetween(main.center, a.center) <
+        Vector.distanceBetween(main.center, b.center)
+        ? a
+        : b;
+    });
+    return World.detectAABBCollision(main, target);
+  }
+
   // collision resolution
+  static resolveDestroy(entity: Entity) {
+    entity.dead = true;
+  }
+
   static resolveDisplace(rect: Entity, displacement: Displacement) {
+    if (displacement.dx !== 0) {
+      rect.velocity.x = 0;
+    } else {
+      rect.velocity.y = 0;
+    }
     rect.position.x += displacement.dx;
     rect.position.y += displacement.dy;
   }
