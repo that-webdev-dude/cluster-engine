@@ -118,8 +118,10 @@ export class GamePlay extends Container {
     this.forEach((entity) => World.reposition(entity as Entity, dt));
 
     pipes.forEach((pipe: Pipe) => {
-      if (World.detectRectVsRectCollision(bird, pipe)) {
+      let displacement = World.detectAABBCollision(bird, pipe);
+      if (displacement !== null) {
         HIT_SOUND.play();
+        World.resolveDisplace(bird, displacement);
         this.state.set(states.GAMEOVER);
       }
       if (bird.center.x > pipe.center.x && !pipe.scored) {
