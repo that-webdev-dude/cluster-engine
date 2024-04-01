@@ -28,8 +28,8 @@ export abstract class Entity
     this.angle = options.angle || 0;
     this.alpha = options.alpha || 1;
     this.mass = options.mass || 1;
-    this.dead = options.dead || false;
-    this.visible = options.visible || true;
+    this.dead = options.dead !== undefined ? options.dead : false;
+    this.visible = options.visible !== undefined ? options.visible : true;
   }
 
   get direction() {

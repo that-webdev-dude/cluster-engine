@@ -2,21 +2,78 @@ import { Vector } from "../tools/Vector";
 import { Entity } from "../core/Entity";
 import { Cluster } from "../types/cluster.types";
 
-// implementation of a Rect Entity class
 export class Rect
   extends Entity
   implements Cluster.EntityType<Cluster.RectOptions>
 {
+  // // Rect utilities
+  // /**
+  //  * expands the Rect by the given amount and returns a new expanded Rect
+  //  * @param rect
+  //  * @param amountX
+  //  * @param amountY
+  //  * @returns
+  //  */
+  // static expand(rect: Rect, amountX: number, amountY: number) {
+  //   return new Rect({
+  //     position: new Vector(
+  //       rect.position.x - amountX / 2,
+  //       rect.position.y - amountY / 2
+  //     ),
+  //     width: rect.width + amountX,
+  //     height: rect.height + amountY,
+  //     hitbox: {
+  //       x: rect.hitbox.x,
+  //       y: rect.hitbox.y,
+  //       width: rect.hitbox.width + amountX,
+  //       height: rect.hitbox.height + amountY,
+  //     },
+  //   });
+  // }
+
+  // /**
+  //  * shrinks the Rect by the given amount and returns a new shrunken Rect
+  //  * @param rect
+  //  * @param amountX
+  //  * @param amountY
+  //  * @returns
+  //  */
+  // static shrink(rect: Rect, amountX: number, amountY: number) {
+  //   return new Rect({
+  //     position: new Vector(
+  //       rect.position.x + amountX / 2,
+  //       rect.position.y + amountY / 2
+  //     ),
+  //     width: rect.width - amountX,
+  //     height: rect.height - amountY,
+  //     hitbox: {
+  //       x: rect.hitbox.x,
+  //       y: rect.hitbox.y,
+  //       width: rect.hitbox.width - amountX,
+  //       height: rect.hitbox.height - amountY,
+  //     },
+  //   });
+  // }
+
   readonly tag = Cluster.EntityTag.RECT; // Discriminant property
-  width: number;
-  height: number;
-  style: Cluster.ShapeStyle;
+  public hitbox: Cluster.Box;
+  public height: number;
+  public width: number;
+  public style: Cluster.ShapeStyle;
 
   constructor(options: Cluster.RectOptions) {
     super(Cluster.EntityTag.RECT, options);
-    this.width = options.width;
     this.height = options.height;
+    this.width = options.width;
     this.style = options.style || {};
+
+    // hitbox
+    this.hitbox = options.hitbox || {
+      x: 0,
+      y: 0,
+      width: this.width,
+      height: this.height,
+    };
   }
 
   get center() {

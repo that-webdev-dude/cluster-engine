@@ -46,11 +46,11 @@ export class Container
     }
   }
 
-  forEach<T>(callback: (entity: T) => void) {
+  forEach<T>(callback: (entity: T, index?: number) => void) {
     for (let i = 0; i < this.children.length; i++) {
       const child = this.children[i];
       if (child.tag !== Cluster.EntityTag.CONTAINER) {
-        callback(child as T);
+        callback(child as T, i);
       } else {
         (child as Container).forEach(callback);
       }
