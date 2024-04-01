@@ -235,7 +235,7 @@ class AABBCollision {
       }
     }
 
-    static touch(collision: Collision, done?: (collision: Collision) => void) {
+    static stick(collision: Collision, done?: (collision: Collision) => void) {
       // stick the main in one spot until it moves again
       let { overlap, main } = collision;
       main.position.x += overlap.x;
@@ -269,7 +269,12 @@ class AABBCollision {
 }
 
 class ScreenHandler {
-  static contain(entity: Entity, screenWidth: number, screenHeight: number) {
+  static contain(
+    entity: Entity,
+    screenWidth: number,
+    screenHeight: number,
+    done?: (entity: Entity) => void
+  ) {
     if (entity.position.x < 0) {
       // left
       entity.position.x = 0;
@@ -290,9 +295,18 @@ class ScreenHandler {
       entity.position.y = screenHeight - entity.height;
       entity.velocity.y = 0;
     }
+
+    if (done) {
+      done(entity);
+    }
   }
 
-  static wrap(entity: Entity, screenWidth: number, screenHeight: number) {
+  static wrap(
+    entity: Entity,
+    screenWidth: number,
+    screenHeight: number,
+    done?: (entity: Entity) => void
+  ) {
     if (entity.position.x + entity.width < 0) {
       // left
       entity.position.x = screenWidth;
@@ -308,6 +322,9 @@ class ScreenHandler {
     if (entity.position.y > screenHeight) {
       // bottom
       entity.position.y = -entity.height;
+    }
+    if (done) {
+      done(entity);
     }
   }
 

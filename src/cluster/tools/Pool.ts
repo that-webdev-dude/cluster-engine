@@ -25,6 +25,9 @@ export class Pool<T extends Entity> {
 
   private _create(): T {
     const entity = this._creator();
+    if ("reset" in entity && typeof entity.reset === "function") {
+      entity.reset();
+    }
     entity.dead = false;
     this._cache.push(entity);
     return entity;

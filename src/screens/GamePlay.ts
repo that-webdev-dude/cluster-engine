@@ -11,6 +11,7 @@ import {
   World,
   Vector,
   Dialog,
+  Rect,
 } from "../cluster";
 import { GAME_CONFIG } from "../config/GameConfig";
 import { Background } from "../entities/Background";
@@ -21,10 +22,8 @@ import { GameOverDialog } from "../dialogs/GameOverDialog";
 import ScoreSoundURL from "../sounds/Score.wav";
 import HitSoundURL from "../sounds/Hit.wav";
 
-// sounds
 const SCORE_SOUND = new Sound(ScoreSoundURL, { volume: 0.125 });
 const HIT_SOUND = new Sound(HitSoundURL);
-
 enum states {
   PLAY,
   PAUSED,
@@ -80,6 +79,22 @@ export class GamePlay extends Container {
     this.add(this.camera);
 
     this.dialog = null;
+
+    // const gapHeight = 200;
+    // const gapPosition = Cmath.rand(100, GAME_CONFIG.height - 300);
+    // const pipe = this.pipePool.next((pipe) => {
+    //   pipe.position.set(600, 500);
+    //   pipe.height = gapPosition;
+    //   pipe.scored = false;
+    //   pipe.dead = false;
+    //   pipe.hitbox = {
+    //     x: 0,
+    //     y: 0,
+    //     width: 100,
+    //     height: gapPosition,
+    //   };
+    // });
+    // this.pipes.add(pipe);
   }
 
   spawnPipes() {
@@ -90,12 +105,24 @@ export class GamePlay extends Container {
       pipe.height = gapPosition;
       pipe.scored = false;
       pipe.dead = false;
+      pipe.hitbox = {
+        x: 0,
+        y: 0,
+        width: 100,
+        height: gapPosition,
+      };
     });
     const pipe2 = this.pipePool.next((pipe) => {
       pipe.position.set(GAME_CONFIG.width, gapPosition + gapHeight);
       pipe.height = GAME_CONFIG.height - gapPosition - gapHeight;
       pipe.scored = false;
       pipe.dead = false;
+      pipe.hitbox = {
+        x: 0,
+        y: 0,
+        width: 100,
+        height: GAME_CONFIG.height - gapPosition - gapHeight,
+      };
     });
     this.pipes.add(pipe1);
     this.pipes.add(pipe2);
@@ -115,13 +142,13 @@ export class GamePlay extends Container {
       this.spawnPipes();
     }
 
-    this.forEach((entity) => World.reposition(entity as Entity, dt));
+    this.forEach((entity) => World.Physics.reposition(entity as Entity, dt));
 
     pipes.forEach((pipe: Pipe) => {
-      let displacement = World.detectAABBCollision(bird, pipe);
-      if (displacement !== null) {
+      let collision = World.Collision.detect(bird, pipe as Rect);
+      if (collision) {
         HIT_SOUND.play();
-        World.resolveDisplace(bird, displacement);
+        World.Collision.Resolver.stick(collision);
         this.state.set(states.GAMEOVER);
       }
       if (bird.center.x > pipe.center.x && !pipe.scored) {
@@ -129,13 +156,13 @@ export class GamePlay extends Container {
         SCORE_SOUND.play();
         this.score();
       }
-      if (World.offscreen(pipe, GAME_CONFIG.width, GAME_CONFIG.height)) {
+      if (World.Screen.offscreen(pipe, GAME_CONFIG.width, GAME_CONFIG.height)) {
         pipe.dead = true;
       }
     });
 
-    if (World.hitScreen(this.bird, GAME_CONFIG.width, GAME_CONFIG.height)) {
-      World.screenContain(this.bird, GAME_CONFIG.width, GAME_CONFIG.height);
+    if (World.Screen.hit(this.bird, GAME_CONFIG.width, GAME_CONFIG.height)) {
+      World.Screen.contain(this.bird, GAME_CONFIG.width, GAME_CONFIG.height);
     }
   }
 

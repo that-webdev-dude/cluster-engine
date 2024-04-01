@@ -21,11 +21,11 @@ export class Bird extends Rect {
 
   update(dt: number, t: number) {
     const { keyboard } = this;
-    World.applyFriction(this);
-    World.applyGravity(this);
+    World.Physics.applyFriction(this);
+    World.Physics.applyGravity(this);
     if (keyboard.action) {
       JUMP_SOUND.play();
-      World.applyImpulse(this, { x: 0, y: -1000 }, dt);
+      World.Physics.applyImpulse(this, { x: 0, y: -1000 }, dt);
       keyboard.active = false;
     }
   }
