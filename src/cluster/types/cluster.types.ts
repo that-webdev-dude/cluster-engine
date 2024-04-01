@@ -1,6 +1,6 @@
 import { Vector } from "../tools/Vector";
 
-/** Namespace containing types and utilities for clustering entities. */
+/** Namespace containing types and utilities for Cluster entities. */
 export namespace Cluster {
   /** Represents properties of a generic type. */
   export type Properties<T> = { [K in keyof T]: T[K] };
@@ -58,12 +58,6 @@ export namespace Cluster {
     CONTAINER = "container",
   }
 
-  export enum EntityPhysics {
-    STATIC = "static",
-    DYNAMIC = "dynamic",
-    KINEMATIC = "kinematic",
-  }
-
   /** Represents options for an entity. */
   export interface BaseEntityOptions {
     /** Acceleration vector. */
@@ -98,6 +92,8 @@ export namespace Cluster {
     height: number;
     /** Style of the rectangle. */
     style?: ShapeStyle;
+    /** Hitbox of the rectangle. */
+    hitbox?: Box;
   }
 
   /** Represents specific properties of a circle entity. */
