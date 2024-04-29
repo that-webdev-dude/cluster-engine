@@ -19,6 +19,7 @@ import { Bird } from "../entities/Bird";
 import { Pipe } from "../entities/Pipe";
 import { PauseDialog } from "../dialogs/PauseDialog";
 import { GameOverDialog } from "../dialogs/GameOverDialog";
+import { DustParticle } from "../particles/DustParticle";
 import ScoreSoundURL from "../sounds/Score.wav";
 import HitSoundURL from "../sounds/Hit.wav";
 
@@ -38,6 +39,7 @@ export class GamePlay extends Container {
   timer: number;
   spawnRate: number;
   background: Background;
+  particles: Pool<DustParticle>;
   bird: Bird;
   pipes: Container;
   pipePool: Pool<Pipe>;
@@ -67,6 +69,7 @@ export class GamePlay extends Container {
     this.pipePool = new Pool<Pipe>(
       () => new Pipe(new Vector(0, GAME_CONFIG.width), 0)
     );
+    this.particles = new Pool<DustParticle>(() => new DustParticle(this.bird));
 
     this.camera = new Camera({
       viewSize: { width: GAME_CONFIG.width, height: GAME_CONFIG.height },
@@ -141,6 +144,8 @@ export class GamePlay extends Container {
       this.timer = this.spawnRate;
       this.spawnPipes();
     }
+
+    this.camera.add(this.particles.next());
 
     this.forEach((entity) => World.Physics.reposition(entity as Entity, dt));
 

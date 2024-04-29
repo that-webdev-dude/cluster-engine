@@ -1,4 +1,4 @@
-import { Rect, Vector, World, Keyboard, Sound } from "../cluster";
+import { Rect, Vector, World, Keyboard, Sound, Container } from "../cluster";
 import JumpSoundURL from "../sounds/Jump.wav";
 
 const JUMP_SOUND = new Sound(JumpSoundURL, { volume: 0.5 });
