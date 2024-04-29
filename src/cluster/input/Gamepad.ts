@@ -1,3 +1,6 @@
+// TODO: Add support for multiple gamepads
+// TODO: make it less xbox specific
+
 export class Gamepad {
   private _gamepadIndex: number | null = null;
   //   private _previousButtons: GamepadButton[] = [];

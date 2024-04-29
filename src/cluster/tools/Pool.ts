@@ -8,7 +8,7 @@ export class Pool<T extends Entity> {
 
   constructor(creatorFn?: CreatorFn<T>, initialCacheLength: number = 10) {
     if (!creatorFn) {
-      throw new Error("No default creator function provided");
+      throw new Error("Pool.ts: No default creator function provided");
     }
     this._creator = creatorFn;
     this._cache = Array.from({ length: initialCacheLength }, () =>

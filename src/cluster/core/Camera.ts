@@ -15,6 +15,8 @@ type CameraConfig = {
   trackerSize?: Measurable;
 };
 
+// TODO: Add flash effect
+// TODO: Add screen transitions
 export class Camera extends Container {
   private _subject: Entity | null;
   private _viewSize: Measurable;
@@ -26,6 +28,14 @@ export class Camera extends Container {
   private _shakeDecay: number;
   private _shakeLast: Vector;
 
+  /**
+   * Creates a new Camera instance
+   * @param config
+   * @param config.subject The entity to follow
+   * @param config.viewSize The size of the camera view
+   * @param config.worldSize The size of the world
+   * @param config.trackerSize The size of the tracker
+   */
   constructor(config: CameraConfig) {
     const {
       subject = null,
@@ -75,8 +85,7 @@ export class Camera extends Container {
     this._shakeDecay = power / length;
   }
 
-  // EFFECT: SHAKE
-  _shake(dt: number) {
+  private _shake(dt: number) {
     const { position, _shakePower, _shakeLast } = this;
     if (_shakePower <= 0) {
       return;
@@ -89,7 +98,7 @@ export class Camera extends Container {
     this._shakePower -= this._shakeDecay * dt;
   }
 
-  _unshake() {
+  private _unshake() {
     const { position, _shakeLast } = this;
     position.subtract(_shakeLast);
   }
@@ -129,7 +138,7 @@ export class Camera extends Container {
   update(dt: number, t: number): void {
     this._unshake();
     super.update(dt, t);
-    this._focus(true);
+    this._focus(false);
     this._shake(dt);
     // this._flash(dt);
   }
