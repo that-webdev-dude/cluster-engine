@@ -105,45 +105,6 @@ export class TileSprite
   }
 }
 
-// // implementation of a Tile Sprite Entity class
-// export class TileSprite
-//   extends Sprite
-//   implements Cluster.EntityType<Cluster.TileSpriteOptions>
-// {
-//   readonly tileWidth: number;
-//   readonly tileHeight: number;
-//   readonly animation: Animation;
-
-//   constructor(options: Cluster.TileSpriteOptions) {
-//     super(options);
-//     this.tileWidth = options.tileWidth;
-//     this.tileHeight = options.tileHeight;
-//     this.animation = new Animation({
-//       frame: { x: 0, y: 0 },
-//     });
-//   }
-
-//   get width() {
-//     return this.tileWidth;
-//   }
-
-//   get height() {
-//     return this.tileHeight;
-//   }
-
-//   get frame() {
-//     return this.animation.frame;
-//   }
-
-//   set frame(frame) {
-//     this.animation.frame = frame;
-//   }
-
-//   public update(dt: number) {
-//     this.animation.update(dt);
-//   }
-// }
-
 // implementation of TileMap
 type TileFrame = { x: number; y: number; walkable?: boolean };
 type MapLayout = string[][];

@@ -8,8 +8,8 @@ type TimerConfig = {
 const DEFAULT_DURATION = 1;
 const DEFAULT_DELAY = 0;
 
-type TimerCallback = (ratio: number) => void;
 type SimpleCallback = () => void;
+type TimerCallback = (ratio: number) => void;
 
 export class Timer {
   private _duration: number;
@@ -58,7 +58,9 @@ export class Timer {
     }
   }
 
-  public reset(): void {
+  public reset(duration?: number, delay?: number): void {
+    if (duration) this._duration = duration;
+    if (delay) this._delay = delay;
     this._elapsed = 0;
     this._dead = false;
   }

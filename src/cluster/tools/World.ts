@@ -153,7 +153,7 @@ class AABBCollision {
 
   private static _rectVsRect(main: Rect, target: Rect): Collision | null {
     // TODO
-    // expandedTarget needs to be cached somewhere to avoid making a new Rect it every frame
+    // expandedTarget needs to be cached somewhere to avoid making a new Rect every frame
 
     let mainHitbox = AABBCollision._rectHitbounds(main);
     let targetHitbox = AABBCollision._rectHitbounds(target);
@@ -174,7 +174,6 @@ class AABBCollision {
       let { contact, normal, time } = intersection;
       let distance = AABBCollision._rectDistance(mainHitbox, targetHitbox);
       let overlap = AABBCollision._rectOverlap(mainHitbox, targetHitbox);
-      console.log("overlap", overlap);
       return {
         time,
         distance,
@@ -221,13 +220,13 @@ class AABBCollision {
   static Resolver = class {
     static slide(collision: Collision, done?: (collision: Collision) => void) {
       // slide the main along the target side
-      let { overlap, main } = collision;
+      let { overlap, normal, main } = collision;
       main.position.x += overlap.x;
       main.position.y += overlap.y;
-      if (overlap.x !== 0) {
-        main.velocity.x = 0;
-      } else {
+      if (normal.y) {
         main.velocity.y = 0;
+      } else {
+        main.velocity.x = 0;
       }
 
       if (done) {
@@ -337,6 +336,22 @@ class ScreenHandler {
     );
   }
 
+  static topHit(entity: Entity) {
+    return entity.position.y < 0;
+  }
+
+  static bottomHit(entity: Entity, screenHeight: number) {
+    return entity.position.y + entity.height > screenHeight;
+  }
+
+  static leftHit(entity: Entity) {
+    return entity.position.x < 0;
+  }
+
+  static rightHit(entity: Entity, screenWidth: number) {
+    return entity.position.x + entity.width > screenWidth;
+  }
+
   static offscreen(entity: Entity, screenWidth: number, screenHeight: number) {
     return (
       entity.position.x + entity.width < 0 ||
@@ -356,6 +371,7 @@ class Physics {
     force: { x: number; y: number }
   ) {
     let mass = "mass" in entity ? entity.mass : 1;
+
     entity.acceleration.x += force.x / mass;
     entity.acceleration.y += force.y / mass;
     return this;
@@ -367,6 +383,28 @@ class Physics {
   ) {
     this.applyForce(entity, {
       x: -entity.velocity.x * friction,
+      y: -entity.velocity.y * friction,
+    });
+    return this;
+  }
+
+  static applyHorizontalFriction(
+    entity: Entity | Container,
+    friction: number = this.FRICTION
+  ) {
+    this.applyForce(entity, {
+      x: -entity.velocity.x * friction,
+      y: 0,
+    });
+    return this;
+  }
+
+  static applyVerticalFriction(
+    entity: Entity | Container,
+    friction: number = this.FRICTION
+  ) {
+    this.applyForce(entity, {
+      x: 0,
       y: -entity.velocity.y * friction,
     });
     return this;
@@ -395,6 +433,7 @@ class Physics {
     return this;
   }
 
+  //
   static reposition(entity: Entity | Container, dt: number, maxSpeed?: number) {
     let vx = entity.velocity.x + entity.acceleration.x * dt;
     let vy = entity.velocity.y + entity.acceleration.y * dt;
@@ -413,7 +452,7 @@ class Physics {
     entity.velocity.y = vy;
 
     // apply speed limits to velocity
-    if (entity.velocity.magnitude < 0.001) {
+    if (entity.velocity.magnitude < 0.1) {
       if (entity.acceleration.magnitude !== 0) {
         entity.velocity.x = 0;
         entity.velocity.y = 0;
@@ -421,6 +460,11 @@ class Physics {
     }
 
     entity.acceleration.set(0, 0);
+  }
+
+  // alias for reposition
+  static integrate(entity: Entity | Container, dt: number, maxSpeed?: number) {
+    this.reposition(entity, dt, maxSpeed);
   }
 }
 
