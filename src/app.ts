@@ -1,54 +1,55 @@
-// import { Engine } from "./cluster/engine/Engine";
-// import { Vector } from "./cluster";
-// import {
-//   XComponentType,
-//   XComponent,
-//   XContainer,
-//   XEntity,
-//   XSystem,
-// } from "./XContainer";
+import { Game, Container, Entity, System } from "./x";
+import { Rect } from "./xentities/Rect";
+import { Circle } from "./xentities/Circle";
+import { Transform } from "./xcomponents/Transform";
+import { Size } from "./xcomponents/Size";
 
-// class Transform extends XComponent {
-//   position: Vector;
-//   scale: Vector;
-//   constructor(entity: string) {
-//     super(entity);
-//     this.position = new Vector(0, 0);
-//     this.scale = new Vector(1, 1);
-//   }
-// }
-// class Size extends XComponent {
-//   height: number;
-//   width: number;
-//   constructor(entity: string) {
-//     super(entity);
-//     this.height = 100;
-//     this.width = 100;
-//   }
-// }
+class World extends Container {
+  private _systems: Function[] = [];
+  constructor() {
+    super();
+  }
 
-// class Rect extends XEntity {
-//   constructor() {
-//     super();
-//     this.attach(new Transform(this.id));
-//     this.attach(new Size(this.id));
-//   }
-// }
+  registerSystem(system: Function) {
+    this._systems.push(system);
+  }
 
-// const r1 = new Rect();
-// const r2 = new Rect();
-// const r3 = new Rect();
-// const container = new XContainer();
-// container.add(r1);
-// container.add(r2);
-// container.add(r3);
+  update() {
+    this._systems.forEach((system) => {
+      system(this);
+    });
+  }
+}
 
-import { Game } from "./x";
+const renderRect = (
+  context: CanvasRenderingContext2D,
+  container: Container
+) => {
+  const entities = container.getEntitiesWith(["Transform", "Size"]);
+  entities.forEach((entity: Entity) => {
+    // const { position } = entity.getComponent("Transform") as Transform;
+    // const { width, height } = entity.getComponent("Size") as Size;
+    // context.fillStyle = "red";
+    // context.fillRect(position.x, position.y, width, height);
+  });
+};
+
+const world = new World();
+
+const rect = new Rect();
+
+const circle = new Circle();
+
+world.addEntity(rect);
+world.addEntity(circle);
+world.registerSystem(() => {
+  renderRect(game.display.context, world);
+});
 
 const game = new Game();
 
 export default () => {
   game.start(() => {
-    console.log("update");
+    world.update();
   });
 };

@@ -26,6 +26,10 @@ export class Game {
     }
   }
 
+  public get display(): Display {
+    return this._display;
+  }
+
   public start(updateCb: (dt: number, t: number) => void = () => {}): void {
     this._engine.update = (dt: number, t: number) => {
       // ...
