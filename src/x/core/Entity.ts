@@ -4,6 +4,7 @@ import { Component } from "./Component";
 export class Entity {
   readonly id: string = Cmath.randId(6);
   readonly components: Map<string, Component> = new Map();
+
   attach(component: Component) {
     this.components.set(component.type, component);
   }

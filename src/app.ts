@@ -1,55 +1,51 @@
-import { Game, Container, Entity, System } from "./x";
+import { Game, Container, System, Vector } from "./x";
 import { Rect } from "./xentities/Rect";
 import { Circle } from "./xentities/Circle";
-import { Transform } from "./xcomponents/Transform";
-import { Size } from "./xcomponents/Size";
+import { RenderSystem } from "./xsystems/RenderSystem";
 
 class World extends Container {
-  private _systems: Function[] = [];
+  private _systems: System[] = [];
+
   constructor() {
     super();
   }
 
-  registerSystem(system: Function) {
+  addSystem(system: System) {
     this._systems.push(system);
   }
 
-  update() {
+  update(dt: number, t: number) {
     this._systems.forEach((system) => {
-      system(this);
+      system.update(dt, t);
     });
   }
 }
 
-const renderRect = (
-  context: CanvasRenderingContext2D,
-  container: Container
-) => {
-  const entities = container.getEntitiesWith(["Transform", "Size"]);
-  entities.forEach((entity: Entity) => {
-    // const { position } = entity.getComponent("Transform") as Transform;
-    // const { width, height } = entity.getComponent("Size") as Size;
-    // context.fillStyle = "red";
-    // context.fillRect(position.x, position.y, width, height);
-  });
-};
-
+const game = new Game();
+const rect = new Rect({
+  position: new Vector(100, 100),
+  width: 100,
+  height: 100,
+  style: {
+    fill: "red",
+    stroke: "transparent",
+  },
+});
+const circle = new Circle({
+  position: new Vector(200, 200),
+  radius: 50,
+  style: {
+    fill: "transparent",
+    stroke: "black",
+  },
+});
 const world = new World();
-
-const rect = new Rect();
-
-const circle = new Circle();
-
 world.addEntity(rect);
 world.addEntity(circle);
-world.registerSystem(() => {
-  renderRect(game.display.context, world);
-});
-
-const game = new Game();
+world.addSystem(new RenderSystem(game.display.context, world));
 
 export default () => {
-  game.start(() => {
-    world.update();
+  game.start((dt, t) => {
+    world.update(dt, t);
   });
 };

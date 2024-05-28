@@ -1,3 +1,3 @@
 export abstract class System {
-  abstract update(dt: number, t?: number): void;
+  abstract update(dt?: number, t?: number): void;
 }

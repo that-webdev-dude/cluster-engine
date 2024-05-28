@@ -1,72 +1,44 @@
 import { Entity } from "./Entity";
 
 export class Container {
-  private _components: Map<string, Map<string, any>> = new Map();
+  private _cache = { lookupEntities: new Map<string, Entity>() };
+  private _entities: Map<string, Entity> = new Map();
 
   addEntity(entity: Entity) {
-    const components = entity.getComponents();
-    for (const component of components) {
-      let componentMap = this._components.get(component.type);
-      if (!componentMap) {
-        componentMap = new Map();
-        this._components.set(component.type, componentMap);
-      }
-      componentMap.set(entity.id, component);
-    }
+    this._entities.set(entity.id, entity);
   }
 
   removeEntity(entity: Entity) {
-    const components = entity.getComponents();
-    for (const component of components) {
-      const componentMap = this._components.get(component.type);
-      if (componentMap) {
-        componentMap.delete(entity.id);
-        // Optional: Clean up empty maps to save memory
-        if (componentMap.size === 0) {
-          this._components.delete(component.type);
-        }
-      }
-    }
+    this._entities.delete(entity.id);
   }
 
-  getEntitiesWith(components: string[] | string) {
-    if (typeof components === "string") {
-      const componentMap = this._components.get(components);
-      return componentMap ? Array.from(componentMap.values()) : [];
-    }
+  forEach(callback: (entity: Entity, entityId: string) => void) {
+    this._entities.forEach(callback);
+  }
 
-    if (components.length === 0) {
-      return [];
-    }
+  getEntityById(entityId: string) {
+    return this._entities.get(entityId);
+  }
 
-    const [firstComponent, ...restComponents] = components;
-    const initialEntities = this._components.get(firstComponent);
-
-    if (!initialEntities) {
-      return [];
-    }
-
-    // Use the first component's entities as a starting point
-    const entities = new Set(initialEntities.keys());
-
-    for (const componentName of restComponents) {
-      const componentMap = this._components.get(componentName);
-      if (!componentMap) {
-        return [];
+  getEntitiesByComponent(component: string) {
+    const entities = this._cache.lookupEntities;
+    entities.clear();
+    this._entities.forEach((entity) => {
+      if (entity.has(component)) {
+        entities.set(entity.id, entity);
       }
+    });
+    return entities;
+  }
 
-      entities.forEach((entity) => {
-        if (!componentMap.has(entity)) {
-          entities.delete(entity);
-        }
-      });
-
-      // Early exit if no entities are left
-      if (entities.size === 0) {
-        return [];
+  getEntitiesByComponents(components: string[]) {
+    const entities = this._cache.lookupEntities;
+    entities.clear();
+    this._entities.forEach((entity) => {
+      if (entity.hasAll(components)) {
+        entities.set(entity.id, entity);
       }
-    }
-
-    return Array.from(entities);
+    });
+    return entities;
   }
 }

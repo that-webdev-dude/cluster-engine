@@ -36,8 +36,16 @@ export class Display {
   }
 
   initialize() {
+    // set device pixel ratio
+    const dpr = window.devicePixelRatio || 1;
+    this.view.width = this.width * dpr;
+    this.view.height = this.height * dpr;
+    this.view.style.width = `${this.width}px`;
+    this.view.style.height = `${this.height}px`;
+    this.context.scale(dpr, dpr);
+
     this.context.textBaseline = "top";
-    this.context.imageSmoothingEnabled = false;
+    this.context.imageSmoothingEnabled = true;
     document.addEventListener("keypress", (event) => {
       if (event.code === "KeyF") {
         this.toggleFullScreen();
