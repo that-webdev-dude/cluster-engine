@@ -1,7 +1,7 @@
 import { Entity, Vector } from "../cluster";
-import { Radius } from "../xcomponents/Radius";
-import { Transform } from "../xcomponents/Transform";
-import { ShapeStyle } from "../xcomponents/Style";
+import { Radius } from "../components/Radius";
+import { Transform } from "../components/Transform";
+import { ShapeStyle } from "../components/Style";
 
 type CircleOptions = Partial<{
   position: Vector;

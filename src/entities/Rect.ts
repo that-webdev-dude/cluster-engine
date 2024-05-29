@@ -1,7 +1,7 @@
 import { Entity, Vector } from "../cluster";
-import { Size } from "../xcomponents/Size";
-import { Transform } from "../xcomponents/Transform";
-import { ShapeStyle } from "../xcomponents/Style";
+import { Size } from "../components/Size";
+import { Transform } from "../components/Transform";
+import { ShapeStyle } from "../components/Style";
 
 type RectOptions = Partial<{
   position: Vector;

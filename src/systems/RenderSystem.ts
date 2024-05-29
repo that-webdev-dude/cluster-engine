@@ -1,9 +1,9 @@
 import { System } from "../cluster";
 import { Container } from "../cluster";
-import { Transform } from "../xcomponents/Transform";
-import { Size } from "../xcomponents/Size";
-import { Radius } from "../xcomponents/Radius";
-import { ShapeStyle } from "../xcomponents/Style";
+import { Transform } from "../components/Transform";
+import { Size } from "../components/Size";
+import { Radius } from "../components/Radius";
+import { ShapeStyle } from "../components/Style";
 
 export class RenderSystem extends System {
   private _container: Container;

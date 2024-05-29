@@ -1,7 +1,7 @@
 import { Game, Container, System, Vector } from "./cluster";
-import { Rect } from "./xentities/Rect";
-import { Circle } from "./xentities/Circle";
-import { RenderSystem } from "./xsystems/RenderSystem";
+import { Rect } from "./entities/Rect";
+import { Circle } from "./entities/Circle";
+import { RenderSystem } from "./systems/RenderSystem";
 
 class World extends Container {
   private _systems: System[] = [];
