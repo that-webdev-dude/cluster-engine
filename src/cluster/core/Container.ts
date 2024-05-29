@@ -1,83 +1,44 @@
-import { Vector } from "../tools/Vector";
-import { Cluster } from "../types/cluster.types";
 import { Entity } from "./Entity";
 
-type ContainerChild = Entity | Container;
+export class Container {
+  private _cache = { lookupEntities: new Map<string, Entity>() };
+  private _entities: Map<string, Entity> = new Map();
 
-// implementation of a Container Entity class
-export class Container
-  implements Cluster.EntityContainerType<Cluster.BaseEntityOptions>
-{
-  readonly tag = Cluster.EntityTag.CONTAINER; // Discriminant property
-  acceleration: Vector;
-  velocity: Vector;
-  position: Vector;
-  anchor: Vector;
-  scale: Vector;
-  pivot: Vector;
-  angle: number;
-  alpha: number;
-  dead: boolean;
-  visible: boolean;
-  children: Array<ContainerChild>;
-
-  constructor(options: Cluster.BaseEntityOptions = {}) {
-    this.acceleration = options.acceleration || new Vector(0, 0);
-    this.velocity = options.velocity || new Vector(0, 0);
-    this.position = options.position || new Vector(0, 0);
-    this.anchor = options.anchor || new Vector(0, 0);
-    this.scale = options.scale || new Vector(1, 1);
-    this.pivot = options.pivot || new Vector(0, 0);
-    this.angle = options.angle || 0;
-    this.alpha = options.alpha || 1;
-    this.dead = options.dead || false;
-    this.visible = options.visible || true;
-    this.children = [];
+  addEntity(entity: Entity) {
+    this._entities.set(entity.id, entity);
   }
 
-  add(entity: ContainerChild) {
-    this.children.push(entity);
+  removeEntity(entity: Entity) {
+    this._entities.delete(entity.id);
   }
 
-  remove(entity: ContainerChild) {
-    const index = this.children.indexOf(entity);
-    if (index > -1) {
-      this.children.splice(index, 1);
-    }
+  forEach(callback: (entity: Entity, entityId: string) => void) {
+    this._entities.forEach(callback);
   }
 
-  forEach<T>(callback: (entity: T, index?: number) => void) {
-    for (let i = 0; i < this.children.length; i++) {
-      const child = this.children[i];
-      if (child.tag !== Cluster.EntityTag.CONTAINER) {
-        callback(child as T, i);
-      } else {
-        (child as Container).forEach(callback);
-      }
-    }
-  }
+  // getEntityById(entityId: string) {
+  //   return this._entities.get(entityId);
+  // }
 
-  update(dt: Cluster.Milliseconds, t: Cluster.Milliseconds) {
-    for (let i = 0; i < this.children.length; i++) {
-      const child = this.children[i];
-      if ("update" in child && child.update) {
-        (
-          child.update as (
-            dt: Cluster.Milliseconds,
-            t: Cluster.Milliseconds
-          ) => void
-        )(dt, t);
-      }
+  // getEntitiesByComponent(component: string) {
+  //   const entities = this._cache.lookupEntities;
+  //   entities.clear();
+  //   this._entities.forEach((entity) => {
+  //     if (entity.has(component)) {
+  //       entities.set(entity.id, entity);
+  //     }
+  //   });
+  //   return entities;
+  // }
 
-      // TODO
-      // Use of Array.splice() in EntityContainer.update():
-      // This can be performance-intensive for large arrays.
-      // Consider using a different data structure, like a linked list,
-      // for better performance when removing elements.
-      if ("dead" in child && child.dead) {
-        this.children.splice(i, 1);
-        i--;
-      }
-    }
-  }
+  // getEntitiesByComponents(components: string[]) {
+  //   const entities = this._cache.lookupEntities;
+  //   entities.clear();
+  //   this._entities.forEach((entity) => {
+  //     if (entity.hasAll(components)) {
+  //       entities.set(entity.id, entity);
+  //     }
+  //   });
+  //   return entities;
+  // }
 }

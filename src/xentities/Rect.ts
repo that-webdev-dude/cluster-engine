@@ -1,4 +1,4 @@
-import { Entity, Vector } from "../x";
+import { Entity, Vector } from "../cluster";
 import { Size } from "../xcomponents/Size";
 import { Transform } from "../xcomponents/Transform";
 import { ShapeStyle } from "../xcomponents/Style";

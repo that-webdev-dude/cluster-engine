@@ -1,4 +1,4 @@
-import { Component } from "../x";
+import { Component } from "../cluster";
 
 export class ShapeStyle extends Component {
   fill: string;

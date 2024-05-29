@@ -1,4 +1,4 @@
-import { Component } from "../x";
+import { Component } from "../cluster";
 
 export class Radius extends Component {
   radius: number;

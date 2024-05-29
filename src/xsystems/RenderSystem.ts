@@ -1,5 +1,5 @@
-import { System } from "../x";
-import { Container } from "../x";
+import { System } from "../cluster";
+import { Container } from "../cluster";
 import { Transform } from "../xcomponents/Transform";
 import { Size } from "../xcomponents/Size";
 import { Radius } from "../xcomponents/Radius";
