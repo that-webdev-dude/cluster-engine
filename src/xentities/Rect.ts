@@ -27,8 +27,9 @@ export class Rect extends Entity {
   constructor(options: RectOptions = {}) {
     super();
     const { position, width, height, style } = { ...defaults, ...options };
+    const { fill, stroke } = style;
     this.attach(new Size(this.id, width, height));
     this.attach(new Transform(this.id, position));
-    this.attach(new ShapeStyle(this.id, style.fill, style.stroke));
+    this.attach(new ShapeStyle(this.id, fill, stroke));
   }
 }

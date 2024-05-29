@@ -27,7 +27,7 @@ const rect = new Rect({
   width: 100,
   height: 100,
   style: {
-    fill: "red",
+    fill: "lightblue",
     stroke: "transparent",
   },
 });

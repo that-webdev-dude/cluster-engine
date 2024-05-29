@@ -16,29 +16,29 @@ export class Container {
     this._entities.forEach(callback);
   }
 
-  getEntityById(entityId: string) {
-    return this._entities.get(entityId);
-  }
+  // getEntityById(entityId: string) {
+  //   return this._entities.get(entityId);
+  // }
 
-  getEntitiesByComponent(component: string) {
-    const entities = this._cache.lookupEntities;
-    entities.clear();
-    this._entities.forEach((entity) => {
-      if (entity.has(component)) {
-        entities.set(entity.id, entity);
-      }
-    });
-    return entities;
-  }
+  // getEntitiesByComponent(component: string) {
+  //   const entities = this._cache.lookupEntities;
+  //   entities.clear();
+  //   this._entities.forEach((entity) => {
+  //     if (entity.has(component)) {
+  //       entities.set(entity.id, entity);
+  //     }
+  //   });
+  //   return entities;
+  // }
 
-  getEntitiesByComponents(components: string[]) {
-    const entities = this._cache.lookupEntities;
-    entities.clear();
-    this._entities.forEach((entity) => {
-      if (entity.hasAll(components)) {
-        entities.set(entity.id, entity);
-      }
-    });
-    return entities;
-  }
+  // getEntitiesByComponents(components: string[]) {
+  //   const entities = this._cache.lookupEntities;
+  //   entities.clear();
+  //   this._entities.forEach((entity) => {
+  //     if (entity.hasAll(components)) {
+  //       entities.set(entity.id, entity);
+  //     }
+  //   });
+  //   return entities;
+  // }
 }

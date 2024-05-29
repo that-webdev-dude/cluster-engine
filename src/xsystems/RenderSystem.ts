@@ -8,11 +8,13 @@ import { ShapeStyle } from "../xcomponents/Style";
 export class RenderSystem extends System {
   private _container: Container;
   private _context: CanvasRenderingContext2D;
+
   constructor(context: CanvasRenderingContext2D, container: Container) {
     super();
     this._context = context;
     this._container = container;
   }
+
   update() {
     this._context.clearRect(
       0,

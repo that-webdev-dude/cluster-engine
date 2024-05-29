@@ -35,9 +35,9 @@ export class Game {
       // ...
       updateCb(dt, t);
     };
-    this._engine.render = () => {
-      // ...
-    };
+    // this._engine.render = () => {
+    //   // ...
+    // };
     Assets.onReady(() => {
       this._engine.start(); // start the engine
     });
