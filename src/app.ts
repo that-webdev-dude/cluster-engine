@@ -5,15 +5,12 @@ import { RenderSystem } from "./systems/RenderSystem";
 
 class World extends Container {
   private _systems: System[] = [];
-
   constructor() {
     super();
   }
-
   addSystem(system: System) {
     this._systems.push(system);
   }
-
   update(dt: number, t: number) {
     this._systems.forEach((system) => {
       system.update(dt, t);
@@ -31,6 +28,7 @@ const rect = new Rect({
     stroke: "transparent",
   },
 });
+
 const circle = new Circle({
   position: new Vector(200, 200),
   radius: 50,
@@ -39,6 +37,7 @@ const circle = new Circle({
     stroke: "black",
   },
 });
+
 const world = new World();
 world.addEntity(rect);
 world.addEntity(circle);
@@ -48,4 +47,13 @@ export default () => {
   game.start((dt, t) => {
     world.update(dt, t);
   });
+};
+
+type SystemFunction = (container: Container, ...args: any[]) => void;
+
+const system1: SystemFunction = (
+  container: Container,
+  context: CanvasRenderingContext2D
+) => {
+  console.log(container, context);
 };
