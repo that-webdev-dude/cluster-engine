@@ -7,10 +7,10 @@ type RectOptions = Partial<{
   position: Vector;
   width: number;
   height: number;
-  style: Partial<{
+  style: {
     fill: string;
     stroke: string;
-  }>;
+  };
 }>;
 
 const defaults = {
@@ -18,7 +18,7 @@ const defaults = {
   width: 32,
   height: 32,
   style: {
-    fill: "red",
+    fill: "lightblue",
     stroke: "transparent",
   },
 };
@@ -28,6 +28,7 @@ export class Rect extends Entity {
     super();
     const { position, width, height, style } = { ...defaults, ...options };
     const { fill, stroke } = style;
+
     this.attach(new Size(this.id, width, height));
     this.attach(new Transform(this.id, position));
     this.attach(new ShapeStyle(this.id, fill, stroke));

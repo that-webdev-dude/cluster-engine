@@ -60,7 +60,7 @@ export class Engine {
     }
 
     if (this._updated) {
-      this._render();
+      // this._render();
       this._updated = false;
     }
   };

@@ -1,44 +1,35 @@
 import { Entity } from "./Entity";
 
-export class Container {
-  private _cache = { lookupEntities: new Map<string, Entity>() };
-  private _entities: Map<string, Entity> = new Map();
+export class Container<T> {
+  private _cache = { lookupEntities: new Map<number, T>() };
+  private _items: Map<number, T> = new Map();
+  private _next = 0;
 
-  addEntity(entity: Entity) {
-    this._entities.set(entity.id, entity);
+  get size() {
+    return this._items.size;
   }
 
-  removeEntity(entity: Entity) {
-    this._entities.delete(entity.id);
+  add(item: T) {
+    this._items.set(this._next++, item);
   }
 
-  forEach(callback: (entity: Entity, entityId: string) => void) {
-    this._entities.forEach(callback);
+  remove(item: T) {
+    this._items.forEach((value, key) => {
+      if (value === item) {
+        this._items.delete(key);
+      }
+    });
   }
 
-  // getEntityById(entityId: string) {
-  //   return this._entities.get(entityId);
-  // }
+  delete(item: T) {
+    this._items.forEach((value, key) => {
+      if (value === item) {
+        this._items.delete(key);
+      }
+    });
+  }
 
-  // getEntitiesByComponent(component: string) {
-  //   const entities = this._cache.lookupEntities;
-  //   entities.clear();
-  //   this._entities.forEach((entity) => {
-  //     if (entity.has(component)) {
-  //       entities.set(entity.id, entity);
-  //     }
-  //   });
-  //   return entities;
-  // }
-
-  // getEntitiesByComponents(components: string[]) {
-  //   const entities = this._cache.lookupEntities;
-  //   entities.clear();
-  //   this._entities.forEach((entity) => {
-  //     if (entity.hasAll(components)) {
-  //       entities.set(entity.id, entity);
-  //     }
-  //   });
-  //   return entities;
-  // }
+  forEach(callback: (item: T) => void) {
+    this._items.forEach((item) => callback(item));
+  }
 }

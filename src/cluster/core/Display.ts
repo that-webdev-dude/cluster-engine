@@ -32,10 +32,10 @@ export class Display {
     this.width = width;
     this.view = canvas;
 
-    this.initialize();
+    this._initialize();
   }
 
-  initialize() {
+  private _initialize() {
     // set device pixel ratio
     const dpr = window.devicePixelRatio || 1;
     this.view.width = this.width * dpr;
@@ -48,12 +48,12 @@ export class Display {
     this.context.imageSmoothingEnabled = true;
     document.addEventListener("keypress", (event) => {
       if (event.code === "KeyF") {
-        this.toggleFullScreen();
+        this._toggleFullScreen();
       }
     });
   }
 
-  toggleFullScreen() {
+  private _toggleFullScreen() {
     if (!document.fullscreenElement) {
       this.view.requestFullscreen();
     } else {

@@ -1,3 +1,6 @@
+import { Container } from "./Container";
+import { Entity } from "./Entity";
+
 export abstract class System {
-  abstract update(dt?: number, t?: number): void;
+  update(entities: Container<Entity>, ...args: any[]): void {}
 }
