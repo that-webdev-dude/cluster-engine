@@ -3,6 +3,7 @@ import { Rect } from "../entities/Rect";
 import { Text } from "../entities/Text";
 import { Circle } from "../entities/Circle";
 import { Player } from "../entities/Player";
+import { InputSystem } from "../systems/InputSystem";
 import { RenderSystem } from "../systems/RenderSystem";
 
 const rect = new Rect({
@@ -34,10 +35,7 @@ const text = new Text({
 const player = new Player();
 
 const gameplay = new Scene("gameplay");
-gameplay.addEntity(rect);
-gameplay.addEntity(circle);
-gameplay.addEntity(text);
-gameplay.addEntity(player);
-gameplay.addSystem(new RenderSystem());
+gameplay.entities.add(rect, circle, text, player);
+gameplay.systems.add(new InputSystem(), new RenderSystem());
 
 export { gameplay };

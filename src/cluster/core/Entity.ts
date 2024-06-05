@@ -1,9 +1,8 @@
 /**
- * @file Entity.ts
- * This file contains the definition of the Entity class, which represents an entity in the cluster with a unique identifier and a collection of components.
- * @header
- * @author @that.webdev.dude
- * @date 2024
+ * @File Entity.ts
+ * @Description This file contains the definition of the Entity class, which represents an entity in the cluster with a unique identifier and a collection of components.
+ * @Author @that.webdev.dude
+ * @Date 2024
  */
 
 import { Cmath } from "../tools/Cmath";

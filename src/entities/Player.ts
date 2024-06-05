@@ -1,5 +1,6 @@
 import { Game, Vector, Scene } from "../cluster";
 import { Rect } from "../entities/Rect";
+import { Input } from "../components/Input";
 
 export class Player extends Rect {
   constructor() {
@@ -12,5 +13,7 @@ export class Player extends Rect {
         stroke: "transparent",
       },
     });
+
+    this.attach(new Input());
   }
 }

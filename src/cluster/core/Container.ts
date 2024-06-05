@@ -9,24 +9,24 @@ export class Container<T> {
     return this._items.size;
   }
 
-  add(item: T) {
-    this._items.set(this._next++, item);
+  add(...items: T[]) {
+    items.forEach((item) => {
+      this._items.set(this._next++, item);
+    });
   }
 
-  remove(item: T) {
-    this._items.forEach((value, key) => {
-      if (value === item) {
-        this._items.delete(key);
-      }
+  remove(...items: T[]) {
+    items.forEach((item) => {
+      this._items.forEach((value, key) => {
+        if (value === item) {
+          this._items.delete(key);
+        }
+      });
     });
   }
 
   delete(item: T) {
-    this._items.forEach((value, key) => {
-      if (value === item) {
-        this._items.delete(key);
-      }
-    });
+    this.remove(item);
   }
 
   forEach(callback: (item: T) => void) {
