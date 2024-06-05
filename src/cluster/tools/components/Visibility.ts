@@ -1,4 +1,4 @@
-import { Component } from "../cluster";
+import { Component } from "../../core/Component";
 
 export class Visibility extends Component {
   visible: boolean;

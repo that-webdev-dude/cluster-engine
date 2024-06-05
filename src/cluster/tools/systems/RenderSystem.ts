@@ -5,9 +5,13 @@
  * @Year 2024
  */
 
-import { Entity, System, Cmath, Vector } from "../cluster";
-import { Container } from "../cluster";
+import { Container } from "../../core/Container";
+import { Entity } from "../../core/Entity";
+import { System } from "../../core/System";
+import { Cmath } from "../../tools/Cmath";
+import { Vector } from "../../tools/Vector";
 import { Transform } from "../components/Transform";
+import { Image } from "../components/Image";
 import { Size } from "../components/Size";
 import { Alpha } from "../components/Alpha";
 import { Radius } from "../components/Radius";
@@ -170,6 +174,16 @@ export class RenderSystem extends System {
   }
 
   /**
+   * Draws an image on the canvas rendering context based on the entity's Image component.
+   * @param context
+   * @param entity
+   */
+  private _drawImage(context: CanvasRenderingContext2D, entity: Entity) {
+    const image = entity.getComponent("Image") as Image;
+    context.drawImage(image.image, 0, 0);
+  }
+
+  /**
    * Updates the render system by rendering entities on the canvas.
    * @param entities - The collection of entities to render.
    */
@@ -186,14 +200,17 @@ export class RenderSystem extends System {
         this._setAlpha(context, entity);
         this._setTransform(context, entity);
 
-        if (entity.hasAll(["Transform", "Size", "ShapeStyle"])) {
+        if (entity.hasAll(["Size", "ShapeStyle"])) {
           this._drawRect(context, entity);
         }
-        if (entity.hasAll(["Transform", "Radius", "ShapeStyle"])) {
+        if (entity.hasAll(["Radius", "ShapeStyle"])) {
           this._drawCircle(context, entity);
         }
-        if (entity.hasAll(["Transform", "Message", "TextStyle"])) {
+        if (entity.hasAll(["Message", "TextStyle"])) {
           this._drawText(context, entity);
+        }
+        if (entity.hasAll(["Image"])) {
+          this._drawImage(context, entity);
         }
         context.restore();
       });

@@ -1,4 +1,5 @@
-import { Component, Vector } from "../cluster";
+import { Component } from "../../core/Component";
+import { Vector } from "../Vector";
 
 export class Transform extends Component {
   position: Vector;

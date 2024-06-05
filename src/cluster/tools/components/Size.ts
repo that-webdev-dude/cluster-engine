@@ -1,4 +1,4 @@
-import { Component } from "../cluster";
+import { Component } from "../../core/Component";
 
 export class Size extends Component {
   width: number;

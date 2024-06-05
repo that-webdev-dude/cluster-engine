@@ -1,18 +1,18 @@
-import { Entity, Vector } from "../cluster";
+import { Entity } from "../../core/Entity";
+import { Vector } from "../Vector";
 import { Transform } from "../components/Transform";
-import { Size } from "../components/Size";
+import { Radius } from "../components/Radius";
 import { Alpha } from "../components/Alpha";
 import { Visibility } from "../components/Visibility";
 import { ShapeStyle } from "../components/Style";
 
-type RectOptions = Partial<{
+type CircleOptions = Partial<{
   position: Vector;
   anchor: Vector;
   scale: Vector;
   pivot: Vector;
   angle: number;
-  width: number;
-  height: number;
+  radius: number;
   alpha: number;
   visible: boolean;
   style: {
@@ -27,8 +27,7 @@ const defaults = {
   scale: new Vector(1, 1),
   pivot: new Vector(),
   angle: 0,
-  width: 32,
-  height: 32,
+  radius: 16,
   alpha: 1,
   visible: true,
   style: {
@@ -37,8 +36,8 @@ const defaults = {
   },
 };
 
-export class Rect extends Entity {
-  constructor(options: RectOptions = {}) {
+export class Circle extends Entity {
+  constructor(options: CircleOptions = {}) {
     super();
     const {
       position,
@@ -46,8 +45,7 @@ export class Rect extends Entity {
       scale,
       pivot,
       angle,
-      width,
-      height,
+      radius,
       alpha,
       visible,
       style,
@@ -57,8 +55,8 @@ export class Rect extends Entity {
     };
     const { fill, stroke } = style;
 
-    this.attach(new Size(this.id, width, height));
     this.attach(new Transform(this.id, position, anchor, scale, pivot, angle));
+    this.attach(new Radius(this.id, radius));
     this.attach(new Alpha(this.id, alpha));
     this.attach(new Visibility(this.id, visible));
     this.attach(new ShapeStyle(this.id, fill, stroke));

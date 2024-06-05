@@ -1,21 +1,22 @@
-import { Entity, Vector } from "../cluster";
+import { Entity } from "../../core/Entity";
+import { Vector } from "../Vector";
 import { Transform } from "../components/Transform";
-import { Message } from "../components/Message";
+import { Size } from "../components/Size";
 import { Alpha } from "../components/Alpha";
 import { Visibility } from "../components/Visibility";
-import { TextStyle } from "../components/Style";
+import { ShapeStyle } from "../components/Style";
 
-type TextOptions = Partial<{
+type RectOptions = Partial<{
   position: Vector;
   anchor: Vector;
   scale: Vector;
   pivot: Vector;
   angle: number;
-  text: string;
+  width: number;
+  height: number;
   alpha: number;
   visible: boolean;
   style: {
-    font: string;
     fill: string;
     stroke: string;
   };
@@ -27,18 +28,18 @@ const defaults = {
   scale: new Vector(1, 1),
   pivot: new Vector(),
   angle: 0,
-  text: "text",
+  width: 32,
+  height: 32,
   alpha: 1,
   visible: true,
   style: {
-    font: '24px "Press Start 2P"',
     fill: "lightblue",
     stroke: "transparent",
   },
 };
 
-export class Text extends Entity {
-  constructor(options: TextOptions = {}) {
+export class Rect extends Entity {
+  constructor(options: RectOptions = {}) {
     super();
     const {
       position,
@@ -46,7 +47,8 @@ export class Text extends Entity {
       scale,
       pivot,
       angle,
-      text,
+      width,
+      height,
       alpha,
       visible,
       style,
@@ -54,12 +56,12 @@ export class Text extends Entity {
       ...defaults,
       ...options,
     };
-    const { font, fill, stroke } = style;
+    const { fill, stroke } = style;
 
-    this.attach(new Message(this.id, text));
+    this.attach(new Size(this.id, width, height));
     this.attach(new Transform(this.id, position, anchor, scale, pivot, angle));
     this.attach(new Alpha(this.id, alpha));
     this.attach(new Visibility(this.id, visible));
-    this.attach(new TextStyle(this.id, font, fill, stroke));
+    this.attach(new ShapeStyle(this.id, fill, stroke));
   }
 }

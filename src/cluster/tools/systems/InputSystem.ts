@@ -5,7 +5,9 @@
  * @Year 2024
  */
 
-import { System, Container, Entity } from "../cluster";
+import { Container } from "../../core/Container";
+import { Entity } from "../../core/Entity";
+import { System } from "../../core/System";
 import { Input } from "../components/Input";
 
 /**

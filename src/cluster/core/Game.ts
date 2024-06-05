@@ -14,8 +14,8 @@ export class Game {
     this._engine = new Engine();
     this._display = new Display({
       parentElementId: "#app",
-      width: 832,
-      height: 640,
+      width: 640,
+      height: 320,
     });
 
     this._initialize();

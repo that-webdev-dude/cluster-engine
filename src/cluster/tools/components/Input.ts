@@ -1,4 +1,4 @@
-import { Component } from "../cluster";
+import { Component } from "../../core/Component";
 
 export class Input extends Component {
   private static _instance: Input;

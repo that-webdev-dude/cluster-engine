@@ -1,20 +1,22 @@
-import { Entity, Vector } from "../cluster";
+import { Entity } from "../../core/Entity";
+import { Vector } from "../Vector";
 import { Transform } from "../components/Transform";
-import { Radius } from "../components/Radius";
+import { Message } from "../components/Message";
 import { Alpha } from "../components/Alpha";
 import { Visibility } from "../components/Visibility";
-import { ShapeStyle } from "../components/Style";
+import { TextStyle } from "../components/Style";
 
-type CircleOptions = Partial<{
+type TextOptions = Partial<{
   position: Vector;
   anchor: Vector;
   scale: Vector;
   pivot: Vector;
   angle: number;
-  radius: number;
+  text: string;
   alpha: number;
   visible: boolean;
   style: {
+    font: string;
     fill: string;
     stroke: string;
   };
@@ -26,17 +28,18 @@ const defaults = {
   scale: new Vector(1, 1),
   pivot: new Vector(),
   angle: 0,
-  radius: 16,
+  text: "text",
   alpha: 1,
   visible: true,
   style: {
+    font: '24px "Press Start 2P"',
     fill: "lightblue",
     stroke: "transparent",
   },
 };
 
-export class Circle extends Entity {
-  constructor(options: CircleOptions = {}) {
+export class Text extends Entity {
+  constructor(options: TextOptions = {}) {
     super();
     const {
       position,
@@ -44,7 +47,7 @@ export class Circle extends Entity {
       scale,
       pivot,
       angle,
-      radius,
+      text,
       alpha,
       visible,
       style,
@@ -52,12 +55,12 @@ export class Circle extends Entity {
       ...defaults,
       ...options,
     };
-    const { fill, stroke } = style;
+    const { font, fill, stroke } = style;
 
+    this.attach(new Message(this.id, text));
     this.attach(new Transform(this.id, position, anchor, scale, pivot, angle));
-    this.attach(new Radius(this.id, radius));
     this.attach(new Alpha(this.id, alpha));
     this.attach(new Visibility(this.id, visible));
-    this.attach(new ShapeStyle(this.id, fill, stroke));
+    this.attach(new TextStyle(this.id, font, fill, stroke));
   }
 }
