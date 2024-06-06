@@ -9,17 +9,17 @@ export class Transform extends Component {
   angle: number;
   constructor(
     entity: string,
-    position: Vector = new Vector(),
-    anchor: Vector = new Vector(),
-    scale: Vector = new Vector(1, 1),
-    pivot: Vector = new Vector(),
-    angle: number = 0
+    position: Vector,
+    anchor: Vector,
+    scale: Vector,
+    pivot: Vector,
+    angle: number
   ) {
     super(entity);
-    this.position = position;
-    this.anchor = anchor;
-    this.scale = scale;
-    this.pivot = pivot;
+    this.position = Vector.from(position);
+    this.anchor = Vector.from(anchor);
+    this.scale = Vector.from(scale);
+    this.pivot = Vector.from(pivot);
     this.angle = angle;
   }
 }

@@ -22,7 +22,7 @@ export class InputSystem extends System {
     entities.forEach((entity: Entity) => {
       const input = entity.getComponent("Input") as Input;
       if (input) {
-        // ...Process input for the entity
+        console.log(input.x, input.y);
       }
     });
   }

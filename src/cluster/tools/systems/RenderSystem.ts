@@ -65,9 +65,7 @@ export class RenderSystem extends System {
     context: CanvasRenderingContext2D,
     position: Vector
   ) {
-    if (position.x !== 0 || position.y !== 0) {
-      context.translate(Math.round(position.x), Math.round(position.y));
-    }
+    context.translate(Math.round(position.x), Math.round(position.y));
   }
 
   /**
@@ -193,6 +191,7 @@ export class RenderSystem extends System {
       return;
     } else {
       context.clearRect(0, 0, context.canvas.width, context.canvas.height);
+
       entities.forEach((entity) => {
         if (!this._isVisible(entity) || this._isTransparent(entity)) return;
 

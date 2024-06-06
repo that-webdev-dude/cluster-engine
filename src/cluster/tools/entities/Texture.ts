@@ -1,9 +1,9 @@
 import { Entity } from "../../core/Entity";
 import { Vector } from "../Vector";
-import { Transform } from "../components/Transform";
-import { Alpha } from "../components/Alpha";
-import { Visibility } from "../components/Visibility";
 import { Image } from "../components/Image";
+import { Alpha } from "../components/Alpha";
+import { Transform } from "../components/Transform";
+import { Visibility } from "../components/Visibility";
 
 type TextureOptions = Partial<{
   position: Vector;
@@ -17,7 +17,7 @@ type TextureOptions = Partial<{
 }>;
 
 const defaults = {
-  position: new Vector(),
+  position: new Vector(0, 0),
   anchor: new Vector(),
   scale: new Vector(1, 1),
   pivot: new Vector(),
@@ -28,8 +28,9 @@ const defaults = {
 };
 
 export class Texture extends Entity {
-  constructor(options: TextureOptions = {}) {
+  constructor(options: TextureOptions) {
     super();
+
     const { position, anchor, scale, pivot, angle, alpha, visible, imageURL } =
       { ...defaults, ...options };
 

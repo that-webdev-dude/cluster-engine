@@ -11,22 +11,43 @@ export { Cmath } from "./tools/Cmath";
 export { Vector } from "./tools/Vector";
 
 // entities
-export { Circle } from "./tools/entities/Circle";
-export { Rect } from "./tools/entities/Rect";
-export { Text } from "./tools/entities/Text";
-export { Texture } from "./tools/entities/Texture";
+import { Circle } from "./tools/entities/Circle";
+import { Rect } from "./tools/entities/Rect";
+import { Text } from "./tools/entities/Text";
+import { Texture } from "./tools/entities/Texture";
+const Entities = { Circle, Rect, Text, Texture };
+export { Entities };
 
 // components
-export { Transform } from "./tools/components/Transform";
-export { Image } from "./tools/components/Image";
-export { Size } from "./tools/components/Size";
-export { Alpha } from "./tools/components/Alpha";
-export { Radius } from "./tools/components/Radius";
-export { Message } from "./tools/components/Message";
-export { Visibility } from "./tools/components/Visibility";
-export { ShapeStyle } from "./tools/components/Style";
-export { TextStyle } from "./tools/components/Style";
+import { Transform } from "./tools/components/Transform";
+import { Image } from "./tools/components/Image";
+import { Size } from "./tools/components/Size";
+import { Alpha } from "./tools/components/Alpha";
+import { Radius } from "./tools/components/Radius";
+import { Message } from "./tools/components/Message";
+import { Visibility } from "./tools/components/Visibility";
+import { Input } from "./tools/components/Input";
+import { ShapeStyle } from "./tools/components/Style";
+import { TextStyle } from "./tools/components/Style";
+import { Speed } from "./tools/components/Speed";
+const Components = {
+  Transform,
+  Image,
+  Size,
+  Alpha,
+  Radius,
+  Message,
+  Visibility,
+  Input,
+  ShapeStyle,
+  TextStyle,
+  Speed,
+};
+export { Components };
 
 // systems
-export { RenderSystem } from "./tools/systems/RenderSystem";
-export { InputSystem } from "./tools/systems/InputSystem";
+import { RenderSystem } from "./tools/systems/RenderSystem";
+import { InputSystem } from "./tools/systems/InputSystem";
+import { MovementSystem } from "./tools/systems/MovementSystem";
+const Systems = { RenderSystem, InputSystem, MovementSystem };
+export { Systems };
