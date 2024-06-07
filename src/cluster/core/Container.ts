@@ -1,7 +1,4 @@
-import { Entity } from "./Entity";
-
 export class Container<T> {
-  private _cache = { lookupEntities: new Map<number, T>() };
   private _items: Map<number, T> = new Map();
   private _next = 0;
 
@@ -27,6 +24,10 @@ export class Container<T> {
 
   delete(item: T) {
     this.remove(item);
+  }
+
+  clear() {
+    this._items.clear();
   }
 
   forEach(callback: (item: T) => void) {

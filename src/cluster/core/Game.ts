@@ -3,19 +3,38 @@ import { Display } from "./Display";
 import { Assets } from "./Assets";
 import { Scene } from "./Scene";
 
+type GameOptions = {
+  width: number;
+  height: number;
+  version: string;
+  title: string;
+};
+
+const DEFAULTS: GameOptions = {
+  width: 640,
+  height: 320,
+  version: "0.0.1",
+  title: "MyGame",
+};
+
 export class Game {
   private _scenes: Map<string, Scene> = new Map();
   private _engine: Engine;
   private _display: Display;
   private _scene: Scene;
+  readonly version: string;
+  readonly title: string;
 
-  constructor() {
+  constructor(options: GameOptions) {
+    const { width, height, version, title } = { ...DEFAULTS, ...options };
+    this.version = version;
+    this.title = title;
     this._scene = new Scene("default");
     this._engine = new Engine();
     this._display = new Display({
       parentElementId: "#app",
-      width: 640,
-      height: 320,
+      width,
+      height,
     });
 
     this._initialize();

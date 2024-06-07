@@ -1,26 +1,38 @@
 import { Component } from "../../core/Component";
 
-export class Input extends Component {
-  private static _instance: Input;
+export class InputComponent implements Component {
+  private static _instance: InputComponent;
   keys: Map<string, boolean> = new Map();
   active: boolean = true;
 
-  constructor() {
-    if (Input._instance) {
-      return Input._instance;
+  private constructor() {
+    if (InputComponent._instance) {
+      return InputComponent._instance;
     }
 
-    super("Input");
+    document.addEventListener("keydown", this.handleKeyDown.bind(this));
+    document.addEventListener("keyup", this.handleKeyUp.bind(this));
 
-    document.addEventListener("keydown", (event: KeyboardEvent) => {
+    InputComponent._instance = this;
+  }
+
+  static get instance(): InputComponent {
+    if (!this._instance) {
+      this._instance = new InputComponent();
+    }
+    return this._instance;
+  }
+
+  private handleKeyDown(event: KeyboardEvent): void {
+    if (this.active) {
       this.keys.set(event.code, true);
-    });
+    }
+  }
 
-    document.addEventListener("keyup", (event: KeyboardEvent) => {
+  private handleKeyUp(event: KeyboardEvent): void {
+    if (this.active) {
       this.keys.set(event.code, false);
-    });
-
-    Input._instance = this;
+    }
   }
 
   get left(): boolean {
@@ -56,10 +68,10 @@ export class Input extends Component {
   }
 
   get x(): number {
-    return this.right ? 1 : this.left ? -1 : 0;
+    return (this.right ? 1 : 0) - (this.left ? 1 : 0);
   }
 
   get y(): number {
-    return this.down ? 1 : this.up ? -1 : 0;
+    return (this.down ? 1 : 0) - (this.up ? 1 : 0);
   }
 }

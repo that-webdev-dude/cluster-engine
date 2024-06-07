@@ -4,8 +4,8 @@ import { System } from "./System";
 
 export class Scene {
   readonly name: string;
-  readonly entities: Container<Entity> = new Container();
   readonly systems: Container<System> = new Container();
+  readonly entities: Container<Entity> = new Container();
 
   constructor(name: string) {
     this.name = name;
