@@ -24,4 +24,12 @@ export class TextureComponent implements Component {
       );
     }
   }
+
+  get width(): number {
+    return this.image.width;
+  }
+
+  get height(): number {
+    return this.image.height;
+  }
 }

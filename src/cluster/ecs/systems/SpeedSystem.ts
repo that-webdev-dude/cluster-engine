@@ -4,6 +4,13 @@ import { System } from "../../core/System";
 import { Components } from "../index";
 
 export class SpeedSystem extends System {
+  private _entities: Container<Entity>;
+
+  constructor(entities: Container<Entity>) {
+    super();
+    this._entities = entities;
+  }
+
   private _move(
     entity: Entity,
     dt: number,
@@ -19,8 +26,8 @@ export class SpeedSystem extends System {
     }
   }
 
-  update(entities: Container<Entity>, dt: number): void {
-    entities.forEach((entity: Entity) => {
+  update(dt: number): void {
+    this._entities.forEach((entity: Entity) => {
       const keyboard = entity.getComponent(Components.Keyboard);
 
       if (keyboard) {

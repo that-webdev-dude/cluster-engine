@@ -6,8 +6,10 @@ export class Container<T> {
     return this._items.size;
   }
 
-  add(...items: T[]): void;
-  add(items: T[]): void;
+  get(index: number): T | undefined {
+    return this._items.get(index);
+  }
+
   add(...items: any[]): void {
     if (Array.isArray(items[0])) {
       // If the first argument is an array, treat it as an array of T
@@ -40,7 +42,7 @@ export class Container<T> {
     this._items.clear();
   }
 
-  forEach(callback: (item: T) => void) {
-    this._items.forEach((item) => callback(item));
+  forEach(callback: (item: T, id: number) => void) {
+    this._items.forEach((item, id) => callback(item, id));
   }
 }

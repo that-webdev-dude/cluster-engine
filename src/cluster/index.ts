@@ -9,7 +9,3 @@ export { Assets } from "./core/Assets";
 // tools
 export { Cmath } from "./tools/Cmath";
 export { Vector } from "./tools/Vector";
-
-// ecs
-export { Components } from "./ecs/index";
-export { Systems } from "./ecs/index";

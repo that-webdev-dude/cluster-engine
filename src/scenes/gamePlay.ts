@@ -1,20 +1,23 @@
-import { Scene, Systems } from "../cluster";
+import { Scene, Container, Entity, System } from "../cluster";
+import { Systems } from "../cluster/ecs";
 import { Background } from "../entities/Background";
 import { Spaceship } from "../entities/Spaceship";
 
-// entities
-const background = new Background();
-const spaceship = new Spaceship();
-const entities = [background, spaceship];
+const entities = new Container<Entity>();
+entities.add(new Background());
+entities.add(new Spaceship());
 
-// systems
-const renderSystem = new Systems.Render();
-const speedSystem = new Systems.Speed();
-const inputSystem = new Systems.Input(entities);
-const systems = [inputSystem, speedSystem, renderSystem];
+const systems = new Container<System>();
+systems.add(new Systems.Input(entities));
+systems.add(new Systems.Speed(entities));
+systems.add(new Systems.Screen(entities));
+systems.add(new Systems.Render(entities));
+// systems.add(new Systems.Physics(entities));
 
-const gameplay = new Scene("gameplay");
-gameplay.entities.add(...entities);
-gameplay.systems.add(...systems);
+const gameplay = new Scene({
+  name: "gameplay",
+  entities,
+  systems,
+});
 
 export { gameplay };

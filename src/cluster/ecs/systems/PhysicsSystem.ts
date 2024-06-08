@@ -3,30 +3,25 @@ import { Entity } from "../../core/Entity";
 import { System } from "../../core/System";
 import { Components } from "../index";
 
+/**
+ * Represents a system responsible for handling physics.
+ */
 export class PhysicsSystem extends System {
-  private _move(
-    entity: Entity,
-    dt: number,
-    inputX: number = 1,
-    inputY: number = 1
-  ) {
-    const transform = entity.getComponent(Components.Transform);
-    const speed = entity.getComponent(Components.Speed);
-    if (transform && speed) {
-      const { position } = transform;
-      position.x += inputX * speed.value * dt;
-      position.y += inputY * speed.value * dt;
-    }
+  private _entities: Container<Entity>;
+
+  constructor(entities: Container<Entity>) {
+    super();
+    this._entities = entities;
   }
 
-  update(entities: Container<Entity>, dt: number): void {
-    // entities.forEach((entity: Entity) => {
-    //   const input = entity.getComponent(Components.Input);
-    //   if (input) {
-    //     this._move(entity, dt, input.x, input.y);
-    //   } else {
-    //     this._move(entity, dt);
-    //   }
-    // });
+  update(dt: number): void {
+    if (!this._entities.size) return;
+
+    this._entities.forEach((entity) => {
+      const keyboard = entity.getComponent(Components.Keyboard);
+      if (keyboard) {
+        // console.log(keyboard.x, keyboard.y);
+      }
+    });
   }
 }

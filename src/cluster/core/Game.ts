@@ -29,7 +29,7 @@ export class Game {
     const { width, height, version, title } = { ...DEFAULTS, ...options };
     this.version = version;
     this.title = title;
-    this._scene = new Scene("default");
+    this._scene = new Scene();
     this._engine = new Engine();
     this._display = new Display({
       parentElementId: "#app",

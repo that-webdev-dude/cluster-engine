@@ -1,4 +1,5 @@
-import { Vector, Entity, Components } from "../cluster";
+import { Vector, Entity } from "../cluster";
+import { Components } from "../cluster/ecs";
 import backgroundImageURL from "../images/background.png";
 
 export class Background extends Entity {

@@ -8,8 +8,6 @@ export interface PhysicsOptions {
   friction?: number;
   gravity?: number;
   mass?: number;
-  xForce?: number;
-  yForce?: number;
 }
 
 // Physics Component

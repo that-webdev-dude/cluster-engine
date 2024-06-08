@@ -9,6 +9,8 @@ import { SizeComponent } from "./components/SizeComponent";
 import { SpeedComponent } from "./components/SpeedComponent";
 import { PhysicsComponent } from "./components/PhysicsComponent";
 import { KeyboardComponent } from "./components/KeyboardComponent";
+import { ScreenComponent } from "./components/ScreenComponent";
+import { StatusComponent } from "./components/StatusComponent";
 
 namespace Components {
   export const Visibility = VisibilityComponent;
@@ -21,6 +23,8 @@ namespace Components {
   export const Speed = SpeedComponent;
   export const Physics = PhysicsComponent;
   export const Keyboard = KeyboardComponent;
+  export const Screen = ScreenComponent;
+  export const Status = StatusComponent;
 }
 
 export { Components };
@@ -29,11 +33,15 @@ export { Components };
 import { SpeedSystem } from "./systems/SpeedSystem";
 import { RenderSystem } from "./systems/RenderSystem";
 import { InputSystem } from "./systems/InputSystem";
+import { ScreenSystem } from "./systems/ScreenSystem";
+import { PhysicsSystem } from "./systems/PhysicsSystem";
 
 namespace Systems {
   export const Render = RenderSystem;
   export const Speed = SpeedSystem;
   export const Input = InputSystem;
+  export const Screen = ScreenSystem;
+  export const Physics = PhysicsSystem;
 }
 
 export { Systems };
