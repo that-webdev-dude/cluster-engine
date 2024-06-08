@@ -1,22 +1,17 @@
 import { Vector, Entity, Components } from "../cluster";
+import backgroundImageURL from "../images/background.png";
 
-export class Image extends Entity {
-  constructor(imageURL: string) {
+export class Background extends Entity {
+  constructor() {
     super();
 
-    const visibility = new Components.Visibility({
-      opacity: 1,
-    });
     const transform = new Components.Transform({
       position: new Vector(0, 0),
-      anchor: new Vector(0, 0),
-      scale: new Vector(1, 1),
     });
     const texture = new Components.Texture({
-      imageURL,
+      imageURL: backgroundImageURL,
     });
 
-    this.attachComponent(visibility);
     this.attachComponent(transform);
     this.attachComponent(texture);
   }

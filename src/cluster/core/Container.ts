@@ -6,10 +6,20 @@ export class Container<T> {
     return this._items.size;
   }
 
-  add(...items: T[]) {
-    items.forEach((item) => {
-      this._items.set(this._next++, item);
-    });
+  add(...items: T[]): void;
+  add(items: T[]): void;
+  add(...items: any[]): void {
+    if (Array.isArray(items[0])) {
+      // If the first argument is an array, treat it as an array of T
+      (items[0] as T[]).forEach((item) => {
+        this._items.set(this._next++, item);
+      });
+    } else {
+      // Otherwise, treat it as a list of T
+      items.forEach((item) => {
+        this._items.set(this._next++, item);
+      });
+    }
   }
 
   remove(...items: T[]) {

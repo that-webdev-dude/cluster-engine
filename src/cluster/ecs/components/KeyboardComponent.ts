@@ -1,39 +1,28 @@
 import { Component } from "../../core/Component";
 
-export class InputComponent implements Component {
-  private static _instance: InputComponent;
-  keys: Map<string, boolean> = new Map();
+// Interface for component properties
+export interface KeyboardControlsOptions {
+  keys?: Map<string, boolean>;
+}
+
+// Keyboard Controls Component
+export class KeyboardComponent implements Component {
   active: boolean = true;
-
-  constructor() {
-    if (InputComponent._instance) {
-      return InputComponent._instance;
-    }
-
-    document.addEventListener("keydown", this.handleKeyDown.bind(this));
-    document.addEventListener("keyup", this.handleKeyUp.bind(this));
-
-    InputComponent._instance = this;
-  }
-
-  static get instance(): InputComponent {
-    if (!this._instance) {
-      this._instance = new InputComponent();
-    }
-    return this._instance;
-  }
-
-  private handleKeyDown(event: KeyboardEvent): void {
-    if (this.active) {
-      this.keys.set(event.code, true);
-    }
-  }
-
-  private handleKeyUp(event: KeyboardEvent): void {
-    if (this.active) {
-      this.keys.set(event.code, false);
-    }
-  }
+  keys: Map<string, boolean> = new Map(
+    Object.entries({
+      ArrowRight: false,
+      ArrowDown: false,
+      ArrowLeft: false,
+      ArrowUp: false,
+      KeyA: false,
+      KeyD: false,
+      KeyW: false,
+      KeyS: false,
+      KeyP: false,
+      Space: false,
+      Escape: false,
+    })
+  );
 
   get left(): boolean {
     return this.keys.get("KeyA") || this.keys.get("ArrowLeft") || false;
