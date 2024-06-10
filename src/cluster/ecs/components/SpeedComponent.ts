@@ -1,33 +1,32 @@
 import { Component } from "../../core/Component";
+import { Vector } from "../../tools/Vector";
 
 // Interface for component properties
 export interface SpeedOptions {
-  speed?: number;
+  speed?: Vector;
 }
 
 // Speed Component
 export class SpeedComponent implements Component {
-  private _value: number;
+  private _speed: Vector;
 
-  constructor({ speed = 0 }: SpeedOptions = {}) {
-    if (speed < 0) {
-      throw new TypeError(
-        "[SpeedComponent constructor]: speed must be a positive number"
-      );
-    }
-    this._value = speed;
+  constructor({ speed = new Vector(0, 0) }: SpeedOptions = {}) {
+    this._speed = speed;
   }
 
-  get value(): number {
-    return this._value;
+  get x(): number {
+    return this._speed.x;
   }
 
-  set value(value: number) {
-    if (value < 0) {
-      throw new TypeError(
-        "[SpeedComponent setter]: value must be a positive number"
-      );
-    }
-    this._value = value;
+  set x(value: number) {
+    this._speed.x = value;
+  }
+
+  get y(): number {
+    return this._speed.y;
+  }
+
+  set y(value: number) {
+    this._speed.y = value;
   }
 }

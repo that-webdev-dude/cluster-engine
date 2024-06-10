@@ -20,6 +20,50 @@ export class ScreenSystem extends System {
     this._entities = entities;
   }
 
+  private _getEntityWidth(entity: Entity): number {
+    if (entity.hasComponent(Components.Radius)) {
+      const radius = entity.getComponent(Components.Radius);
+      if (radius) {
+        return radius.radius * 2;
+      }
+    }
+    if (entity.hasComponent(Components.Texture)) {
+      const texture = entity.getComponent(Components.Texture);
+      if (texture) {
+        return texture.width;
+      }
+    }
+    if (entity.hasComponent(Components.Size)) {
+      const size = entity.getComponent(Components.Size);
+      if (size) {
+        return size.width;
+      }
+    }
+    return 0;
+  }
+
+  private _getEntityHeight(entity: Entity): number {
+    if (entity.hasComponent(Components.Radius)) {
+      const radius = entity.getComponent(Components.Radius);
+      if (radius) {
+        return radius.radius * 2;
+      }
+    }
+    if (entity.hasComponent(Components.Texture)) {
+      const texture = entity.getComponent(Components.Texture);
+      if (texture) {
+        return texture.height;
+      }
+    }
+    if (entity.hasComponent(Components.Size)) {
+      const size = entity.getComponent(Components.Size);
+      if (size) {
+        return size.height;
+      }
+    }
+    return 0;
+  }
+
   private _contain(entity: Entity, maxWidth: number, maxHeight: number): void {
     const transform = entity.getComponent(Components.Transform);
     if (transform) {
@@ -36,17 +80,19 @@ export class ScreenSystem extends System {
 
   private _wrap(entity: Entity, maxWidth: number, maxHeight: number): void {
     const transform = entity.getComponent(Components.Transform);
+    const height = this._getEntityHeight(entity);
+    const width = this._getEntityWidth(entity);
     if (transform) {
-      if (transform.position.x < 0) {
+      if (transform.position.x + width < 0) {
         transform.position.x = maxWidth;
       } else if (transform.position.x > maxWidth) {
-        transform.position.x = 0;
+        transform.position.x = -width;
       }
 
-      if (transform.position.y < 0) {
+      if (transform.position.y + height < 0) {
         transform.position.y = maxHeight;
       } else if (transform.position.y > maxHeight) {
-        transform.position.y = 0;
+        transform.position.y = -height;
       }
     }
   }
@@ -58,11 +104,13 @@ export class ScreenSystem extends System {
   ): void {
     const transform = entity.getComponent(Components.Transform);
     const status = entity.getComponent(Components.Status);
+    const height = this._getEntityHeight(entity);
+    const width = this._getEntityWidth(entity);
     if (transform && status && !status.dead) {
       if (
-        transform.position.x < 0 ||
+        transform.position.x + width < 0 ||
         transform.position.x > screenWidth ||
-        transform.position.y < 0 ||
+        transform.position.y + height < 0 ||
         transform.position.y > screenHeight
       ) {
         status.dead = true;

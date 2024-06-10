@@ -2,6 +2,10 @@ export class Container<T> {
   private _items: Map<number, T> = new Map();
   private _next = 0;
 
+  get length() {
+    return this.size;
+  }
+
   get size() {
     return this._items.size;
   }
@@ -11,17 +15,9 @@ export class Container<T> {
   }
 
   add(...items: any[]): void {
-    if (Array.isArray(items[0])) {
-      // If the first argument is an array, treat it as an array of T
-      (items[0] as T[]).forEach((item) => {
-        this._items.set(this._next++, item);
-      });
-    } else {
-      // Otherwise, treat it as a list of T
-      items.forEach((item) => {
-        this._items.set(this._next++, item);
-      });
-    }
+    items.forEach((item) => {
+      this._items.set(this._next++, item);
+    });
   }
 
   remove(...items: T[]) {

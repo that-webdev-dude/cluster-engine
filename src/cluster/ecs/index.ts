@@ -11,6 +11,7 @@ import { PhysicsComponent } from "./components/PhysicsComponent";
 import { KeyboardComponent } from "./components/KeyboardComponent";
 import { ScreenComponent } from "./components/ScreenComponent";
 import { StatusComponent } from "./components/StatusComponent";
+import { SpawnerComponent } from "./components/SpawnerComponent";
 
 namespace Components {
   export const Visibility = VisibilityComponent;
@@ -25,6 +26,7 @@ namespace Components {
   export const Keyboard = KeyboardComponent;
   export const Screen = ScreenComponent;
   export const Status = StatusComponent;
+  export const Spawner = SpawnerComponent;
 }
 
 export { Components };
@@ -35,11 +37,13 @@ import { RenderSystem } from "./systems/RenderSystem";
 import { InputSystem } from "./systems/InputSystem";
 import { ScreenSystem } from "./systems/ScreenSystem";
 import { PhysicsSystem } from "./systems/PhysicsSystem";
+import { SpawnSystem } from "./systems/SpawnSystem";
 
 namespace Systems {
   export const Render = RenderSystem;
   export const Speed = SpeedSystem;
   export const Input = InputSystem;
+  export const Spawn = SpawnSystem;
   export const Screen = ScreenSystem;
   export const Physics = PhysicsSystem;
 }

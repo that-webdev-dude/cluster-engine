@@ -27,6 +27,12 @@ export class Entity {
     );
   }
 
+  hasComponent<T extends Component>(
+    componentClass: new (...args: any[]) => T
+  ): boolean {
+    return this.components.has(componentClass.name);
+  }
+
   // getComponents(): Component[] {
   //   return Array.from(this.components.values());
   // }

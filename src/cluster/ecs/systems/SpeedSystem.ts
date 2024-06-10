@@ -21,8 +21,8 @@ export class SpeedSystem extends System {
     const speed = entity.getComponent(Components.Speed);
     if (transform && speed) {
       const { position } = transform;
-      position.x += inputX * speed.value * dt;
-      position.y += inputY * speed.value * dt;
+      position.x += inputX * speed.x * dt;
+      position.y += inputY * speed.y * dt;
     }
   }
 
