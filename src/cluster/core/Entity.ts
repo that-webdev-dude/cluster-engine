@@ -1,28 +1,6 @@
 import { Cmath } from "../tools/Cmath";
 import { Component } from "./Component";
 
-// -----------
-// const details = {
-//   component: Components.Transform,
-//   property: "Position",
-//   value: new Vector(0, 0),
-// };
-// const component = entity.getComponent(details.component);
-// if (component) {
-//   const keys = Object.keys(component);
-//   if (keys.includes(details.property)) {
-//     Object.assign(component, {
-//       [details.property]: spawner.position,
-//     });
-//   }
-// }
-// type ComponentPropertyValue = {
-//   component: Component
-//   property: string
-//   value: any
-// }
-// -----------
-
 export class Entity {
   readonly id: string = Cmath.randId(6);
   readonly components: Map<string, Component> = new Map();
@@ -55,17 +33,24 @@ export class Entity {
     return this.components.has(componentClass.name);
   }
 
-  // apply(componentPropertyValue: ComponentPropertyValue): void {
-  //   const component = this.getComponent(componentPropertyValue.component as any);
-  //   if (component) {
-  //     const keys = Object.keys(component);
-  //     if (keys.includes(componentPropertyValue.property)) {
-  //       Object.assign(component, {
-  //         [componentPropertyValue.property]: componentPropertyValue.value,
-  //       });
-  //     }
-  //   }
-  // }
+  setComponent<T extends Component>(
+    componentClass: new (...args: any[]) => T,
+    properties: any // change this to a better type def
+  ): boolean {
+    const component = this.getComponent(componentClass);
+    if (component) {
+      Object.keys(properties).forEach((property) => {
+        if (component.hasOwnProperty(property)) {
+          const value = properties[property];
+          Object.assign(component, {
+            [property]: value,
+          });
+          return true;
+        }
+      });
+    }
+    return false;
+  }
 
   // getComponents(): Component[] {
   //   return Array.from(this.components.values());
