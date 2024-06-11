@@ -1,5 +1,5 @@
 import { GAME_CONFIG } from "../config/GameConfig";
-import { Vector, Entity, Cmath } from "../cluster";
+import { Vector, Entity } from "../cluster";
 import { Components } from "../cluster/ecs";
 
 const { width: GAME_WIDTH, height: GAME_HEIGHT } = GAME_CONFIG;

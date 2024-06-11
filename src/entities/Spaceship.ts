@@ -29,6 +29,7 @@ export class Spaceship extends Entity {
     const status = new Components.Status({
       dead: false,
     });
+
     const cannon = new Components.Spawner({
       spawnInterval: 0.5,
       spawnCountMax: 2,

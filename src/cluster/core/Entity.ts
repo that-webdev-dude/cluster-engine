@@ -1,6 +1,28 @@
 import { Cmath } from "../tools/Cmath";
 import { Component } from "./Component";
 
+// -----------
+// const details = {
+//   component: Components.Transform,
+//   property: "Position",
+//   value: new Vector(0, 0),
+// };
+// const component = entity.getComponent(details.component);
+// if (component) {
+//   const keys = Object.keys(component);
+//   if (keys.includes(details.property)) {
+//     Object.assign(component, {
+//       [details.property]: spawner.position,
+//     });
+//   }
+// }
+// type ComponentPropertyValue = {
+//   component: Component
+//   property: string
+//   value: any
+// }
+// -----------
+
 export class Entity {
   readonly id: string = Cmath.randId(6);
   readonly components: Map<string, Component> = new Map();
@@ -32,6 +54,18 @@ export class Entity {
   ): boolean {
     return this.components.has(componentClass.name);
   }
+
+  // apply(componentPropertyValue: ComponentPropertyValue): void {
+  //   const component = this.getComponent(componentPropertyValue.component as any);
+  //   if (component) {
+  //     const keys = Object.keys(component);
+  //     if (keys.includes(componentPropertyValue.property)) {
+  //       Object.assign(component, {
+  //         [componentPropertyValue.property]: componentPropertyValue.value,
+  //       });
+  //     }
+  //   }
+  // }
 
   // getComponents(): Component[] {
   //   return Array.from(this.components.values());

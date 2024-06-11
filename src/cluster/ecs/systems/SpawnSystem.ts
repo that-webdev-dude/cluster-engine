@@ -4,6 +4,11 @@ import { System } from "../../core/System";
 import { Components } from "../index";
 import { SpawnerComponent } from "../components/SpawnerComponent";
 
+// const details = {
+//   component: Components.Keyboard,
+//   property: "action",
+// };
+
 export class SpawnSystem extends System {
   private _entities: Container<Entity>;
 
