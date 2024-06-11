@@ -1,10 +1,22 @@
 import { GAME_CONFIG } from "../config/GameConfig";
-import { Vector, Entity } from "../cluster";
+import { Vector, Entity, Component } from "../cluster";
 import { Components } from "../cluster/ecs";
 import { Bullet } from "./Bullet";
 import spaceshipImageURL from "../images/spaceship.png";
 
 const { width: GAME_WIDTH, height: GAME_HEIGHT } = GAME_CONFIG;
+
+interface ComponentOptions {
+  component: Component;
+  properties: any;
+}
+
+interface EntityOptions {
+  entity: typeof Entity;
+  components: ComponentOptions[];
+}
+
+type Entities = EntityOptions[];
 
 export class Spaceship extends Entity {
   constructor() {
@@ -29,7 +41,6 @@ export class Spaceship extends Entity {
     const status = new Components.Status({
       dead: false,
     });
-
     const cannon = new Components.Spawner({
       spawnInterval: 0.5,
       spawnCountMax: 2,
@@ -62,3 +73,30 @@ export class Spaceship extends Entity {
     this.attachComponent(keyboard);
   }
 }
+
+const a = [
+  {
+    entity: Spaceship,
+    components: [
+      {
+        component: Components.Transform as Component,
+        properties: {
+          position: new Vector(),
+        },
+      },
+    ],
+  },
+  {
+    entity: Spaceship,
+    components: [
+      {
+        component: Components.Colour as Component,
+        properties: {
+          colour: "red",
+        },
+      },
+    ],
+  },
+] as Entities;
+
+console.log(a);
