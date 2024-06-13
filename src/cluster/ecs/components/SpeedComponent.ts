@@ -8,25 +8,25 @@ export interface SpeedOptions {
 
 // Speed Component
 export class SpeedComponent implements Component {
-  private _speed: Vector;
+  speed: Vector;
 
   constructor({ speed = new Vector(0, 0) }: SpeedOptions = {}) {
-    this._speed = speed;
+    this.speed = speed;
   }
 
   get x(): number {
-    return this._speed.x;
+    return this.speed.x;
   }
 
   set x(value: number) {
-    this._speed.x = value;
+    this.speed.x = value;
   }
 
   get y(): number {
-    return this._speed.y;
+    return this.speed.y;
   }
 
   set y(value: number) {
-    this._speed.y = value;
+    this.speed.y = value;
   }
 }

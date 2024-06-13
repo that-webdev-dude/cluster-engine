@@ -3,11 +3,7 @@ import { Entity } from "../../core/Entity";
 import { System } from "../../core/System";
 import { Components } from "../index";
 import { SpawnerComponent } from "../components/SpawnerComponent";
-
-// const details = {
-//   component: Components.Keyboard,
-//   property: "action",
-// };
+import { Component } from "../../core/Component";
 
 export class SpawnSystem extends System {
   private _entities: Container<Entity>;
@@ -18,12 +14,12 @@ export class SpawnSystem extends System {
   }
 
   private _spawnEntity(spawner: SpawnerComponent): void {
-    const entity = new spawner.entity();
-    const transform = entity.getComponent(Components.Transform);
-    if (transform) {
-      transform.position = spawner.position;
+    const spawn = spawner.generator();
+    if (Array.isArray(spawn)) {
+      this._entities.add(...spawn);
+    } else {
+      this._entities.add(spawn);
     }
-    this._entities.add(entity);
     if (spawner.countMax !== null) {
       spawner.count++;
     }

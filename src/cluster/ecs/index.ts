@@ -11,6 +11,7 @@ import { PhysicsComponent } from "./components/PhysicsComponent";
 import { KeyboardComponent } from "./components/KeyboardComponent";
 import { ScreenComponent } from "./components/ScreenComponent";
 import { StatusComponent } from "./components/StatusComponent";
+import { HitboxComponent } from "./components/HitboxComponent";
 import { SpawnerComponent } from "./components/SpawnerComponent";
 
 namespace Components {
@@ -26,6 +27,7 @@ namespace Components {
   export const Keyboard = KeyboardComponent;
   export const Screen = ScreenComponent;
   export const Status = StatusComponent;
+  export const Hitbox = HitboxComponent;
   export const Spawner = SpawnerComponent;
 }
 
@@ -36,8 +38,8 @@ import { SpeedSystem } from "./systems/SpeedSystem";
 import { RenderSystem } from "./systems/RenderSystem";
 import { InputSystem } from "./systems/InputSystem";
 import { ScreenSystem } from "./systems/ScreenSystem";
-import { PhysicsSystem } from "./systems/PhysicsSystem";
 import { SpawnSystem } from "./systems/SpawnSystem";
+import { CollisionSystem } from "./systems/CollisionSystem";
 
 namespace Systems {
   export const Render = RenderSystem;
@@ -45,7 +47,7 @@ namespace Systems {
   export const Input = InputSystem;
   export const Spawn = SpawnSystem;
   export const Screen = ScreenSystem;
-  export const Physics = PhysicsSystem;
+  export const Collision = CollisionSystem;
 }
 
 export { Systems };

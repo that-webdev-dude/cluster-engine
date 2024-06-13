@@ -6,27 +6,24 @@ import { Vector } from "../../tools/Vector";
 export interface SpawnerOptions {
   spawnInterval: number;
   spawnCountMax?: number | null;
-  spawnPosition: () => Vector;
   spawnTrigger?: () => boolean;
-  spawnEntity: typeof Entity;
+  spawnGenerator: () => Entity | Entity[];
 }
 
 // Spawner Component
 export class SpawnerComponent implements Component {
   private _spawnInterval: number;
   private _spawnCountMax: number | null;
-  private _spawnPosition: () => Vector;
   private _spawnTrigger: (() => boolean) | undefined;
-  private _spawnEntity: typeof Entity;
+  private _spawnGenerator: () => Entity | Entity[];
   private _spawnCount: number = 0;
   private _spawnElapsedTime: number;
 
   constructor({
     spawnInterval,
     spawnCountMax = null,
-    spawnPosition,
     spawnTrigger,
-    spawnEntity,
+    spawnGenerator,
   }: SpawnerOptions) {
     if (spawnInterval <= 0) {
       throw new TypeError(
@@ -38,18 +35,12 @@ export class SpawnerComponent implements Component {
         "[SpawnerComponent constructor]: spawnCountMax must be a positive number"
       );
     }
-    if (!spawnEntity) {
-      throw new TypeError(
-        "[SpawnerComponent constructor]: spawnEntity must be an entity type"
-      );
-    }
 
     this._spawnElapsedTime = 0;
     this._spawnInterval = spawnInterval;
     this._spawnCountMax = spawnCountMax;
-    this._spawnPosition = spawnPosition;
     this._spawnTrigger = spawnTrigger;
-    this._spawnEntity = spawnEntity;
+    this._spawnGenerator = spawnGenerator;
   }
 
   get interval(): number {
@@ -104,12 +95,8 @@ export class SpawnerComponent implements Component {
     this._spawnElapsedTime = value;
   }
 
-  get entity(): typeof Entity {
-    return this._spawnEntity;
-  }
-
-  get position(): Vector {
-    return this._spawnPosition();
+  get generator(): () => Entity | Entity[] {
+    return this._spawnGenerator;
   }
 
   get hasTrigger(): boolean {

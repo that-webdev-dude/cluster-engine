@@ -3,6 +3,7 @@ import { Component } from "./Component";
 
 export class Entity {
   readonly id: string = Cmath.randId(6);
+  readonly type: string = this.constructor.name;
   readonly components: Map<string, Component> = new Map();
 
   attachComponent(component: Component): void {
@@ -19,60 +20,17 @@ export class Entity {
     return this.components.get(componentClass.name) as T;
   }
 
-  hasAllComponents(
-    componentClasses: (new (...args: any[]) => Component)[]
-  ): boolean {
-    return componentClasses.every((componentClass) =>
-      this.components.has(componentClass.name)
-    );
-  }
-
   hasComponent<T extends Component>(
     componentClass: new (...args: any[]) => T
   ): boolean {
     return this.components.has(componentClass.name);
   }
 
-  setComponent<T extends Component>(
-    componentClass: new (...args: any[]) => T,
-    properties: any // change this to a better type def
-  ): boolean {
-    const component = this.getComponent(componentClass);
-    if (component) {
-      Object.keys(properties).forEach((property) => {
-        if (component.hasOwnProperty(property)) {
-          const value = properties[property];
-          Object.assign(component, {
-            [property]: value,
-          });
-          return true;
-        }
-      });
-    }
-    return false;
-  }
-
-  // getComponents(): Component[] {
-  //   return Array.from(this.components.values());
-  // }
-
-  // getComponentNames(): string[] {
-  //   return Array.from(this.components.keys());
-  // }
-
-  // hasComponent(component: string): boolean {
-  //   return this.components.has(component);
-  // }
-
-  // hasAllComponents(components: string[]): boolean {
-  //   return components.every((component) => this.components.has(component));
-  // }
-
-  // hasAnyComponent(components: string[]): boolean {
-  //   return components.some((component) => this.components.has(component));
-  // }
-
-  // hasNoneOfComponents(components: string[]): boolean {
-  //   return components.every((component) => !this.components.has(component));
+  // hasAllComponents(
+  //   componentClasses: (new (...args: any[]) => Component)[]
+  // ): boolean {
+  //   return componentClasses.every((componentClass) =>
+  //     this.components.has(componentClass.name)
+  //   );
   // }
 }
