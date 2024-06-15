@@ -2,9 +2,15 @@ import { Cmath } from "../tools/Cmath";
 import { Component } from "./Component";
 
 export class Entity {
-  readonly id: string = Cmath.randId(6);
-  readonly type: string = this.constructor.name;
-  readonly components: Map<string, Component> = new Map();
+  readonly id: string;
+  readonly type: string;
+  readonly components: Map<string, Component>;
+
+  constructor(type?: string) {
+    this.id = Cmath.randId(6);
+    this.type = type || this.constructor.name;
+    this.components = new Map();
+  }
 
   attachComponent(component: Component): void {
     this.components.set(component.constructor.name, component);

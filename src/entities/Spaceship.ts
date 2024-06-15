@@ -4,7 +4,11 @@ import { Components } from "../cluster/ecs";
 import { createBullets } from "./Bullet";
 import spaceshipImageURL from "../images/spaceship.png";
 
-const { width: GAME_WIDTH, height: GAME_HEIGHT } = GAME_CONFIG;
+const {
+  width: GAME_WIDTH,
+  height: GAME_HEIGHT,
+  collisionLayer: GAME_COLLISION_LAYER,
+} = GAME_CONFIG;
 
 export class Spaceship extends Entity {
   constructor() {
@@ -30,7 +34,7 @@ export class Spaceship extends Entity {
       dead: false,
     });
     const cannon = new Components.Spawner({
-      spawnInterval: 0.125,
+      spawnInterval: 0.25,
       spawnTrigger: () => {
         const keyboard = this.getComponent(Components.Keyboard);
         if (keyboard) {
@@ -47,6 +51,10 @@ export class Spaceship extends Entity {
       position: transform.position,
       size: new Vector(texture.width, texture.height),
     });
+    const collision = new Components.Collision({
+      layer: GAME_COLLISION_LAYER.Spaceship,
+      mask: GAME_COLLISION_LAYER.Enemy,
+    });
     const keyboard = new Components.Keyboard();
 
     this.attachComponent(transform);
@@ -57,5 +65,6 @@ export class Spaceship extends Entity {
     this.attachComponent(cannon);
     this.attachComponent(hitbox);
     this.attachComponent(keyboard);
+    this.attachComponent(collision);
   }
 }

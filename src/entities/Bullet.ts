@@ -2,7 +2,11 @@ import { GAME_CONFIG } from "../config/GameConfig";
 import { Vector, Entity } from "../cluster";
 import { Components } from "../cluster/ecs";
 
-const { width: GAME_WIDTH, height: GAME_HEIGHT } = GAME_CONFIG;
+const {
+  width: GAME_WIDTH,
+  height: GAME_HEIGHT,
+  collisionLayer: GAME_COLLISION_LAYER,
+} = GAME_CONFIG;
 
 export class Bullet extends Entity {
   constructor() {
@@ -36,6 +40,10 @@ export class Bullet extends Entity {
       fill: "red",
       stroke: "transparent",
     });
+    const collision = new Components.Collision({
+      layer: GAME_COLLISION_LAYER.Bullet,
+      mask: GAME_COLLISION_LAYER.Enemy,
+    });
 
     this.attachComponent(transform);
     this.attachComponent(size);
@@ -44,6 +52,7 @@ export class Bullet extends Entity {
     this.attachComponent(status);
     this.attachComponent(hitbox);
     this.attachComponent(colour);
+    this.attachComponent(collision);
   }
 }
 

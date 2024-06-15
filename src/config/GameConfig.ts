@@ -6,4 +6,10 @@ export class GAME_CONFIG {
   static readonly version = "0.0.1";
   static readonly title = "Cluster Game";
   static readonly fontStyle = '"Press Start 2P"';
+  static readonly collisionLayer = {
+    Default: 1 << 0,
+    Spaceship: 1 << 1,
+    Bullet: 1 << 2,
+    Enemy: 1 << 3,
+  };
 }

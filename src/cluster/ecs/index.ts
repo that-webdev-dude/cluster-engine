@@ -13,6 +13,7 @@ import { ScreenComponent } from "./components/ScreenComponent";
 import { StatusComponent } from "./components/StatusComponent";
 import { HitboxComponent } from "./components/HitboxComponent";
 import { SpawnerComponent } from "./components/SpawnerComponent";
+import { CollisionComponent } from "./components/CollisionComponent";
 
 namespace Components {
   export const Visibility = VisibilityComponent;
@@ -29,6 +30,7 @@ namespace Components {
   export const Status = StatusComponent;
   export const Hitbox = HitboxComponent;
   export const Spawner = SpawnerComponent;
+  export const Collision = CollisionComponent;
 }
 
 export { Components };
@@ -39,7 +41,7 @@ import { RenderSystem } from "./systems/RenderSystem";
 import { InputSystem } from "./systems/InputSystem";
 import { ScreenSystem } from "./systems/ScreenSystem";
 import { SpawnSystem } from "./systems/SpawnSystem";
-import { CollisionSystem } from "./systems/CollisionSystem";
+import { CollisionSystem, ResolutionSystem } from "./systems/CollisionSystem";
 
 namespace Systems {
   export const Render = RenderSystem;
@@ -48,6 +50,7 @@ namespace Systems {
   export const Spawn = SpawnSystem;
   export const Screen = ScreenSystem;
   export const Collision = CollisionSystem;
+  export const Resolution = ResolutionSystem;
 }
 
 export { Systems };

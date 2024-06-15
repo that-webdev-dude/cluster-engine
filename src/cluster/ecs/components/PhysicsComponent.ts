@@ -8,6 +8,7 @@ export interface PhysicsOptions {
   friction?: number;
   gravity?: number;
   mass?: number;
+  triggerForce?: Vector;
 }
 
 // Physics Component
@@ -17,6 +18,7 @@ export class PhysicsComponent implements Component {
   friction: number;
   gravity: number;
   mass: number;
+  triggerForce: Vector;
 
   constructor({
     acceleration = new Vector(0, 0),
@@ -24,11 +26,13 @@ export class PhysicsComponent implements Component {
     friction = 0.9,
     gravity = 0.3,
     mass = 1,
+    triggerForce = new Vector(0, 0),
   }: PhysicsOptions = {}) {
     this.acceleration = Vector.from(acceleration);
     this.velocity = Vector.from(velocity);
     this.friction = friction;
     this.gravity = gravity;
     this.mass = mass;
+    this.triggerForce = Vector.from(triggerForce);
   }
 }

@@ -114,7 +114,7 @@ export class ScreenSystem extends System {
         transform.position.y > screenHeight
       ) {
         status.dead = true;
-        this._entities.delete(entity);
+        this._entities.remove(entity);
       }
     }
   }

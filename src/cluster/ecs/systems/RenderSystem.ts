@@ -50,6 +50,7 @@ export class RenderSystem extends System {
     const colour = entity.getComponent(Components.Colour);
     const radius = entity.getComponent(Components.Radius);
     const texture = entity.getComponent(Components.Texture);
+    const text = entity.getComponent(Components.Text);
 
     if (size && colour) {
       context.fillStyle = colour.fill;
@@ -63,6 +64,11 @@ export class RenderSystem extends System {
       context.arc(0, 0, radius.radius, 0, Math.PI * 2);
       context.fill();
       context.stroke();
+    } else if (text && colour) {
+      context.fillStyle = colour.fill;
+      context.font = text.font;
+      context.textAlign = text.align;
+      context.fillText(text.string, 0, 0);
     } else if (texture) {
       context.drawImage(texture.image, 0, 0);
     }

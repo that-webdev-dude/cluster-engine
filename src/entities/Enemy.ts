@@ -3,7 +3,11 @@ import { Cmath, Vector, Entity, Assets } from "../cluster";
 import { Components } from "../cluster/ecs";
 import enemyImageURL from "../images/enemy.png";
 
-const { width: GAME_WIDTH, height: GAME_HEIGHT } = GAME_CONFIG;
+const {
+  width: GAME_WIDTH,
+  height: GAME_HEIGHT,
+  collisionLayer: GAME_COLLISION_LAYER,
+} = GAME_CONFIG;
 Assets.image(enemyImageURL);
 
 export class Enemy extends Entity {
@@ -38,6 +42,10 @@ export class Enemy extends Entity {
       fill: "black",
       stroke: "transparent",
     });
+    const collision = new Components.Collision({
+      layer: GAME_COLLISION_LAYER.Enemy,
+      mask: GAME_COLLISION_LAYER.Bullet | GAME_COLLISION_LAYER.Spaceship,
+    });
 
     this.attachComponent(transform);
     this.attachComponent(texture);
@@ -46,6 +54,7 @@ export class Enemy extends Entity {
     this.attachComponent(status);
     this.attachComponent(hitbox);
     this.attachComponent(colour);
+    this.attachComponent(collision);
   }
 }
 
@@ -53,8 +62,8 @@ export function createEnemy(): Entity {
   const enemy = new Enemy();
   const transformComponent = enemy.getComponent(Components.Transform);
   if (transformComponent) {
-    transformComponent.position.x = GAME_WIDTH - 32;
-    transformComponent.position.y = Cmath.rand(0, GAME_HEIGHT - 32);
+    transformComponent.position.x = GAME_WIDTH;
+    transformComponent.position.y = Cmath.rand(32, GAME_HEIGHT - 64);
   }
   const speedComponent = enemy.getComponent(Components.Speed);
   if (speedComponent) {

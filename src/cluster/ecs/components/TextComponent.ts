@@ -4,22 +4,22 @@ import { Component } from "../../core/Component";
 export interface TextOptions {
   align?: CanvasTextAlign;
   font?: string;
-  message?: string;
+  string?: string;
 }
 
 // Text Component
 export class TextComponent implements Component {
   align: CanvasTextAlign;
   font: string;
-  message: string;
+  string: string;
 
   constructor({
     align = "center",
     font = "16px Arial",
-    message = "",
+    string = "",
   }: TextOptions = {}) {
     this.align = align;
     this.font = font;
-    this.message = message;
+    this.string = string;
   }
 }
