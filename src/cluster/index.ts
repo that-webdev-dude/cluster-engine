@@ -4,6 +4,7 @@ export { Component } from "./core/Component";
 export { Container } from "./core/Container";
 export { System } from "./core/System";
 export { Scene } from "./core/Scene";
+export { Store } from "./core/Store";
 export { Assets } from "./core/Assets";
 
 // tools
