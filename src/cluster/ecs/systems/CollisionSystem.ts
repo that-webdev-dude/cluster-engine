@@ -98,6 +98,8 @@ export class ResolutionSystem extends System {
         this._entities.remove(entity);
         this._entities.remove(other);
       });
+
+      collision.collisions = [];
     });
   }
 }

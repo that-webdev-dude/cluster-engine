@@ -13,7 +13,7 @@ export interface CollisionOptions {
 
 // Collision Component
 export class CollisionComponent implements Component {
-  readonly collisions: Array<CollisionData>;
+  public collisions: Array<CollisionData>;
   readonly layer: number; // collision layer of this entity
   readonly mask: number; // what layers this entity can collide with
 
