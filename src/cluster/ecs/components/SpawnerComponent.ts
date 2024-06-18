@@ -1,13 +1,13 @@
+import { Cluster } from "../../types/cluster.types";
 import { Component } from "../../core/Component";
 import { Entity } from "../../core/Entity";
-import { Vector } from "../../tools/Vector";
 
 // Interface for component properties
 export interface SpawnerOptions {
   spawnInterval: number;
   spawnCountMax?: number | null;
   spawnTrigger?: () => boolean;
-  spawnGenerator: () => Entity | Entity[];
+  spawnGenerator: Cluster.EntityGenerator<Entity>;
 }
 
 // Spawner Component
@@ -15,7 +15,7 @@ export class SpawnerComponent implements Component {
   private _spawnInterval: number;
   private _spawnCountMax: number | null;
   private _spawnTrigger: (() => boolean) | undefined;
-  private _spawnGenerator: () => Entity | Entity[];
+  private _spawnGenerator: Cluster.EntityGenerator<Entity>;
   private _spawnCount: number = 0;
   private _spawnElapsedTime: number;
 
@@ -95,7 +95,7 @@ export class SpawnerComponent implements Component {
     this._spawnElapsedTime = value;
   }
 
-  get generator(): () => Entity | Entity[] {
+  get generator(): Cluster.EntityGenerator<Entity> {
     return this._spawnGenerator;
   }
 

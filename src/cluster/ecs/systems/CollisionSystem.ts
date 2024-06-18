@@ -1,6 +1,7 @@
 import { Container } from "../../core/Container";
 import { Entity } from "../../core/Entity";
 import { System } from "../../core/System";
+import { Store } from "../../core/Store";
 import { Components } from "../index";
 
 export class CollisionSystem extends System {
@@ -65,7 +66,10 @@ export class CollisionSystem extends System {
           this._canCollide(entity, other) &&
           this._testCollision(entity, other)
         ) {
+          // this will store the collision data in both entities as the resolver is
+          // processing things one at time
           this._storeCollision(entity, other);
+          this._storeCollision(other, entity);
         }
       }
     }
@@ -74,10 +78,39 @@ export class CollisionSystem extends System {
 
 export class ResolutionSystem extends System {
   private _entities: Container<Entity>;
+  private _store: Store;
 
-  constructor(entities: Container<Entity>) {
+  constructor(entities: Container<Entity>, store: Store) {
     super();
     this._entities = entities;
+    this._store = store;
+  }
+
+  private _dieResolution(entity: Entity): void {
+    if (entity.dead) return;
+
+    const collision = entity.getComponent(Components.Collision);
+
+    if (!collision) return;
+
+    collision.collisions.forEach((collisionData) => {
+      const other = collisionData.entity;
+
+      if (!other) return;
+
+      entity.dead = true;
+
+      const { resolvers } = collision;
+      resolvers.forEach((resolver) => {
+        const { mask, actions } = resolver;
+        const layer = other.getComponent(Components.Collision)?.layer || 0;
+        if (mask & layer) {
+          actions?.forEach((action) => {
+            this._store.dispatch(action.name, action.data);
+          });
+        }
+      });
+    });
   }
 
   update(): void {
@@ -86,20 +119,7 @@ export class ResolutionSystem extends System {
     );
 
     collidableEntities.forEach((entity: Entity) => {
-      const collision = entity.getComponent(Components.Collision);
-
-      if (!collision) return;
-
-      collision.collisions.forEach((collisionData) => {
-        const other = collisionData.entity;
-
-        if (!other) return;
-
-        this._entities.remove(entity);
-        this._entities.remove(other);
-      });
-
-      collision.collisions = [];
+      this._dieResolution(entity);
     });
   }
 }

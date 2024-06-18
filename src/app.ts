@@ -1,5 +1,5 @@
 import { GAME_CONFIG } from "./config/GameConfig";
-import { Cmath, Game } from "./cluster";
+import { Game } from "./cluster";
 import { gameplay } from "./scenes/gamePlay";
 
 export default () => {

@@ -1,8 +1,10 @@
 import { GAME_CONFIG } from "../config/GameConfig";
-import { Vector, Entity } from "../cluster";
+import { Vector, Entity, Assets } from "../cluster";
 import { Components } from "../cluster/ecs";
-import { createBullets } from "./Bullet";
+import { createBullets } from "./generators/BulletGenerator";
 import spaceshipImageURL from "../images/spaceship.png";
+
+Assets.image(spaceshipImageURL);
 
 const {
   width: GAME_WIDTH,

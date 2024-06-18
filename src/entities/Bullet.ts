@@ -55,34 +55,3 @@ export class Bullet extends Entity {
     this.attachComponent(collision);
   }
 }
-
-export function createBullet(position: Vector, speed: Vector): Entity {
-  const bullet = new Bullet();
-  const transformComponent = bullet.getComponent(Components.Transform);
-  if (transformComponent) {
-    transformComponent.position = position;
-  }
-  const speedComponent = bullet.getComponent(Components.Speed);
-  if (speedComponent) {
-    speedComponent.speed = speed;
-  }
-  const hitboxComponent = bullet.getComponent(Components.Hitbox);
-  if (hitboxComponent) {
-    hitboxComponent.position = position;
-  }
-  return bullet;
-}
-
-export function createBullets(sourcePosition: Vector): Entity[] {
-  const bulletSpeed = new Vector(800, 0);
-  const bullets = [];
-  for (let i = -1; i < 2; i++) {
-    bullets.push(
-      createBullet(
-        Vector.from(sourcePosition).add(new Vector(38, 16)),
-        Vector.from(bulletSpeed).add(new Vector(0, i * 100))
-      )
-    );
-  }
-  return bullets;
-}

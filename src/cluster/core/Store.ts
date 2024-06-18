@@ -58,25 +58,32 @@ type StoreOptions = {
   actions?: {
     [key: string]: Action;
   };
+  getters?: {
+    [key: string]: any;
+  };
   mutations?: {
     [key: string]: Mutation;
   };
 };
 
 export class Store extends Emitter {
+  private state: State;
+  private status: string;
   private mutations: {
     [key: string]: Mutation;
+  };
+  private getters: {
+    [key: string]: any;
   };
   private actions: {
     [key: string]: Action;
   };
-  private status: string;
-  public state: State;
 
   constructor(options: StoreOptions = {}) {
     super();
-    const { state = {}, actions = {}, mutations = {} } = options;
+    const { state = {}, actions = {}, getters = {}, mutations = {} } = options;
     this.mutations = mutations;
+    this.getters = getters;
     this.actions = actions;
     this.status = "resting";
     this.state = state;
@@ -93,13 +100,14 @@ export class Store extends Emitter {
           );
 
         Reflect.set(state, key, value);
-        self.emit(`${String(key)}-change`, self.state[String(key)]);
+        self.emit(`${String(key)}-changed`, self.state[String(key)]);
         self.status = "resting";
         return true;
       },
     });
 
-    Object.freeze(this);
+    // Object.freeze(this);
+    Object.seal(this);
   }
 
   dispatch(actionKey: string, payload?: any): boolean {
@@ -116,5 +124,11 @@ export class Store extends Emitter {
     this.status = "mutation";
     this.mutations[mutationKey](this.state, payload);
     return true;
+  }
+
+  get(key: string): any {
+    if (typeof this.getters[key] !== "function")
+      throw new Error(`Getter ${key} doesn't exist!`);
+    return this.getters[key](this.state);
   }
 }

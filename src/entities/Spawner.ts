@@ -1,9 +1,9 @@
 import { Vector, Entity } from "../cluster";
 import { Components } from "../cluster/ecs";
 import { GAME_CONFIG } from "../config/GameConfig";
-import { createEnemy } from "./Enemy";
+import { createEnemy } from "./generators/EnemyGenerator";
 
-const { width: GAME_WIDTH, height: GAME_HEIGHT } = GAME_CONFIG;
+const { width: GAME_WIDTH } = GAME_CONFIG;
 
 export class Spawner extends Entity {
   constructor() {
