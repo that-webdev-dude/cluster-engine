@@ -6,15 +6,11 @@ import { Scene } from "./Scene";
 type GameOptions = {
   width: number;
   height: number;
-  version: string;
-  title: string;
 };
 
 const DEFAULTS: GameOptions = {
   width: 640,
   height: 320,
-  version: "0.0.1",
-  title: "MyGame",
 };
 
 export class Game {
@@ -22,13 +18,9 @@ export class Game {
   private _engine: Engine;
   private _display: Display;
   private _scene: Scene;
-  readonly version: string;
-  readonly title: string;
 
   constructor(options: GameOptions) {
-    const { width, height, version, title } = { ...DEFAULTS, ...options };
-    this.version = version;
-    this.title = title;
+    const { width, height } = { ...DEFAULTS, ...options };
     this._scene = new Scene();
     this._engine = new Engine();
     this._display = new Display({

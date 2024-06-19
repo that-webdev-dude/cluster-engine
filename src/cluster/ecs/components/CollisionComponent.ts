@@ -10,7 +10,7 @@ interface Resolver {
   type: string;
   actions?: {
     name: string;
-    data: number;
+    data: number | string | boolean;
   }[];
 }
 

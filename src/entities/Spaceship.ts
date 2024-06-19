@@ -56,6 +56,18 @@ export class Spaceship extends Entity {
     const collision = new Components.Collision({
       layer: GAME_COLLISION_LAYER.Spaceship,
       mask: GAME_COLLISION_LAYER.Enemy,
+      resolvers: [
+        {
+          mask: GAME_COLLISION_LAYER.Enemy,
+          type: "die",
+          actions: [
+            {
+              name: "setScene",
+              data: "gameTitle",
+            },
+          ],
+        },
+      ],
     });
     const keyboard = new Components.Keyboard();
 
