@@ -27,19 +27,6 @@ const actions = {
   setScene: (context: Store, scene: GameScene) => {
     switch (scene) {
       case GameScene.TITLE:
-        const setGamePlay = (event: Event) => {
-          event.preventDefault();
-          if (event instanceof KeyboardEvent) {
-            if (event.key === "Space") {
-              document.removeEventListener("keydown", setGamePlay);
-              context.commit("reset");
-              context.commit("setScene", GameScene.PLAY);
-            }
-          }
-        };
-
-        document.addEventListener("keydown", setGamePlay);
-
         context.commit("setScene", GameScene.TITLE);
         break;
       case GameScene.PLAY:
