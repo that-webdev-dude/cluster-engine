@@ -1,30 +1,43 @@
-import { Store } from "../cluster";
-
-type State = {
-  [key: string]: any;
-};
+import { Scene, Store } from "../cluster";
 
 const SCENES = {
-  TITLE: "gameScene1",
-  PLAY: "gameScene2",
+  DEFAULT: "gameTitle",
+  TITLE: "gameTitle",
+  PLAY: "gamePlay",
 };
 
 const state = {
-  scene: "gameScene1",
+  scene: SCENES.DEFAULT,
   title: "Shooter Game",
-  scores: 0,
-  height: 320,
   width: 640,
+  height: 320,
+  scores: 0,
+};
+
+const getters = {
+  scene: (state: any) => {
+    return state.scene;
+  },
+  title: (state: any) => {
+    return state.title;
+  },
+  height: (state: any) => {
+    return state.height;
+  },
+  width: (state: any) => {
+    return state.width;
+  },
+  scores: (state: any) => {
+    return state.scores;
+  },
 };
 
 const actions = {
-  increaseScores: (context: Store, amount: number) => {
-    if (amount < 0) throw new Error("Amount must be a positive number.");
-    context.commit("setScores", amount);
+  increaseScores: (context: Store, scores: number) => {
+    context.commit("increaseScores", scores);
   },
-  decreaseScores: (context: Store, amount: number) => {
-    if (amount < 0) throw new Error("Amount must be a positive number.");
-    context.commit("setScores", amount);
+  setScores: (context: Store, scores: number) => {
+    context.commit("setScores", scores);
   },
   setScene: (context: Store, scene: string) => {
     if (scene === SCENES.TITLE || scene === SCENES.PLAY) {
@@ -33,44 +46,25 @@ const actions = {
       throw new Error("Invalid scene name.");
     }
   },
-  reset: (context: Store) => {
-    context.commit("reset");
-  },
-};
-
-const getters = {
-  scene: (state: State) => {
-    return state.scene;
-  },
-  title: (state: State) => {
-    return state.title;
-  },
-  scores: (state: State) => {
-    return state.scores;
-  },
-  height: (state: State) => {
-    return state.height;
-  },
-  width: (state: State) => {
-    return state.width;
-  },
 };
 
 const mutations = {
-  setScores: (state: State, payload: any) => {
+  increaseScores: (state: any, payload: number) => {
     state.scores += payload;
   },
-  setScene: (state: State, payload: any) => {
-    state.scene = payload;
+  setScores: (state: any, payload: number) => {
+    state.scores = payload;
   },
-  reset: (state: State) => {
-    state.scores = 0;
+  setScene: (state: any, payload: string) => {
+    state.scene = payload;
   },
 };
 
-export const store = new Store({
+const store = new Store({
   state,
   getters,
-  mutations,
   actions,
+  mutations,
 });
+
+export { store };

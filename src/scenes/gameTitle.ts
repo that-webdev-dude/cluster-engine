@@ -1,31 +1,31 @@
-// import { Scene, Container, Entity, System } from "../cluster";
-// import { Systems } from "../cluster/ecs";
-// import { store, GameScene } from "../store/store";
-// import { TitleBackground } from "../entities/Background";
-// import { UITitle } from "../entities/UITitle";
+import { Scene, Container, Entity, System } from "../cluster";
+import { Systems } from "../cluster/ecs";
+import { Keyboard } from "../cluster/input";
+import { TitleBackground } from "../entities/UIBackground";
+import { UITitle } from "../entities/UITitle";
+import { store } from "../store/store";
 
-// const entities = new Container<Entity>();
-// entities.add(new TitleBackground());
-// entities.add(new UITitle());
+export class GameTitle extends Scene {
+  constructor() {
+    const entities = new Container<Entity>();
+    entities.add(new TitleBackground());
+    entities.add(new UITitle());
 
-// const systems = new Container<System>();
-// systems.add(new Systems.Input(entities));
-// systems.add(new Systems.Render(entities));
+    const systems = new Container<System>();
+    systems.add(new Systems.Input(entities));
+    systems.add(new Systems.Render(entities));
 
-// const setGamePlay = (event: Event) => {
-//   event.preventDefault();
-//   document.removeEventListener("keydown", setGamePlay);
-//   store.dispatch("setScene", GameScene.PLAY);
-//   store.dispatch("reset");
-// };
+    super({
+      name: "gameTitle",
+      entities,
+      systems,
+    });
+  }
 
-// document.addEventListener("keydown", setGamePlay);
-
-// const gameTitle = new Scene({
-//   name: "gameTitle",
-//   entities,
-//   systems,
-//   store,
-// });
-
-// export { gameTitle };
+  update(dt: number, t: number) {
+    super.update(dt, t);
+    if (Keyboard.key("Space")) {
+      store.dispatch("setScene", "gamePlay");
+    }
+  }
+}
