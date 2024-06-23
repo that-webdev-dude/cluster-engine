@@ -1,11 +1,13 @@
-import { Engine } from "./Engine";
+import { Cluster } from "../../cluster/types/cluster.types";
 import { Display } from "./Display";
+import { Engine } from "./Engine";
 import { Assets } from "./Assets";
 import { Scene } from "./Scene";
 
 type GameOptions = {
-  width: number;
+  scenes?: Map<string, Cluster.Creator<Scene>>;
   height: number;
+  width: number;
 };
 
 const DEFAULTS: GameOptions = {
@@ -14,14 +16,16 @@ const DEFAULTS: GameOptions = {
 };
 
 export class Game {
-  private _scenes: Map<string, Scene> = new Map();
-  private _engine: Engine;
+  // private _scenes: Map<string, Scene> = new Map();
+  private _scenes: Map<string, Cluster.Creator<Scene>> = new Map();
   private _display: Display;
+  private _engine: Engine;
   private _scene: Scene;
 
   constructor(options: GameOptions) {
-    const { width, height } = { ...DEFAULTS, ...options };
+    const { scenes, width, height } = { ...DEFAULTS, ...options };
     this._scene = new Scene();
+    this._scenes = scenes || new Map();
     this._engine = new Engine();
     this._display = new Display({
       parentElementId: "#app",
@@ -45,23 +49,30 @@ export class Game {
     return this._display.context;
   }
 
-  public addScene(scene: Scene): void {
-    this._scenes.set(scene.name, scene);
-    if (this._scenes.size === 1) {
-      this._scene = scene;
-    }
-  }
+  // public addScene(scene: Scene): void {
+  //   this._scenes.set(scene.name, scene);
+  //   if (this._scenes.size === 1) {
+  //     this._scene = scene;
+  //   }
+  // }
 
-  public getScene(name: string): Scene | null {
-    if (this._scenes.has(name)) {
-      return this._scenes.get(name) as Scene;
-    }
-    return null;
-  }
+  // public getScene(name: string): Scene | null {
+  //   if (this._scenes.has(name)) {
+  //     return this._scenes.get(name) as Scene;
+  //   }
+  //   return null;
+  // }
 
-  public setScene(name: string): void {
-    if (this._scenes.has(name)) {
-      this._scene = this._scenes.get(name) as Scene;
+  // public setScene(name: string): void {
+  //   if (this._scenes.has(name)) {
+  //     this._scene = this._scenes.get(name) as Scene;
+  //   }
+  // }
+
+  public setScene(string: string): void {
+    const scene = this._scenes.get(string);
+    if (scene) {
+      this._scene = scene();
     }
   }
 

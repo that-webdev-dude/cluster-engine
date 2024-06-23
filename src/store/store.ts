@@ -4,15 +4,17 @@ type State = {
   [key: string]: any;
 };
 
-export enum GameScene {
-  TITLE = "gameTitle",
-  PLAY = "gamePlay",
-}
+const SCENES = {
+  TITLE: "gameScene1",
+  PLAY: "gameScene2",
+};
 
 const state = {
-  scene: GameScene.TITLE,
+  scene: "gameScene1",
   title: "Shooter Game",
   scores: 0,
+  height: 320,
+  width: 640,
 };
 
 const actions = {
@@ -24,16 +26,11 @@ const actions = {
     if (amount < 0) throw new Error("Amount must be a positive number.");
     context.commit("setScores", amount);
   },
-  setScene: (context: Store, scene: GameScene) => {
-    switch (scene) {
-      case GameScene.TITLE:
-        context.commit("setScene", GameScene.TITLE);
-        break;
-      case GameScene.PLAY:
-        context.commit("setScene", GameScene.PLAY);
-        break;
-      default:
-        throw new Error("Invalid scene");
+  setScene: (context: Store, scene: string) => {
+    if (scene === SCENES.TITLE || scene === SCENES.PLAY) {
+      context.commit("setScene", scene);
+    } else {
+      throw new Error("Invalid scene name.");
     }
   },
   reset: (context: Store) => {
@@ -50,6 +47,12 @@ const getters = {
   },
   scores: (state: State) => {
     return state.scores;
+  },
+  height: (state: State) => {
+    return state.height;
+  },
+  width: (state: State) => {
+    return state.width;
   },
 };
 

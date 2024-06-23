@@ -1,22 +1,43 @@
-import { GAME_CONFIG } from "./config/GameConfig";
+import { Cluster } from "./cluster/types/cluster.types";
+import { store } from "./store/GameStore";
 import { Game } from "./cluster";
-import { store, GameScene } from "./store/store";
-import { gameTitle } from "./scenes/gameTitle";
-import { gamePlay } from "./scenes/gamePlay";
+import { Scene } from "./cluster/core/Scene";
+import { GameScene1 } from "./scenes/gameScene1";
+import { GameScene2 } from "./scenes/gameScene2";
 
+const createGameScene1: Cluster.Creator<Scene> = () => {
+  return new GameScene1();
+};
+const createGameScene2: Cluster.Creator<Scene> = () => {
+  return new GameScene2();
+};
 export default () => {
+  const width = store.get("width");
+  const height = store.get("height");
+  const scenes = new Map([
+    ["gameScene1", createGameScene1],
+    ["gameScene2", createGameScene2],
+  ]);
+
   const game = new Game({
-    width: GAME_CONFIG.width,
-    height: GAME_CONFIG.height,
+    width,
+    height,
+    scenes,
   });
 
-  game.addScene(gameTitle);
-  game.addScene(gamePlay);
+  setTimeout(() => {
+    store.dispatch("setScene", "gameScene2");
+  }, 2000);
 
-  store.on("scene-changed", () => {
-    console.log("Scene changed to", store.get("scene"));
-    game.setScene(store.get("scene"));
-  });
+  setTimeout(() => {
+    store.dispatch("setScene", "gameScene1");
+  }, 3000);
+
+  console.log(store.get("scene"));
+  const sceneHandler = (scene: string) => {
+    game.setScene(scene);
+  };
+  store.on("scene-changed", sceneHandler);
 
   game.setScene(store.get("scene"));
   game.start();
