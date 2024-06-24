@@ -8,7 +8,7 @@ export class Vector {
   private _y: number;
   private _magnitude: number | null;
 
-  // Vecrot static methods
+  // Vector static methods
 
   /**
    * Creates a new Vector instance from the provided coordinates.

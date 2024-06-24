@@ -1,10 +1,5 @@
-// 2024 @that-webdev-dude
-// Engine.ts
-// A fixed time step game loop that uses requestAnimationFrame to update and render the game at a consistent frame rate.
-
 type EngineOptions = {
   update?: (dt: number, t: number) => void;
-  render?: () => void;
   fps?: number;
 };
 
@@ -16,10 +11,9 @@ export class Engine {
   private _updated: boolean;
   private _updates: number;
   private _update: (dt: number, t: number) => void;
-  private _render: () => void;
 
   constructor(config: EngineOptions = {}) {
-    const { update = () => {}, render = () => {}, fps = 60 } = config;
+    const { update = () => {}, fps = 60 } = config;
     this._frameRequest = null;
     this._currentTime = null;
     this._elapsedTime = 0;
@@ -27,15 +21,10 @@ export class Engine {
     this._timeStep = 1000 / fps;
     this._updates = 0;
     this._update = update;
-    this._render = render;
   }
 
   set update(update: (dt: number, t: number) => void) {
     this._update = update;
-  }
-
-  set render(render: () => void) {
-    this._render = render;
   }
 
   private _run = (timestamp: number) => {
@@ -60,7 +49,6 @@ export class Engine {
     }
 
     if (this._updated) {
-      // this._render();
       this._updated = false;
     }
   };
