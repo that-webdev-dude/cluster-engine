@@ -1,9 +1,7 @@
-import { Cluster } from "./cluster/types/cluster.types";
-import { store } from "./store/store";
 import { Game } from "./cluster";
-import { Scene } from "./cluster/core/Scene";
-import { GameTitle } from "./scenes/gameTitle";
-import { GamePlay } from "./scenes/gamePlay";
+import { GameTitle } from "./scenes/GameTitle";
+import { GamePlay } from "./scenes/GamePlay";
+import { store } from "./store";
 
 export default () => {
   const width = store.get("width");

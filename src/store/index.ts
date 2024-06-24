@@ -42,9 +42,6 @@ const actions = {
   increaseScores: (context: Store, scores: number) => {
     context.commit("increaseScores", scores);
   },
-  setScores: (context: Store, scores: number) => {
-    context.commit("setScores", scores);
-  },
   setScene: (context: Store, scene: string) => {
     if (scene === SCENES.TITLE || scene === SCENES.PLAY) {
       context.commit("setScene", scene);
@@ -57,9 +54,6 @@ const actions = {
 const mutations = {
   increaseScores: (state: any, payload: number) => {
     state.scores += payload;
-  },
-  setScores: (state: any, payload: number) => {
-    state.scores = payload;
   },
   setScene: (state: any, payload: string) => {
     state.scene = payload;
