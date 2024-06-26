@@ -6,7 +6,8 @@ import { RadiusComponent } from "./components/RadiusComponent";
 import { ColourComponent } from "./components/ColourComponent";
 import { TextComponent } from "./components/TextComponent";
 import { SizeComponent } from "./components/SizeComponent";
-import { SpeedComponent } from "./components/SpeedComponent";
+// import { SpeedComponent } from "./components/SpeedComponent";
+import { VelocityComponent } from "./components/VelocityComponent";
 import { PhysicsComponent } from "./components/PhysicsComponent";
 import { KeyboardComponent } from "./components/KeyboardComponent";
 import { ScreenComponent } from "./components/ScreenComponent";
@@ -23,7 +24,8 @@ namespace Components {
   export const Radius = RadiusComponent;
   export const Text = TextComponent;
   export const Size = SizeComponent;
-  export const Speed = SpeedComponent;
+  // export const Speed = SpeedComponent;
+  export const Velocity = VelocityComponent;
   export const Physics = PhysicsComponent;
   export const Keyboard = KeyboardComponent;
   export const Screen = ScreenComponent;
@@ -36,19 +38,19 @@ namespace Components {
 export { Components };
 
 // systems
-import { SpeedSystem } from "./systems/SpeedSystem";
 import { RenderSystem } from "./systems/RenderSystem";
 import { InputSystem } from "./systems/InputSystem";
 import { ScreenSystem } from "./systems/ScreenSystem";
 import { SpawnSystem } from "./systems/SpawnSystem";
+import { PhysicsSystem } from "./systems/PhysicsSystem";
 import { CollisionSystem, ResolutionSystem } from "./systems/CollisionSystem";
 
 namespace Systems {
   export const Render = RenderSystem;
-  export const Speed = SpeedSystem;
   export const Input = InputSystem;
   export const Spawn = SpawnSystem;
   export const Screen = ScreenSystem;
+  export const Physics = PhysicsSystem;
   export const Collision = CollisionSystem;
   export const Resolution = ResolutionSystem;
 }

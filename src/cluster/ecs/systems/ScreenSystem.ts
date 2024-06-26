@@ -24,7 +24,7 @@ export class ScreenSystem extends System {
     if (entity.hasComponent(Components.Radius)) {
       const radius = entity.getComponent(Components.Radius);
       if (radius) {
-        return radius.radius * 2;
+        return radius.value * 2;
       }
     }
     if (entity.hasComponent(Components.Texture)) {
@@ -46,7 +46,7 @@ export class ScreenSystem extends System {
     if (entity.hasComponent(Components.Radius)) {
       const radius = entity.getComponent(Components.Radius);
       if (radius) {
-        return radius.radius * 2;
+        return radius.value * 2;
       }
     }
     if (entity.hasComponent(Components.Texture)) {

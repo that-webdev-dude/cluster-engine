@@ -12,11 +12,11 @@ export interface TransformOptions {
 
 // Transform Component
 export class TransformComponent implements Component {
-  position: Vector;
-  anchor: Vector;
-  scale: Vector;
-  pivot: Vector;
-  angle: number;
+  public position: Vector;
+  public anchor: Vector;
+  public scale: Vector;
+  public pivot: Vector;
+  private _angle: number;
 
   constructor({
     position = new Vector(0, 0),
@@ -35,6 +35,19 @@ export class TransformComponent implements Component {
     this.anchor = Vector.from(anchor);
     this.scale = Vector.from(scale);
     this.pivot = Vector.from(pivot);
-    this.angle = angle;
+    this._angle = angle;
+  }
+
+  get angle(): number {
+    return this._angle;
+  }
+
+  set angle(angle: number) {
+    if (angle < 0 || angle > 360) {
+      throw new TypeError(
+        "[TransformComponent setter]: Angle must be between 0 and 360"
+      );
+    }
+    this._angle = angle;
   }
 }

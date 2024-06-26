@@ -61,7 +61,7 @@ export class RenderSystem extends System {
       context.fillStyle = colour.fill;
       context.strokeStyle = colour.stroke;
       context.beginPath();
-      context.arc(0, 0, radius.radius, 0, Math.PI * 2);
+      context.arc(0, 0, radius.value, 0, Math.PI * 2);
       context.fill();
       context.stroke();
     } else if (text && colour) {

@@ -8,8 +8,8 @@ export interface ColourOptions {
 
 // Colour Component
 export class ColourComponent implements Component {
-  fill: string;
-  stroke: string;
+  public fill: string;
+  public stroke: string;
 
   constructor({
     fill = "lightBlue",

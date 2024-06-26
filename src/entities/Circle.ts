@@ -1,63 +1,39 @@
-import { Entity, Vector } from "../cluster";
-import { Transform } from "../components/Transform";
-import { Radius } from "../components/Radius";
-import { Alpha } from "../components/Alpha";
-import { Visibility } from "../components/Visibility";
-import { ShapeStyle } from "../components/Style";
-
-type CircleOptions = Partial<{
-  position: Vector;
-  anchor: Vector;
-  scale: Vector;
-  pivot: Vector;
-  angle: number;
-  radius: number;
-  alpha: number;
-  visible: boolean;
-  style: {
-    fill: string;
-    stroke: string;
-  };
-}>;
-
-const defaults = {
-  position: new Vector(),
-  anchor: new Vector(),
-  scale: new Vector(1, 1),
-  pivot: new Vector(),
-  angle: 0,
-  radius: 16,
-  alpha: 1,
-  visible: true,
-  style: {
-    fill: "lightblue",
-    stroke: "transparent",
-  },
-};
+import { Cmath } from "../cluster";
+import { Entity } from "../cluster";
+import { Vector } from "../cluster";
+import { Components } from "../cluster/ecs";
 
 export class Circle extends Entity {
-  constructor(options: CircleOptions = {}) {
+  constructor() {
     super();
-    const {
-      position,
-      anchor,
-      scale,
-      pivot,
-      angle,
-      radius,
-      alpha,
-      visible,
-      style,
-    } = {
-      ...defaults,
-      ...options,
-    };
-    const { fill, stroke } = style;
 
-    this.attach(new Transform(this.id, position, anchor, scale, pivot, angle));
-    this.attach(new Radius(this.id, radius));
-    this.attach(new Alpha(this.id, alpha));
-    this.attach(new Visibility(this.id, visible));
-    this.attach(new ShapeStyle(this.id, fill, stroke));
+    const transformComponent = new Components.Transform({
+      position: new Vector(Cmath.rand(300, 400), Cmath.rand(300, 400)),
+    });
+    const velocityComponent = new Components.Velocity({
+      velocity: new Vector(Cmath.rand(-500, 500), Cmath.rand(-500, 500)),
+    });
+    const radiusComponent = new Components.Radius({
+      radius: Cmath.rand(10, 20),
+    });
+    const colourComponent = new Components.Colour({
+      fill: "red",
+      stroke: "black",
+    });
+
+    // to be fixed in case of Circle
+    const screenComponent = new Components.Screen({
+      width: 800,
+      height: 600,
+      entityWidth: radiusComponent.value * 2,
+      entityHeight: radiusComponent.value * 2,
+      offscreenBehavior: "contain",
+    });
+
+    this.attachComponent(transformComponent);
+    this.attachComponent(velocityComponent);
+    this.attachComponent(radiusComponent);
+    this.attachComponent(colourComponent);
+    this.attachComponent(screenComponent);
   }
 }

@@ -1,3 +1,5 @@
+// DEPRECATED
+
 import { Component } from "../../core/Component";
 import { Vector } from "../../tools/Vector";
 

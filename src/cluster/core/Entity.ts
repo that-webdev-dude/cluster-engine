@@ -4,8 +4,8 @@ import { Component } from "./Component";
 export class Entity {
   readonly id: string;
   readonly type: string;
-  public dead: boolean;
   readonly components: Map<string, Component>;
+  public dead: boolean;
 
   constructor(type?: string) {
     this.id = Cmath.randId(6);
@@ -34,11 +34,9 @@ export class Entity {
     return this.components.has(componentClass.name);
   }
 
-  // hasAllComponents(
-  //   componentClasses: (new (...args: any[]) => Component)[]
-  // ): boolean {
-  //   return componentClasses.every((componentClass) =>
-  //     this.components.has(componentClass.name)
-  //   );
-  // }
+  hasComponents(...componentClasses: any[]): boolean {
+    return componentClasses.every((componentClass) =>
+      this.components.has(componentClass.name)
+    );
+  }
 }
