@@ -45,9 +45,9 @@ export class Game {
     }
   }
 
-  public get context(): CanvasRenderingContext2D {
-    return this._display.context;
-  }
+  // public get context(): CanvasRenderingContext2D {
+  //   return this._display.context;
+  // }
 
   // public addScene(scene: Scene): void {
   //   this._scenes.set(scene.name, scene);

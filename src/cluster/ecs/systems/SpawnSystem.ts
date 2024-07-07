@@ -3,7 +3,6 @@ import { Entity } from "../../core/Entity";
 import { System } from "../../core/System";
 import { Components } from "../index";
 import { SpawnerComponent } from "../components/SpawnerComponent";
-import { Component } from "../../core/Component";
 
 export class SpawnSystem extends System {
   private _entities: Container<Entity>;
@@ -51,7 +50,7 @@ export class SpawnSystem extends System {
     }
   }
 
-  update(dt: number, t: number): void {
+  update(entities: Container<Entity>, dt: number, t: number): void {
     this._entities.forEach((entity: Entity) => {
       const spawner = entity.getComponent(Components.Spawner);
       if (spawner) {

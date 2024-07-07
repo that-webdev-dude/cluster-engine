@@ -5,146 +5,134 @@ import { Components } from "../index";
 
 const OFFSCREEN_BEHAVIOR = {
   CONTAIN: "contain",
+  BOUNCE: "bounce",
   WRAP: "wrap",
   DIE: "die",
 };
 
-/**
- * Represents a system responsible for handling screen-related behaviors.
- */
+let systemEntities: Container<Entity>;
+
 export class ScreenSystem extends System {
-  private _entities: Container<Entity>;
-
-  constructor(entities: Container<Entity>) {
-    super();
-    this._entities = entities;
-  }
-
   private _getEntityWidth(entity: Entity): number {
-    if (entity.hasComponent(Components.Radius)) {
-      const radius = entity.getComponent(Components.Radius);
-      if (radius) {
-        return radius.value * 2;
-      }
-    }
-    if (entity.hasComponent(Components.Texture)) {
-      const texture = entity.getComponent(Components.Texture);
-      if (texture) {
-        return texture.width;
-      }
-    }
-    if (entity.hasComponent(Components.Size)) {
-      const size = entity.getComponent(Components.Size);
-      if (size) {
-        return size.width;
-      }
+    const transform = entity.getComponent(Components.Transform);
+    const size = entity.getComponent(Components.Size);
+    if (transform && size) {
+      return size.width * transform.scale.x + transform.anchor.x;
     }
     return 0;
   }
 
   private _getEntityHeight(entity: Entity): number {
-    if (entity.hasComponent(Components.Radius)) {
-      const radius = entity.getComponent(Components.Radius);
-      if (radius) {
-        return radius.value * 2;
-      }
-    }
-    if (entity.hasComponent(Components.Texture)) {
-      const texture = entity.getComponent(Components.Texture);
-      if (texture) {
-        return texture.height;
-      }
-    }
-    if (entity.hasComponent(Components.Size)) {
-      const size = entity.getComponent(Components.Size);
-      if (size) {
-        return size.height;
-      }
+    const transform = entity.getComponent(Components.Transform);
+    const size = entity.getComponent(Components.Size);
+    if (transform && size) {
+      return size.height * transform.scale.y + transform.anchor.y;
     }
     return 0;
   }
 
-  private _contain(entity: Entity, maxWidth: number, maxHeight: number): void {
+  private _contain(entity: Entity): void {
     const transform = entity.getComponent(Components.Transform);
-    if (transform) {
+    const screen = entity.getComponent(Components.Screen);
+    if (transform && screen) {
+      const entityHeight = this._getEntityHeight(entity);
+      const entityWidth = this._getEntityWidth(entity);
       transform.position.x = Math.max(
         0,
-        Math.min(transform.position.x, maxWidth)
+        Math.min(transform.position.x, screen.width - entityWidth)
       );
       transform.position.y = Math.max(
         0,
-        Math.min(transform.position.y, maxHeight)
+        Math.min(transform.position.y, screen.height - entityHeight)
       );
     }
   }
 
-  private _wrap(entity: Entity, maxWidth: number, maxHeight: number): void {
+  private _bounce(entity: Entity): void {
     const transform = entity.getComponent(Components.Transform);
-    const height = this._getEntityHeight(entity);
-    const width = this._getEntityWidth(entity);
-    if (transform) {
-      if (transform.position.x + width < 0) {
-        transform.position.x = maxWidth;
-      } else if (transform.position.x > maxWidth) {
-        transform.position.x = -width;
+    const velocity = entity.getComponent(Components.Velocity);
+    const screen = entity.getComponent(Components.Screen);
+    if (transform && velocity && screen) {
+      const entityHeight = this._getEntityHeight(entity);
+      const entityWidth = this._getEntityWidth(entity);
+      if (transform.position.x < 0) {
+        transform.position.x = 0;
+        velocity.velocity.x *= -1;
+      } else if (transform.position.x + entityWidth > screen.width) {
+        transform.position.x = screen.width - entityWidth;
+        velocity.velocity.x *= -1;
       }
 
-      if (transform.position.y + height < 0) {
-        transform.position.y = maxHeight;
-      } else if (transform.position.y > maxHeight) {
-        transform.position.y = -height;
+      if (transform.position.y < 0) {
+        transform.position.y = 0;
+        velocity.velocity.y *= -1;
+      } else if (transform.position.y + entityHeight > screen.height) {
+        transform.position.y = screen.height - entityHeight;
+        velocity.velocity.y *= -1;
       }
     }
   }
 
-  private _die(
-    entity: Entity,
-    screenWidth: number,
-    screenHeight: number
-  ): void {
+  private _wrap(entity: Entity): void {
     const transform = entity.getComponent(Components.Transform);
-    const status = entity.getComponent(Components.Status);
-    const height = this._getEntityHeight(entity);
-    const width = this._getEntityWidth(entity);
-    if (transform && status && !status.dead) {
+    const screen = entity.getComponent(Components.Screen);
+    if (transform && screen) {
+      const entityHeight = this._getEntityHeight(entity);
+      const entityWidth = this._getEntityWidth(entity);
+      if (transform.position.x + entityWidth < 0) {
+        transform.position.x = screen.width;
+      } else if (transform.position.x > screen.width) {
+        transform.position.x = -entityWidth;
+      }
+
+      if (transform.position.y + entityHeight < 0) {
+        transform.position.y = screen.height;
+      } else if (transform.position.y > screen.height) {
+        transform.position.y = -entityHeight;
+      }
+    }
+  }
+
+  private _die(entity: Entity): void {
+    const transform = entity.getComponent(Components.Transform);
+    const screen = entity.getComponent(Components.Screen);
+    if (transform && screen && !entity.dead) {
+      const entityHeight = this._getEntityHeight(entity);
+      const entityWidth = this._getEntityWidth(entity);
       if (
-        transform.position.x + width < 0 ||
-        transform.position.x > screenWidth ||
-        transform.position.y + height < 0 ||
-        transform.position.y > screenHeight
+        transform.position.x + entityWidth < 0 ||
+        transform.position.x > screen.width ||
+        transform.position.y + entityHeight < 0 ||
+        transform.position.y > screen.height
       ) {
-        status.dead = true;
-        this._entities.remove(entity);
+        entity.dead = true;
       }
     }
   }
 
-  update(): void {
-    if (!this._entities.size) return;
+  public update(entities: Container<Entity>): void {
+    if (!entities.size) return;
 
-    this._entities.forEach((entity) => {
+    systemEntities = entities.filter((entity) =>
+      entity.hasComponent(Components.Screen)
+    );
+    if (!systemEntities.size) return;
+
+    systemEntities.forEach((entity) => {
       const screen = entity.getComponent(Components.Screen);
       if (screen) {
-        const maxWidth =
-          screen.width -
-          (screen.offscreenBehavior === OFFSCREEN_BEHAVIOR.CONTAIN
-            ? screen.entityWidth
-            : 0);
-        const maxHeight =
-          screen.height -
-          (screen.offscreenBehavior === OFFSCREEN_BEHAVIOR.CONTAIN
-            ? screen.entityHeight
-            : 0);
-
         switch (screen.offscreenBehavior) {
           case OFFSCREEN_BEHAVIOR.CONTAIN:
-            this._contain(entity, maxWidth, maxHeight);
+            this._contain(entity);
+            break;
+          case OFFSCREEN_BEHAVIOR.BOUNCE:
+            this._bounce(entity);
             break;
           case OFFSCREEN_BEHAVIOR.WRAP:
-            this._wrap(entity, screen.width, screen.height);
+            this._wrap(entity);
             break;
           case OFFSCREEN_BEHAVIOR.DIE:
-            this._die(entity, screen.width, screen.height);
+            this._die(entity);
             break;
           default:
             console.warn(
@@ -153,5 +141,7 @@ export class ScreenSystem extends System {
         }
       }
     });
+
+    systemEntities.clear();
   }
 }

@@ -2,37 +2,36 @@ import { Cmath } from "../cluster";
 import { Entity } from "../cluster";
 import { Vector } from "../cluster";
 import { Components } from "../cluster/ecs";
+import { store } from "../store";
 
-export class Circle extends Entity {
+export class Rect extends Entity {
   constructor() {
     super();
 
     const transformComponent = new Components.Transform({
       position: new Vector(Cmath.rand(300, 400), Cmath.rand(300, 400)),
+      scale: new Vector(1, 1),
     });
     const velocityComponent = new Components.Velocity({
-      velocity: new Vector(Cmath.rand(-500, 500), Cmath.rand(-500, 500)),
+      velocity: new Vector(Cmath.rand(-200, 200), Cmath.rand(-200, 200)),
     });
-    const radiusComponent = new Components.Radius({
-      radius: Cmath.rand(10, 20),
+    const sizeComponent = new Components.Size({
+      width: 50,
+      height: 50,
     });
     const colourComponent = new Components.Colour({
-      fill: "red",
-      stroke: "black",
+      fill: "lightblue",
+      stroke: "transparent",
     });
-
-    // to be fixed in case of Circle
     const screenComponent = new Components.Screen({
-      width: 800,
-      height: 600,
-      entityWidth: radiusComponent.value * 2,
-      entityHeight: radiusComponent.value * 2,
-      offscreenBehavior: "contain",
+      width: store.get("screenWidth"),
+      height: store.get("screenHeight"),
+      offscreenBehavior: "bounce",
     });
 
     this.attachComponent(transformComponent);
     this.attachComponent(velocityComponent);
-    this.attachComponent(radiusComponent);
+    this.attachComponent(sizeComponent);
     this.attachComponent(colourComponent);
     this.attachComponent(screenComponent);
   }

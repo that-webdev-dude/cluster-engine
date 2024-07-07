@@ -2,32 +2,20 @@ import { Component } from "../../core/Component";
 
 // Interface for component properties
 export interface ScreenOptions {
-  width?: number;
-  height?: number;
-  entityWidth?: number;
-  entityHeight?: number;
-  offscreenBehavior?: "contain" | "wrap" | "die";
+  width: number;
+  height: number;
+  offscreenBehavior?: "contain" | "wrap" | "die" | "bounce" | "none";
 }
 
 // Screen Component
 export class ScreenComponent implements Component {
   width: number;
   height: number;
-  entityWidth: number;
-  entityHeight: number;
-  offscreenBehavior: "contain" | "wrap" | "die";
+  offscreenBehavior: "contain" | "wrap" | "die" | "bounce" | "none";
 
-  constructor({
-    width = 800,
-    height = 600,
-    entityWidth = 32,
-    entityHeight = 32,
-    offscreenBehavior = "contain",
-  }: ScreenOptions = {}) {
+  constructor({ width, height, offscreenBehavior = "contain" }: ScreenOptions) {
     this.width = width;
     this.height = height;
-    this.entityWidth = entityWidth;
-    this.entityHeight = entityHeight;
     this.offscreenBehavior = offscreenBehavior;
   }
 }

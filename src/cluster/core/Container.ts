@@ -34,10 +34,6 @@ export class Container<T> {
     });
   }
 
-  // delete(item: T) {
-  //   this.remove(item);
-  // }
-
   clear() {
     this._items.clear();
   }
@@ -54,5 +50,20 @@ export class Container<T> {
 
   forEach(callback: (item: T, id: number) => void) {
     this._items.forEach((item, id) => callback(item, id));
+  }
+
+  equals(other: Container<T>): boolean {
+    if (this.size !== other.size) {
+      return false;
+    }
+
+    let areEqual = true;
+    this._items.forEach((value, key) => {
+      if (value !== other.get(key)) {
+        areEqual = false;
+      }
+    });
+
+    return areEqual;
   }
 }

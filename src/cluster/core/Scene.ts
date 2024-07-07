@@ -33,7 +33,7 @@ export class Scene {
     if (this.systems.size === 0) return;
     this.systems.forEach((system) => {
       if (system.update) {
-        system.update(dt, t);
+        system.update(this.entities, dt, t);
       }
     });
   }

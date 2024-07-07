@@ -4,21 +4,25 @@ import { Entity } from "./cluster";
 import { System } from "./cluster";
 import { Container } from "./cluster";
 import { Systems } from "./cluster/ecs";
-import { Circle } from "./entities/Circle";
+import { Rect } from "./entities/Rect";
+import { Player } from "./entities/Player";
+import { store } from "./store";
 
 class GamePlay extends Scene {
   constructor() {
-    const N_CIRCLES = 1;
+    const nRects = 4;
 
     const entities = new Container<Entity>();
-    for (let i = 0; i < N_CIRCLES; i++) {
-      entities.add(new Circle());
+    for (let i = 0; i < nRects; i++) {
+      entities.add(new Rect());
     }
+    entities.add(new Player());
 
     const systems = new Container<System>();
-    systems.add(new Systems.Physics(entities));
-    systems.add(new Systems.Screen(entities));
-    systems.add(new Systems.Render(entities));
+    systems.add(new Systems.Input(entities));
+    systems.add(new Systems.Movement());
+    systems.add(new Systems.Screen());
+    systems.add(new Systems.Render());
 
     super({
       name: "GamePlay",
@@ -30,8 +34,8 @@ class GamePlay extends Scene {
 
 export default () => {
   const game = new Game({
-    width: 800,
-    height: 600,
+    width: store.get("screenWidth"),
+    height: store.get("screenHeight"),
     scenes: new Map([["GamePlay", () => new GamePlay()]]),
   });
 

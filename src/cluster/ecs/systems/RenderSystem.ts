@@ -10,22 +10,12 @@ enum RenderErrors {
 }
 
 export class RenderSystem extends System {
-  private _entities: Container<Entity>;
-
-  constructor(entities: Container<Entity>) {
-    super();
-    this._entities = entities;
-  }
-
   private _isVisible(entity: Entity): boolean {
     const visibility = entity.getComponent(Components.Visibility);
     return visibility ? visibility.visible && visibility.opacity > 0 : true;
   }
 
-  private _applyTransformations(
-    context: CanvasRenderingContext2D,
-    entity: Entity
-  ) {
+  private _applyTransform(context: CanvasRenderingContext2D, entity: Entity) {
     const transform = entity.getComponent(Components.Transform);
     if (transform) {
       context.translate(
@@ -74,21 +64,23 @@ export class RenderSystem extends System {
     }
   }
 
-  update(): void {
+  update(entities: Container<Entity>): void {
+    if (!entities.size) return;
+
     const context = document.querySelector("canvas")?.getContext("2d");
     if (!context) {
       console.warn(RenderErrors.NoContext);
       return;
     }
 
-    if (!this._entities.size) {
+    if (!entities.size) {
       console.warn(RenderErrors.NoEntities);
       return;
     }
 
     context.clearRect(0, 0, context.canvas.width, context.canvas.height);
 
-    this._entities.forEach((entity) => {
+    entities.forEach((entity) => {
       if (!this._isVisible(entity)) return;
 
       context.save();
@@ -98,7 +90,7 @@ export class RenderSystem extends System {
         context.globalAlpha = visibility.opacity;
       }
 
-      this._applyTransformations(context, entity);
+      this._applyTransform(context, entity);
       this._drawEntity(context, entity);
 
       context.restore();

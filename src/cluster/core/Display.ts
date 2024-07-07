@@ -37,12 +37,12 @@ export class Display {
 
   private _initialize() {
     // set device pixel ratio
-    const dpr = window.devicePixelRatio || 1;
-    this.view.width = this.width * dpr;
-    this.view.height = this.height * dpr;
-    this.view.style.width = `${this.width}px`;
-    this.view.style.height = `${this.height}px`;
-    this.context.scale(dpr, dpr);
+    // const dpr = window.devicePixelRatio || 1;
+    // this.view.width = this.width * dpr;
+    // this.view.height = this.height * dpr;
+    // this.view.style.width = `${this.width}px`;
+    // this.view.style.height = `${this.height}px`;
+    // this.context.scale(dpr, dpr);
 
     this.context.textBaseline = "top";
     this.context.imageSmoothingEnabled = true;

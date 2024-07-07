@@ -6,7 +6,6 @@ import { RadiusComponent } from "./components/RadiusComponent";
 import { ColourComponent } from "./components/ColourComponent";
 import { TextComponent } from "./components/TextComponent";
 import { SizeComponent } from "./components/SizeComponent";
-// import { SpeedComponent } from "./components/SpeedComponent";
 import { VelocityComponent } from "./components/VelocityComponent";
 import { PhysicsComponent } from "./components/PhysicsComponent";
 import { KeyboardComponent } from "./components/KeyboardComponent";
@@ -24,7 +23,6 @@ namespace Components {
   export const Radius = RadiusComponent;
   export const Text = TextComponent;
   export const Size = SizeComponent;
-  // export const Speed = SpeedComponent;
   export const Velocity = VelocityComponent;
   export const Physics = PhysicsComponent;
   export const Keyboard = KeyboardComponent;
@@ -42,7 +40,8 @@ import { RenderSystem } from "./systems/RenderSystem";
 import { InputSystem } from "./systems/InputSystem";
 import { ScreenSystem } from "./systems/ScreenSystem";
 import { SpawnSystem } from "./systems/SpawnSystem";
-import { PhysicsSystem } from "./systems/PhysicsSystem";
+// import { PhysicsSystem } from "./systems/PhysicsSystem";
+import { MovementSystem } from "./systems/MovementSystem";
 import { CollisionSystem, ResolutionSystem } from "./systems/CollisionSystem";
 
 namespace Systems {
@@ -50,7 +49,8 @@ namespace Systems {
   export const Input = InputSystem;
   export const Spawn = SpawnSystem;
   export const Screen = ScreenSystem;
-  export const Physics = PhysicsSystem;
+  // export const Physics = PhysicsSystem;
+  export const Movement = MovementSystem;
   export const Collision = CollisionSystem;
   export const Resolution = ResolutionSystem;
 }

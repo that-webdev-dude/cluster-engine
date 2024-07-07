@@ -4,14 +4,7 @@ import { System } from "../../core/System";
 import { Cmath } from "../../tools/Cmath";
 import { Components } from "../index";
 
-export class PhysicsSystem extends System {
-  private _entities: Container<Entity>;
-
-  constructor(entities: Container<Entity>) {
-    super();
-    this._entities = entities;
-  }
-
+export class MovementSystem extends System {
   private _integrate(entity: Entity, dt: number) {
     const transformComponent = entity.getComponent(Components.Transform);
     const velocityComponent = entity.getComponent(Components.Velocity);
@@ -66,7 +59,7 @@ export class PhysicsSystem extends System {
   }
 
   public update(entities: Container<Entity>, dt: number): void {
-    const systemEntities = this._entities.filter((entity) =>
+    const systemEntities = entities.filter((entity) =>
       entity.hasComponents(Components.Transform, Components.Velocity)
     );
 
