@@ -1,15 +1,26 @@
 import { Container } from "../../core/Container";
 import { Entity } from "../../core/Entity";
 import { System } from "../../core/System";
+import { Vector } from "../../tools/Vector";
 import { Cmath } from "../../tools/Cmath";
 import { Components } from "../index";
 
-export class PhysicsSystem extends System {
-  private _entities: Container<Entity>;
+// cache the entities that have a physics component
+let systemEntities: Container<Entity>;
 
-  constructor(entities: Container<Entity>) {
-    super();
-    this._entities = entities;
+export class PhysicsSystem extends System {
+  private _accumulate(entity: Entity, dt: number) {
+    const physics = entity.getComponent(Components.Physics);
+    if (physics) {
+      const { acceleration, friction, mass, forces, impulses } = physics;
+      if (forces) {
+        forces.forEach((force) => {
+          const userForce = force();
+          acceleration.x += userForce.x / mass;
+          acceleration.y += userForce.y / mass;
+        });
+      }
+    }
   }
 
   private _integrate(entity: Entity, dt: number) {
@@ -19,17 +30,17 @@ export class PhysicsSystem extends System {
     if (transformComponent && velocityComponent) {
       let accelerationX = 0;
       let accelerationY = 0;
-      let physicsComponent = entity.getComponent(Components.Physics);
+
+      const physicsComponent = entity.getComponent(Components.Physics);
       if (physicsComponent) {
         const { acceleration } = physicsComponent;
         accelerationX = acceleration.x;
         accelerationY = acceleration.y;
         acceleration.set(0, 0);
-        // here you need to apply any additional forces like gravity or friction and add them to accelerationX and accelerationY respectively
       }
 
       const { position } = transformComponent;
-      const { velocity, maxSpeed, minSpeed } = velocityComponent;
+      const { velocity, minSpeed, maxSpeed } = velocityComponent;
 
       let vx = velocity.x + accelerationX * dt;
       let vy = velocity.y + accelerationY * dt;
@@ -59,19 +70,19 @@ export class PhysicsSystem extends System {
     }
   }
 
-  private _processEntities(entities: Container<Entity>, dt: number) {
-    entities.forEach((entity) => {
+  public update(entities: Container<Entity>, dt: number): void {
+    if (!entities.size) return;
+
+    systemEntities = entities.filter((entity) =>
+      entity.hasComponent(Components.Physics)
+    );
+    if (!systemEntities.size) return;
+
+    systemEntities.forEach((entity) => {
+      this._accumulate(entity, dt);
       this._integrate(entity, dt);
     });
-  }
 
-  public update(entities: Container<Entity>, dt: number): void {
-    const systemEntities = this._entities.filter((entity) =>
-      entity.hasComponents(Components.Transform, Components.Velocity)
-    );
-
-    if (systemEntities.size) {
-      this._processEntities(systemEntities, dt);
-    }
+    systemEntities.clear();
   }
 }

@@ -1,3 +1,5 @@
+import { Vector } from "../tools/Vector";
+
 // components
 import { VisibilityComponent } from "./components/VisibilityComponent";
 import { TransformComponent } from "./components/TransformComponent";
@@ -40,7 +42,7 @@ import { RenderSystem } from "./systems/RenderSystem";
 import { InputSystem } from "./systems/InputSystem";
 import { ScreenSystem } from "./systems/ScreenSystem";
 import { SpawnSystem } from "./systems/SpawnSystem";
-// import { PhysicsSystem } from "./systems/PhysicsSystem";
+import { PhysicsSystem } from "./systems/PhysicsSystem";
 import { MovementSystem } from "./systems/MovementSystem";
 import { CollisionSystem, ResolutionSystem } from "./systems/CollisionSystem";
 
@@ -49,7 +51,7 @@ namespace Systems {
   export const Input = InputSystem;
   export const Spawn = SpawnSystem;
   export const Screen = ScreenSystem;
-  // export const Physics = PhysicsSystem;
+  export const Physics = PhysicsSystem;
   export const Movement = MovementSystem;
   export const Collision = CollisionSystem;
   export const Resolution = ResolutionSystem;

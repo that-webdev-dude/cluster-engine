@@ -1,44 +1,26 @@
 import { Game } from "./cluster";
-import { Scene } from "./cluster";
-import { Entity } from "./cluster";
-import { System } from "./cluster";
-import { Container } from "./cluster";
-import { Systems } from "./cluster/ecs";
-import { Rect } from "./entities/Rect";
-import { Player } from "./entities/Player";
+import { GameMenu } from "./scenes/GameMenu";
+import { GamePlay } from "./scenes/GamePlay";
 import { store } from "./store";
 
-class GamePlay extends Scene {
-  constructor() {
-    const nRects = 4;
+const scenes = store.get("gameScenes");
+const height = store.get("screenHeight");
+const width = store.get("screenWidth");
 
-    const entities = new Container<Entity>();
-    for (let i = 0; i < nRects; i++) {
-      entities.add(new Rect());
-    }
-    entities.add(new Player());
+const game = new Game({
+  height,
+  width,
+  scenes: new Map([
+    [scenes.GameMenu, () => new GameMenu()],
+    [scenes.GamePlay, () => new GamePlay()],
+  ]),
+});
 
-    const systems = new Container<System>();
-    systems.add(new Systems.Input(entities));
-    systems.add(new Systems.Movement());
-    systems.add(new Systems.Screen());
-    systems.add(new Systems.Render());
-
-    super({
-      name: "GamePlay",
-      entities,
-      systems,
-    });
-  }
-}
+store.on("gameScene-changed", () => {
+  game.setScene(store.get("gameScene"));
+});
 
 export default () => {
-  const game = new Game({
-    width: store.get("screenWidth"),
-    height: store.get("screenHeight"),
-    scenes: new Map([["GamePlay", () => new GamePlay()]]),
-  });
-
-  game.setScene("GamePlay");
+  game.setScene(scenes.GameMenu);
   game.start();
 };

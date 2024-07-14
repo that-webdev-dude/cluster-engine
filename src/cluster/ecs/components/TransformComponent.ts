@@ -1,6 +1,11 @@
 import { Component } from "../../core/Component";
 import { Vector } from "../../tools/Vector";
 
+// Component errors
+enum TransformErrors {
+  AngleRange = "[TransformComponent]: Angle must be between 0 and 360",
+}
+
 // Interface for component properties
 export interface TransformOptions {
   position?: Vector;
@@ -25,11 +30,8 @@ export class TransformComponent implements Component {
     pivot = new Vector(0, 0),
     angle = 0,
   }: TransformOptions = {}) {
-    if (angle < 0 || angle > 360) {
-      throw new TypeError(
-        "[TransformComponent constructor]: Angle must be between 0 and 360"
-      );
-    }
+    if (angle < 0 || angle > 360)
+      throw new TypeError(TransformErrors.AngleRange);
 
     this.position = Vector.from(position);
     this.anchor = Vector.from(anchor);
@@ -43,11 +45,9 @@ export class TransformComponent implements Component {
   }
 
   set angle(angle: number) {
-    if (angle < 0 || angle > 360) {
-      throw new TypeError(
-        "[TransformComponent setter]: Angle must be between 0 and 360"
-      );
-    }
+    if (angle < 0 || angle > 360)
+      throw new TypeError(TransformErrors.AngleRange);
+
     this._angle = angle;
   }
 }

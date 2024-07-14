@@ -4,6 +4,8 @@ import { System } from "../../core/System";
 import { Cmath } from "../../tools/Cmath";
 import { Components } from "../index";
 
+let systemEntities: Container<Entity>;
+
 export class MovementSystem extends System {
   private _integrate(entity: Entity, dt: number) {
     const transformComponent = entity.getComponent(Components.Transform);
@@ -12,17 +14,17 @@ export class MovementSystem extends System {
     if (transformComponent && velocityComponent) {
       let accelerationX = 0;
       let accelerationY = 0;
-      let physicsComponent = entity.getComponent(Components.Physics);
+
+      const physicsComponent = entity.getComponent(Components.Physics);
       if (physicsComponent) {
         const { acceleration } = physicsComponent;
         accelerationX = acceleration.x;
         accelerationY = acceleration.y;
         acceleration.set(0, 0);
-        // here you need to apply any additional forces like gravity or friction and add them to accelerationX and accelerationY respectively
       }
 
       const { position } = transformComponent;
-      const { velocity, maxSpeed, minSpeed } = velocityComponent;
+      const { velocity, minSpeed, maxSpeed } = velocityComponent;
 
       let vx = velocity.x + accelerationX * dt;
       let vy = velocity.y + accelerationY * dt;
@@ -52,19 +54,18 @@ export class MovementSystem extends System {
     }
   }
 
-  private _processEntities(entities: Container<Entity>, dt: number) {
-    entities.forEach((entity) => {
-      this._integrate(entity, dt);
-    });
-  }
-
   public update(entities: Container<Entity>, dt: number): void {
-    const systemEntities = entities.filter((entity) =>
+    if (!entities.size) return;
+
+    systemEntities = entities.filter((entity) =>
       entity.hasComponents(Components.Transform, Components.Velocity)
     );
+    if (!systemEntities.size) return;
 
-    if (systemEntities.size) {
-      this._processEntities(systemEntities, dt);
-    }
+    systemEntities.forEach((entity) => {
+      this._integrate(entity, dt);
+    });
+
+    systemEntities.clear();
   }
 }

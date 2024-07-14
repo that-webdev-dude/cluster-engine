@@ -1,17 +1,25 @@
 import { Component } from "../../core/Component";
 
+type OffscreenBehavior =
+  | "contain"
+  | "wrap"
+  | "die"
+  | "stop"
+  | "bounce"
+  | "none";
+
 // Interface for component properties
 export interface ScreenOptions {
   width: number;
   height: number;
-  offscreenBehavior?: "contain" | "wrap" | "die" | "bounce" | "none";
+  offscreenBehavior?: OffscreenBehavior;
 }
 
 // Screen Component
 export class ScreenComponent implements Component {
   width: number;
   height: number;
-  offscreenBehavior: "contain" | "wrap" | "die" | "bounce" | "none";
+  offscreenBehavior: OffscreenBehavior;
 
   constructor({ width, height, offscreenBehavior = "contain" }: ScreenOptions) {
     this.width = width;

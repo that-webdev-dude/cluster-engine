@@ -16,7 +16,6 @@ const DEFAULTS: GameOptions = {
 };
 
 export class Game {
-  // private _scenes: Map<string, Scene> = new Map();
   private _scenes: Map<string, Cluster.Creator<Scene>> = new Map();
   private _display: Display;
   private _engine: Engine;
@@ -45,33 +44,10 @@ export class Game {
     }
   }
 
-  // public get context(): CanvasRenderingContext2D {
-  //   return this._display.context;
-  // }
-
-  // public addScene(scene: Scene): void {
-  //   this._scenes.set(scene.name, scene);
-  //   if (this._scenes.size === 1) {
-  //     this._scene = scene;
-  //   }
-  // }
-
-  // public getScene(name: string): Scene | null {
-  //   if (this._scenes.has(name)) {
-  //     return this._scenes.get(name) as Scene;
-  //   }
-  //   return null;
-  // }
-
-  // public setScene(name: string): void {
-  //   if (this._scenes.has(name)) {
-  //     this._scene = this._scenes.get(name) as Scene;
-  //   }
-  // }
-
   public setScene(string: string): void {
     const scene = this._scenes.get(string);
     if (scene) {
+      console.log(scene);
       this._scene = scene();
     }
   }

@@ -15,49 +15,53 @@ import { Entity } from "../../core/Entity";
 import { System } from "../../core/System";
 import { Components } from "../index";
 
-/**
- * Represents a system responsible for handling input.
- */
+let systemEntities = new Container<Entity>();
+
 export class InputSystem extends System {
-  private _entities: Container<Entity>;
+  readonly _keyState: Map<string, boolean> = new Map();
 
-  constructor(entities: Container<Entity>) {
+  constructor() {
     super();
-    this._entities = entities;
 
-    // Bind the context of the event handlers
-    this._handleKeyEvent = this._handleKeyEvent.bind(this);
-
-    document.addEventListener("keydown", this._handleKeyEvent);
-    document.addEventListener("keyup", this._handleKeyEvent);
+    document.addEventListener("keyup", this._handleKeyState.bind(this));
+    document.addEventListener("keydown", this._handleKeyState.bind(this));
   }
 
-  private _handleKeyEvent(event: KeyboardEvent): void {
-    const isPressed = event.type === "keydown";
-    this._updateKey(event.code, isPressed);
+  private _handleKeyState(e: KeyboardEvent): void {
+    if (e.type === "keydown") {
+      this._keyState.set(e.code, true);
+    } else if (e.type === "keyup") {
+      this._keyState.set(e.code, false);
+    }
   }
 
-  /**
-   * Updates the state of a key for each entity.
-   * @param code
-   * @param isPressed
-   */
-  private _updateKey(code: string, isPressed: boolean): void {
-    if (!this._entities.size) return;
+  private _destroy(): void {
+    // ...
+  }
 
-    this._entities.forEach((entity) => {
+  public update(entities: Container<Entity>, dt: number): void {
+    if (!entities.size) return;
+
+    systemEntities = entities.filter((entity) =>
+      entity.hasComponent(Components.Keyboard)
+    );
+    if (!systemEntities.size) return;
+
+    systemEntities.forEach((entity) => {
       const keyboard = entity.getComponent(Components.Keyboard);
-      if (keyboard?.keys.has(code)) {
-        keyboard.keys.set(code, isPressed);
-      }
-    });
-  }
+      if (!keyboard) return;
 
-  /**
-   * Clean up event listeners when the system is destroyed.
-   */
-  destroy(): void {
-    document.removeEventListener("keydown", this._handleKeyEvent);
-    document.removeEventListener("keyup", this._handleKeyEvent);
+      this._keyState.forEach((value, key) => {
+        if (keyboard.keys.has(key)) {
+          keyboard.keys.set(key, value);
+        }
+      });
+
+      keyboard.actions.forEach((action) => {
+        action();
+      });
+    });
+
+    systemEntities.clear();
   }
 }

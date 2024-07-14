@@ -6,4 +6,8 @@ export namespace Cluster {
   export type Updater<T> = (args: any) => T;
 
   export type Degrees = number;
+
+  export type ITest = {
+    test: string;
+  };
 }

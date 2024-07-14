@@ -10,7 +10,7 @@ export interface Options {
 
 // Velocity Component
 export class VelocityComponent implements Component {
-  public velocity: Vector;
+  private _velocity: Vector;
   private _maxSpeed: number | undefined;
   private _minSpeed: number | undefined;
 
@@ -19,7 +19,7 @@ export class VelocityComponent implements Component {
     minSpeed = undefined,
     maxSpeed = undefined,
   }: Options = {}) {
-    this.velocity = velocity;
+    this._velocity = velocity;
     this._minSpeed = minSpeed;
     this._maxSpeed = maxSpeed;
   }
@@ -38,6 +38,14 @@ export class VelocityComponent implements Component {
 
   set y(value: number) {
     this.velocity.y = value;
+  }
+
+  get velocity(): Vector {
+    return this._velocity;
+  }
+
+  set velocity(value: Vector) {
+    this._velocity = value;
   }
 
   get minSpeed(): number | undefined {

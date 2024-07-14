@@ -13,27 +13,50 @@ export class Player extends Entity {
     });
     const velocityComponent = new Components.Velocity({
       velocity: new Vector(0, 0),
+      minSpeed: 0,
+      maxSpeed: 200,
     });
     const sizeComponent = new Components.Size({
-      width: 50,
       height: 50,
+      width: 50,
     });
     const colourComponent = new Components.Colour({
-      fill: "red",
       stroke: "transparent",
+      fill: "red",
     });
     const screenComponent = new Components.Screen({
       width: store.get("screenWidth"),
       height: store.get("screenHeight"),
-      offscreenBehavior: "bounce",
+      offscreenBehavior: "stop",
     });
-    const keyboardComponent = new Components.Keyboard();
+    const physicsComponent = new Components.Physics({
+      friction: 0.1,
+      mass: 1,
+      // forces: [
+      //   () => {
+      //     return new Vector(
+      //       keyboardComponent.x * 500,
+      //       keyboardComponent.y * 500
+      //     );
+      //   },
+      // ],
+      // impulses: [],
+    });
+    const keyboardComponent = new Components.Keyboard({
+      actions: [
+        () => {
+          velocityComponent.velocity.x = keyboardComponent.x * 200;
+          velocityComponent.velocity.y = keyboardComponent.y * 200;
+        },
+      ],
+    });
 
+    this.attachComponent(keyboardComponent);
     this.attachComponent(transformComponent);
-    this.attachComponent(velocityComponent);
     this.attachComponent(sizeComponent);
     this.attachComponent(colourComponent);
+    this.attachComponent(physicsComponent);
+    this.attachComponent(velocityComponent);
     this.attachComponent(screenComponent);
-    this.attachComponent(keyboardComponent);
   }
 }

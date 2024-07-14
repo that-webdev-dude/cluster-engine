@@ -1,14 +1,16 @@
 import { Component } from "../../core/Component";
 import { Vector } from "../../tools/Vector";
 
+type ForceGenerator = () => Vector;
+
 // Interface for component properties
-export interface PhysicsOptions {
-  acceleration?: Vector;
-  velocity?: Vector;
+interface PhysicsOptions {
   friction?: number;
-  gravity?: number;
+  impulses?: ForceGenerator[];
+  forces?: ForceGenerator[];
   mass?: number;
-  triggerForce?: Vector;
+  minSpeed?: number;
+  maxSpeed?: number;
 }
 
 // Physics Component
@@ -16,23 +18,27 @@ export class PhysicsComponent implements Component {
   acceleration: Vector;
   velocity: Vector;
   friction: number;
-  gravity: number;
+  impulses: ForceGenerator[];
+  forces: ForceGenerator[];
   mass: number;
-  triggerForce: Vector;
+  minSpeed?: number | undefined;
+  maxSpeed?: number | undefined;
 
   constructor({
-    acceleration = new Vector(0, 0),
-    velocity = new Vector(0, 0),
-    friction = 0.9,
-    gravity = 0.3,
+    friction = 0,
+    impulses = [],
+    forces = [],
     mass = 1,
-    triggerForce = new Vector(0, 0),
-  }: PhysicsOptions = {}) {
-    this.acceleration = Vector.from(acceleration);
-    this.velocity = Vector.from(velocity);
+    minSpeed = undefined,
+    maxSpeed = undefined,
+  }: PhysicsOptions) {
+    this.acceleration = new Vector(0, 0);
+    this.velocity = new Vector(0, 0);
     this.friction = friction;
-    this.gravity = gravity;
+    this.impulses = impulses;
+    this.forces = forces;
     this.mass = mass;
-    this.triggerForce = Vector.from(triggerForce);
+    this.minSpeed = minSpeed;
+    this.maxSpeed = maxSpeed;
   }
 }

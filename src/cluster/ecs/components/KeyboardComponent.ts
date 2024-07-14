@@ -1,8 +1,8 @@
 import { Component } from "../../core/Component";
 
 // Interface for component properties
-export interface KeyboardControlsOptions {
-  keys?: Map<string, boolean>;
+export interface KeyboardOptions {
+  actions?: Array<() => void>;
 }
 
 // Keyboard Controls Component
@@ -23,6 +23,13 @@ export class KeyboardComponent implements Component {
       Escape: false,
     })
   );
+  actions: Array<() => void> = [];
+
+  constructor(options: KeyboardOptions) {
+    if (options) {
+      if (options.actions) this.actions = [...options.actions];
+    }
+  }
 
   get left(): boolean {
     return this.keys.get("KeyA") || this.keys.get("ArrowLeft") || false;

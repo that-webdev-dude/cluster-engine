@@ -1,5 +1,10 @@
 import { Component } from "../../core/Component";
 
+// Component errors
+enum VisibilityErrors {
+  InvalidOpacity = "[VisibilityComponent]: Opacity must be between 0 and 1",
+}
+
 // Interface for component properties
 export interface VisibilityOptions {
   opacity?: number;
@@ -11,9 +16,7 @@ export class VisibilityComponent implements Component {
 
   constructor({ opacity = 1 }: VisibilityOptions = {}) {
     if (opacity < 0 || opacity > 1) {
-      throw new TypeError(
-        "[VisibilityComponent constructor]: Opacity must be between 0 and 1"
-      );
+      throw new TypeError(VisibilityErrors.InvalidOpacity);
     }
     this._opacity = opacity;
   }
@@ -24,9 +27,7 @@ export class VisibilityComponent implements Component {
 
   set opacity(value: number) {
     if (value < 0 || value > 1) {
-      throw new TypeError(
-        "[VisibilityComponent setter]: Opacity must be between 0 and 1"
-      );
+      throw new TypeError(VisibilityErrors.InvalidOpacity);
     }
     this._opacity = value;
   }

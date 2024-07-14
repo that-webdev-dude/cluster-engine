@@ -1,18 +1,35 @@
 import { Store } from "../cluster";
 
+enum GameScenes {
+  GameMenu = "GameMenu",
+  GamePlay = "GamePlay",
+}
+
 const state = {
   screenWidth: 800,
   screenHeight: 600,
+  gameScenes: GameScenes,
+  gameScene: GameScenes.GameMenu,
 };
 
 const getters = {
-  screenWidth: (state: any) => state.screenWidth,
   screenHeight: (state: any) => state.screenHeight,
+  screenWidth: (state: any) => state.screenWidth,
+  gameScenes: (state: any) => state.gameScenes,
+  gameScene: (state: any) => state.gameScene,
 };
 
-const actions = {};
+const actions = {
+  setGameScene(context: any, scene: GameScenes) {
+    context.commit("setGameScene", scene);
+  },
+};
 
-const mutations = {};
+const mutations = {
+  setGameScene(state: any, payload: GameScenes) {
+    state.gameScene = payload;
+  },
+};
 
 const store = new Store({
   state,

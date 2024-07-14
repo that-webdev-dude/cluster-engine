@@ -10,6 +10,14 @@ enum RenderErrors {
 }
 
 export class RenderSystem extends System {
+  private _getContext(): CanvasRenderingContext2D {
+    const context = document.querySelector("canvas")?.getContext("2d");
+    if (!context) {
+      throw new Error(RenderErrors.NoContext);
+    }
+    return context;
+  }
+
   private _isVisible(entity: Entity): boolean {
     const visibility = entity.getComponent(Components.Visibility);
     return visibility ? visibility.visible && visibility.opacity > 0 : true;
@@ -65,20 +73,11 @@ export class RenderSystem extends System {
   }
 
   update(entities: Container<Entity>): void {
-    if (!entities.size) return;
-
-    const context = document.querySelector("canvas")?.getContext("2d");
-    if (!context) {
-      console.warn(RenderErrors.NoContext);
-      return;
-    }
-
-    if (!entities.size) {
-      console.warn(RenderErrors.NoEntities);
-      return;
-    }
+    const context = this._getContext();
 
     context.clearRect(0, 0, context.canvas.width, context.canvas.height);
+
+    if (!entities.size) return;
 
     entities.forEach((entity) => {
       if (!this._isVisible(entity)) return;
