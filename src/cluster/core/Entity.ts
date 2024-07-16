@@ -14,6 +14,7 @@ export class Entity {
     this.components = new Map();
   }
 
+  // note that the entity cannot have multiple components of the same type
   attachComponent(component: Component): void {
     this.components.set(component.constructor.name, component);
   }

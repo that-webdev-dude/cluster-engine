@@ -6,7 +6,13 @@ class Ease {
   }
 
   static out(x: number, power: number): number {
-    return 1 - Ease.in(1 - x, power);
+    return 1 - Ease.in(x, power);
+  }
+
+  static inOut(x: number, power: number): number {
+    return x < 0.5
+      ? Ease.in(x * 2, power) / 2
+      : Ease.out(x * 2, power) / 2 + 0.5;
   }
 
   static quadIn(x: number): number {

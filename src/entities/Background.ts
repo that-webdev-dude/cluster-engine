@@ -1,18 +1,20 @@
 import { Entity, Vector } from "../cluster";
-import { Components } from "../cluster/ecs";
+import { Transform } from "../components/Transform";
+import { Colour } from "../components/Colour";
+import { Size } from "../components/Size";
 import { store } from "../store";
 
-export class Background extends Entity {
-  constructor(fill: string) {
+export class MenuBackground extends Entity {
+  constructor() {
     super();
 
-    const transform = new Components.Transform({
-      position: new Vector(),
+    const transform = new Transform({
+      position: new Vector(0, 0),
     });
-    const colour = new Components.Colour({
-      fill,
+    const colour = new Colour({
+      fill: "black",
     });
-    const size = new Components.Size({
+    const size = new Size({
       width: store.get("screenWidth"),
       height: store.get("screenHeight"),
     });

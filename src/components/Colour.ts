@@ -1,0 +1,21 @@
+import { Component } from "../cluster";
+
+// Component errors
+enum ComponentErrors {}
+
+// Interface for component properties
+export interface ComponentOptions {
+  fill?: string;
+  strike?: string;
+}
+
+// Transform Component
+export class Colour implements Component {
+  public fill: string;
+  public stroke: string;
+
+  constructor({ fill = "black" }: ComponentOptions = {}) {
+    this.fill = fill;
+    this.stroke = "transparent";
+  }
+}

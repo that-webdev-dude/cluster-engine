@@ -47,7 +47,6 @@ export class Game {
   public setScene(string: string): void {
     const scene = this._scenes.get(string);
     if (scene) {
-      console.log(scene);
       this._scene = scene();
     }
   }
