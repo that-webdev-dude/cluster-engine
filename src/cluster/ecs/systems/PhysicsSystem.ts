@@ -1,7 +1,6 @@
 import { Container } from "../../core/Container";
 import { Entity } from "../../core/Entity";
 import { System } from "../../core/System";
-import { Vector } from "../../tools/Vector";
 import { Cmath } from "../../tools/Cmath";
 import { Components } from "../index";
 
