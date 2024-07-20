@@ -38,16 +38,16 @@ export class Scene {
     });
   }
 
-  private _cleanup() {
-    this.entities.forEach((entity) => {
-      if (entity.dead) {
-        this.entities.remove(entity);
-      }
-    });
-  }
+  // private _cleanup() {
+  //   this.entities.forEach((entity) => {
+  //     if (entity.dead) {
+  //       this.entities.remove(entity);
+  //     }
+  //   });
+  // }
 
   update(dt: number, t: number) {
     this._updateSystems(dt, t);
-    this._cleanup();
+    // this._cleanup();
   }
 }

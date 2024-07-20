@@ -1,21 +1,26 @@
 import { Store } from "../cluster";
 
-enum GameScenes {
+export enum GameScenes {
   GameMenu = "GameMenu",
   GamePlay = "GamePlay",
+}
+
+export enum GameCollisionLayer {
+  Default = 1 << 0,
+  Player = 1 << 1,
+  Enemy = 1 << 2,
+  Bullet = 1 << 3,
 }
 
 const state = {
   screenWidth: 800,
   screenHeight: 600,
-  gameScenes: GameScenes,
   gameScene: GameScenes.GameMenu,
 };
 
 const getters = {
   screenHeight: (state: any) => state.screenHeight,
   screenWidth: (state: any) => state.screenWidth,
-  gameScenes: (state: any) => state.gameScenes,
   gameScene: (state: any) => state.gameScene,
 };
 

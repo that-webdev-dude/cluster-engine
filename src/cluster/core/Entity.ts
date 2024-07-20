@@ -5,12 +5,10 @@ export class Entity {
   readonly id: string;
   readonly type: string;
   readonly components: Map<string, Component>;
-  public dead: boolean;
 
   constructor(type?: string) {
     this.id = Cmath.randId(6);
     this.type = type || this.constructor.name;
-    this.dead = false;
     this.components = new Map();
   }
 

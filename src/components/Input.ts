@@ -5,32 +5,83 @@ import { Keyboard } from "../cluster";
 // enum ComponentErrors {}
 
 // Interface for component properties
-// export interface ComponentOptions {}
+export interface ComponentOptions {
+  action: string;
+  pause: string;
+  quit: string;
+  enter: string;
+  right: string;
+  down: string;
+  left: string;
+  up: string;
+}
 
 // Transform Component
 export class Input implements Component {
+  private _action: string;
+  private _pause: string;
+  private _quit: string;
+  private _enter: string;
+  private _right: string;
+  private _down: string;
+  private _left: string;
+  private _up: string;
+
+  constructor(options: ComponentOptions) {
+    this._action = options.action;
+    this._pause = options.pause;
+    this._quit = options.quit;
+    this._enter = options.enter;
+    this._right = options.right;
+    this._down = options.down;
+    this._left = options.left;
+    this._up = options.up;
+  }
+
   get action() {
-    return Keyboard.action;
+    return Keyboard.key(this._action);
   }
 
   get pause() {
-    return Keyboard.pause;
+    return Keyboard.key(this._pause);
   }
 
   get quit() {
-    return Keyboard.quit;
+    return Keyboard.key(this._quit);
   }
 
   get enter() {
-    return Keyboard.enter;
+    return Keyboard.key(this._enter);
+  }
+
+  get right() {
+    return Keyboard.key(this._right);
+  }
+
+  get down() {
+    return Keyboard.key(this._down);
+  }
+
+  get left() {
+    return Keyboard.key(this._left);
+  }
+
+  get up() {
+    return Keyboard.key(this._up);
   }
 
   get x() {
-    return Keyboard.x;
+    return (
+      (Number(this.right) || Number(Keyboard.key("ArrowRight"))) -
+      (Number(this.left) || Number(Keyboard.key("ArrowLeft")))
+    );
   }
 
   get y() {
-    return Keyboard.y;
+    return (
+      (Number(this.down) || Number(Keyboard.key("ArrowDown"))) -
+      (Number(this.up) || Number(Keyboard.key("ArrowUp")))
+    );
   }
 
   get active() {

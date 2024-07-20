@@ -1,10 +1,11 @@
 import { Scene, Container, Entity, System, Keyboard } from "../cluster";
+import { CollisionSystem } from "../systems/CollisionSystem";
 import { MovementSystem } from "../systems/MovementSystem";
 import { RenderSystem } from "../systems/RenderSystem";
-// import { InputSystem } from "../systems/InputSystem";
+import { BoundarySystem } from "../systems/BoundarySystem";
 import { Player } from "../entities/Character";
 import { Enemy } from "../entities/Character";
-import { store } from "../store";
+import { store, GameScenes } from "../store";
 
 export class GamePlay extends Scene {
   constructor() {
@@ -14,6 +15,8 @@ export class GamePlay extends Scene {
 
     const systems = new Container<System>();
     systems.add(new MovementSystem());
+    systems.add(new BoundarySystem());
+    systems.add(new CollisionSystem());
     systems.add(new RenderSystem());
 
     super({
@@ -24,8 +27,8 @@ export class GamePlay extends Scene {
   }
 
   update(dt: number, t: number) {
-    if (Keyboard.enter) {
-      store.dispatch("setGameScene", store.get("gameScenes").GameMenu);
+    if (Keyboard.key("Escape")) {
+      store.dispatch("setGameScene", GameScenes.GameMenu);
       Keyboard.active = false;
     }
 

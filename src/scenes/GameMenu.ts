@@ -4,7 +4,7 @@ import { RenderSystem } from "../systems/RenderSystem";
 import { MenuBackground } from "../entities/Background";
 import { ActionText } from "../entities/Text";
 import { TitleText } from "../entities/Text";
-import { store } from "../store";
+import { store, GameScenes } from "../store";
 
 export class GameMenu extends Scene {
   constructor() {
@@ -26,8 +26,8 @@ export class GameMenu extends Scene {
 
   update(dt: number, t: number) {
     // console.log("GameMenu update");
-    if (Keyboard.enter) {
-      store.dispatch("setGameScene", store.get("gameScenes").GamePlay);
+    if (Keyboard.key("Enter")) {
+      store.dispatch("setGameScene", GameScenes.GamePlay);
       Keyboard.active = false;
     }
 

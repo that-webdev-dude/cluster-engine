@@ -171,7 +171,7 @@ export class ScreenSystem extends System {
   private _die(entity: Entity): void {
     const transform = entity.getComponent(Components.Transform);
     const screen = entity.getComponent(Components.Screen);
-    if (transform && screen && !entity.dead) {
+    if (transform && screen) {
       const entityHeight = this._getEntityHeight(entity);
       const entityWidth = this._getEntityWidth(entity);
       if (
@@ -180,7 +180,7 @@ export class ScreenSystem extends System {
         transform.position.y + entityHeight < 0 ||
         transform.position.y > screen.height
       ) {
-        entity.dead = true;
+        // entity.dead = true;
       }
     }
   }

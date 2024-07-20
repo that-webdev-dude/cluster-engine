@@ -27,6 +27,10 @@ let SystemCache = {
   entities: new Container<Entity>(),
 };
 
+/**
+ * RenderSystem
+ * @components Transform, Size, Colour, Texture, Text, Visibility
+ */
 export class RenderSystem extends System {
   private _getContext(): CanvasRenderingContext2D {
     const context = document.querySelector("canvas")?.getContext("2d");

@@ -18,6 +18,10 @@ let SystemCache = {
   entities: new Container<Entity>(),
 };
 
+/**
+ * VisibilitySystem
+ * @components Visibility, Fade
+ */
 export class VisibilitySystem extends System {
   update(entities: Container<Entity>, dt: number, t: number): void {
     if (!entities.size) return;

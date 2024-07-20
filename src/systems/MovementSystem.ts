@@ -22,6 +22,10 @@ let SystemCache = {
   entities: new Container<Entity>(),
 };
 
+/**
+ * MovementSystem
+ * @components Transform, Velocity, Input, InputMotion, VibrationMotion
+ */
 export class MovementSystem extends System {
   private _move(entity: Entity, dt: number) {
     const transform = entity.getComponent(SystemComponents.Transform);
@@ -101,8 +105,8 @@ export class MovementSystem extends System {
         const transform = entity.getComponent(SystemComponents.Transform);
         if (transform) {
           const { position } = transform;
-          position.x += Cmath.rand(-offsetX, offsetX);
-          position.y += Cmath.rand(-offsetY, offsetY);
+          position.x += Cmath.randf(-offsetX, offsetX);
+          position.y += Cmath.randf(-offsetY, offsetY);
         }
       }
     });

@@ -87,7 +87,7 @@ export class ResolutionSystem extends System {
   }
 
   private _dieResolution(entity: Entity): void {
-    if (entity.dead) return;
+    // if (entity.dead) return;
 
     const collision = entity.getComponent(Components.Collision);
 
@@ -98,7 +98,7 @@ export class ResolutionSystem extends System {
 
       if (!other) return;
 
-      entity.dead = true;
+      // entity.dead = true;
 
       const { resolvers } = collision;
       resolvers.forEach((resolver) => {

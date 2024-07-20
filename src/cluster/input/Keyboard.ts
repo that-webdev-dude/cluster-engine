@@ -33,36 +33,6 @@ export class Keyboard {
     Keyboard._keys[e.code] = false;
   }
 
-  public static get action(): boolean {
-    return Keyboard.key("Space");
-  }
-
-  public static get pause(): boolean {
-    return Keyboard.key("KeyP");
-  }
-
-  public static get quit(): boolean {
-    return Keyboard.key("Escape");
-  }
-
-  public static get enter(): boolean {
-    return Keyboard.key("Enter");
-  }
-
-  public static get x(): number {
-    return (
-      (Number(Keyboard.key("KeyD")) || Number(Keyboard.key("ArrowRight"))) -
-      (Number(Keyboard.key("KeyA")) || Number(Keyboard.key("ArrowLeft")))
-    );
-  }
-
-  public static get y(): number {
-    return (
-      (Number(Keyboard.key("KeyS")) || Number(Keyboard.key("ArrowDown"))) -
-      (Number(Keyboard.key("KeyW")) || Number(Keyboard.key("ArrowUp")))
-    );
-  }
-
   public static key(key: string, value?: boolean): boolean {
     if (!Keyboard.active) return false;
     if (value !== undefined) {

@@ -1,9 +1,9 @@
 import { Game } from "./cluster";
 import { GameMenu } from "./scenes/GameMenu";
 import { GamePlay } from "./scenes/GamePlay";
-import { store } from "./store";
+import { store, GameScenes } from "./store";
 
-const scenes = store.get("gameScenes");
+const scenes = GameScenes;
 const height = store.get("screenHeight");
 const width = store.get("screenWidth");
 
