@@ -28,6 +28,10 @@ const actions = {
   setGameScene(context: any, scene: GameScenes) {
     context.commit("setGameScene", scene);
   },
+
+  dummy() {
+    console.log("Dummy action");
+  },
 };
 
 const mutations = {

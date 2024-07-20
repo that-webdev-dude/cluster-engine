@@ -6,9 +6,9 @@ import { Colour } from "../components/Colour";
 import { Input } from "../components/Input";
 import { Size } from "../components/Size";
 import { Hitbox } from "../components/Hitbox";
+import { Collision } from "../components/Collision";
 import { InputMotion } from "../components/motion/InputMotion";
 import { VibrationMotion } from "../components/motion/VibrationMotion";
-import { Collision } from "../components/Collision";
 import { store, GameCollisionLayer } from "../store";
 
 export class Player extends Entity {
@@ -102,6 +102,18 @@ export class Enemy extends Entity {
     const collision = new Collision({
       layer: GameCollisionLayer.Enemy,
       mask: GameCollisionLayer.Player,
+      resolvers: [
+        {
+          mask: GameCollisionLayer.Player,
+          type: "die",
+          actions: [
+            {
+              name: "dummy",
+              data: 1,
+            },
+          ],
+        },
+      ],
     });
     const vibrationMotion = new VibrationMotion({
       offsetX: 4,

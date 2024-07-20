@@ -185,7 +185,7 @@ export class BoundarySystem extends System {
     }
   }
 
-  private _die(entity: Entity): void {
+  private _die(entities: Container<Entity>, entity: Entity): void {
     const transform = entity.getComponent(SystemComponents.Transform);
     const boundary = entity.getComponent(SystemComponents.Boundary);
     if (transform && boundary) {
@@ -197,7 +197,7 @@ export class BoundarySystem extends System {
         transform.position.y + entityHeight < 0 ||
         transform.position.y > boundary.height
       ) {
-        // entity.dead = true; // mark entity for removal
+        entities.remove(entity);
       }
     }
   }
@@ -224,7 +224,7 @@ export class BoundarySystem extends System {
             this._wrap(entity);
             break;
           case SystemBehaviors.DIE:
-            this._die(entity);
+            this._die(entities, entity);
             break;
           case SystemBehaviors.STOP:
             this._stop(entity);

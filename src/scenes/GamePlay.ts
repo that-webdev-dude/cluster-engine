@@ -1,5 +1,6 @@
 import { Scene, Container, Entity, System, Keyboard } from "../cluster";
 import { CollisionSystem } from "../systems/CollisionSystem";
+import { ResolutionSystem } from "../systems/ResolutionSystem";
 import { MovementSystem } from "../systems/MovementSystem";
 import { RenderSystem } from "../systems/RenderSystem";
 import { BoundarySystem } from "../systems/BoundarySystem";
@@ -17,6 +18,7 @@ export class GamePlay extends Scene {
     systems.add(new MovementSystem());
     systems.add(new BoundarySystem());
     systems.add(new CollisionSystem());
+    systems.add(new ResolutionSystem());
     systems.add(new RenderSystem());
 
     super({

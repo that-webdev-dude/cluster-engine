@@ -5,13 +5,13 @@ enum ComponentErrors {
   rangeError = "[Fade] Duration must be greater than 0.",
 }
 
-// ...
-type Easing = "easeIn" | "easeOut" | "easeInOut";
+// Component behaviors
+type EasingBehavior = "easeIn" | "easeOut" | "easeInOut";
 
 // Interface for component properties
 export interface ComponentOptions {
   duration?: number;
-  easing?: Easing;
+  easing?: EasingBehavior;
   loop?: boolean;
 }
 
@@ -20,7 +20,7 @@ export class Fade implements Component {
   elapsedTime: number = 0;
   complete: boolean = false;
   duration: number;
-  easing: Easing;
+  easing: EasingBehavior;
   loop: boolean;
 
   constructor({

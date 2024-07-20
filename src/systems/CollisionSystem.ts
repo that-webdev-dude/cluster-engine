@@ -10,8 +10,6 @@ const SystemComponents = {
   Transform,
   Size,
   Hitbox, // optional
-  //   Velocity,
-  //   Boundary,
 };
 
 // system errors
@@ -75,12 +73,16 @@ export class CollisionSystem extends System {
     if (!collision) return;
 
     // add an entity to the collision data only if it doesn't already exist
-    //     collision.data.forEach((data) => {
-    //       if (data.entity.id !== other.id) collision.data.add({ entity: other });
-    //     });
-
-    //     console.log(collision.data.size);
-    //     collision.data.add({ entity: other });
+    if (!collision.data.size) {
+      collision.data.add({ entity: other });
+      return;
+    } else {
+      collision.data.forEach((data) => {
+        if (data.entity.id !== other.id) {
+          collision.data.add({ entity: other });
+        }
+      });
+    }
   }
 
   private _testCollision(entity: Entity, other: Entity) {
