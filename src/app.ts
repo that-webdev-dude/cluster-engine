@@ -21,6 +21,6 @@ store.on("gameScene-changed", () => {
 });
 
 export default () => {
-  game.setScene(scenes.GameMenu);
+  game.setScene(scenes.GamePlay);
   game.start();
 };

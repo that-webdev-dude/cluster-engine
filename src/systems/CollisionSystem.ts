@@ -3,6 +3,7 @@ import { Collision } from "../components/Collision";
 import { Transform } from "../components/Transform";
 import { Hitbox } from "../components/Hitbox";
 import { Size } from "../components/Size";
+import { Resolver } from "./ResolutionSystem";
 
 // system dependencies
 const SystemComponents = {
@@ -17,11 +18,6 @@ enum SystemErrors {
   DependencyError = "[CollisionSystem]: missing required components Transform, Size, Hitbox?",
 }
 
-// system types
-export interface CollisionData {
-  entity: Entity;
-}
-
 // system cache
 let SystemCache = {
   entities: new Container<Entity>(),
@@ -34,10 +30,7 @@ export class CollisionSystem extends System {
 
     if (!entityCollision || !otherCollision) return false;
 
-    return (
-      (entityCollision.mask & otherCollision.layer &&
-        otherCollision.mask & entityCollision.layer) !== 0
-    );
+    return (entityCollision.mask & otherCollision.layer) !== 0;
   }
 
   private _getHitbox(entity: Entity):
@@ -67,22 +60,50 @@ export class CollisionSystem extends System {
     return hitbox;
   }
 
+  private _getResolverType(entity: Entity, other: Entity): Resolver | "" {
+    const collision = entity.getComponent(SystemComponents.Collision);
+
+    if (!collision) return "";
+
+    const resolver = collision.resolvers.find((resolver) => {
+      return (
+        resolver.mask === other.getComponent(SystemComponents.Collision)?.layer
+      );
+    });
+
+    return resolver?.type || "";
+  }
+
   private _storeCollision(entity: Entity, other: Entity): void {
     const collision = entity.getComponent(SystemComponents.Collision);
 
-    if (!collision) return;
+    // if there are no resolvers, don't store the collision
+    if (!collision || !collision.resolvers.length) return;
 
     // add an entity to the collision data only if it doesn't already exist
-    if (!collision.data.size) {
-      collision.data.add({ entity: other });
-      return;
-    } else {
-      collision.data.forEach((data) => {
-        if (data.entity.id !== other.id) {
-          collision.data.add({ entity: other });
+    const resolverType = this._getResolverType(entity, other);
+    if (resolverType) {
+      if (collision.data.has(resolverType)) {
+        const data = collision.data.get(resolverType);
+        if (data) {
+          if (!data.includes(other)) {
+            data.push(other);
+          }
         }
-      });
+      } else {
+        collision.data.set(resolverType, [other]);
+      }
     }
+    // if (!collision.data.size) {
+    //   collision.data.add({ entity: other });
+    //   return;
+    // } else {
+    //   collision.data.forEach((data) => {
+    //     if (data.entity.id !== other.id) {
+    //       collision.data.add({ entity: other });
+    //     }
+    //   });
+    // }
   }
 
   private _testCollision(entity: Entity, other: Entity) {

@@ -54,7 +54,19 @@ export class Player extends Entity {
     });
     const collision = new Collision({
       layer: GameCollisionLayer.Player,
-      mask: GameCollisionLayer.Enemy,
+      mask: GameCollisionLayer.Enemy | GameCollisionLayer.Wall,
+      resolvers: [
+        {
+          mask: GameCollisionLayer.Wall,
+          type: "slide",
+          actions: [
+            {
+              name: "dummy",
+              data: 1,
+            },
+          ],
+        },
+      ],
     });
     const inputMotion = new InputMotion({
       speedX: 200,

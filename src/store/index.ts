@@ -10,12 +10,13 @@ export enum GameCollisionLayer {
   Player = 1 << 1,
   Enemy = 1 << 2,
   Bullet = 1 << 3,
+  Wall = 1 << 4,
 }
 
 const state = {
-  screenWidth: 800,
-  screenHeight: 600,
-  gameScene: GameScenes.GameMenu,
+  screenWidth: 26 * 32,
+  screenHeight: 20 * 32,
+  gameScene: GameScenes.GamePlay,
 };
 
 const getters = {

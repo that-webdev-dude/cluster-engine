@@ -15,9 +15,12 @@ let SystemCache = {
   entities: new Container<Entity>(),
 };
 
+// system types
+export type Resolver = "die" | "slide";
+
 export class ResolutionSystem extends System {
-  private _dieResolution(entities: Container<Entity>, entity: Entity): void {
-    entities.remove(entity);
+  private _dieResolution(): void {
+    // ...
   }
 
   update(entities: Container<Entity>): void {
@@ -32,27 +35,58 @@ export class ResolutionSystem extends System {
       const collision = entity.getComponent(SystemComponents.Collision);
       if (!collision || !collision.data.size) return;
 
-      collision.data.forEach((collisionData) => {
-        const other = collisionData.entity;
-        if (!other) return;
+      const { resolvers } = collision;
+      resolvers.forEach((resolver) => {
+        switch (resolver.type) {
+          case "slide":
+            // implement the slide resolution
+            console.log(entity.type, collision.data.get("slide"));
+            break;
 
-        const { resolvers } = collision;
-        resolvers.forEach((resolver) => {
-          const { mask, type, actions } = resolver;
-          const layer =
-            other.getComponent(SystemComponents.Collision)?.layer || 0;
-          if (mask & layer) {
-            switch (type) {
-              case "die":
-                this._dieResolution(entities, entity);
-                break;
-            }
-            actions?.forEach((action) => {
-              store.dispatch(action.name, action.data);
+          case "die":
+            const data = collision.data.get("die");
+            if (!data) return;
+
+            data.forEach((otherEntity) => {
+              const layer =
+                otherEntity.getComponent(SystemComponents.Collision)?.layer ||
+                0;
+              const { mask, actions } = resolver;
+              if (mask & layer) {
+                entities.remove(entity);
+              }
+
+              if (actions?.length) {
+                actions.forEach((action) => {
+                  store.dispatch(action.name, action.data);
+                });
+              }
             });
-          }
-        });
+            break;
+        }
       });
+
+      // collision.data.forEach((collisionData) => {
+      //   const other = collisionData.entity;
+      //   if (!other) return;
+
+      //   const { resolvers } = collision;
+      //   resolvers.forEach((resolver) => {
+      //     const { mask, type, actions } = resolver;
+      //     const layer =
+      //       other.getComponent(SystemComponents.Collision)?.layer || 0;
+      //     if (mask & layer) {
+      //       switch (type) {
+      //         case "die":
+      //           this._dieResolution(entities, entity);
+      //           break;
+      //       }
+      //       actions?.forEach((action) => {
+      //         store.dispatch(action.name, action.data);
+      //       });
+      //     }
+      //   });
+      // });
 
       collision.data.clear();
     });
