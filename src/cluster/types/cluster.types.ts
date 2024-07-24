@@ -1,4 +1,5 @@
 import { Entity } from "../core/Entity";
+import { Vector } from "../tools/Vector";
 
 export namespace Cluster {
   export type EntityGenerator<T extends Entity> = (...args: any[]) => T | T[];
@@ -10,4 +11,11 @@ export namespace Cluster {
   export type ITest = {
     test: string;
   };
+
+  export interface CollisionData {
+    other: Entity;
+    overlap: Vector;
+    normal: Vector;
+    area: number;
+  }
 }

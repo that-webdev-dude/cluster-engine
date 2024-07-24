@@ -43,7 +43,7 @@ export class MovementSystem extends System {
       //   acceleration.set(0, 0);
       // }
 
-      const { position } = transform;
+      const { previousPosition, position } = transform;
       const { minSpeed, maxSpeed } = velocity;
 
       let vx = velocity.value.x + accelerationX * dt;
@@ -57,6 +57,8 @@ export class MovementSystem extends System {
       let dx = ((velocity.value.x + vx) / 2) * dt;
       let dy = ((velocity.value.y + vy) / 2) * dt;
 
+      // previousPosition.x = position.x;
+      // previousPosition.y = position.y;
       position.x += dx;
       position.y += dy;
 
@@ -100,11 +102,14 @@ export class MovementSystem extends System {
       const vibrationMotion = entity.getComponent(
         SystemComponents.VibrationMotion
       );
+
       if (vibrationMotion) {
         const { offsetX, offsetY } = vibrationMotion;
         const transform = entity.getComponent(SystemComponents.Transform);
         if (transform) {
-          const { position } = transform;
+          const { previousPosition, position } = transform;
+          // previousPosition.x = position.x;
+          // previousPosition.y = position.y;
           position.x += Cmath.randf(-offsetX, offsetX);
           position.y += Cmath.randf(-offsetY, offsetY);
         }

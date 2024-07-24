@@ -13,3 +13,6 @@ export { Keyboard } from "./input";
 // tools
 export { Cmath } from "./tools/Cmath";
 export { Vector } from "./tools/Vector";
+
+// types
+export * from "./types/cluster.types";

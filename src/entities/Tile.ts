@@ -2,6 +2,7 @@ import { Entity, Vector } from "../cluster";
 import { Transform } from "../components/Transform";
 import { Colour } from "../components/Colour";
 import { Collision } from "../components/Collision";
+import { Hitbox } from "../components/Hitbox";
 import { Size } from "../components/Size";
 import { GameCollisionLayer } from "../store";
 
@@ -20,6 +21,13 @@ export class Floor extends Entity {
       stroke: "black",
       fill: "transparent",
     });
+    const hitbox = new Hitbox({
+      x: 0,
+      y: 0,
+      width: 32,
+      height: 32,
+      anchor: transform.position,
+    });
     const collision = new Collision({
       layer: GameCollisionLayer.Wall,
     });
@@ -27,6 +35,7 @@ export class Floor extends Entity {
     this.attachComponent(transform);
     this.attachComponent(size);
     this.attachComponent(colour);
+    this.attachComponent(hitbox);
     this.attachComponent(collision);
   }
 }

@@ -6,12 +6,7 @@ import { Resolver } from "../systems/ResolutionSystem";
 // Component errors
 enum ComponentErrors {}
 
-// Component types
-// export interface CollisionData {
-//   entity: Entity;
-// }
-// type Resolver = "die" | "slide";
-
+// Interface for component properties
 interface CollisionResolver {
   mask: number;
   type: Resolver;
@@ -21,8 +16,14 @@ interface CollisionResolver {
   }[];
 }
 
-// Interface for component properties
-export interface ComponentOptions {
+interface CollisionData {
+  other: Entity;
+  overlap: Vector;
+  normal: Vector;
+  area: number;
+}
+
+interface ComponentOptions {
   layer?: number;
   mask?: number;
   resolvers?: CollisionResolver[];
@@ -32,7 +33,7 @@ export interface ComponentOptions {
 export class Collision implements Component {
   readonly layer: number;
   readonly mask: number;
-  readonly data: Map<Resolver, Entity[]>;
+  readonly data: Map<Resolver, CollisionData[]>;
   readonly resolvers: CollisionResolver[];
 
   constructor({ layer = 0, mask = 1, resolvers = [] }: ComponentOptions = {}) {

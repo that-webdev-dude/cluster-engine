@@ -21,7 +21,7 @@ export class Player extends Entity {
       behavior: "stop",
     });
     const transform = new Transform({
-      position: new Vector(32, 32),
+      position: new Vector(320, 32),
     });
     const velocity = new Velocity({
       value: new Vector(0, 0),
@@ -54,10 +54,9 @@ export class Player extends Entity {
     });
     const collision = new Collision({
       layer: GameCollisionLayer.Player,
-      mask: GameCollisionLayer.Enemy | GameCollisionLayer.Wall,
       resolvers: [
         {
-          mask: GameCollisionLayer.Wall,
+          mask: GameCollisionLayer.Wall | GameCollisionLayer.Enemy,
           type: "slide",
           actions: [
             {
@@ -69,8 +68,8 @@ export class Player extends Entity {
       ],
     });
     const inputMotion = new InputMotion({
-      speedX: 200,
-      speedY: 200,
+      speedX: 400,
+      speedY: 400,
     });
 
     this.attachComponent(boundary);
@@ -102,30 +101,17 @@ export class Enemy extends Entity {
     });
     const size = new Size({
       width: 32,
-      height: 32,
+      height: 216,
     });
     const hitbox = new Hitbox({
       x: 0,
       y: 0,
       width: 32,
-      height: 32,
+      height: 216,
       anchor: transform.position,
     });
     const collision = new Collision({
       layer: GameCollisionLayer.Enemy,
-      mask: GameCollisionLayer.Player,
-      resolvers: [
-        {
-          mask: GameCollisionLayer.Player,
-          type: "die",
-          actions: [
-            {
-              name: "dummy",
-              data: 1,
-            },
-          ],
-        },
-      ],
     });
     const vibrationMotion = new VibrationMotion({
       offsetX: 4,
