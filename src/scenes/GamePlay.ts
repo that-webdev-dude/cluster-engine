@@ -1,26 +1,23 @@
 import { Scene, Container, Entity, System, Keyboard } from "../cluster";
-// systems
 import { CollisionSystem } from "../systems/CollisionSystem";
 import { ResolutionSystem } from "../systems/ResolutionSystem";
 import { MovementSystem } from "../systems/MovementSystem";
 import { RenderSystem } from "../systems/RenderSystem";
 import { BoundarySystem } from "../systems/BoundarySystem";
 import { PhysicsSystem } from "../systems/PhysicsSystem";
-// entities
 import { GameBackground } from "../entities/Background";
 import { Player } from "../entities/Character";
 import { Enemy } from "../entities/Character";
 import { Floor } from "../entities/Tile";
-// store
 import { store, GameScenes } from "../store";
 
 const createFloor = (): Array<Entity> => {
-  const mapWidth = store.get("screenWidth") / 32;
+  const mapWidth = store.get("worldWidth") / 32;
 
   const tiles = [];
   for (let i = 0; i < mapWidth; i++) {
     const x = i * 32;
-    const tile = new Floor(x, store.get("screenHeight") - 32);
+    const tile = new Floor(x, store.get("worldHeight") - 32);
     tiles.push(tile);
   }
 

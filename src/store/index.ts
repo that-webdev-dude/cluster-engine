@@ -13,15 +13,20 @@ export enum GameCollisionLayer {
   Wall = 1 << 4,
 }
 
+// store
 const state = {
-  screenWidth: 26 * 32,
   screenHeight: 20 * 32,
+  screenWidth: 26 * 32,
+  worldHeight: 20 * 32,
+  worldWidth: 26 * 32 * 2,
   gameScene: GameScenes.GamePlay,
 };
 
 const getters = {
   screenHeight: (state: any) => state.screenHeight,
   screenWidth: (state: any) => state.screenWidth,
+  worldHeight: (state: any) => state.worldHeight,
+  worldWidth: (state: any) => state.worldWidth,
   gameScene: (state: any) => state.gameScene,
 };
 

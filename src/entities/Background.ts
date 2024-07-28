@@ -36,8 +36,8 @@ export class GameBackground extends Entity {
       fill: "black",
     });
     const size = new Size({
-      width: store.get("screenWidth"),
-      height: store.get("screenHeight"),
+      width: store.get("worldWidth"),
+      height: store.get("worldHeight"),
     });
 
     this.attachComponent(transform);

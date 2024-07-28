@@ -102,6 +102,9 @@ export class RenderSystem extends System {
     );
     if (!SystemCache.entities.size) return;
 
+    context.save();
+    // context.translate(-32, 0);
+
     SystemCache.entities.forEach((entity) => {
       if (!this._isVisible(entity)) return;
 
@@ -117,6 +120,8 @@ export class RenderSystem extends System {
 
       context.restore();
     });
+
+    context.restore();
 
     SystemCache.entities.clear();
   }
