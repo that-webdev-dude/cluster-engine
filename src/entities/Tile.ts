@@ -18,7 +18,7 @@ export class Floor extends Entity {
       height: 32,
     });
     const colour = new Colour({
-      stroke: "black",
+      stroke: "white",
       fill: "transparent",
     });
     const hitbox = new Hitbox({

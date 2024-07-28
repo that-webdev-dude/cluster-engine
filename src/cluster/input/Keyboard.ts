@@ -5,11 +5,7 @@ type KeyMap = {
 export class Keyboard {
   private static _keys: KeyMap = {};
   private static _preventDefaultKeys: Set<string> = new Set([
-    "ArrowLeft",
-    "ArrowUp",
-    "ArrowRight",
-    "ArrowDown",
-    "Space",
+    // ...
   ]);
   public static active: boolean = true;
 
@@ -40,6 +36,20 @@ export class Keyboard {
     }
 
     return Keyboard._keys[key] || false;
+  }
+
+  public static x(): number {
+    return (
+      (Number(Keyboard.key("ArrowRight")) || Number(Keyboard.key("KeyD"))) -
+      (Number(Keyboard.key("ArrowLeft")) || Number(Keyboard.key("KeyA")))
+    );
+  }
+
+  public static y(): number {
+    return (
+      (Number(Keyboard.key("ArrowDown")) || Number(Keyboard.key("KeyS"))) -
+      (Number(Keyboard.key("ArrowUp")) || Number(Keyboard.key("KeyW")))
+    );
   }
 
   public static reset(): void {

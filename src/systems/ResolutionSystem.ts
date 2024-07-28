@@ -103,7 +103,8 @@ export class ResolutionSystem extends System {
     if (area <= 0 && overlap.x <= 0 && overlap.y <= 0) return; // area is negative or zero: no more collision
 
     transform.position = transform.position.add(overlap.multiply(normal));
-    velocity.value.multiply(normal);
+    if (normal.x !== 0) velocity.value.x = 0;
+    if (normal.y !== 0) velocity.value.y = 0;
 
     collisionData.shift();
 

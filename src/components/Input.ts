@@ -18,6 +18,7 @@ export interface ComponentOptions {
 
 // Transform Component
 export class Input implements Component {
+  [key: string]: any;
   private _action: string;
   private _pause: string;
   private _quit: string;
@@ -55,19 +56,19 @@ export class Input implements Component {
   }
 
   get right() {
-    return Keyboard.key(this._right);
+    return Keyboard.key(this._right) || Keyboard.key("ArrowRight");
   }
 
   get down() {
-    return Keyboard.key(this._down);
+    return Keyboard.key(this._down) || Keyboard.key("ArrowDown");
   }
 
   get left() {
-    return Keyboard.key(this._left);
+    return Keyboard.key(this._left) || Keyboard.key("ArrowLeft");
   }
 
   get up() {
-    return Keyboard.key(this._up);
+    return Keyboard.key(this._up) || Keyboard.key("ArrowUp");
   }
 
   get x() {

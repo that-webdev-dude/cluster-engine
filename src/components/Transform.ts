@@ -17,7 +17,6 @@ export interface TransformOptions {
 
 // Transform Component
 export class Transform implements Component {
-  public previousPosition: Vector;
   public position: Vector;
   public anchor: Vector;
   public scale: Vector;
@@ -34,7 +33,6 @@ export class Transform implements Component {
     if (angle < 0 || angle > 360)
       throw new TypeError(TransformErrors.AngleRange);
 
-    this.previousPosition = Vector.from(position);
     this.position = Vector.from(position);
     this.anchor = Vector.from(anchor);
     this.scale = Vector.from(scale);

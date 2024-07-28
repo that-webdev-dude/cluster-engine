@@ -350,4 +350,13 @@ export class Vector {
   public unit(): this {
     return this.normalize();
   }
+
+  /**
+   * check if two vectors are equal by comparing their x and y values
+   * @param param0
+   * @returns
+   */
+  public equals({ x, y }: Vector): boolean {
+    return this.x === x && this.y === y;
+  }
 }

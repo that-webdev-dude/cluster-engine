@@ -1,4 +1,4 @@
-import { Entity, Vector } from "../cluster";
+import { Entity, Vector, Keyboard } from "../cluster";
 import { Boundary } from "../components/Boundary";
 import { Transform } from "../components/Transform";
 import { Velocity } from "../components/Velocity";
@@ -6,8 +6,9 @@ import { Colour } from "../components/Colour";
 import { Input } from "../components/Input";
 import { Size } from "../components/Size";
 import { Hitbox } from "../components/Hitbox";
+import { Physics } from "../components/Physics";
 import { Collision } from "../components/Collision";
-import { InputMotion } from "../components/motion/InputMotion";
+// import { InputMotion } from "../components/motion/InputMotion";
 import { VibrationMotion } from "../components/motion/VibrationMotion";
 import { store, GameCollisionLayer } from "../store";
 
@@ -21,15 +22,15 @@ export class Player extends Entity {
       behavior: "stop",
     });
     const transform = new Transform({
-      position: new Vector(320, 32),
+      position: new Vector(32, 32),
     });
     const velocity = new Velocity({
       value: new Vector(0, 0),
-      minSpeed: 10,
-      maxSpeed: 200,
+      maxSpeed: 400,
     });
     const colour = new Colour({
-      fill: "red",
+      fill: "transparent",
+      stroke: "white",
     });
     const size = new Size({
       width: 32,
@@ -67,9 +68,26 @@ export class Player extends Entity {
         },
       ],
     });
-    const inputMotion = new InputMotion({
-      speedX: 400,
-      speedY: 400,
+    const physics = new Physics({
+      mass: 1,
+      generators: [
+        () => {
+          let x = 2000 * Keyboard.x();
+          let y = 2000 * Keyboard.y();
+          return { x, y };
+        },
+        () => {
+          return { x: 0, y: 1000 };
+        },
+      ],
+      // forces: [
+      //   { inputKey: "up", force: { x: 0, y: -2000 } },
+      //   { inputKey: "down", force: { x: 0, y: 2000 } },
+      //   { inputKey: "left", force: { x: -2000, y: 0 } },
+      //   { inputKey: "right", force: { x: 2000, y: 0 } },
+      //   { force: { x: 0, y: 1000 } },
+      // ],
+      // impulses: [{ inputKey: "action", force: { x: 0, y: -1000 } }],
     });
 
     this.attachComponent(boundary);
@@ -79,8 +97,8 @@ export class Player extends Entity {
     this.attachComponent(size);
     this.attachComponent(input);
     this.attachComponent(hitbox);
+    this.attachComponent(physics);
     this.attachComponent(collision);
-    this.attachComponent(inputMotion);
   }
 }
 
@@ -97,7 +115,7 @@ export class Enemy extends Entity {
       position: new Vector(320, 320),
     });
     const colour = new Colour({
-      fill: "blue",
+      fill: "white",
     });
     const size = new Size({
       width: 32,
