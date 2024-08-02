@@ -2,52 +2,45 @@ import { Container } from "./Container";
 import { Entity } from "./Entity";
 import { System } from "./System";
 
+type SystemContainer = Container<System>;
+
+type EntityContainer = Container<Entity>;
+
 interface SceneOptions {
-  entities?: Container<Entity>;
-  systems?: Container<System>;
+  systems?: SystemContainer;
+  entities?: EntityContainer;
   name?: string;
 }
 
 export class Scene {
   readonly name: string;
-  readonly systems: Container<System>;
-  readonly entities: Container<Entity>;
+  readonly systems: SystemContainer;
+  readonly entities: EntityContainer;
 
   constructor(
     {
       name = "default",
-      entities = new Container<Entity>(),
       systems = new Container<System>(),
+      entities = new Container<Entity>(),
     }: SceneOptions = {
       name: "default",
-      entities: new Container<Entity>(),
       systems: new Container<System>(),
+      entities: new Container<Entity>(),
     }
   ) {
     this.name = name;
-    this.entities = entities;
     this.systems = systems;
+    this.entities = entities;
   }
 
   private _updateSystems(dt: number, t: number) {
     if (this.systems.size === 0) return;
     this.systems.forEach((system) => {
-      if (system.update) {
-        system.update(this.entities, dt, t);
-      }
+      system.update(this.entities, dt, t);
     });
   }
 
-  // private _cleanup() {
-  //   this.entities.forEach((entity) => {
-  //     if (entity.dead) {
-  //       this.entities.remove(entity);
-  //     }
-  //   });
-  // }
-
   update(dt: number, t: number) {
     this._updateSystems(dt, t);
-    // this._cleanup();
   }
 }

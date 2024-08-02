@@ -1,44 +1,30 @@
 import { Scene, Container, Entity, System, Keyboard } from "../cluster";
-// import { CollisionSystem } from "../systems/CollisionSystem";
-// import { ResolutionSystem } from "../systems/ResolutionSystem";
-// import { MovementSystem } from "../systems/MovementSystem";
-// import { RenderSystem } from "../systems/RenderSystem";
-// import { BoundarySystem } from "../systems/BoundarySystem";
-// import { PhysicsSystem } from "../systems/PhysicsSystem";
-// import { GameBackground } from "../entities/Background";
-// import { Player } from "../entities/Character";
-// import { Enemy } from "../entities/Character";
-// import { Floor } from "../entities/Tile";
+import { RenderSystem } from "../systems/RenderSystem";
+import { Background } from "../entities/Rectangle";
+import { Player } from "../entities/Rectangle";
+import { Tile } from "../entities/Rectangle";
 import { store, GameScenes } from "../store";
 
-// const createFloor = (): Array<Entity> => {
-//   const mapWidth = store.get("worldWidth") / 32;
-
-//   const tiles = [];
-//   for (let i = 0; i < mapWidth; i++) {
-//     const x = i * 32;
-//     const tile = new Floor(x, store.get("worldHeight") - 32);
-//     tiles.push(tile);
-//   }
-
-//   return tiles;
-// };
+const createTiles = () => {
+  const tiles = [];
+  for (let i = 0; i < 20; i++) {
+    for (let j = 0; j < 26; j++) {
+      const tile = new Tile(j * 32, i * 32);
+      tiles.push(tile);
+    }
+  }
+  return tiles;
+};
 
 export class GamePlay extends Scene {
   constructor() {
     const entities = new Container<Entity>();
-    // entities.add(new GameBackground());
-    // entities.add(new Player());
-    // entities.add(new Enemy());
-    // entities.add(...createFloor());
+    entities.add(new Background());
+    entities.add(new Player());
+    entities.add(...createTiles());
 
     const systems = new Container<System>();
-    // systems.add(new PhysicsSystem());
-    // systems.add(new MovementSystem());
-    // systems.add(new BoundarySystem());
-    // systems.add(new CollisionSystem());
-    // systems.add(new ResolutionSystem());
-    // systems.add(new RenderSystem());
+    systems.add(new RenderSystem());
 
     super({
       name: "GamePlay",

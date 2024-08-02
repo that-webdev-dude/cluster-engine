@@ -4,6 +4,9 @@ import { Engine } from "./Engine";
 import { Assets } from "./Assets";
 import { Scene } from "./Scene";
 
+// just give the Game a scene to update
+// when chenging scene use setScene method
+
 type GameOptions = {
   scenes?: Map<string, Cluster.Creator<Scene>>;
   height: number;
@@ -23,25 +26,14 @@ export class Game {
 
   constructor(options: GameOptions) {
     const { scenes, width, height } = { ...DEFAULTS, ...options };
-    this._scene = new Scene();
     this._scenes = scenes || new Map();
+    this._scene = new Scene();
     this._engine = new Engine();
     this._display = new Display({
       parentElementId: "#app",
       width,
       height,
     });
-
-    this._initialize();
-  }
-
-  private _initialize() {
-    let appElement = document.querySelector("#app") as HTMLElement;
-    if (!appElement) {
-      throw new Error("[Game.ts:_initialize] Failed to get app element");
-    } else {
-      appElement.appendChild(this._display.view);
-    }
   }
 
   public setScene(string: string): void {

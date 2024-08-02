@@ -18,10 +18,15 @@ export class Display {
     const canvas = document.createElement("canvas");
     const context = canvas.getContext("2d");
 
-    if (!context) throw new Error("Failed to get 2D context");
+    if (!context)
+      throw new Error("[Display Error]: Failed to get Canvas 2D context");
 
     if (parentElementId) {
       let appElement = document.querySelector(parentElementId) as HTMLElement;
+
+      if (!appElement)
+        throw new Error("[Display Error]: Failed to get HTML parent element");
+
       canvas.width = width;
       canvas.height = height;
       appElement.appendChild(canvas);
@@ -36,14 +41,6 @@ export class Display {
   }
 
   private _initialize() {
-    // set device pixel ratio
-    // const dpr = window.devicePixelRatio || 1;
-    // this.view.width = this.width * dpr;
-    // this.view.height = this.height * dpr;
-    // this.view.style.width = `${this.width}px`;
-    // this.view.style.height = `${this.height}px`;
-    // this.context.scale(dpr, dpr);
-
     this.context.textBaseline = "top";
     this.context.imageSmoothingEnabled = true;
     document.addEventListener("keypress", (event) => {

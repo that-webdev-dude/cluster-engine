@@ -1,5 +1,5 @@
 export { Game } from "./core/Game";
-export { Entity } from "./core/Entity";
+export { Entity, EntityContainer } from "./core/Entity";
 export { Component } from "./core/Component";
 export { Container } from "./core/Container";
 export { System } from "./core/System";
