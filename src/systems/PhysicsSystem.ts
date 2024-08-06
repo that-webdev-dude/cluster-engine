@@ -1,4 +1,11 @@
-// import { Container, Entity, System, Cmath, Vector, Keyboard } from "../cluster";
+// import {
+//   Component,
+//   Container,
+//   Entity,
+//   System,
+//   Vector,
+//   EntityGroup,
+// } from "../cluster";
 // import { Physics } from "../components/Physics";
 // import { Input } from "../components/Input";
 
@@ -8,15 +15,26 @@
 //   Input, // optional
 // };
 
-// // system errors
-// enum SystemErrors {}
-
 // // system cache
-// let SystemCache = {
-//   entities: new Container<Entity>(),
-// };
+// class SystemCache {
+//   static entities = new Container<Entity>();
+//   static flatten = (
+//     entities: Container<Entity>,
+//     ...components: Component[]
+//   ) => {
+//     entities.forEach((entity) => {
+//       if (entity.hasComponents(...components)) {
+//         SystemCache.entities.add(entity);
+//       }
 
-// export class PhysicsSystem extends System {
+//       if (entity instanceof EntityGroup) {
+//         SystemCache.flatten(entity.entities, ...components);
+//       }
+//     });
+//   };
+// }
+
+// export class PhysicsSystem implements System {
 //   private _applyForce(
 //     acceleration: Vector,
 //     mass: number,
@@ -28,7 +46,6 @@
 //   }
 
 //   private _applyForces(entity: Entity, dt: number, t: number): void {
-//     const input = entity.getComponent(SystemComponents.Input);
 //     const physics = entity.getComponent(SystemComponents.Physics);
 //     if (!physics) return;
 
@@ -37,44 +54,37 @@
 //       const { x, y } = generator(dt, t);
 //       this._applyForce(physics.acceleration, physics.mass, x, y);
 //     });
+//   }
 
-//     // const { forces } = physics;
-//     // const { acceleration, mass } = physics;
-//     // forces.forEach((entityForce) => {
-//     //   const { inputKey, force } = entityForce;
-//     //   let { x, y } = force;
-//     //   if (inputKey) {
-//     //     if (!input) return;
-//     //     x *= input[inputKey];
-//     //     y *= input[inputKey];
-//     //   }
-//     //   this._applyForce(acceleration, mass, x, y);
-//     // });
+//   private _processEntities(
+//     entities: Container<Entity>,
+//     dt: number,
+//     t: number
+//   ): void {
+//     entities.forEach((entity) => {
+//       if (entity.hasComponent(SystemComponents.Physics)) {
+//         this._applyForces(entity, dt, t);
+//       }
 
-//     // const { impulses } = physics;
-//     // impulses.forEach((entityImpulse) => {
-//     //   const { inputKey, force } = entityImpulse;
-//     //   let { x, y } = force;
-//     //   if (inputKey) {
-//     //     if (!input) return;
-//     //     x *= input[inputKey];
-//     //     y *= input[inputKey];
-//     //   }
-//     //   this._applyForce(acceleration, mass, x / dt, y / dt);
-//     // });
+//       if (entity instanceof EntityGroup) {
+//         this._processEntities(entity.entities, dt, t);
+//       }
+//     });
+//   }
+
+//   requiredComponents(): string[] {
+//     return ["Physics"];
 //   }
 
 //   public update(entities: Container<Entity>, dt: number, t: number): void {
 //     if (!entities.size) return;
 
-//     SystemCache.entities = entities.filter((entity) => {
-//       return entity.hasComponents(SystemComponents.Physics);
-//     });
+//     // SystemCache.flatten(entities, SystemComponents.Physics);
+
 //     if (!SystemCache.entities.size) return;
 
 //     SystemCache.entities.forEach((entity) => {
 //       this._applyForces(entity, dt, t);
-//       // apply friction
 //     });
 
 //     SystemCache.entities.clear();

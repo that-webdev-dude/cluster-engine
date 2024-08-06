@@ -18,7 +18,7 @@ export class Container<T> {
     return this._items.get(index);
   }
 
-  add(...items: any[]): void {
+  add(...items: T[]): void {
     items.forEach((item) => {
       this._items.set(this._index++, item);
     });
@@ -34,8 +34,26 @@ export class Container<T> {
     });
   }
 
+  delete(...items: T[]) {
+    this.remove(...items);
+  }
+
   clear() {
     this._items.clear();
+  }
+
+  has(item: T): boolean {
+    return Array.from(this._items.values()).includes(item);
+  }
+
+  find(fn: (item: T) => boolean): T | undefined {
+    let result: T | undefined;
+    this._items.forEach((item) => {
+      if (fn(item)) {
+        result = item;
+      }
+    });
+    return result;
   }
 
   filter(fn: (item: T) => boolean): Container<T> {
@@ -50,5 +68,9 @@ export class Container<T> {
 
   forEach(fn: (item: T, id: number) => void) {
     this._items.forEach((item, id) => fn(item, id));
+  }
+
+  toArray(): T[] {
+    return Array.from(this._items.values());
   }
 }

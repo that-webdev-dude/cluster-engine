@@ -1,14 +1,12 @@
-import { Cluster } from "../../cluster/types/cluster.types";
 import { Display } from "./Display";
 import { Engine } from "./Engine";
 import { Assets } from "./Assets";
-import { Scene } from "./Scene";
+import { Scene } from "./ECS";
 
 // just give the Game a scene to update
 // when chenging scene use setScene method
 
 type GameOptions = {
-  scenes?: Map<string, Cluster.Creator<Scene>>;
   height: number;
   width: number;
 };
@@ -19,14 +17,12 @@ const DEFAULTS: GameOptions = {
 };
 
 export class Game {
-  private _scenes: Map<string, Cluster.Creator<Scene>> = new Map();
   private _display: Display;
   private _engine: Engine;
-  private _scene: Scene;
+  private _scene: Scene | null = null;
 
   constructor(options: GameOptions) {
-    const { scenes, width, height } = { ...DEFAULTS, ...options };
-    this._scenes = scenes || new Map();
+    const { width, height } = { ...DEFAULTS, ...options };
     this._scene = new Scene();
     this._engine = new Engine();
     this._display = new Display({
@@ -36,11 +32,8 @@ export class Game {
     });
   }
 
-  public setScene(string: string): void {
-    const scene = this._scenes.get(string);
-    if (scene) {
-      this._scene = scene();
-    }
+  public setScene(scene: Scene): void {
+    this._scene = scene;
   }
 
   public start(updateCb: (dt: number, t: number) => void = () => {}): void {

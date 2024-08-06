@@ -14,6 +14,7 @@ export interface ComponentOptions {
 
 // Texture Component
 export class Texture implements Component {
+  readonly type = "Texture";
   image: HTMLImageElement;
 
   constructor({ imageURL }: ComponentOptions) {

@@ -12,6 +12,7 @@ export interface ComponentOptions {
 
 // Transform Component
 export class Text implements Component {
+  readonly type = "Text";
   align: CanvasTextAlign;
   font: string;
   string: string;

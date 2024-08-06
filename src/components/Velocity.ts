@@ -6,18 +6,23 @@ enum ComponentErrors {}
 
 // Interface for component properties
 export interface ComponentOptions {
-  value: Vector;
+  value?: Vector;
   minSpeed?: number;
   maxSpeed?: number;
 }
 
 // Transform Component
 export class Velocity implements Component {
+  readonly type = "Velocity";
   value: Vector;
   minSpeed: number;
   maxSpeed: number;
 
-  constructor({ value, minSpeed = 0, maxSpeed = 0 }: ComponentOptions) {
+  constructor({
+    value = new Vector(),
+    minSpeed = 0,
+    maxSpeed = 0,
+  }: ComponentOptions) {
     this.value = value;
     this.minSpeed = minSpeed;
     this.maxSpeed = maxSpeed;

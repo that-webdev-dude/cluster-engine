@@ -6,18 +6,19 @@ import { Keyboard } from "../cluster";
 
 // Interface for component properties
 export interface ComponentOptions {
-  action: string;
-  pause: string;
-  quit: string;
-  enter: string;
-  right: string;
-  down: string;
-  left: string;
-  up: string;
+  action?: string;
+  pause?: string;
+  quit?: string;
+  enter?: string;
+  right?: string;
+  down?: string;
+  left?: string;
+  up?: string;
 }
 
 // Transform Component
 export class Input implements Component {
+  readonly type = "Input";
   [key: string]: any;
   private _action: string;
   private _pause: string;
@@ -29,14 +30,14 @@ export class Input implements Component {
   private _up: string;
 
   constructor(options: ComponentOptions) {
-    this._action = options.action;
-    this._pause = options.pause;
-    this._quit = options.quit;
-    this._enter = options.enter;
-    this._right = options.right;
-    this._down = options.down;
-    this._left = options.left;
-    this._up = options.up;
+    this._action = options.action || "";
+    this._pause = options.pause || "";
+    this._quit = options.quit || "";
+    this._enter = options.enter || "";
+    this._right = options.right || "";
+    this._down = options.down || "";
+    this._left = options.left || "";
+    this._up = options.up || "";
   }
 
   get action() {

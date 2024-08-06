@@ -12,6 +12,7 @@ export interface ComponentOptions {
 
 // Visibility Component
 export class Visibility implements Component {
+  readonly type = "Visibility";
   private _opacity: number;
 
   constructor({ opacity = 1 }: ComponentOptions = {}) {

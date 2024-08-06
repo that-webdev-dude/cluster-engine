@@ -9,7 +9,7 @@ export interface ComponentOptions {}
 
 // Transform Component
 export class Template implements Component {
-  // ...
+  readonly type = "Template";
 
   constructor({}: ComponentOptions = {}) {}
 }

@@ -17,6 +17,7 @@ export interface TransformOptions {
 
 // Transform Component
 export class Transform implements Component {
+  readonly type = "Transform";
   public position: Vector;
   public anchor: Vector;
   public scale: Vector;

@@ -17,6 +17,7 @@ export interface ComponentOptions {
 
 // Component
 export class Fade implements Component {
+  readonly type = "Fade";
   elapsedTime: number = 0;
   complete: boolean = false;
   duration: number;

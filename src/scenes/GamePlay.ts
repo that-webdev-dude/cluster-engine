@@ -1,44 +1,55 @@
-import { Scene, Container, Entity, System, Keyboard } from "../cluster";
-import { RenderSystem } from "../systems/RenderSystem";
-import { Background } from "../entities/Rectangle";
-import { Player } from "../entities/Rectangle";
-import { Tile } from "../entities/Rectangle";
-import { store, GameScenes } from "../store";
+// import {
+//   Scene,
+//   Container,
+//   Entity,
+//   System,
+//   Keyboard,
+//   Component,
+// } from "../cluster";
+// import { PhysicsSystem } from "../systems/PhysicsSystem";
+// import { RenderSystem } from "../systems/RenderSystem";
+// import { Background } from "../entities/Rectangle";
+// import { Player } from "../entities/Rectangle";
+// import { Tile } from "../entities/Rectangle";
+// import { Blobby, Baddie } from "../entities/Blobby";
+// import { store, GameScenes } from "../store";
 
-const createTiles = () => {
-  const tiles = [];
-  for (let i = 0; i < 20; i++) {
-    for (let j = 0; j < 26; j++) {
-      const tile = new Tile(j * 32, i * 32);
-      tiles.push(tile);
-    }
-  }
-  return tiles;
-};
+// const createTiles = () => {
+//   const tiles = [];
+//   for (let i = 0; i < 20; i++) {
+//     for (let j = 0; j < 26; j++) {
+//       const tile = new Tile(j * 32, i * 32);
+//       tiles.push(tile);
+//     }
+//   }
+//   return tiles;
+// };
 
-export class GamePlay extends Scene {
-  constructor() {
-    const entities = new Container<Entity>();
-    entities.add(new Background());
-    entities.add(new Player());
-    entities.add(...createTiles());
+// export class GamePlay extends Scene {
+//   constructor() {
+//     const entities = new Container<Entity>();
+//     entities.add(new Background());
+//     // entities.add(new Player());
+//     entities.add(new Blobby());
+//     // entities.add(...createTiles());
 
-    const systems = new Container<System>();
-    systems.add(new RenderSystem());
+//     const systems = new Container<System>();
+//     systems.add(new PhysicsSystem());
+//     systems.add(new RenderSystem());
 
-    super({
-      name: "GamePlay",
-      entities,
-      systems,
-    });
-  }
+//     super({
+//       name: "GamePlay",
+//       entities,
+//       systems,
+//     });
+//   }
 
-  update(dt: number, t: number) {
-    if (Keyboard.key("Escape")) {
-      store.dispatch("setGameScene", GameScenes.GameMenu);
-      Keyboard.active = false;
-    }
+//   update(dt: number, t: number) {
+//     if (Keyboard.key("Escape")) {
+//       store.dispatch("setGameScene", GameScenes.GameMenu);
+//       Keyboard.active = false;
+//     }
 
-    super.update(dt, t);
-  }
-}
+//     super.update(dt, t);
+//   }
+// }

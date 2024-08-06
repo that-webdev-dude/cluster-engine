@@ -26,16 +26,16 @@
 //   entities: new Container<Entity>(),
 // };
 
-// export class MovementSystem extends System {
+// export class MovementSystem implements System {
 //   private _move(entity: Entity, dt: number) {
-//     const transform = entity.getComponent(SystemComponents.Transform);
-//     const velocity = entity.getComponent(SystemComponents.Velocity);
+//     const transform = entity.getComponent('Transform');
+//     const velocity = entity.getComponent('Velocity');
 
 //     if (transform && velocity) {
 //       let accelerationX = 0;
 //       let accelerationY = 0;
 
-//       const physics = entity.getComponent(SystemComponents.Physics);
+//       const physics = entity.getComponent('Physics');
 //       if (physics) {
 //         const { acceleration } = physics;
 //         accelerationX = acceleration.x;
@@ -73,104 +73,23 @@
 //     }
 //   }
 
-//   // private _updateKinematic(entity: Entity, dt: number) {
-//   //   const kinematicMotion = entity.getComponent(
-//   //     SystemComponents.KinematicMotion
-//   //   );
-//   //   if (!kinematicMotion) return;
-
-//   //   // the input should be more flexible
-//   //   // let x = 1;
-//   //   // let y = 1;
-//   //   // const { input } = kinematicMotion;
-//   //   // if (input) {
-//   //   //   const entityInput = entity.getComponent(SystemComponents.Input);
-//   //   //   if (!entityInput) return;
-//   //   //   x = entityInput.x;
-//   //   //   y = entityInput.y;
-//   //   // }
-
-//   //   const velocity = entity.getComponent(SystemComponents.Velocity);
-//   //   if (!velocity) return;
-
-//   //   const { path } = kinematicMotion;
-//   //   if (path.length < 2) return;
-
-//   //   let { targetPosition, startPosition, pathVelocity } = kinematicMotion;
-//   //   pathVelocity = Vector.subtract(targetPosition, startPosition)
-//   //     .normalize()
-//   //     .scale(kinematicMotion.speed);
-
-//   //   velocity.value.x = pathVelocity.x;
-//   //   velocity.value.y = pathVelocity.y;
-
-//   //   const transform = entity.getComponent(SystemComponents.Transform);
-//   //   if (!transform) return;
-
-//   //   const { position } = transform;
-//   //   const travelDistance = Vector.subtract(
-//   //     targetPosition,
-//   //     startPosition
-//   //   ).magnitude;
-//   //   const pathDistance = Vector.subtract(position, startPosition).magnitude;
-//   //   if (position.equals(targetPosition)) {
-//   //     console.log("reached target position");
-//   //     // const nextIndex = path.indexOf(targetPosition) + 1;
-//   //     // if (nextIndex >= path.length) {
-//   //     //   targetPosition = path[0];
-//   //     // } else {
-//   //     //   targetPosition = path[nextIndex];
-//   //     // }
-//   //   }
-
-//   //   this._move(entity, dt);
-//   // }
+//   requiredComponents(): string[] {
+//     return ["Transform", "Velocity"];
+//   }
 
 //   update(entities: Container<Entity>, dt: number): void {
 //     if (!entities.size) return;
 
 //     SystemCache.entities = entities.filter((entity) => {
 //       return entity.hasComponents(
-//         SystemComponents.Transform,
-//         SystemComponents.Velocity
+//         'Transform',
+//         'Velocity'
 //       );
 //     });
 //     if (!SystemCache.entities.size) return;
 
 //     SystemCache.entities.forEach((entity) => {
 //       this._move(entity, dt);
-//       // const input = entity.getComponent(SystemComponents.Input);
-//       // const inputMotion = entity.getComponent(SystemComponents.InputMotion);
-//       // if (input && inputMotion) {
-//       //   const { speedX, speedY } = inputMotion;
-//       //   const { x, y } = input;
-//       //   const velocity = entity.getComponent(SystemComponents.Velocity);
-//       //   if (velocity) {
-//       //     velocity.value.x = x * speedX;
-//       //     velocity.value.y = y * speedY;
-//       //   }
-//       //   this._move(entity, dt);
-//       // }
-//       // const kinematicMotion = entity.getComponent(
-//       //   SystemComponents.KinematicMotion
-//       // );
-//       // if (kinematicMotion) {
-//       //   this._updateKinematic(entity, dt);
-//       // }
-//       // const vibrationMotion = entity.getComponent(
-//       //   SystemComponents.VibrationMotion
-//       // );
-//       // if (vibrationMotion) {
-//       //   const { offsetX, offsetY } = vibrationMotion;
-//       //   const transform = entity.getComponent(SystemComponents.Transform);
-//       //   if (transform) {
-//       //     const { previousPosition, position } = transform;
-//       //     // previousPosition.x = position.x;
-//       //     // previousPosition.y = position.y;
-//       //     position.x += Cmath.randf(-offsetX, offsetX);
-//       //     position.y += Cmath.randf(-offsetY, offsetY);
-//       //   }
-//       // }
 //     });
 
 //     SystemCache.entities.clear();

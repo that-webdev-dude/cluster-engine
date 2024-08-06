@@ -12,6 +12,7 @@ export interface ComponentOptions {
 
 // Transform Component
 export class InputMotion implements Component {
+  readonly type = "InputMotion";
   public speedX: number;
   public speedY: number;
 

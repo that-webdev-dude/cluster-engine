@@ -45,4 +45,12 @@ export class Emitter {
       (targetListener) => targetListener !== listener
     );
   }
+
+  /**
+   * Unsubscribe, by removing all listeners
+   * from a specific event.
+   */
+  removeAllListeners(): void {
+    this._events = {};
+  }
 }

@@ -16,6 +16,7 @@ export interface ComponentOptions {
 
 // Transform Component
 export class Boundary implements Component {
+  readonly type = "Boundary";
   width: number;
   height: number;
   behavior: OffboundBehavior;

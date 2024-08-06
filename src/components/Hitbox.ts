@@ -17,6 +17,7 @@ export interface ComponentOptions {
 
 // Transform Component
 export class Hitbox implements Component {
+  readonly type = "Hitbox";
   _x: number;
   _y: number;
   _width: number;

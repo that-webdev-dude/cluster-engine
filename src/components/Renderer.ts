@@ -11,6 +11,7 @@ export interface ComponentOptions {
 
 // Transform Component
 export class Renderer implements Component {
+  readonly type = "Renderer";
   layer: number;
   constructor({ layer = 0 }: ComponentOptions = {}) {
     this.layer = layer;

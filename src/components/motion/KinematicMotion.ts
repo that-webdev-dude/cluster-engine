@@ -13,6 +13,7 @@ export interface ComponentOptions {
 
 // Transform Component
 export class KinematicMotion implements Component {
+  readonly type = "KinematicMotion";
   public speed: number;
   public input: boolean;
   public path: Vector[];

@@ -12,6 +12,7 @@ export interface ComponentOptions {
 
 // Transform Component
 export class VibrationMotion implements Component {
+  readonly type = "VibrationMotion";
   public offsetX: number;
   public offsetY: number;
 

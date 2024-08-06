@@ -11,6 +11,7 @@ export interface ComponentOptions {
 
 // Transform Component
 export class Colour implements Component {
+  readonly type = "Colour";
   public fill: string;
   public stroke: string;
 

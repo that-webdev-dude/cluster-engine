@@ -13,6 +13,7 @@ export interface ComponentOptions {
 
 // Transform Component
 export class Size implements Component {
+  readonly type = "Size";
   private _width: number;
   private _height: number;
 

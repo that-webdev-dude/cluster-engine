@@ -31,6 +31,7 @@ interface ComponentOptions {
 
 // Transform Component
 export class Collision implements Component {
+  readonly type = "Collision";
   readonly layer: number;
   readonly mask: number;
   // readonly data: Map<Resolver, CollisionData[]>;
