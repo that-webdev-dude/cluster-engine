@@ -1,10 +1,6 @@
 import "./src/styles/style.scss";
-// import app from "./src/app.ts";
-// import dev from "./src/dev.ts";
-import ecs from "./src/ecs.ts";
+import app from "./src/app.ts";
 
 window.onload = () => {
-  // app();
-  // dev();
-  ecs();
+  app();
 };

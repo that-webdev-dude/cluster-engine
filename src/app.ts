@@ -1,26 +1,16 @@
-// import { Game } from "./cluster";
-// import { GameMenu } from "./scenes/GameMenu";
-// import { GamePlay } from "./scenes/GamePlay";
-// import { store, GameScenes } from "./store";
+import { store } from "./game/store";
+import * as Cluster from "./cluster";
+import * as Scenes from "./game/scenes";
 
-// const scenes = GameScenes;
-// const height = store.get("screenHeight");
-// const width = store.get("screenWidth");
+const height = store.get("screenHeight");
+const width = store.get("screenWidth");
 
-// // const game = new Game({
-// //   height,
-// //   width,
-// //   scenes: new Map([
-// //     [scenes.GameMenu, () => new GameMenu()],
-// //     [scenes.GamePlay, () => new GamePlay()],
-// //   ]),
-// // });
+export default () => {
+  const game = new Cluster.Game({
+    height,
+    width,
+  });
 
-// // store.on("gameScene-changed", () => {
-// //   game.setScene(store.get("gameScene"));
-// // });
-
-// export default () => {
-//   // game.setScene(scenes.GamePlay);
-//   // game.start();
-// };
+  game.setScene(new Scenes.GamePlay());
+  game.start();
+};

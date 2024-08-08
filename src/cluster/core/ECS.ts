@@ -1,81 +1,6 @@
+import { SystemEvents } from "../../cluster";
+import { EntityId } from "../../cluster";
 import { EventEmitter } from "events";
-
-type EntityId = number;
-
-export class Entity extends EventEmitter {
-  id: EntityId;
-  components: Map<string, Component>;
-  dead: boolean;
-
-  constructor(id: EntityId) {
-    super();
-    this.id = id;
-    this.components = new Map();
-    this.dead = false;
-  }
-
-  addComponent(component: Component) {
-    const componentName = component.constructor.name;
-    this.components.set(componentName, component);
-    this.emit("componentsChanged", this.id, componentName, "added");
-  }
-
-  addComponents(components: Component[]) {
-    for (let component of components) {
-      this.addComponent(component);
-    }
-  }
-
-  attachComponent(component: Component) {
-    this.addComponent(component);
-  }
-
-  attachComponents(...components: Component[]) {
-    for (let component of components) {
-      this.addComponent(component);
-    }
-  }
-
-  removeComponent(componentName: string) {
-    this.components.delete(componentName);
-    this.emit("componentsChanged", this.id, componentName, "removed");
-  }
-
-  removeComponents(componentNames: string[]) {
-    for (let componentName of componentNames) {
-      this.removeComponent(componentName);
-    }
-  }
-
-  detachComponent(component: Component) {
-    this.removeComponent(component.constructor.name);
-  }
-
-  detachComponents(...components: Component[]) {
-    for (let component of components) {
-      this.removeComponent(component.constructor.name);
-    }
-  }
-
-  hasComponent(componentName: string): boolean {
-    return this.components.has(componentName);
-  }
-
-  hasComponents(componentNames: string[]): boolean {
-    return componentNames.every((componentName) =>
-      this.components.has(componentName)
-    );
-  }
-
-  markAsDead() {
-    this.dead = true;
-    this.emit("statusChanged", this.id, "dead");
-  }
-}
-
-export class Component {
-  // Base class for all components
-}
 
 class ComponentIndex {
   private index: Map<string, Set<EntityId>>;
@@ -132,7 +57,7 @@ class ComponentIndex {
       }
     }
 
-    this.cache.set(cacheKey, result!);
+    // this.cache.set(cacheKey, result!);
     return this.getEntityInstances(result!);
   }
 
@@ -141,14 +66,70 @@ class ComponentIndex {
   }
 }
 
-export class System {
+class EventQueue {
+  private _queue: Map<string, Function[]>;
+  constructor() {
+    this._queue = new Map();
+  }
+
+  addEventListener(event: string, callback: Function) {
+    if (!this._queue.has(event)) {
+      this._queue.set(event, []);
+    }
+    this._queue.get(event)!.push(callback);
+  }
+
+  processEventListeners() {
+    if (!this._queue.size) return;
+
+    for (let [event, callbacks] of this._queue) {
+      for (let callback of callbacks) {
+        callback();
+      }
+    }
+    this._queue.clear();
+  }
+
+  get size() {
+    return this._queue.size;
+  }
+}
+
+export class Entity {
+  private static nextId: EntityId = 0;
+  id: EntityId;
+  dead: boolean;
+  active: boolean;
+  components: Map<string, Component>;
+
+  constructor() {
+    this.id = Entity.nextId++;
+    this.dead = false;
+    this.active = true;
+    this.components = new Map();
+  }
+}
+
+export class Component {
+  name: string;
+
+  constructor(name: string) {
+    if (!name) {
+      throw new Error("[Component Error] Component name is required");
+    }
+    this.name = name;
+  }
+}
+
+export class System extends EventEmitter {
   componentsRequired: string[];
 
   constructor(componentsRequired: string[]) {
+    super();
     this.componentsRequired = componentsRequired;
   }
 
-  update(entities: Set<Entity>) {
+  update(entities: Set<Entity>, dt?: number, t?: number) {
     // To be implemented by specific systems
   }
 }
@@ -157,37 +138,18 @@ export class Scene {
   private entities: Map<EntityId, Entity>;
   private systems: System[];
   private componentIndex: ComponentIndex;
-  private pendingChanges: {
-    entityId: EntityId;
-    componentName?: string;
-    action: "added" | "removed" | "dead";
-  }[];
+  private eventQueue: EventQueue;
 
   constructor() {
     this.entities = new Map();
     this.systems = [];
     this.componentIndex = new ComponentIndex();
-    this.pendingChanges = [];
+    this.eventQueue = new EventQueue();
   }
 
   addEntity(entity: Entity) {
     this.entities.set(entity.id, entity);
     this.componentIndex.addEntity(entity);
-
-    entity.on(
-      "componentsChanged",
-      (
-        entityId: EntityId,
-        componentName: string,
-        action: "added" | "removed"
-      ) => {
-        this.pendingChanges.push({ entityId, componentName, action });
-      }
-    );
-
-    entity.on("statusChanged", (entityId: EntityId, status: "dead") => {
-      this.pendingChanges.push({ entityId, action: status });
-    });
   }
 
   removeEntity(entity: Entity) {
@@ -196,6 +158,22 @@ export class Scene {
   }
 
   addSystem(system: System) {
+    system.on(SystemEvents.COMPONENT_ATTACHED, (entityId: EntityId) => {
+      this.componentIndex.addEntity(this.entities.get(entityId)!);
+    });
+
+    system.on(SystemEvents.COMPONENT_DETACHED, (entityId: EntityId) => {
+      this.componentIndex.removeEntity(this.entities.get(entityId)!);
+    });
+
+    system.on(SystemEvents.ENTITY_CREATED, (entity: Entity) => {
+      this.addEntity(entity);
+    });
+
+    system.on(SystemEvents.ENTITY_DESTROYED, (entityId: EntityId) => {
+      this.removeEntity(this.entities.get(entityId)!);
+    });
+
     this.systems.push(system);
   }
 
@@ -204,26 +182,9 @@ export class Scene {
       const entities = this.componentIndex.getEntitiesWithComponents(
         system.componentsRequired
       );
-      system.update(entities);
+      system.update(entities, dt, t);
     }
 
-    this.applyPendingChanges();
-  }
-
-  private applyPendingChanges() {
-    for (let change of this.pendingChanges) {
-      const entity = this.entities.get(change.entityId);
-      if (!entity) continue;
-
-      if (change.action === "added") {
-        this.componentIndex.addEntity(entity);
-      } else if (change.action === "removed") {
-        this.componentIndex.removeEntity(entity);
-      } else if (change.action === "dead") {
-        this.removeEntity(entity);
-      }
-    }
-
-    this.pendingChanges = [];
+    this.eventQueue.processEventListeners();
   }
 }

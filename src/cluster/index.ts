@@ -12,3 +12,16 @@ export { Keyboard } from "./input";
 export { Cmath } from "./tools/Cmath";
 export { Vector } from "./tools/Vector";
 export { Container } from "./tools/Container";
+
+// enums
+export enum SystemEvents {
+  COMPONENT_ATTACHED = "componentAttached",
+  COMPONENT_DETACHED = "componentDetached",
+  ENTITY_DESTROYED = "entityDestroyed",
+  ENTITY_CREATED = "entityCreated",
+  SYSTEM_UPDATED = "systemUpdated",
+  SYSTEM_ERROR = "systemError",
+}
+
+// types
+export type EntityId = number;
