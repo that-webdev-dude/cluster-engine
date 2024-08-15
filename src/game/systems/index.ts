@@ -440,3 +440,326 @@ export class SpawnSystem extends Cluster.System {
     this.emit("systemUpdated");
   }
 }
+
+/** Collision system
+ * @required Collision
+ * @emits systemStarted, systemUpdated, systemError
+ */
+export class CollisionSystem extends Cluster.System {
+  constructor() {
+    super(["Collision"]);
+  }
+
+  private _testCollision(
+    entityA: Cluster.Entity,
+    entityB: Cluster.Entity
+  ): boolean {
+    const transformA = entityA.components.get("Transform") as
+      | Components.TransformComponent
+      | undefined;
+    const transformB = entityB.components.get("Transform") as
+      | Components.TransformComponent
+      | undefined;
+
+    if (!transformA || !transformB) return false;
+
+    const collisionA = entityA.components.get("Collision") as
+      | Components.CollisionComponent
+      | undefined;
+    const collisionB = entityB.components.get("Collision") as
+      | Components.CollisionComponent
+      | undefined;
+
+    if (!collisionA || !collisionB) return false;
+
+    const positionA = transformA.position;
+    const positionB = transformB.position;
+    const hitboxA = collisionA.hitbox;
+    const hitboxB = collisionB.hitbox;
+
+    return (
+      positionA.x < positionB.x + hitboxB.width &&
+      positionA.x + hitboxA.width > positionB.x &&
+      positionA.y < positionB.y + hitboxB.height &&
+      positionA.y + hitboxA.height > positionB.y
+    );
+  }
+
+  private _storeCollisionData(
+    entityA: Cluster.Entity,
+    entityB: Cluster.Entity
+  ) {
+    const collisionA = entityA.components.get("Collision") as
+      | Components.CollisionComponent
+      | undefined;
+    const collisionB = entityB.components.get("Collision") as
+      | Components.CollisionComponent
+      | undefined;
+
+    const resolversA = collisionA?.resolvers;
+    if (!resolversA?.length) return;
+
+    resolversA.forEach((resolverA) => {
+      if (collisionB && resolverA.mask & collisionB.layer) {
+        const transformA = entityA.components.get("Transform") as
+          | Components.TransformComponent
+          | undefined;
+        const transformB = entityB.components.get("Transform") as
+          | Components.TransformComponent
+          | undefined;
+
+        if (!transformA || !transformB) return;
+
+        if (!collisionA || !collisionB) return;
+
+        const positionA = transformA.position;
+        const positionB = transformB.position;
+        const hitboxA = collisionA.hitbox;
+        const hitboxB = collisionB.hitbox;
+
+        const x1 = Math.max(positionA.x + hitboxA.x, positionB.x + hitboxB.x);
+        const x2 = Math.min(
+          positionA.x + hitboxA.x + hitboxA.width,
+          positionB.x + hitboxB.x + hitboxB.width
+        );
+        const y1 = Math.max(positionA.y + hitboxA.y, positionB.y + hitboxB.y);
+        const y2 = Math.min(
+          positionA.y + hitboxA.y + hitboxA.height,
+          positionB.y + hitboxB.y + hitboxB.height
+        );
+
+        const overlapX = x2 - x1;
+        const overlapY = y2 - y1;
+
+        const overlap = new Cluster.Vector(overlapX, overlapY);
+
+        const normal = new Cluster.Vector(
+          overlap.x < overlap.y ? (overlap.x < 0 ? -1 : 1) : 0,
+          overlap.x > overlap.y ? (overlap.y < 0 ? -1 : 1) : 0
+        );
+
+        const area = overlap.x * overlap.y;
+
+        const dataA = collisionA.data.get(resolverA.type);
+        if (dataA) {
+          if (!dataA.some((data) => data.other === entityB)) {
+            dataA.push({
+              other: entityB,
+              overlap,
+              normal,
+              area,
+            });
+          }
+        } else {
+          collisionA.data.set(resolverA.type, [
+            {
+              other: entityB,
+              overlap,
+              normal,
+              area,
+            },
+          ]);
+        }
+      }
+    });
+  }
+
+  update(entities: Set<Cluster.Entity>) {
+    if (entities.size <= 1) return;
+
+    this.emit("systemStarted");
+
+    for (let i = 0; i < entities.size; i++) {
+      for (let j = i + 1; j < entities.size; j++) {
+        const entityA = Array.from(entities)[i]; // O(n^2) complexity - cache this
+        const entityB = Array.from(entities)[j]; // O(n^2) complexity - cache this
+
+        const collisionA = entityA.components.get("Collision") as
+          | Components.CollisionComponent
+          | undefined;
+        const collisionB = entityB.components.get("Collision") as
+          | Components.CollisionComponent
+          | undefined;
+
+        if (!collisionA || !collisionB) continue;
+
+        const resolversA = collisionA?.resolvers;
+        if (!resolversA?.length) continue;
+
+        const layerB = collisionB?.layer;
+        if (!resolversA.some((resolver) => resolver.mask & layerB)) {
+          continue;
+        } else {
+          if (this._testCollision(entityA, entityB)) {
+            // store collision data
+            this._storeCollisionData(entityA, entityB);
+            this._storeCollisionData(entityB, entityA);
+            // resolve collision
+          }
+        }
+      }
+
+      this.emit("systemUpdated");
+    }
+  }
+}
+
+/** Resolution system
+ * @required Collision, Transform, Velocity
+ * @emits systemStarted, systemUpdated, systemError, entityDestroyed
+ */
+export class ResolutionSystem extends Cluster.System {
+  // private _getOverlap(entityA: Cluster.Entity, entityB: Cluster.Entity) {
+  //   const transformA = entityA.components.get("Transform") as
+  //     | Components.TransformComponent
+  //     | undefined;
+  //   const transformB = entityB.components.get("Transform") as
+  //     | Components.TransformComponent
+  //     | undefined;
+
+  //   if (!transformA || !transformB) return new Cluster.Vector(0, 0);
+
+  //   const collisionA = entityA.components.get("Collision") as
+  //     | Components.CollisionComponent
+  //     | undefined;
+  //   const collisionB = entityB.components.get("Collision") as
+  //     | Components.CollisionComponent
+  //     | undefined;
+
+  //   if (!collisionA || !collisionB) return new Cluster.Vector(0, 0);
+
+  //   const positionA = transformA.position;
+  //   const positionB = transformB.position;
+  //   const hitboxA = collisionA.hitbox;
+  //   const hitboxB = collisionB.hitbox;
+
+  //   const x1 = Math.max(positionA.x + hitboxA.x, positionB.x + hitboxB.x);
+  //   const x2 = Math.min(
+  //     positionA.x + hitboxA.x + hitboxA.width,
+  //     positionB.x + hitboxB.x + hitboxB.width
+  //   );
+  //   const y1 = Math.max(positionA.y + hitboxA.y, positionB.y + hitboxB.y);
+  //   const y2 = Math.min(
+  //     positionA.y + hitboxA.y + hitboxA.height,
+  //     positionB.y + hitboxB.y + hitboxB.height
+  //   );
+
+  //   const overlapX = x2 - x1;
+  //   const overlapY = y2 - y1;
+
+  //   return new Cluster.Vector(overlapX, overlapY);
+  // }
+
+  // private _getNormal(
+  //   entityA: Cluster.Entity,
+  //   entityB: Cluster.Entity,
+  //   overlap: Cluster.Vector
+  // ) {
+  //   const transformA = entityA.components.get("Transform") as
+  //     | Components.TransformComponent
+  //     | undefined;
+  //   const transformB = entityB.components.get("Transform") as
+  //     | Components.TransformComponent
+  //     | undefined;
+
+  //   if (!transformA || !transformB) return new Cluster.Vector(0, 0);
+
+  //   const collisionA = entityA.components.get("Collision") as
+  //     | Components.CollisionComponent
+  //     | undefined;
+  //   const collisionB = entityB.components.get("Collision") as
+  //     | Components.CollisionComponent
+  //     | undefined;
+
+  //   if (!collisionA || !collisionB) return new Cluster.Vector(0, 0);
+
+  //   if (overlap.x < overlap.y) {
+  //     return transformA.position.x < transformB.position.x
+  //       ? new Cluster.Vector(-1, 0)
+  //       : new Cluster.Vector(1, 0);
+  //   } else if (overlap.x > overlap.y) {
+  //     return transformA.position.y < transformB.position.y
+  //       ? new Cluster.Vector(0, -1)
+  //       : new Cluster.Vector(0, 1);
+  //   } else if (overlap.x === overlap.y) {
+  //     // ... edge case
+  //   }
+  //   return new Cluster.Vector(0, 0);
+  // }
+
+  // private _slideResolution(entity: Cluster.Entity) {
+  //   const collision = entity.components.get("Collision") as
+  //     | Components.CollisionComponent
+  //     | undefined;
+
+  //   if (!collision) return;
+
+  //   const collisionData = collision.data.get("slide");
+  //   if (!collisionData || !collisionData.length) return;
+
+  //   const transform = entity.components.get("Transform") as
+  //     | Components.TransformComponent
+  //     | undefined;
+  //   const velocity = entity.components.get("Velocity") as
+  //     | Components.VelocityComponent
+  //     | undefined;
+
+  //   if (!transform || !velocity) return;
+
+  //   collisionData.sort((a, b) => b.area - a.area);
+
+  //   const first = collisionData[0];
+  //   const normal = first.normal;
+  //   const overlap = first.overlap;
+
+  //   transform.position.x += overlap.x * normal.x;
+  //   transform.position.y += overlap.y * normal.y;
+
+  //   if (normal.x !== 0) {
+  //     velocity.x = 0;
+  //   }
+  //   if (normal.y !== 0) {
+  //     velocity.y = 0;
+  //   }
+  // }
+
+  constructor() {
+    super(["Collision"]);
+  }
+
+  update(entities: Set<Cluster.Entity>) {
+    if (entities.size === 0) return;
+
+    this.emit("systemStarted");
+
+    for (let entity of entities) {
+      if (entity.dead || !entity.active) continue;
+
+      try {
+        const collision = entity.components.get("Collision") as
+          | Components.CollisionComponent
+          | undefined;
+
+        if (collision) {
+          const dieCollisions = collision.data.get("die");
+          if (!dieCollisions || !dieCollisions.length) continue;
+          dieCollisions.forEach((data) => {
+            entity.dead = true;
+            this.emit("entityDestroyed", entity.id);
+            // actions
+          });
+
+          const noneCollisions = collision.data.get("none");
+          if (!noneCollisions || !noneCollisions.length) continue;
+          noneCollisions.forEach((data) => {
+            // actions
+          });
+        }
+      } catch (error) {
+        this.emit("systemError", error);
+      }
+    }
+
+    this.emit("systemUpdated");
+  }
+}

@@ -5,6 +5,12 @@ import * as Strategies from "../strategies";
 import * as Systems from "../systems";
 import * as Images from "../../images";
 
+const CollisionLayers = {
+  Player: 1 << 0,
+  Enemy: 1 << 1,
+  Bullet: 1 << 2,
+} as const;
+
 /** Background entity
  * @components Transform, Rect, Zindex
  */
@@ -33,7 +39,7 @@ export class Background extends Cluster.Entity {
 }
 
 /** Spaceship entity
- * @components Health, Transform, Velocity, Texture, Zindex, Player, Controller
+ * @components Controller, Transform, Velocity, Sprite, Zindex, Player, Spawner, Collision
  */
 export class Spaceship extends Cluster.Entity {
   constructor() {
@@ -44,10 +50,7 @@ export class Spaceship extends Cluster.Entity {
 
     const transform = new Components.TransformComponent({
       boundary: "contain",
-      position: new Cluster.Vector(
-        store.get("screenWidth") / 2 - 32,
-        store.get("screenHeight") - 128
-      ),
+      position: new Cluster.Vector(64, store.get("screenHeight") / 2 - 32),
       pivot: new Cluster.Vector(32, 32),
       angle: 90,
     });
@@ -80,6 +83,28 @@ export class Spaceship extends Cluster.Entity {
       interval: 0.1,
     });
 
+    const collision = new Components.CollisionComponent({
+      layer: CollisionLayers.Player,
+      hitbox: {
+        x: 0,
+        y: 0,
+        width: 64,
+        height: 64,
+      },
+      resolvers: [
+        {
+          type: "none",
+          mask: CollisionLayers.Enemy,
+          actions: [
+            {
+              name: "damage",
+              data: 10,
+            },
+          ],
+        },
+      ],
+    });
+
     this.components.set("Controller", controller);
     this.components.set("Transform", transform);
     this.components.set("Velocity", velocity);
@@ -87,11 +112,12 @@ export class Spaceship extends Cluster.Entity {
     this.components.set("Sprite", sprite);
     this.components.set("Player", player);
     this.components.set("Spawner", spawner);
+    this.components.set("Collision", collision);
   }
 }
 
 /** Bullet entity
- * @options position, direction, damage, speed
+ * @options position, direction, damage, speed [, frame]
  * @components Transform, Velocity, Sprite, Zindex, Bullet
  */
 interface BulletOptions {
@@ -99,9 +125,16 @@ interface BulletOptions {
   direction: Cluster.Vector;
   damage: number;
   speed: number;
+  frame?: number;
 }
 export class Bullet extends Cluster.Entity {
-  constructor({ position, direction, damage, speed }: BulletOptions) {
+  constructor({
+    position,
+    direction,
+    damage,
+    speed,
+    frame = 0,
+  }: BulletOptions) {
     super();
 
     const transform = new Components.TransformComponent({
@@ -115,7 +148,7 @@ export class Bullet extends Cluster.Entity {
 
     const sprite = new Components.SpriteComponent({
       image: Images.bulletsImage,
-      frame: 0,
+      frame: frame,
       width: 12,
       height: 12,
     });
@@ -144,56 +177,68 @@ export class Bullet extends Cluster.Entity {
  */
 interface EnemyOptions {
   position: Cluster.Vector;
-  velocity: Cluster.Vector;
 }
 export class Enemy extends Cluster.Entity {
-  constructor({ position, velocity }: EnemyOptions) {
+  constructor({ position }: EnemyOptions) {
     super();
-    this.components.set(
-      "Transform",
-      new Components.TransformComponent({
-        boundary: "sleep",
-        position: position,
-      })
-    );
-    this.components.set(
-      "Velocity",
-      new Components.VelocityComponent({
-        velocity: velocity,
-      })
-    );
-    this.components.set(
-      "Sprite",
-      new Components.SpriteComponent({
-        image: Images.enemiesImage,
-        frame: 27,
+
+    const transform = new Components.TransformComponent({
+      boundary: "sleep",
+      position: position,
+    });
+
+    const velocity = new Components.VelocityComponent({
+      velocity: new Cluster.Vector(-100, 0),
+    });
+
+    const sprite = new Components.SpriteComponent({
+      image: Images.enemiesImage,
+      frame: 27,
+      width: 64,
+      height: 64,
+    });
+
+    const zindex = new Components.ZindexComponent({
+      zindex: 0,
+    });
+
+    const enemy = new Components.EnemyComponent({
+      health: 100,
+      speed: 100,
+      damage: 10,
+    });
+
+    const spawner = new Components.SpawnerComponent({
+      strategy: "bullet",
+      pool: enemyBulletPool,
+      limit: 0,
+      interval: 1,
+    });
+
+    const collision = new Components.CollisionComponent({
+      layer: CollisionLayers.Enemy,
+      hitbox: {
+        x: 0,
+        y: 0,
         width: 64,
         height: 64,
-      })
-    );
-    this.components.set(
-      "Zindex",
-      new Components.ZindexComponent({
-        zindex: 0,
-      })
-    );
-    this.components.set(
-      "Enemy",
-      new Components.EnemyComponent({
-        health: 100,
-        speed: 100,
-        damage: 10,
-      })
-    );
-    this.components.set(
-      "Spawner",
-      new Components.SpawnerComponent({
-        strategy: "bullet",
-        pool: enemyBulletPool,
-        limit: 0,
-        interval: 1,
-      })
-    );
+      },
+      // mask: CollisionLayers.Player,
+      resolvers: [
+        {
+          type: "die",
+          mask: CollisionLayers.Player,
+        },
+      ],
+    });
+
+    this.components.set("Transform", transform);
+    this.components.set("Velocity", velocity);
+    this.components.set("Sprite", sprite);
+    this.components.set("Zindex", zindex);
+    this.components.set("Enemy", enemy);
+    this.components.set("Spawner", spawner);
+    this.components.set("Collision", collision);
   }
 }
 
@@ -359,22 +404,22 @@ export const playerBulletPool = new Cluster.Pool<Bullet>(() => {
     direction: new Cluster.Vector(1, 0),
     damage: 10,
     speed: 500,
+    frame: 0,
   });
 }, 0);
 
 export const enemyBulletPool = new Cluster.Pool<Bullet>(() => {
-  const bullet = new Bullet({
+  return new Bullet({
     position: new Cluster.Vector(0, 0),
     direction: new Cluster.Vector(-1, 0),
     damage: 10,
     speed: 500,
+    frame: 10,
   });
-  return bullet;
 }, 0);
 
 export const enemyPool = new Cluster.Pool<Enemy>(() => {
   return new Enemy({
     position: new Cluster.Vector(0, 0),
-    velocity: new Cluster.Vector(-100, 0),
   });
 }, 0);

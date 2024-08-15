@@ -57,7 +57,8 @@ class ComponentIndex {
       }
     }
 
-    // this.cache.set(cacheKey, result!);
+    this.cache.set(cacheKey, result!);
+
     return this.getEntityInstances(result!);
   }
 
