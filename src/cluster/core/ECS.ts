@@ -95,6 +95,7 @@ class EventQueue {
   }
 }
 
+// add utilities to add and remove components from entities
 export class Entity {
   private static nextId: EntityId = 0;
   id: EntityId;
@@ -148,11 +149,13 @@ export class Scene {
   }
 
   addEntity(entity: Entity) {
+    if (!entity || this.entities.has(entity.id)) return;
     this.entities.set(entity.id, entity);
     this.componentIndex.addEntity(entity);
   }
 
   removeEntity(entity: Entity) {
+    if (!entity || !this.entities.has(entity.id)) return;
     this.entities.delete(entity.id);
     this.componentIndex.removeEntity(entity);
   }

@@ -14,3 +14,5 @@ export default () => {
   game.setScene(new Scenes.GamePlay());
   game.start();
 };
+
+// TODO: dispay doesn't resize. fix this

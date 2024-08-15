@@ -2,8 +2,8 @@ import { Store } from "../../cluster";
 
 // store
 const state = {
-  screenHeight: 32 * 20,
-  screenWidth: 32 * 12,
+  screenHeight: 640,
+  screenWidth: 832,
 };
 
 const getters = {

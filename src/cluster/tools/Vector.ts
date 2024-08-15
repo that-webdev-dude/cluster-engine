@@ -246,6 +246,14 @@ export class Vector {
   }
 
   /**
+   * Gets the angle of the vector.
+   * @returns The angle of the vector in radians.
+   */
+  get angle(): number {
+    return Math.atan2(this.y, this.x);
+  }
+
+  /**
    * Sets the coordinates of the vector.
    * @param x - The x coordinate of the vector.
    * @param y - The y coordinate of the vector.

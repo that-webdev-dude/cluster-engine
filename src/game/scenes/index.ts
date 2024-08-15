@@ -6,26 +6,24 @@ export class GamePlay extends Cluster.Scene {
   constructor() {
     super();
 
-    // entities
-    const background = new Entities.Background();
-    const spaceship = new Entities.Spaceship();
-    const enemy = new Entities.Enemy({
-      position: new Cluster.Vector(64, 128),
-      velocity: new Cluster.Vector(0, 0),
-    });
-    const bullet = new Entities.Bullet({
-      position: new Cluster.Vector(128, 128),
-      velocity: new Cluster.Vector(0, 0),
-    });
-
     // systems
+    const inputSystem = new Systems.InputSystem();
+    const motionSystem = new Systems.MotionSystem();
+    const spawnSystem = new Systems.SpawnSystem();
+    const boundarySystem = new Systems.BoundarySystem();
     const rendererSystem = new Systems.RendererSystem();
 
     // initialize
-    this.addEntity(background);
-    this.addEntity(spaceship);
-    this.addEntity(enemy);
-    this.addEntity(bullet);
+    this.addEntity(new Entities.Background());
+    this.addEntity(new Entities.Mothership());
+    this.addEntity(new Entities.Spaceship());
+    for (let i = 0; i < 20; i++) {
+      this.addEntity(new Entities.Star());
+    }
+    this.addSystem(inputSystem);
+    this.addSystem(motionSystem);
+    this.addSystem(spawnSystem);
+    this.addSystem(boundarySystem);
     this.addSystem(rendererSystem);
   }
 }

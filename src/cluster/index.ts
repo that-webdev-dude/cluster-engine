@@ -9,6 +9,7 @@ export { Scene } from "./core/ECS";
 
 export { Keyboard } from "./input";
 
+export { Pool } from "./tools/Pool";
 export { Cmath } from "./tools/Cmath";
 export { Vector } from "./tools/Vector";
 export { Container } from "./tools/Container";

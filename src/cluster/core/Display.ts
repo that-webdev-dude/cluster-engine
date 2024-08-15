@@ -42,7 +42,7 @@ export class Display {
 
   private _initialize() {
     this.context.textBaseline = "top";
-    this.context.imageSmoothingEnabled = true;
+    this.context.imageSmoothingEnabled = false;
     document.addEventListener("keypress", (event) => {
       if (event.code === "KeyF") {
         this._toggleFullScreen();

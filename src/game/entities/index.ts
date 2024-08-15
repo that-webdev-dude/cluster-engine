@@ -1,101 +1,146 @@
 import { store } from "../store";
 import * as Cluster from "../../cluster";
 import * as Components from "../components";
+import * as Strategies from "../strategies";
+import * as Systems from "../systems";
 import * as Images from "../../images";
 
+/** Background entity
+ * @components Transform, Rect, Zindex
+ */
+export class Background extends Cluster.Entity {
+  constructor() {
+    super();
+
+    const transform = new Components.TransformComponent({
+      position: new Cluster.Vector(0, 0),
+    });
+
+    const rect = new Components.RectComponent({
+      width: store.get("screenWidth"),
+      height: store.get("screenHeight"),
+      fill: "#191970",
+    });
+
+    const zindex = new Components.ZindexComponent({
+      zindex: -1,
+    });
+
+    this.components.set("Transform", transform);
+    this.components.set("Rect", rect);
+    this.components.set("Zindex", zindex);
+  }
+}
+
 /** Spaceship entity
- * @components Health, Transform, Velocity, Texture, Zindex, Player
+ * @components Health, Transform, Velocity, Texture, Zindex, Player, Controller
  */
 export class Spaceship extends Cluster.Entity {
   constructor() {
     super();
-    this.components.set(
-      "Health",
-      new Components.HealthComponent({
-        health: 100,
-      })
-    );
-    this.components.set(
-      "Transform",
-      new Components.TransformComponent({
-        position: new Cluster.Vector(
-          store.get("screenWidth") / 2 - 32,
-          store.get("screenHeight") - 128
-        ),
-        scale: new Cluster.Vector(0.5, 0.5),
-      })
-    );
-    this.components.set(
-      "Velocity",
-      new Components.VelocityComponent({
-        velocity: new Cluster.Vector(0, 0),
-      })
-    );
-    this.components.set(
-      "Texture",
-      new Components.TextureComponent({
-        image: Images.playerImage,
-      })
-    );
-    this.components.set(
-      "Zindex",
-      new Components.ZindexComponent({
-        zindex: 0,
-      })
-    );
-    this.components.set(
-      "Player",
-      new Components.PlayerComponent({
-        lives: 3,
-      })
-    );
+    const controller = new Components.ControllerComponent({
+      action: "Space",
+    });
+
+    const transform = new Components.TransformComponent({
+      boundary: "contain",
+      position: new Cluster.Vector(
+        store.get("screenWidth") / 2 - 32,
+        store.get("screenHeight") - 128
+      ),
+      pivot: new Cluster.Vector(32, 32),
+      angle: 90,
+    });
+
+    const velocity = new Components.VelocityComponent({
+      velocity: new Cluster.Vector(0, 0),
+    });
+
+    const zindex = new Components.ZindexComponent({
+      zindex: 1,
+    });
+
+    const sprite = new Components.SpriteComponent({
+      image: Images.playerImage,
+      frame: 0,
+      width: 64,
+      height: 64,
+    });
+
+    const player = new Components.PlayerComponent({
+      lives: 3,
+      speed: 400,
+      health: 100,
+    });
+
+    const spawner = new Components.SpawnerComponent({
+      strategy: "bullet",
+      pool: playerBulletPool,
+      limit: 0,
+      interval: 0.1,
+    });
+
+    this.components.set("Controller", controller);
+    this.components.set("Transform", transform);
+    this.components.set("Velocity", velocity);
+    this.components.set("Zindex", zindex);
+    this.components.set("Sprite", sprite);
+    this.components.set("Player", player);
+    this.components.set("Spawner", spawner);
   }
 }
 
 /** Bullet entity
- * @options position, velocity
- * @components Transform, Velocity, Texture, Zindex
+ * @options position, direction, damage, speed
+ * @components Transform, Velocity, Sprite, Zindex, Bullet
  */
 interface BulletOptions {
   position: Cluster.Vector;
-  velocity: Cluster.Vector;
+  direction: Cluster.Vector;
+  damage: number;
+  speed: number;
 }
 export class Bullet extends Cluster.Entity {
-  constructor({ position, velocity }: BulletOptions) {
+  constructor({ position, direction, damage, speed }: BulletOptions) {
     super();
-    this.components.set(
-      "Transform",
-      new Components.TransformComponent({
-        position: position,
-      })
-    );
-    this.components.set(
-      "Velocity",
-      new Components.VelocityComponent({
-        velocity: velocity,
-      })
-    );
-    this.components.set(
-      "Sprite",
-      new Components.SpriteComponent({
-        image: Images.bulletsImage,
-        frame: 0,
-        width: 8,
-        height: 8,
-      })
-    );
-    this.components.set(
-      "Zindex",
-      new Components.ZindexComponent({
-        zindex: 1,
-      })
-    );
+
+    const transform = new Components.TransformComponent({
+      boundary: "sleep",
+      position: position,
+    });
+
+    const velocity = new Components.VelocityComponent({
+      velocity: new Cluster.Vector(direction.x * speed, direction.y * speed),
+    });
+
+    const sprite = new Components.SpriteComponent({
+      image: Images.bulletsImage,
+      frame: 0,
+      width: 12,
+      height: 12,
+    });
+
+    const zindex = new Components.ZindexComponent({
+      zindex: 1,
+    });
+
+    const bullet = new Components.BulletComponent({
+      damage: damage,
+      speed: speed,
+      direction: direction,
+    });
+
+    this.components.set("Transform", transform);
+    this.components.set("Velocity", velocity);
+    this.components.set("Sprite", sprite);
+    this.components.set("Zindex", zindex);
+    this.components.set("Bullet", bullet);
   }
 }
 
 /** Enemy entity
  * @options position, velocity
- * @components Health, Transform, Velocity, Texture, Zindex
+ * @components Health, Transform, Velocity, Texture, Zindex, Spawner
  */
 interface EnemyOptions {
   position: Cluster.Vector;
@@ -105,18 +150,10 @@ export class Enemy extends Cluster.Entity {
   constructor({ position, velocity }: EnemyOptions) {
     super();
     this.components.set(
-      "Health",
-      new Components.HealthComponent({
-        health: 100,
-      })
-    );
-    this.components.set(
       "Transform",
       new Components.TransformComponent({
+        boundary: "sleep",
         position: position,
-        scale: new Cluster.Vector(0.5, 0.5),
-        pivot: new Cluster.Vector(32, 32),
-        angle: -90,
       })
     );
     this.components.set(
@@ -140,73 +177,89 @@ export class Enemy extends Cluster.Entity {
         zindex: 0,
       })
     );
+    this.components.set(
+      "Enemy",
+      new Components.EnemyComponent({
+        health: 100,
+        speed: 100,
+        damage: 10,
+      })
+    );
+    this.components.set(
+      "Spawner",
+      new Components.SpawnerComponent({
+        strategy: "bullet",
+        pool: enemyBulletPool,
+        limit: 0,
+        interval: 1,
+      })
+    );
   }
 }
 
-/** Background entity
- * @components Transform, Rect, Zindex
+/** Mothership entity
+ * @components EnhanceSpawner
  */
-export class Background extends Cluster.Entity {
+export class Mothership extends Cluster.Entity {
   constructor() {
     super();
     this.components.set(
-      "Transform",
-      new Components.TransformComponent({
-        position: new Cluster.Vector(0, 0),
-      })
-    );
-    this.components.set(
-      "Rect",
-      new Components.RectComponent({
-        width: store.get("screenWidth"),
-        height: store.get("screenHeight"),
-        fill: "#000033",
-      })
-    );
-    this.components.set(
-      "Zindex",
-      new Components.ZindexComponent({
-        zindex: -1,
+      "Spawner",
+      new Components.SpawnerComponent({
+        strategy: "enemy",
+        pool: enemyPool,
+        limit: 0,
+        interval: 1,
       })
     );
   }
 }
 
 /** Star entity
- * @options position, velocity
- * @components Transform, Velocity, Rect, Zindex
+ * @components Transform, Velocity, Alpha, Rect, Zindex
  */
-interface StarOptions {
-  position: Cluster.Vector;
-  velocity: Cluster.Vector;
-}
 export class Star extends Cluster.Entity {
-  constructor({ position, velocity }: StarOptions) {
+  constructor() {
     super();
+    const screenHeight = store.get("screenHeight");
+    const screenWidth = store.get("screenWidth");
     this.components.set(
       "Transform",
       new Components.TransformComponent({
-        position: position,
+        boundary: "wrap",
+        position: new Cluster.Vector(
+          Cluster.Cmath.rand(0, screenWidth),
+          Cluster.Cmath.rand(0, screenHeight)
+        ),
       })
     );
     this.components.set(
       "Velocity",
       new Components.VelocityComponent({
-        velocity: velocity,
+        velocity: new Cluster.Vector(-Cluster.Cmath.rand(50, 200), 0),
       })
     );
+    let width = Cluster.Cmath.rand(1, 4);
+    let height = width;
     this.components.set(
       "Rect",
       new Components.RectComponent({
-        width: 2,
-        height: 2,
+        width,
+        height,
         fill: "white",
+        stroke: "transparent",
+      })
+    );
+    this.components.set(
+      "Alpha",
+      new Components.AlphaComponent({
+        alpha: Cluster.Cmath.randf(0.5, 1),
       })
     );
     this.components.set(
       "Zindex",
       new Components.ZindexComponent({
-        zindex: -1,
+        zindex: 0,
       })
     );
   }
@@ -298,3 +351,30 @@ export class UIHealth extends Cluster.Entity {
     );
   }
 }
+
+// pools
+export const playerBulletPool = new Cluster.Pool<Bullet>(() => {
+  return new Bullet({
+    position: new Cluster.Vector(0, 0),
+    direction: new Cluster.Vector(1, 0),
+    damage: 10,
+    speed: 500,
+  });
+}, 0);
+
+export const enemyBulletPool = new Cluster.Pool<Bullet>(() => {
+  const bullet = new Bullet({
+    position: new Cluster.Vector(0, 0),
+    direction: new Cluster.Vector(-1, 0),
+    damage: 10,
+    speed: 500,
+  });
+  return bullet;
+}, 0);
+
+export const enemyPool = new Cluster.Pool<Enemy>(() => {
+  return new Enemy({
+    position: new Cluster.Vector(0, 0),
+    velocity: new Cluster.Vector(-100, 0),
+  });
+}, 0);
