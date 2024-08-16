@@ -1,6 +1,7 @@
 import * as Cluster from "../../cluster";
 import * as Strategies from "../strategies";
 import * as Components from "../components";
+import * as Entities from "../entities";
 
 /** Renderer system
  * @required Transform, Zindex
@@ -113,6 +114,16 @@ export class RendererSystem extends Cluster.System {
         sprite.width,
         sprite.height
       );
+
+      //debug
+      const collision = entity.components.get("Collision") as
+        | Components.CollisionComponent
+        | undefined;
+      if (collision) {
+        const hitbox = collision.hitbox;
+        context.strokeStyle = "yellow";
+        context.strokeRect(0, 0, hitbox.width, hitbox.height);
+      }
     }
   }
 
@@ -746,6 +757,14 @@ export class ResolutionSystem extends Cluster.System {
           dieCollisions.forEach((data) => {
             entity.dead = true;
             this.emit("entityDestroyed", entity.id);
+            // actions
+          });
+
+          const sleepCollisions = collision.data.get("sleep");
+          if (!sleepCollisions || !sleepCollisions.length) continue;
+          sleepCollisions.forEach((data) => {
+            console.log("sleep");
+            entity.active = false;
             // actions
           });
 
