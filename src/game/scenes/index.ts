@@ -20,7 +20,7 @@ export class GamePlay extends Cluster.Scene {
     this.addSystem(new Systems.MotionSystem());
     this.addSystem(new Systems.SpawnSystem());
     this.addSystem(new Systems.BoundarySystem());
-    // this.addSystem(new Systems.CollisionSystem());
+    this.addSystem(new Systems.CollisionSystem());
     // this.addSystem(new Systems.ResolutionSystem());
     this.addSystem(new Systems.RendererSystem());
   }

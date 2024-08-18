@@ -30,7 +30,7 @@ interface CollisionData {
 
 interface CollisionOptions {
   layer: number;
-  mask: number;
+  mask?: number;
   hitbox: CollisionHitbox;
   resolvers?: CollisionResolver[];
 }
@@ -50,7 +50,7 @@ export class CollisionComponent extends Cluster.Component {
     super("Collision");
     this.data = [];
     this.layer = layer;
-    this.mask = mask;
+    this.mask = mask || 0;
     this.hitbox = hitbox;
     this.resolvers = resolvers || [];
   }

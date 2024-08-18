@@ -816,3 +816,7 @@ export class SpawnSystem extends Cluster.System {
 //     this.emit("systemUpdated");
 //   }
 // }
+
+import { CollisionSystem } from "./_CollisionSystem";
+
+export { CollisionSystem };
