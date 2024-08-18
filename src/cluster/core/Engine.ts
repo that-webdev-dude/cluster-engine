@@ -43,7 +43,9 @@ export class Engine {
       this._elapsedTime -= this._timeStep;
       this._update(this._timeStep / 1000, this._currentTime / 1000);
       if (++this._updates > 2) {
-        throw new Error("Engine (46): Too many updates!");
+        // throw new Error("Engine (46): Too many updates!");
+        console.warn("[Engine]: Too many updates!");
+        break;
       }
       this._updated = true;
     }

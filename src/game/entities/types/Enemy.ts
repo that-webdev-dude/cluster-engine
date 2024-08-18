@@ -32,7 +32,7 @@ export class Enemy extends Cluster.Entity {
     });
 
     const zindex = new Components.ZindexComponent({
-      zindex: 0,
+      zindex: 1,
     });
 
     const enemy = new Components.EnemyComponent({
@@ -50,6 +50,7 @@ export class Enemy extends Cluster.Entity {
 
     const collision = new Components.CollisionComponent({
       layer: CollisionLayers.Enemy,
+      mask: CollisionLayers.Spaceship | CollisionLayers.SpaceshipBullet,
       hitbox: {
         x: 0,
         y: 0,
@@ -59,7 +60,7 @@ export class Enemy extends Cluster.Entity {
       resolvers: [
         {
           type: "die",
-          mask: CollisionLayers.SpaceshipBullet,
+          mask: CollisionLayers.SpaceshipBullet | CollisionLayers.Spaceship,
         },
       ],
     });

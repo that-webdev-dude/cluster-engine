@@ -1,3 +1,4 @@
+import { store } from "../../store";
 import * as Cluster from "../../../cluster";
 import * as Components from "../../components";
 
@@ -9,12 +10,12 @@ export class UIScore extends Cluster.Entity {
     super();
 
     const transform = new Components.TransformComponent({
-      position: new Cluster.Vector(0, 0),
+      position: new Cluster.Vector(32, 64),
     });
 
     const text = new Components.TextComponent({
-      text: "Score: 0",
-      font: "16px Arial",
+      text: `Score: ${store.get("scores")}`,
+      font: "16px 'Press Start 2P'",
       fill: "white",
     });
 

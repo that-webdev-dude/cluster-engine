@@ -1,7 +1,7 @@
+import { store } from "../store";
 import * as Cluster from "../../cluster";
 import * as Strategies from "../strategies";
 import * as Components from "../components";
-import * as Entities from "../entities";
 
 /** Renderer system
  * @required Transform, Zindex
@@ -130,6 +130,8 @@ export class RendererSystem extends Cluster.System {
   update(entities: Set<Cluster.Entity>) {
     if (entities.size === 0) return;
 
+    // const start = performance.now(); // debug
+
     this.emit("systemStarted");
 
     this._clear();
@@ -166,6 +168,9 @@ export class RendererSystem extends Cluster.System {
       } catch (error) {
         this.emit("systemError", error);
       }
+
+      // const end = performance.now(); // debug
+      // console.log(`RendererSystem: ${(end - start).toPrecision(2)}ms`); // debug
     }
 
     this._buffers?.forEach((context) => {
@@ -187,6 +192,8 @@ export class InputSystem extends Cluster.System {
 
   update(entities: Set<Cluster.Entity>) {
     if (entities.size === 0) return;
+
+    // const start = performance.now(); // debug
 
     this.emit("systemStarted");
 
@@ -217,6 +224,9 @@ export class InputSystem extends Cluster.System {
     }
 
     this.emit("systemUpdated");
+
+    // const end = performance.now(); // debug
+    // console.log(`InputSystem: ${end - start}ms`); // debug
   }
 }
 
@@ -555,6 +565,7 @@ export class CollisionSystem extends Cluster.System {
         if (dataA) {
           if (!dataA.some((data) => data.other === entityB)) {
             dataA.push({
+              main: entityA,
               other: entityB,
               overlap,
               normal,
@@ -564,6 +575,7 @@ export class CollisionSystem extends Cluster.System {
         } else {
           collisionA.data.set(resolverA.type, [
             {
+              main: entityA,
               other: entityB,
               overlap,
               normal,
@@ -575,15 +587,28 @@ export class CollisionSystem extends Cluster.System {
     });
   }
 
+  private _potentialCollision(
+    collisionA: Components.CollisionComponent,
+    collisionB: Components.CollisionComponent
+  ) {
+    return (
+      collisionA.layer & collisionB.mask || collisionB.layer & collisionA.mask
+    );
+  }
+
   update(entities: Set<Cluster.Entity>) {
     if (entities.size <= 1) return;
 
+    // const start = performance.now(); // debug
+
     this.emit("systemStarted");
+
+    const entitiesArray = Array.from(entities);
 
     for (let i = 0; i < entities.size; i++) {
       for (let j = i + 1; j < entities.size; j++) {
-        const entityA = Array.from(entities)[i]; // O(n^2) complexity - cache this
-        const entityB = Array.from(entities)[j]; // O(n^2) complexity - cache this
+        const entityA = entitiesArray[i];
+        const entityB = entitiesArray[j];
 
         const collisionA = entityA.components.get("Collision") as
           | Components.CollisionComponent
@@ -594,23 +619,25 @@ export class CollisionSystem extends Cluster.System {
 
         if (!collisionA || !collisionB) continue;
 
-        const resolversA = collisionA?.resolvers;
-        if (!resolversA?.length) continue;
-
-        const layerB = collisionB?.layer;
-        if (!resolversA.some((resolver) => resolver.mask & layerB)) {
+        // check if a collision can happen using the layer and mask values
+        if (!this._potentialCollision(collisionA, collisionB)) {
           continue;
-        } else {
-          if (this._testCollision(entityA, entityB)) {
-            // store collision data
+        }
+
+        if (this._testCollision(entityA, entityB)) {
+          if (collisionA.resolvers.length) {
             this._storeCollisionData(entityA, entityB);
+          }
+          if (collisionB.resolvers.length) {
             this._storeCollisionData(entityB, entityA);
-            // resolve collision
           }
         }
       }
 
       this.emit("systemUpdated");
+
+      // const end = performance.now(); // debug
+      // console.log(`CollisionSystem: ${(end - start).toFixed(2)}ms`); // debug
     }
   }
 }
@@ -751,29 +778,36 @@ export class ResolutionSystem extends Cluster.System {
           | Components.CollisionComponent
           | undefined;
 
-        if (collision) {
-          const dieCollisions = collision.data.get("die");
-          if (!dieCollisions || !dieCollisions.length) continue;
-          dieCollisions.forEach((data) => {
-            entity.dead = true;
-            this.emit("entityDestroyed", entity.id);
-            // actions
-          });
+        if (!collision || collision.data.size === 0) continue;
 
-          const sleepCollisions = collision.data.get("sleep");
-          if (!sleepCollisions || !sleepCollisions.length) continue;
-          sleepCollisions.forEach((data) => {
-            console.log("sleep");
-            entity.active = false;
-            // actions
-          });
+        const { resolvers } = collision;
+        collision.data.forEach((collisionData, key) => {
+          switch (key) {
+            case "die":
+              entity.dead = true;
+              store.dispatch("addScore", 10);
+              // const dieResolver = resolvers.find(
+              //   (resolver) => resolver.type === key
+              // );
+              // dieResolver?.actions?.forEach((action) => {
+              //   store.dispatch(action.name, action.data);
+              // });
+              break;
+            case "sleep":
+              entity.active = false;
+              break;
+            case "none":
+              break;
+            default:
+              break;
+          }
+        });
 
-          const noneCollisions = collision.data.get("none");
-          if (!noneCollisions || !noneCollisions.length) continue;
-          noneCollisions.forEach((data) => {
-            // actions
-          });
+        if (entity.dead) {
+          this.emit("entityDestroyed", entity.id);
         }
+
+        collision.data.clear();
       } catch (error) {
         this.emit("systemError", error);
       }

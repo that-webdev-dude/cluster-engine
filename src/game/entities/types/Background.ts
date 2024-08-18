@@ -20,7 +20,7 @@ export class Background extends Cluster.Entity {
     });
 
     const zindex = new Components.ZindexComponent({
-      zindex: -1,
+      zindex: 0,
     });
 
     this.components.set("Transform", transform);

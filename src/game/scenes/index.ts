@@ -13,6 +13,7 @@ export class GamePlay extends Cluster.Scene {
     for (let i = 0; i < 20; i++) {
       this.addEntity(new Entities.Star());
     }
+    this.addEntity(new Entities.UIScore());
 
     // systems
     this.addSystem(new Systems.InputSystem());

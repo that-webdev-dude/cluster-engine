@@ -65,6 +65,10 @@ class ComponentIndex {
   private getEntityInstances(ids: Set<EntityId>): Set<Entity> {
     return new Set([...ids].map((id) => this.entities.get(id)!));
   }
+
+  get cacheSize() {
+    return this.cache.size;
+  }
 }
 
 class EventQueue {

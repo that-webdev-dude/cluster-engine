@@ -52,6 +52,7 @@ export class Spaceship extends Cluster.Entity {
 
     const collision = new Components.CollisionComponent({
       layer: CollisionLayers.Spaceship,
+      mask: CollisionLayers.Enemy | CollisionLayers.EnemyBullet,
       hitbox: {
         x: 0,
         y: 0,

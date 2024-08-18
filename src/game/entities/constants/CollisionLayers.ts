@@ -1,6 +1,7 @@
 export const CollisionLayers = {
-  SpaceshipBullet: 1 << 0,
-  EnemyBullet: 1 << 1,
-  Spaceship: 1 << 2,
-  Enemy: 1 << 3,
+  default: 1 << 0,
+  SpaceshipBullet: 1 << 1,
+  EnemyBullet: 1 << 2,
+  Spaceship: 1 << 3,
+  Enemy: 1 << 4,
 } as const;

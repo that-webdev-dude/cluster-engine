@@ -372,6 +372,7 @@ interface CollisionResolver {
   }[];
 }
 interface CollisionData {
+  main: Cluster.Entity;
   other: Cluster.Entity;
   overlap: Cluster.Vector;
   normal: Cluster.Vector;
@@ -413,6 +414,10 @@ export class CollisionComponent extends Cluster.Component {
     this.hitbox = hitbox;
     this.resolvers = resolvers;
     this.data = new Map();
+  }
+
+  get hit() {
+    return this.data.size > 0;
   }
 }
 
