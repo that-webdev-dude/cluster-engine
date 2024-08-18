@@ -358,68 +358,8 @@ class SpawnerComponent extends Cluster.Component {
   }
 }
 
-/** Collision component
- * @options layer, mask, resolvers
- * @properties layer, mask, resolvers
- */
-type ResolverType = "bounce" | "die" | "stop" | "sleep" | "none";
-interface CollisionResolver {
-  type: ResolverType;
-  mask: number;
-  actions?: {
-    name: string;
-    data: number | string | boolean;
-  }[];
-}
-interface CollisionData {
-  main: Cluster.Entity;
-  other: Cluster.Entity;
-  overlap: Cluster.Vector;
-  normal: Cluster.Vector;
-  area: number;
-}
-interface CollisionHitbox {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-}
-interface CollisionOptions {
-  layer: number;
-  mask?: number;
-  hitbox: CollisionHitbox;
-  resolvers?: CollisionResolver[];
-}
-export class CollisionComponent extends Cluster.Component {
-  readonly layer: number;
-  readonly mask: number;
-  readonly hitbox: CollisionHitbox;
-  readonly resolvers: CollisionResolver[];
-  readonly data: Map<ResolverType, CollisionData[]>;
-
-  constructor({
-    layer = 0,
-    mask = 1,
-    hitbox = {
-      x: 0,
-      y: 0,
-      width: 0,
-      height: 0,
-    },
-    resolvers = [],
-  }: CollisionOptions) {
-    super("Collision");
-    this.layer = layer;
-    this.mask = mask;
-    this.hitbox = hitbox;
-    this.resolvers = resolvers;
-    this.data = new Map();
-  }
-
-  get hit() {
-    return this.data.size > 0;
-  }
-}
+import { ScoresComponent } from "./_ScoresComponent";
+import { CollisionComponent } from "./_CollisionComponent";
 
 // Cluster.Component Classes
 export {
@@ -435,4 +375,7 @@ export {
   PlayerComponent,
   ControllerComponent,
   SpawnerComponent,
+  // new components
+  ScoresComponent,
+  CollisionComponent,
 };

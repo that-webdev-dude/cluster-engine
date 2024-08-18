@@ -50,28 +50,28 @@ export class Spaceship extends Cluster.Entity {
       interval: 0.1,
     });
 
-    const collision = new Components.CollisionComponent({
-      layer: CollisionLayers.Spaceship,
-      mask: CollisionLayers.Enemy | CollisionLayers.EnemyBullet,
-      hitbox: {
-        x: 0,
-        y: 0,
-        width: 64,
-        height: 64,
-      },
-      resolvers: [
-        {
-          type: "die",
-          mask: CollisionLayers.Enemy | CollisionLayers.EnemyBullet,
-          actions: [
-            {
-              name: "damage",
-              data: 10,
-            },
-          ],
-        },
-      ],
-    });
+    // const collision = new Components.CollisionComponent({
+    //   layer: CollisionLayers.Spaceship,
+    //   mask: CollisionLayers.Enemy | CollisionLayers.EnemyBullet,
+    //   hitbox: {
+    //     x: 0,
+    //     y: 0,
+    //     width: 64,
+    //     height: 64,
+    //   },
+    //   resolvers: [
+    //     {
+    //       type: "die",
+    //       mask: CollisionLayers.Enemy | CollisionLayers.EnemyBullet,
+    //       actions: [
+    //         {
+    //           name: "damage",
+    //           data: 10,
+    //         },
+    //       ],
+    //     },
+    //   ],
+    // });
 
     this.components.set("Controller", controller);
     this.components.set("Transform", transform);
@@ -80,6 +80,6 @@ export class Spaceship extends Cluster.Entity {
     this.components.set("Sprite", sprite);
     this.components.set("Player", player);
     this.components.set("Spawner", spawner);
-    this.components.set("Collision", collision);
+    // this.components.set("Collision", collision);
   }
 }

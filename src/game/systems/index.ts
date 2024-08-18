@@ -462,357 +462,357 @@ export class SpawnSystem extends Cluster.System {
   }
 }
 
-/** Collision system
- * @required Collision
- * @emits systemStarted, systemUpdated, systemError
- */
-export class CollisionSystem extends Cluster.System {
-  constructor() {
-    super(["Collision"]);
-  }
+// /** Collision system
+//  * @required Collision
+//  * @emits systemStarted, systemUpdated, systemError
+//  */
+// export class CollisionSystem extends Cluster.System {
+//   constructor() {
+//     super(["Collision"]);
+//   }
 
-  private _testCollision(
-    entityA: Cluster.Entity,
-    entityB: Cluster.Entity
-  ): boolean {
-    const transformA = entityA.components.get("Transform") as
-      | Components.TransformComponent
-      | undefined;
-    const transformB = entityB.components.get("Transform") as
-      | Components.TransformComponent
-      | undefined;
+//   private _testCollision(
+//     entityA: Cluster.Entity,
+//     entityB: Cluster.Entity
+//   ): boolean {
+//     const transformA = entityA.components.get("Transform") as
+//       | Components.TransformComponent
+//       | undefined;
+//     const transformB = entityB.components.get("Transform") as
+//       | Components.TransformComponent
+//       | undefined;
 
-    if (!transformA || !transformB) return false;
+//     if (!transformA || !transformB) return false;
 
-    const collisionA = entityA.components.get("Collision") as
-      | Components.CollisionComponent
-      | undefined;
-    const collisionB = entityB.components.get("Collision") as
-      | Components.CollisionComponent
-      | undefined;
+//     const collisionA = entityA.components.get("Collision") as
+//       | Components.CollisionComponent
+//       | undefined;
+//     const collisionB = entityB.components.get("Collision") as
+//       | Components.CollisionComponent
+//       | undefined;
 
-    if (!collisionA || !collisionB) return false;
+//     if (!collisionA || !collisionB) return false;
 
-    const positionA = transformA.position;
-    const positionB = transformB.position;
-    const hitboxA = collisionA.hitbox;
-    const hitboxB = collisionB.hitbox;
+//     const positionA = transformA.position;
+//     const positionB = transformB.position;
+//     const hitboxA = collisionA.hitbox;
+//     const hitboxB = collisionB.hitbox;
 
-    return (
-      positionA.x < positionB.x + hitboxB.width &&
-      positionA.x + hitboxA.width > positionB.x &&
-      positionA.y < positionB.y + hitboxB.height &&
-      positionA.y + hitboxA.height > positionB.y
-    );
-  }
+//     return (
+//       positionA.x < positionB.x + hitboxB.width &&
+//       positionA.x + hitboxA.width > positionB.x &&
+//       positionA.y < positionB.y + hitboxB.height &&
+//       positionA.y + hitboxA.height > positionB.y
+//     );
+//   }
 
-  private _storeCollisionData(
-    entityA: Cluster.Entity,
-    entityB: Cluster.Entity
-  ) {
-    const collisionA = entityA.components.get("Collision") as
-      | Components.CollisionComponent
-      | undefined;
-    const collisionB = entityB.components.get("Collision") as
-      | Components.CollisionComponent
-      | undefined;
+//   private _storeCollisionData(
+//     entityA: Cluster.Entity,
+//     entityB: Cluster.Entity
+//   ) {
+//     const collisionA = entityA.components.get("Collision") as
+//       | Components.CollisionComponent
+//       | undefined;
+//     const collisionB = entityB.components.get("Collision") as
+//       | Components.CollisionComponent
+//       | undefined;
 
-    const resolversA = collisionA?.resolvers;
-    if (!resolversA?.length) return;
+//     const resolversA = collisionA?.resolvers;
+//     if (!resolversA?.length) return;
 
-    resolversA.forEach((resolverA) => {
-      if (collisionB && resolverA.mask & collisionB.layer) {
-        const transformA = entityA.components.get("Transform") as
-          | Components.TransformComponent
-          | undefined;
-        const transformB = entityB.components.get("Transform") as
-          | Components.TransformComponent
-          | undefined;
+//     resolversA.forEach((resolverA) => {
+//       if (collisionB && resolverA.mask & collisionB.layer) {
+//         const transformA = entityA.components.get("Transform") as
+//           | Components.TransformComponent
+//           | undefined;
+//         const transformB = entityB.components.get("Transform") as
+//           | Components.TransformComponent
+//           | undefined;
 
-        if (!transformA || !transformB) return;
+//         if (!transformA || !transformB) return;
 
-        if (!collisionA || !collisionB) return;
+//         if (!collisionA || !collisionB) return;
 
-        const positionA = transformA.position;
-        const positionB = transformB.position;
-        const hitboxA = collisionA.hitbox;
-        const hitboxB = collisionB.hitbox;
+//         const positionA = transformA.position;
+//         const positionB = transformB.position;
+//         const hitboxA = collisionA.hitbox;
+//         const hitboxB = collisionB.hitbox;
 
-        const x1 = Math.max(positionA.x + hitboxA.x, positionB.x + hitboxB.x);
-        const x2 = Math.min(
-          positionA.x + hitboxA.x + hitboxA.width,
-          positionB.x + hitboxB.x + hitboxB.width
-        );
-        const y1 = Math.max(positionA.y + hitboxA.y, positionB.y + hitboxB.y);
-        const y2 = Math.min(
-          positionA.y + hitboxA.y + hitboxA.height,
-          positionB.y + hitboxB.y + hitboxB.height
-        );
+//         const x1 = Math.max(positionA.x + hitboxA.x, positionB.x + hitboxB.x);
+//         const x2 = Math.min(
+//           positionA.x + hitboxA.x + hitboxA.width,
+//           positionB.x + hitboxB.x + hitboxB.width
+//         );
+//         const y1 = Math.max(positionA.y + hitboxA.y, positionB.y + hitboxB.y);
+//         const y2 = Math.min(
+//           positionA.y + hitboxA.y + hitboxA.height,
+//           positionB.y + hitboxB.y + hitboxB.height
+//         );
 
-        const overlapX = x2 - x1;
-        const overlapY = y2 - y1;
+//         const overlapX = x2 - x1;
+//         const overlapY = y2 - y1;
 
-        const overlap = new Cluster.Vector(overlapX, overlapY);
+//         const overlap = new Cluster.Vector(overlapX, overlapY);
 
-        const normal = new Cluster.Vector(
-          overlap.x < overlap.y ? (overlap.x < 0 ? -1 : 1) : 0,
-          overlap.x > overlap.y ? (overlap.y < 0 ? -1 : 1) : 0
-        );
+//         const normal = new Cluster.Vector(
+//           overlap.x < overlap.y ? (overlap.x < 0 ? -1 : 1) : 0,
+//           overlap.x > overlap.y ? (overlap.y < 0 ? -1 : 1) : 0
+//         );
 
-        const area = overlap.x * overlap.y;
+//         const area = overlap.x * overlap.y;
 
-        const dataA = collisionA.data.get(resolverA.type);
-        if (dataA) {
-          if (!dataA.some((data) => data.other === entityB)) {
-            dataA.push({
-              main: entityA,
-              other: entityB,
-              overlap,
-              normal,
-              area,
-            });
-          }
-        } else {
-          collisionA.data.set(resolverA.type, [
-            {
-              main: entityA,
-              other: entityB,
-              overlap,
-              normal,
-              area,
-            },
-          ]);
-        }
-      }
-    });
-  }
+//         // const dataA = collisionA.data.get(resolverA.type);
+//         // if (dataA) {
+//         //   if (!dataA.some((data) => data.other === entityB)) {
+//         //     dataA.push({
+//         //       main: entityA,
+//         //       other: entityB,
+//         //       overlap,
+//         //       normal,
+//         //       area,
+//         //     });
+//         //   }
+//         // } else {
+//         //   collisionA.data.set(resolverA.type, [
+//         //     {
+//         //       main: entityA,
+//         //       other: entityB,
+//         //       overlap,
+//         //       normal,
+//         //       area,
+//         //     },
+//         //   ]);
+//         // }
+//       }
+//     });
+//   }
 
-  private _potentialCollision(
-    collisionA: Components.CollisionComponent,
-    collisionB: Components.CollisionComponent
-  ) {
-    return (
-      collisionA.layer & collisionB.mask || collisionB.layer & collisionA.mask
-    );
-  }
+//   private _potentialCollision(
+//     collisionA: Components.CollisionComponent,
+//     collisionB: Components.CollisionComponent
+//   ) {
+//     return (
+//       collisionA.layer & collisionB.mask || collisionB.layer & collisionA.mask
+//     );
+//   }
 
-  update(entities: Set<Cluster.Entity>) {
-    if (entities.size <= 1) return;
+//   update(entities: Set<Cluster.Entity>) {
+//     if (entities.size <= 1) return;
 
-    // const start = performance.now(); // debug
+//     // const start = performance.now(); // debug
 
-    this.emit("systemStarted");
+//     this.emit("systemStarted");
 
-    const entitiesArray = Array.from(entities);
+//     const entitiesArray = Array.from(entities);
 
-    for (let i = 0; i < entities.size; i++) {
-      for (let j = i + 1; j < entities.size; j++) {
-        const entityA = entitiesArray[i];
-        const entityB = entitiesArray[j];
+//     for (let i = 0; i < entities.size; i++) {
+//       for (let j = i + 1; j < entities.size; j++) {
+//         const entityA = entitiesArray[i];
+//         const entityB = entitiesArray[j];
 
-        const collisionA = entityA.components.get("Collision") as
-          | Components.CollisionComponent
-          | undefined;
-        const collisionB = entityB.components.get("Collision") as
-          | Components.CollisionComponent
-          | undefined;
+//         const collisionA = entityA.components.get("Collision") as
+//           | Components.CollisionComponent
+//           | undefined;
+//         const collisionB = entityB.components.get("Collision") as
+//           | Components.CollisionComponent
+//           | undefined;
 
-        if (!collisionA || !collisionB) continue;
+//         if (!collisionA || !collisionB) continue;
 
-        // check if a collision can happen using the layer and mask values
-        if (!this._potentialCollision(collisionA, collisionB)) {
-          continue;
-        }
+//         // check if a collision can happen using the layer and mask values
+//         if (!this._potentialCollision(collisionA, collisionB)) {
+//           continue;
+//         }
 
-        if (this._testCollision(entityA, entityB)) {
-          if (collisionA.resolvers.length) {
-            this._storeCollisionData(entityA, entityB);
-          }
-          if (collisionB.resolvers.length) {
-            this._storeCollisionData(entityB, entityA);
-          }
-        }
-      }
+//         if (this._testCollision(entityA, entityB)) {
+//           if (collisionA.resolvers.length) {
+//             this._storeCollisionData(entityA, entityB);
+//           }
+//           if (collisionB.resolvers.length) {
+//             this._storeCollisionData(entityB, entityA);
+//           }
+//         }
+//       }
 
-      this.emit("systemUpdated");
+//       this.emit("systemUpdated");
 
-      // const end = performance.now(); // debug
-      // console.log(`CollisionSystem: ${(end - start).toFixed(2)}ms`); // debug
-    }
-  }
-}
+//       // const end = performance.now(); // debug
+//       // console.log(`CollisionSystem: ${(end - start).toFixed(2)}ms`); // debug
+//     }
+//   }
+// }
 
-/** Resolution system
- * @required Collision, Transform, Velocity
- * @emits systemStarted, systemUpdated, systemError, entityDestroyed
- */
-export class ResolutionSystem extends Cluster.System {
-  // private _getOverlap(entityA: Cluster.Entity, entityB: Cluster.Entity) {
-  //   const transformA = entityA.components.get("Transform") as
-  //     | Components.TransformComponent
-  //     | undefined;
-  //   const transformB = entityB.components.get("Transform") as
-  //     | Components.TransformComponent
-  //     | undefined;
+// /** Resolution system
+//  * @required Collision, Transform, Velocity
+//  * @emits systemStarted, systemUpdated, systemError, entityDestroyed
+//  */
+// export class ResolutionSystem extends Cluster.System {
+//   // private _getOverlap(entityA: Cluster.Entity, entityB: Cluster.Entity) {
+//   //   const transformA = entityA.components.get("Transform") as
+//   //     | Components.TransformComponent
+//   //     | undefined;
+//   //   const transformB = entityB.components.get("Transform") as
+//   //     | Components.TransformComponent
+//   //     | undefined;
 
-  //   if (!transformA || !transformB) return new Cluster.Vector(0, 0);
+//   //   if (!transformA || !transformB) return new Cluster.Vector(0, 0);
 
-  //   const collisionA = entityA.components.get("Collision") as
-  //     | Components.CollisionComponent
-  //     | undefined;
-  //   const collisionB = entityB.components.get("Collision") as
-  //     | Components.CollisionComponent
-  //     | undefined;
+//   //   const collisionA = entityA.components.get("Collision") as
+//   //     | Components.CollisionComponent
+//   //     | undefined;
+//   //   const collisionB = entityB.components.get("Collision") as
+//   //     | Components.CollisionComponent
+//   //     | undefined;
 
-  //   if (!collisionA || !collisionB) return new Cluster.Vector(0, 0);
+//   //   if (!collisionA || !collisionB) return new Cluster.Vector(0, 0);
 
-  //   const positionA = transformA.position;
-  //   const positionB = transformB.position;
-  //   const hitboxA = collisionA.hitbox;
-  //   const hitboxB = collisionB.hitbox;
+//   //   const positionA = transformA.position;
+//   //   const positionB = transformB.position;
+//   //   const hitboxA = collisionA.hitbox;
+//   //   const hitboxB = collisionB.hitbox;
 
-  //   const x1 = Math.max(positionA.x + hitboxA.x, positionB.x + hitboxB.x);
-  //   const x2 = Math.min(
-  //     positionA.x + hitboxA.x + hitboxA.width,
-  //     positionB.x + hitboxB.x + hitboxB.width
-  //   );
-  //   const y1 = Math.max(positionA.y + hitboxA.y, positionB.y + hitboxB.y);
-  //   const y2 = Math.min(
-  //     positionA.y + hitboxA.y + hitboxA.height,
-  //     positionB.y + hitboxB.y + hitboxB.height
-  //   );
+//   //   const x1 = Math.max(positionA.x + hitboxA.x, positionB.x + hitboxB.x);
+//   //   const x2 = Math.min(
+//   //     positionA.x + hitboxA.x + hitboxA.width,
+//   //     positionB.x + hitboxB.x + hitboxB.width
+//   //   );
+//   //   const y1 = Math.max(positionA.y + hitboxA.y, positionB.y + hitboxB.y);
+//   //   const y2 = Math.min(
+//   //     positionA.y + hitboxA.y + hitboxA.height,
+//   //     positionB.y + hitboxB.y + hitboxB.height
+//   //   );
 
-  //   const overlapX = x2 - x1;
-  //   const overlapY = y2 - y1;
+//   //   const overlapX = x2 - x1;
+//   //   const overlapY = y2 - y1;
 
-  //   return new Cluster.Vector(overlapX, overlapY);
-  // }
+//   //   return new Cluster.Vector(overlapX, overlapY);
+//   // }
 
-  // private _getNormal(
-  //   entityA: Cluster.Entity,
-  //   entityB: Cluster.Entity,
-  //   overlap: Cluster.Vector
-  // ) {
-  //   const transformA = entityA.components.get("Transform") as
-  //     | Components.TransformComponent
-  //     | undefined;
-  //   const transformB = entityB.components.get("Transform") as
-  //     | Components.TransformComponent
-  //     | undefined;
+//   // private _getNormal(
+//   //   entityA: Cluster.Entity,
+//   //   entityB: Cluster.Entity,
+//   //   overlap: Cluster.Vector
+//   // ) {
+//   //   const transformA = entityA.components.get("Transform") as
+//   //     | Components.TransformComponent
+//   //     | undefined;
+//   //   const transformB = entityB.components.get("Transform") as
+//   //     | Components.TransformComponent
+//   //     | undefined;
 
-  //   if (!transformA || !transformB) return new Cluster.Vector(0, 0);
+//   //   if (!transformA || !transformB) return new Cluster.Vector(0, 0);
 
-  //   const collisionA = entityA.components.get("Collision") as
-  //     | Components.CollisionComponent
-  //     | undefined;
-  //   const collisionB = entityB.components.get("Collision") as
-  //     | Components.CollisionComponent
-  //     | undefined;
+//   //   const collisionA = entityA.components.get("Collision") as
+//   //     | Components.CollisionComponent
+//   //     | undefined;
+//   //   const collisionB = entityB.components.get("Collision") as
+//   //     | Components.CollisionComponent
+//   //     | undefined;
 
-  //   if (!collisionA || !collisionB) return new Cluster.Vector(0, 0);
+//   //   if (!collisionA || !collisionB) return new Cluster.Vector(0, 0);
 
-  //   if (overlap.x < overlap.y) {
-  //     return transformA.position.x < transformB.position.x
-  //       ? new Cluster.Vector(-1, 0)
-  //       : new Cluster.Vector(1, 0);
-  //   } else if (overlap.x > overlap.y) {
-  //     return transformA.position.y < transformB.position.y
-  //       ? new Cluster.Vector(0, -1)
-  //       : new Cluster.Vector(0, 1);
-  //   } else if (overlap.x === overlap.y) {
-  //     // ... edge case
-  //   }
-  //   return new Cluster.Vector(0, 0);
-  // }
+//   //   if (overlap.x < overlap.y) {
+//   //     return transformA.position.x < transformB.position.x
+//   //       ? new Cluster.Vector(-1, 0)
+//   //       : new Cluster.Vector(1, 0);
+//   //   } else if (overlap.x > overlap.y) {
+//   //     return transformA.position.y < transformB.position.y
+//   //       ? new Cluster.Vector(0, -1)
+//   //       : new Cluster.Vector(0, 1);
+//   //   } else if (overlap.x === overlap.y) {
+//   //     // ... edge case
+//   //   }
+//   //   return new Cluster.Vector(0, 0);
+//   // }
 
-  // private _slideResolution(entity: Cluster.Entity) {
-  //   const collision = entity.components.get("Collision") as
-  //     | Components.CollisionComponent
-  //     | undefined;
+//   // private _slideResolution(entity: Cluster.Entity) {
+//   //   const collision = entity.components.get("Collision") as
+//   //     | Components.CollisionComponent
+//   //     | undefined;
 
-  //   if (!collision) return;
+//   //   if (!collision) return;
 
-  //   const collisionData = collision.data.get("slide");
-  //   if (!collisionData || !collisionData.length) return;
+//   //   const collisionData = collision.data.get("slide");
+//   //   if (!collisionData || !collisionData.length) return;
 
-  //   const transform = entity.components.get("Transform") as
-  //     | Components.TransformComponent
-  //     | undefined;
-  //   const velocity = entity.components.get("Velocity") as
-  //     | Components.VelocityComponent
-  //     | undefined;
+//   //   const transform = entity.components.get("Transform") as
+//   //     | Components.TransformComponent
+//   //     | undefined;
+//   //   const velocity = entity.components.get("Velocity") as
+//   //     | Components.VelocityComponent
+//   //     | undefined;
 
-  //   if (!transform || !velocity) return;
+//   //   if (!transform || !velocity) return;
 
-  //   collisionData.sort((a, b) => b.area - a.area);
+//   //   collisionData.sort((a, b) => b.area - a.area);
 
-  //   const first = collisionData[0];
-  //   const normal = first.normal;
-  //   const overlap = first.overlap;
+//   //   const first = collisionData[0];
+//   //   const normal = first.normal;
+//   //   const overlap = first.overlap;
 
-  //   transform.position.x += overlap.x * normal.x;
-  //   transform.position.y += overlap.y * normal.y;
+//   //   transform.position.x += overlap.x * normal.x;
+//   //   transform.position.y += overlap.y * normal.y;
 
-  //   if (normal.x !== 0) {
-  //     velocity.x = 0;
-  //   }
-  //   if (normal.y !== 0) {
-  //     velocity.y = 0;
-  //   }
-  // }
+//   //   if (normal.x !== 0) {
+//   //     velocity.x = 0;
+//   //   }
+//   //   if (normal.y !== 0) {
+//   //     velocity.y = 0;
+//   //   }
+//   // }
 
-  constructor() {
-    super(["Collision"]);
-  }
+//   constructor() {
+//     super(["Collision"]);
+//   }
 
-  update(entities: Set<Cluster.Entity>) {
-    if (entities.size === 0) return;
+//   update(entities: Set<Cluster.Entity>) {
+//     if (entities.size === 0) return;
 
-    this.emit("systemStarted");
+//     this.emit("systemStarted");
 
-    for (let entity of entities) {
-      if (entity.dead || !entity.active) continue;
+//     for (let entity of entities) {
+//       if (entity.dead || !entity.active) continue;
 
-      try {
-        const collision = entity.components.get("Collision") as
-          | Components.CollisionComponent
-          | undefined;
+//       try {
+//         const collision = entity.components.get("Collision") as
+//           | Components.CollisionComponent
+//           | undefined;
 
-        if (!collision || collision.data.size === 0) continue;
+//         if (!collision || collision.data.size === 0) continue;
 
-        const { resolvers } = collision;
-        collision.data.forEach((collisionData, key) => {
-          switch (key) {
-            case "die":
-              entity.dead = true;
-              store.dispatch("addScore", 10);
-              // const dieResolver = resolvers.find(
-              //   (resolver) => resolver.type === key
-              // );
-              // dieResolver?.actions?.forEach((action) => {
-              //   store.dispatch(action.name, action.data);
-              // });
-              break;
-            case "sleep":
-              entity.active = false;
-              break;
-            case "none":
-              break;
-            default:
-              break;
-          }
-        });
+//         const { resolvers } = collision;
+//         collision.data.forEach((collisionData, key) => {
+//           switch (key) {
+//             case "die":
+//               entity.dead = true;
+//               store.dispatch("addScore", 10);
+//               // const dieResolver = resolvers.find(
+//               //   (resolver) => resolver.type === key
+//               // );
+//               // dieResolver?.actions?.forEach((action) => {
+//               //   store.dispatch(action.name, action.data);
+//               // });
+//               break;
+//             case "sleep":
+//               entity.active = false;
+//               break;
+//             case "none":
+//               break;
+//             default:
+//               break;
+//           }
+//         });
 
-        if (entity.dead) {
-          this.emit("entityDestroyed", entity.id);
-        }
+//         if (entity.dead) {
+//           this.emit("entityDestroyed", entity.id);
+//         }
 
-        collision.data.clear();
-      } catch (error) {
-        this.emit("systemError", error);
-      }
-    }
+//         collision.data.clear();
+//       } catch (error) {
+//         this.emit("systemError", error);
+//       }
+//     }
 
-    this.emit("systemUpdated");
-  }
-}
+//     this.emit("systemUpdated");
+//   }
+// }

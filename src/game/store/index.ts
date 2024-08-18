@@ -4,7 +4,7 @@ import { Store } from "../../cluster";
 const state = {
   screenHeight: 640,
   screenWidth: 832,
-  scores: 10,
+  scores: 20,
 };
 
 const getters = {

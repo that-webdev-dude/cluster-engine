@@ -48,22 +48,22 @@ export class Enemy extends Cluster.Entity {
       interval: 1,
     });
 
-    const collision = new Components.CollisionComponent({
-      layer: CollisionLayers.Enemy,
-      mask: CollisionLayers.Spaceship | CollisionLayers.SpaceshipBullet,
-      hitbox: {
-        x: 0,
-        y: 0,
-        width: 64,
-        height: 64,
-      },
-      resolvers: [
-        {
-          type: "die",
-          mask: CollisionLayers.SpaceshipBullet | CollisionLayers.Spaceship,
-        },
-      ],
-    });
+    // const collision = new Components.CollisionComponent({
+    //   layer: CollisionLayers.Enemy,
+    //   mask: CollisionLayers.Spaceship | CollisionLayers.SpaceshipBullet,
+    //   hitbox: {
+    //     x: 0,
+    //     y: 0,
+    //     width: 64,
+    //     height: 64,
+    //   },
+    //   resolvers: [
+    //     {
+    //       type: "die",
+    //       mask: CollisionLayers.SpaceshipBullet | CollisionLayers.Spaceship,
+    //     },
+    //   ],
+    // });
 
     this.components.set("Transform", transform);
     this.components.set("Velocity", velocity);
@@ -71,7 +71,7 @@ export class Enemy extends Cluster.Entity {
     this.components.set("Zindex", zindex);
     this.components.set("Enemy", enemy);
     this.components.set("Spawner", spawner);
-    this.components.set("Collision", collision);
+    // this.components.set("Collision", collision);
   }
 }
 

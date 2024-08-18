@@ -23,9 +23,12 @@ export class UIScore extends Cluster.Entity {
       zindex: 2,
     });
 
+    const scores = new Components.ScoresComponent();
+
     this.components.set("Transform", transform);
     this.components.set("Text", text);
     this.components.set("Zindex", zindex);
+    this.components.set("Scores", scores);
   }
 }
 

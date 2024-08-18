@@ -66,30 +66,30 @@ export const spaceshipBulletPool = new Cluster.Pool<Bullet>(() => {
     speed: 500,
     frame: 0,
   });
-  bullet.components.set(
-    "Collision",
-    new Components.CollisionComponent({
-      layer: CollisionLayers.SpaceshipBullet,
-      hitbox: {
-        x: 0,
-        y: 0,
-        width: 12,
-        height: 12,
-      },
-      resolvers: [
-        {
-          type: "die",
-          mask: CollisionLayers.Enemy,
-          actions: [
-            {
-              name: "damage",
-              data: 10,
-            },
-          ],
-        },
-      ],
-    })
-  );
+  // bullet.components.set(
+  //   "Collision",
+  //   new Components.CollisionComponent({
+  //     layer: CollisionLayers.SpaceshipBullet,
+  //     hitbox: {
+  //       x: 0,
+  //       y: 0,
+  //       width: 12,
+  //       height: 12,
+  //     },
+  //     resolvers: [
+  //       {
+  //         type: "die",
+  //         mask: CollisionLayers.Enemy,
+  //         actions: [
+  //           {
+  //             name: "damage",
+  //             data: 10,
+  //           },
+  //         ],
+  //       },
+  //     ],
+  //   })
+  // );
   return bullet;
 }, 0);
 
@@ -101,23 +101,23 @@ export const enemyBulletPool = new Cluster.Pool<Bullet>(() => {
     speed: 500,
     frame: 10,
   });
-  bullet.components.set(
-    "Collision",
-    new Components.CollisionComponent({
-      layer: CollisionLayers.EnemyBullet,
-      hitbox: {
-        x: 0,
-        y: 0,
-        width: 12,
-        height: 12,
-      },
-      resolvers: [
-        {
-          type: "die",
-          mask: CollisionLayers.Spaceship,
-        },
-      ],
-    })
-  );
+  // bullet.components.set(
+  //   "Collision",
+  //   new Components.CollisionComponent({
+  //     layer: CollisionLayers.EnemyBullet,
+  //     hitbox: {
+  //       x: 0,
+  //       y: 0,
+  //       width: 12,
+  //       height: 12,
+  //     },
+  //     resolvers: [
+  //       {
+  //         type: "die",
+  //         mask: CollisionLayers.Spaceship,
+  //       },
+  //     ],
+  //   })
+  // );
   return bullet;
 }, 0);
