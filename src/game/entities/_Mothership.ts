@@ -1,6 +1,6 @@
-import { enemyPool } from "./Enemy";
-import * as Cluster from "../../../cluster";
-import * as Components from "../../components";
+import { enemyPool } from "./_Enemy";
+import * as Cluster from "../../cluster";
+import * as Components from "../components";
 
 /** Mothership entity
  * @components EnhanceSpawner

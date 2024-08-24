@@ -1,9 +1,9 @@
-import { spaceshipBulletPool } from "./Bullet";
-import { CollisionLayers } from "../constants/CollisionLayers";
-import { store } from "../../store";
-import * as Cluster from "../../../cluster";
-import * as Components from "../../components";
-import * as Images from "../../../images";
+import { spaceshipBulletPool } from "./_Bullet";
+import { CollisionLayers } from "./constants/CollisionLayers";
+import { store } from "../store";
+import * as Images from "../../images";
+import * as Cluster from "../../cluster";
+import * as Components from "../components";
 
 /** Spaceship entity
  * @components Controller, Transform, Velocity, Sprite, Zindex, Player, Spawner, Collision
@@ -61,14 +61,14 @@ export class Spaceship extends Cluster.Entity {
       },
       resolvers: [
         {
-          resolver: "die",
+          type: "die",
           mask: CollisionLayers.Enemy,
-          // store: [
-          //   {
-          //     action: "decrement",
-          //     payload: 1,
-          //   },
-          // ],
+          actions: [
+            {
+              action: "removeLife",
+              payload: 1,
+            },
+          ],
         },
       ],
     });

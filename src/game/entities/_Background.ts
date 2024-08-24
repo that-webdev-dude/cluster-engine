@@ -1,6 +1,6 @@
-import { store } from "../../store";
-import * as Cluster from "../../../cluster";
-import * as Components from "../../components";
+import { store } from "../store";
+import * as Cluster from "../../cluster";
+import * as Components from "../components";
 
 /** Background entity
  * @components Transform, Rect, Zindex

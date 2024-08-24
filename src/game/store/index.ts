@@ -4,24 +4,35 @@ import { Store } from "../../cluster";
 const state = {
   screenHeight: 640,
   screenWidth: 832,
-  scores: 20,
+  scores: 0,
+  lives: 3,
+  level: 1,
 };
 
 const getters = {
   screenHeight: (state: any) => state.screenHeight,
   screenWidth: (state: any) => state.screenWidth,
   scores: (state: any) => state.scores,
+  lives: (state: any) => state.lives,
 };
 
 const actions = {
-  addScore(context: Store, score: number) {
+  addScores(context: Store, score: number) {
     context.commit("setScores", state.scores + score);
   },
-  resetScore(context: Store) {
+  resetScores(context: Store) {
     context.commit("setScores", 0);
   },
-  logScores(context: Store) {
-    context.commit("logScores");
+  addLife(context: Store) {
+    context.commit("setLives", state.lives + 1);
+  },
+  removeLife(context: Store) {
+    context.commit("setLives", state.lives - 1);
+  },
+  resetGame(context: Store) {
+    context.commit("setScores", 0);
+    context.commit("setLives", 3);
+    context.commit("setLevel", 1);
   },
 };
 
@@ -35,8 +46,11 @@ const mutations = {
   setScores(state: any, scores: number) {
     state.scores = scores;
   },
-  logScores(state: any) {
-    console.log(state.scores);
+  setLives(state: any, lives: number) {
+    state.lives = lives;
+  },
+  setLevel(state: any, level: number) {
+    state.level = level;
   },
 };
 

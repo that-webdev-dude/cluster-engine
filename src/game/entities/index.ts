@@ -1,13 +1,13 @@
 // Game entities
-export { Background } from "./types/Background";
-export { Mothership } from "./types/Mothership";
-export { Spaceship } from "./types/Spaceship";
-export { Enemy } from "./types/Enemy";
-export { Star } from "./types/Star";
-
-export { Bullet } from "./types/Bullet";
+export { Background } from "./_Background";
+export { Mothership } from "./_Mothership";
+export { Spaceship } from "./_Spaceship";
+export { Enemy } from "./_Enemy";
+export { Star } from "./_Star";
+export { Bullet } from "./_Bullet";
 
 // UI entities
-export { UIHealth } from "./types/UI";
-export { UILives } from "./types/UI";
-export { UIScore } from "./types/UI";
+export { UIHealth } from "./_UI";
+export { UILives } from "./_UI";
+export { UIScores } from "./_UI";
+export { UITitle } from "./_UI";

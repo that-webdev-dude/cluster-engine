@@ -92,6 +92,7 @@ class EventQueue {
         callback();
       }
     }
+
     this._queue.clear();
   }
 
@@ -103,6 +104,7 @@ class EventQueue {
 // add utilities to add and remove components from entities
 export class Entity {
   private static nextId: EntityId = 0;
+
   id: EntityId;
   dead: boolean;
   active: boolean;
@@ -113,6 +115,19 @@ export class Entity {
     this.dead = false;
     this.active = true;
     this.components = new Map();
+  }
+
+  get type() {
+    return this.constructor.name;
+  }
+
+  get<T extends Component>(name: string): T {
+    if (!this.components.has(name)) {
+      throw new Error(
+        `[Entity Error] Component ${name} not found in entity ${this.id}`
+      );
+    }
+    return this.components.get(name) as T;
   }
 }
 
@@ -141,16 +156,16 @@ export class System extends EventEmitter {
 }
 
 export class Scene {
-  private entities: Map<EntityId, Entity>;
-  private systems: System[];
   private componentIndex: ComponentIndex;
   private eventQueue: EventQueue;
+  private entities: Map<EntityId, Entity>;
+  private systems: System[];
 
   constructor() {
-    this.entities = new Map();
-    this.systems = [];
     this.componentIndex = new ComponentIndex();
     this.eventQueue = new EventQueue();
+    this.entities = new Map();
+    this.systems = [];
   }
 
   addEntity(entity: Entity) {
@@ -161,25 +176,54 @@ export class Scene {
 
   removeEntity(entity: Entity) {
     if (!entity || !this.entities.has(entity.id)) return;
-    this.entities.delete(entity.id);
-    this.componentIndex.removeEntity(entity);
+    // this.entities.delete(entity.id);
+    // this.componentIndex.removeEntity(entity);
+    console.log("Removing entity", entity.id);
+    if (this.entities.delete(entity.id)) {
+      this.componentIndex.removeEntity(entity);
+    }
   }
 
   addSystem(system: System) {
+    // system.on(SystemEvents.COMPONENT_ATTACHED, (entityId: EntityId) => {
+    //   this.componentIndex.addEntity(this.entities.get(entityId)!);
+    // });
+
+    // system.on(SystemEvents.COMPONENT_DETACHED, (entityId: EntityId) => {
+    //   this.componentIndex.removeEntity(this.entities.get(entityId)!);
+    // });
+
+    // system.on(SystemEvents.ENTITY_CREATED, (entity: Entity) => {
+    //   this.addEntity(entity);
+    // });
+
+    // system.on(SystemEvents.ENTITY_DESTROYED, (entityId: EntityId) => {
+    //   this.removeEntity(this.entities.get(entityId)!);
+    // });
+
+    // this.systems.push(system);
     system.on(SystemEvents.COMPONENT_ATTACHED, (entityId: EntityId) => {
-      this.componentIndex.addEntity(this.entities.get(entityId)!);
+      this.eventQueue.addEventListener(SystemEvents.COMPONENT_ATTACHED, () => {
+        this.componentIndex.addEntity(this.entities.get(entityId)!);
+      });
     });
 
     system.on(SystemEvents.COMPONENT_DETACHED, (entityId: EntityId) => {
-      this.componentIndex.removeEntity(this.entities.get(entityId)!);
+      this.eventQueue.addEventListener(SystemEvents.COMPONENT_DETACHED, () => {
+        this.componentIndex.removeEntity(this.entities.get(entityId)!);
+      });
     });
 
     system.on(SystemEvents.ENTITY_CREATED, (entity: Entity) => {
-      this.addEntity(entity);
+      this.eventQueue.addEventListener(SystemEvents.ENTITY_CREATED, () => {
+        this.addEntity(entity);
+      });
     });
 
     system.on(SystemEvents.ENTITY_DESTROYED, (entityId: EntityId) => {
-      this.removeEntity(this.entities.get(entityId)!);
+      this.eventQueue.addEventListener(SystemEvents.ENTITY_DESTROYED, () => {
+        this.removeEntity(this.entities.get(entityId)!);
+      });
     });
 
     this.systems.push(system);
@@ -192,6 +236,10 @@ export class Scene {
       );
       system.update(entities, dt, t);
     }
+
+    // if (this.eventQueue.size) {
+    //   console.log(`Event queue size: ${this.eventQueue.event}`);
+    // }
 
     this.eventQueue.processEventListeners();
   }

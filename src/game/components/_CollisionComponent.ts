@@ -1,34 +1,41 @@
 import * as Cluster from "../../cluster";
 
-type ResolverType = "bounce" | "die" | "stop" | "sleep" | "none";
+export type CollisionResolverType =
+  | "bounce"
+  | "die"
+  | "stop"
+  | "sleep"
+  | "none"
+  | "slide";
 
-interface CollisionHitbox {
+export interface CollisionResolver {
+  type: CollisionResolverType;
+  mask: number;
+  actions?: {
+    action: string;
+    payload: any;
+  }[];
+}
+
+export interface CollisionHitbox {
   x: number;
   y: number;
   width: number;
   height: number;
 }
 
-interface CollisionResolver {
-  resolver: ResolverType;
-  mask: number;
-  store?: {
+export interface CollisionData {
+  entity: Cluster.Entity;
+  normal: Cluster.Vector;
+  overlap: Cluster.Vector;
+  area: number;
+  actions?: {
     action: string;
     payload: any;
   }[];
 }
 
-interface CollisionData {
-  resolver: ResolverType;
-  main: Cluster.Entity;
-  other: Cluster.Entity;
-  store: {
-    action: string;
-    payload: any;
-  }[];
-}
-
-interface CollisionOptions {
+export interface CollisionOptions {
   layer: number;
   mask?: number;
   hitbox: CollisionHitbox;
@@ -36,26 +43,28 @@ interface CollisionOptions {
 }
 
 /** Collision component
- * @options layer, mask, hitbox, resolvers?
- * @properties layer, mask, resolvers
+ * the collision component is used to store the collision data of an entity
+ * @tag Collision
+ * @options layer, mask, hitbox, resolvers
+ * @properties data, mask, layer, hitbox, resolvers
  */
 export class CollisionComponent extends Cluster.Component {
-  readonly data: CollisionData[];
-  readonly layer: number;
+  readonly data: Map<CollisionResolverType, CollisionData[]>;
   readonly mask: number;
+  readonly layer: number;
   readonly hitbox: CollisionHitbox;
   readonly resolvers: CollisionResolver[];
 
   constructor({ layer, mask, hitbox, resolvers }: CollisionOptions) {
     super("Collision");
-    this.data = [];
-    this.layer = layer;
+    this.data = new Map();
     this.mask = mask || 0;
+    this.layer = layer;
     this.hitbox = hitbox;
     this.resolvers = resolvers || [];
   }
 
   get hit() {
-    return this.data.length > 0;
+    return this.data.size > 0;
   }
 }

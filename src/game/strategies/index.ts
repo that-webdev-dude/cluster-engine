@@ -20,6 +20,7 @@ class EnemySpawn<T extends Cluster.Entity> implements SpawnStrategy<T> {
       entityTransform.position.y = positionY;
     }
     entity.active = true;
+    entity.dead = false;
     return entity;
   }
 }
@@ -61,7 +62,7 @@ class BulletSpawn<T extends Cluster.Entity> implements SpawnStrategy<T> {
         | undefined;
 
       if (!ownerTransform) return;
-      bulletPositionX = ownerTransform.position.x - 64;
+      bulletPositionX = ownerTransform.position.x;
       bulletPositionY = ownerTransform.position.y + 32 - 6;
 
       const entity = pool.next();

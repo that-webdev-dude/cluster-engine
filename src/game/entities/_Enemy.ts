@@ -1,8 +1,8 @@
-import { CollisionLayers } from "../constants/CollisionLayers";
-import { enemyBulletPool } from "./Bullet";
-import * as Cluster from "../../../cluster";
-import * as Components from "../../components";
-import * as Images from "../../../images";
+import { CollisionLayers } from "./constants/CollisionLayers";
+import { enemyBulletPool } from "./_Bullet";
+import * as Images from "../../images";
+import * as Cluster from "../../cluster";
+import * as Components from "../components";
 
 /** Enemy entity
  * @options position, velocity
@@ -45,17 +45,30 @@ export class Enemy extends Cluster.Entity {
       strategy: "bullet",
       pool: enemyBulletPool,
       limit: 0,
-      interval: 1,
+      interval: 3,
     });
 
     const collision = new Components.CollisionComponent({
       layer: CollisionLayers.Enemy,
+      mask: CollisionLayers.SpaceshipBullet | CollisionLayers.Spaceship,
       hitbox: {
         x: 0,
         y: 0,
         width: 64,
         height: 64,
       },
+      resolvers: [
+        {
+          type: "sleep",
+          mask: CollisionLayers.SpaceshipBullet | CollisionLayers.Spaceship,
+          actions: [
+            {
+              action: "addScores",
+              payload: 5,
+            },
+          ],
+        },
+      ],
     });
 
     this.components.set("Transform", transform);

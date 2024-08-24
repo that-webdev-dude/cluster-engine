@@ -11,7 +11,14 @@ export default () => {
     width,
   });
 
-  game.setScene(new Scenes.GamePlay());
+  // listeners
+  store.on("lives-changed", () => {
+    if (store.get("lives") <= 0) {
+      game.setScene(new Scenes.GameTitle(game));
+    }
+  });
+
+  game.setScene(new Scenes.GameTitle(game));
   game.start();
 };
 
