@@ -1,5 +1,5 @@
 // entities
-import { PlayerEntity } from "./PlayerEntity";
-import { EnemyEntity } from "./EnemyEntity";
+import { PlayerEntity } from "./_PlayerEntity";
+import { EnemyEntity } from "./_EnemyEntity";
 
 export { PlayerEntity, EnemyEntity };
