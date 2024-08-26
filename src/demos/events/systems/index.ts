@@ -1,4 +1,4 @@
-import { BoundarySystem } from "./BoundarySystem";
-import { RendererSystem } from "./RenderSystem";
+import { BoundarySystem } from "./_BoundarySystem";
+import { RendererSystem } from "./_RenderSystem";
 
 export { BoundarySystem, RendererSystem };
