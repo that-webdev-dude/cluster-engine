@@ -1,5 +1,5 @@
 import * as Cluster from "./cluster";
-import { GamePlay } from "./demos/events/scenes/GamePlay";
+import * as Scenes from "./demos/events/scenes";
 
 const height = 600;
 const width = 800;
@@ -10,7 +10,7 @@ export default () => {
     width,
   });
 
-  game.setScene(new GamePlay());
+  game.setScene(new Scenes.GamePlay());
   game.start();
 };
 
