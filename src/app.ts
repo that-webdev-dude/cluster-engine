@@ -1,9 +1,8 @@
-import { store } from "./game/store";
 import * as Cluster from "./cluster";
-import * as Scenes from "./game/scenes";
+import { GamePlay } from "./demos/events/scenes/GamePlay";
 
-const height = store.get("screenHeight");
-const width = store.get("screenWidth");
+const height = 600;
+const width = 800;
 
 export default () => {
   const game = new Cluster.Game({
@@ -11,14 +10,7 @@ export default () => {
     width,
   });
 
-  // listeners
-  store.on("lives-changed", () => {
-    if (store.get("lives") <= 0) {
-      game.setScene(new Scenes.GameTitle(game));
-    }
-  });
-
-  game.setScene(new Scenes.GamePlay(game));
+  game.setScene(new GamePlay());
   game.start();
 };
 

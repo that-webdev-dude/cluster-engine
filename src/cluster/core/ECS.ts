@@ -122,13 +122,8 @@ export class Entity {
     return this.constructor.name;
   }
 
-  get<T extends Component>(name: string): T {
-    if (!this.components.has(name)) {
-      throw new Error(
-        `[Entity Error] Component ${name} not found in entity ${this.id}`
-      );
-    }
-    return this.components.get(name) as T;
+  get<T extends Component>(name: string): T | undefined {
+    return this.components.get(name) as T | undefined;
   }
 }
 
@@ -143,11 +138,22 @@ export class Component {
   }
 }
 
-export class System extends EventEmitter {
-  componentsRequired: string[];
+export class System {
+  private static _emitter = new EventEmitter();
+
+  static events = new EventQueue();
+
+  static on(event: string, listener: (...args: any[]) => void) {
+    System.events.addEventListener(event, listener);
+  }
+
+  static emit(event: string, ...args: any[]) {
+    System._emitter.emit(event, ...args);
+  }
+
+  readonly componentsRequired: string[];
 
   constructor(componentsRequired: string[]) {
-    super();
     this.componentsRequired = componentsRequired;
   }
 
@@ -187,29 +193,45 @@ export class Scene {
   }
 
   addSystem(system: System) {
-    system.on(SystemEvents.COMPONENT_ATTACHED, (entityId: EntityId) => {
-      this.eventQueue.addEventListener(SystemEvents.COMPONENT_ATTACHED, () => {
-        this.componentIndex.addEntity(this.entities.get(entityId)!);
-      });
-    });
+    // system.on(SystemEvents.COMPONENT_ATTACHED, (entityId: EntityId) => {
+    //   this.eventQueue.addEventListener(SystemEvents.COMPONENT_ATTACHED, () => {
+    //     this.componentIndex.addEntity(this.entities.get(entityId)!);
+    //   });
+    // });
 
-    system.on(SystemEvents.COMPONENT_DETACHED, (entityId: EntityId) => {
-      this.eventQueue.addEventListener(SystemEvents.COMPONENT_DETACHED, () => {
-        this.componentIndex.removeEntity(this.entities.get(entityId)!);
-      });
-    });
+    // system.on(SystemEvents.COMPONENT_DETACHED, (entityId: EntityId) => {
+    //   this.eventQueue.addEventListener(SystemEvents.COMPONENT_DETACHED, () => {
+    //     this.componentIndex.removeEntity(this.entities.get(entityId)!);
+    //   });
+    // });
 
-    system.on(SystemEvents.ENTITY_CREATED, (entity: Entity) => {
-      this.eventQueue.addEventListener(SystemEvents.ENTITY_CREATED, () => {
-        this.addEntity(entity);
-      });
-    });
+    // system.on(SystemEvents.ENTITY_CREATED, (entity: Entity) => {
+    //   this.eventQueue.addEventListener(SystemEvents.ENTITY_CREATED, () => {
+    //     this.addEntity(entity);
+    //   });
+    // });
 
-    system.on(SystemEvents.ENTITY_DESTROYED, (entityId: EntityId) => {
-      this.eventQueue.addEventListener(SystemEvents.ENTITY_DESTROYED, () => {
-        this.removeEntity(this.entities.get(entityId)!);
-      });
-    });
+    // system.on(SystemEvents.ENTITY_DESTROYED, (entityId: EntityId) => {
+    //   this.eventQueue.addEventListener(SystemEvents.ENTITY_DESTROYED, () => {
+    //     this.removeEntity(this.entities.get(entityId)!);
+    //   });
+    // });
+
+    // System.on(SystemEvents.COMPONENT_ATTACHED, (entityId: EntityId) => {
+    //   this.componentIndex.addEntity(this.entities.get(entityId)!);
+    // });
+
+    // System.on(SystemEvents.COMPONENT_DETACHED, (entityId: EntityId) => {
+    //   this.componentIndex.removeEntity(this.entities.get(entityId)!);
+    // });
+
+    // System.on(SystemEvents.ENTITY_CREATED, (entity: Entity) => {
+    //   this.addEntity(entity);
+    // });
+
+    // System.on(SystemEvents.ENTITY_DESTROYED, (entityId: EntityId) => {
+    //   this.removeEntity(this.entities.get(entityId)!);
+    // });
 
     this.systems.push(system);
   }
@@ -223,6 +245,7 @@ export class Scene {
       system.update(entities, dt, t);
     }
 
-    this.eventQueue.processEventListeners();
+    // this.eventQueue.processEventListeners();
+    System.events.processEventListeners();
   }
 }

@@ -10,8 +10,7 @@ export class Emitter {
     this._events = {};
   }
 
-  /**
-   * Subscribe to the event system.
+  /** Subscribe to the event system.
    * @param {String} event
    * @param {Function} listener
    */
@@ -20,8 +19,7 @@ export class Emitter {
     return this._events[event].push(listener);
   }
 
-  /**
-   * Fires the handlers of a specific event.
+  /** Fires the handlers of a specific event.
    * @param {String} event
    * @param {Object} data
    */
@@ -32,8 +30,7 @@ export class Emitter {
     });
   }
 
-  /**
-   * Unsubscribe, by removing a specific
+  /** Unsubscribe, by removing a specific
    * listener from an event.
    * @param {String} event
    * @param {Function} listener
@@ -46,8 +43,7 @@ export class Emitter {
     );
   }
 
-  /**
-   * Unsubscribe, by removing all listeners
+  /** Unsubscribe, by removing all listeners
    * from a specific event.
    */
   removeAllListeners(): void {
