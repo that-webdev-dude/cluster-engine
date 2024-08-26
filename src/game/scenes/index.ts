@@ -13,14 +13,27 @@ export class GamePlay extends Cluster.Scene {
     this._game = game;
 
     // entities
-    for (let i = 0; i < 10; i++) {
-      this.addEntity(new Entities.Star());
-    }
+    // for (let i = 0; i < 10; i++) {
+    //   this.addEntity(new Entities.Star());
+    // }
+    // this.addEntity(new Entities.Background());
+    // this.addEntity(new Entities.Spaceship());
+    // this.addEntity(new Entities.Mothership());
+    // this.addEntity(new Entities.UIScores());
+    // this.addEntity(new Entities.UILives());
+    // just the background, spaceship and debugRect forming a cave to test collisions
     this.addEntity(new Entities.Background());
     this.addEntity(new Entities.Spaceship());
-    this.addEntity(new Entities.Mothership());
-    this.addEntity(new Entities.UIScores());
-    this.addEntity(new Entities.UILives());
+    for (let i = 0; i < 10; i++) {
+      this.addEntity(
+        new DebugRect(
+          new Cluster.Vector(
+            Cluster.Cmath.rand(0, 500),
+            Cluster.Cmath.rand(0, 500)
+          )
+        )
+      );
+    }
 
     // systems
     this.addSystem(new Systems.InputSystem());

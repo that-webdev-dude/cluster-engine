@@ -51,8 +51,9 @@ export class Spaceship extends Cluster.Entity {
     });
 
     const collision = new Components.CollisionComponent({
+      detectable: true,
       layer: CollisionLayers.Spaceship,
-      mask: CollisionLayers.Enemy,
+      mask: CollisionLayers.Enemy | CollisionLayers.Debug,
       hitbox: {
         x: 0,
         y: 0,
@@ -60,13 +61,23 @@ export class Spaceship extends Cluster.Entity {
         height: 64,
       },
       resolvers: [
+        // {
+        //   type: "die",
+        //   mask: CollisionLayers.Enemy,
+        //   actions: [
+        //     {
+        //       action: "removeLife",
+        //       payload: 1,
+        //     },
+        //   ],
+        // },
         {
-          type: "die",
-          mask: CollisionLayers.Enemy,
-          actions: [
+          type: "slide",
+          mask: CollisionLayers.Debug,
+          events: [
             {
-              action: "removeLife",
-              payload: 1,
+              event: "spaceship-collided",
+              payload: null,
             },
           ],
         },
@@ -81,5 +92,9 @@ export class Spaceship extends Cluster.Entity {
     this.components.set("Player", player);
     this.components.set("Spawner", spawner);
     this.components.set("Collision", collision);
+
+    store.on("spaceship-collided", () => {
+      collision.detectable = false;
+    });
   }
 }

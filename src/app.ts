@@ -18,7 +18,7 @@ export default () => {
     }
   });
 
-  game.setScene(new Scenes.GameTitle(game));
+  game.setScene(new Scenes.GamePlay(game));
   game.start();
 };
 

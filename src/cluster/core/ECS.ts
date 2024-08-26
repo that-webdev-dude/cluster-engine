@@ -71,7 +71,7 @@ class ComponentIndex {
   }
 }
 
-class EventQueue {
+export class EventQueue {
   private _queue: Map<string, Function[]>;
   constructor() {
     this._queue = new Map();
@@ -88,6 +88,7 @@ class EventQueue {
     if (!this._queue.size) return;
 
     for (let [event, callbacks] of this._queue) {
+      // console.log(`[EventQueue] Processing event ${event}`);
       for (let callback of callbacks) {
         callback();
       }
@@ -168,6 +169,10 @@ export class Scene {
     this.systems = [];
   }
 
+  get events() {
+    return this.eventQueue;
+  }
+
   addEntity(entity: Entity) {
     if (!entity || this.entities.has(entity.id)) return;
     this.entities.set(entity.id, entity);
@@ -176,32 +181,12 @@ export class Scene {
 
   removeEntity(entity: Entity) {
     if (!entity || !this.entities.has(entity.id)) return;
-    // this.entities.delete(entity.id);
-    // this.componentIndex.removeEntity(entity);
-    console.log("Removing entity", entity.id);
     if (this.entities.delete(entity.id)) {
       this.componentIndex.removeEntity(entity);
     }
   }
 
   addSystem(system: System) {
-    // system.on(SystemEvents.COMPONENT_ATTACHED, (entityId: EntityId) => {
-    //   this.componentIndex.addEntity(this.entities.get(entityId)!);
-    // });
-
-    // system.on(SystemEvents.COMPONENT_DETACHED, (entityId: EntityId) => {
-    //   this.componentIndex.removeEntity(this.entities.get(entityId)!);
-    // });
-
-    // system.on(SystemEvents.ENTITY_CREATED, (entity: Entity) => {
-    //   this.addEntity(entity);
-    // });
-
-    // system.on(SystemEvents.ENTITY_DESTROYED, (entityId: EntityId) => {
-    //   this.removeEntity(this.entities.get(entityId)!);
-    // });
-
-    // this.systems.push(system);
     system.on(SystemEvents.COMPONENT_ATTACHED, (entityId: EntityId) => {
       this.eventQueue.addEventListener(SystemEvents.COMPONENT_ATTACHED, () => {
         this.componentIndex.addEntity(this.entities.get(entityId)!);
@@ -234,12 +219,9 @@ export class Scene {
       const entities = this.componentIndex.getEntitiesWithComponents(
         system.componentsRequired
       );
+      if (!entities.size) continue;
       system.update(entities, dt, t);
     }
-
-    // if (this.eventQueue.size) {
-    //   console.log(`Event queue size: ${this.eventQueue.event}`);
-    // }
 
     this.eventQueue.processEventListeners();
   }

@@ -4,20 +4,20 @@ import {
   CollisionHitbox,
   CollisionResolver,
   CollisionResolverType,
-} from "./_CollisionComponent";
+} from "./_Collision";
 
-import { TransformComponent } from "./_TransformComponent";
-import { VelocityComponent } from "./_VelocityComponent";
-import { SpriteComponent } from "./_SpriteComponent";
-import { RectComponent } from "./_RectComponent";
-import { TextComponent } from "./_TextComponent";
-import { AlphaComponent } from "./_AlphaComponent";
-import { ZindexComponent } from "./_ZindexComponent";
-import { BulletComponent } from "./_BulletComponent";
-import { EnemyComponent } from "./_EnemyComponent";
-import { PlayerComponent } from "./_PlayerComponent";
-import { ControllerComponent } from "./_ControllerComponent";
-import { SpawnerComponent } from "./_SpawnerComponent";
+import { TransformComponent } from "./_Transform";
+import { VelocityComponent } from "./_Velocity";
+import { SpriteComponent } from "./_Sprite";
+import { RectComponent } from "./_Rect";
+import { TextComponent } from "./_Text";
+import { AlphaComponent } from "./_Alpha";
+import { ZindexComponent } from "./_Zindex";
+import { BulletComponent } from "./_Bullet";
+import { EnemyComponent } from "./_Enemy";
+import { PlayerComponent } from "./_Player";
+import { ControllerComponent } from "./_Controller";
+import { SpawnerComponent } from "./_Spawner";
 
 // Cluster.Component Classes
 export {

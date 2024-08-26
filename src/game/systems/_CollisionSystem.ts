@@ -6,8 +6,8 @@ type EntityId = number;
 type ResolverType = Components.CollisionResolverType;
 
 /** Collision system
- * @required Collision
- * @emits systemStarted, systemUpdated, systemError
+ * @required  Transform, Collision
+ * @emits entityDestroyed, systemStarted, systemUpdated,
  */
 export class CollisionSystem extends Cluster.System {
   private _entityCache: Map<ResolverType, Set<EntityId>>;
@@ -102,9 +102,11 @@ export class CollisionSystem extends Cluster.System {
         }
         collisionA.data.get(resolver.type)?.push({
           entity: entityB,
-          normal: normal,
           overlap,
+          normal: normal,
           area: overlap.x * overlap.y,
+          events: resolver.events,
+          actions: resolver.actions,
         });
 
         // cache the entity ids for later resolution
@@ -168,12 +170,13 @@ export class CollisionSystem extends Cluster.System {
   /** handles the sleep resolution making the entity inactive and emitting an event */
   private _handleSleepResolution(
     entity: Cluster.Entity,
-    resolvers: Components.ICollisionResolver[]
+    resolvers: Components.ICollisionResolver[],
+    targetLayer: number
   ) {
     const sleepResolverA = resolvers.find(
       (resolver) => resolver.type === "sleep"
     );
-    if (sleepResolverA) {
+    if (sleepResolverA && sleepResolverA.mask & targetLayer) {
       entity.active = false;
       this._dispatchStoreEvent(sleepResolverA);
     }
@@ -182,10 +185,11 @@ export class CollisionSystem extends Cluster.System {
   /* handles the die resolution, marking the entity as dead and emitting an event. */
   private _handleDieResolution(
     entity: Cluster.Entity,
-    resolvers: Components.ICollisionResolver[]
+    resolvers: Components.ICollisionResolver[],
+    targetLayer: number
   ) {
     const dieResolverA = resolvers.find((resolver) => resolver.type === "die");
-    if (dieResolverA) {
+    if (dieResolverA && dieResolverA.mask & targetLayer) {
       entity.dead = true;
       this.emit("entityDestroyed", entity.id);
       this._dispatchStoreEvent(dieResolverA);
@@ -213,7 +217,10 @@ export class CollisionSystem extends Cluster.System {
     collisionB: Components.CollisionComponent
   ) {
     return (
-      collisionA.layer & collisionB.mask || collisionB.layer & collisionA.mask
+      collisionA.layer & collisionB.mask ||
+      (collisionB.layer & collisionA.mask &&
+        collisionA.detectable &&
+        collisionB.detectable)
     );
   }
 
@@ -231,9 +238,6 @@ export class CollisionSystem extends Cluster.System {
       for (let j = i + 1; j < activeEntities.length; j++) {
         const entityA = activeEntities[i];
         const entityB = activeEntities[j];
-
-        // if (entityA.dead || entityB.dead || !entityA.active || !entityB.active)
-        //   continue;
 
         const collisionA =
           entityA.get<Components.CollisionComponent>("Collision");
@@ -259,26 +263,41 @@ export class CollisionSystem extends Cluster.System {
             collisionB.hitbox
           )
         ) {
-          // no need to resolve collisions if one or both entities are dead
-          this._handleDieResolution(entityA, collisionA.resolvers);
-          this._handleDieResolution(entityB, collisionB.resolvers);
+          // console.log(entityA.type, entityB.type);
 
+          // no need to resolve collisions if one or both entities are dead
+          this._handleDieResolution(
+            entityA,
+            collisionA.resolvers,
+            collisionB.layer
+          );
+          this._handleDieResolution(
+            entityB,
+            collisionB.resolvers,
+            collisionA.layer
+          );
           if (entityA.dead || entityB.dead) continue;
 
           // no need to resolve collisions if one or both entities are inactive
-          this._handleSleepResolution(entityA, collisionA.resolvers);
-          this._handleSleepResolution(entityB, collisionB.resolvers);
-
+          this._handleSleepResolution(
+            entityA,
+            collisionA.resolvers,
+            collisionB.layer
+          );
+          this._handleSleepResolution(
+            entityB,
+            collisionB.resolvers,
+            collisionA.layer
+          );
           if (!entityA.active || !entityB.active) continue;
 
+          //no need to resolve collisions if there are no resolvers
           const resolversA = collisionA.resolvers;
           const resolversB = collisionB.resolvers;
 
           if (resolversA.length === 0 && resolversB.length === 0) continue;
 
-          // console.log("Collision detected");
-
-          // at this point we start collecting data
+          // // at this point we start collecting data
           const overlap = this._getCollisionOverlap(
             transformA.position,
             collisionA.hitbox,
@@ -333,38 +352,53 @@ export class CollisionSystem extends Cluster.System {
         const collision =
           entity.get<Components.CollisionComponent>("Collision");
 
-        const data = collision.data.get(resolverType);
+        const transform =
+          entity.get<Components.TransformComponent>("Transform");
 
+        if (!collision || !transform) return;
+
+        const data = collision.data.get(resolverType);
         if (!data || data.length === 0) return;
 
         const primaryCollision = this._getPrimaryCollision(data);
         if (!primaryCollision) return;
 
-        const transform =
-          entity.get<Components.TransformComponent>("Transform");
-
-        transform.position.x +=
+        let totalAdjustmentX =
           primaryCollision.normal.x * primaryCollision.overlap.x;
-        transform.position.y +=
+        let totalAdjustmentY =
           primaryCollision.normal.y * primaryCollision.overlap.y;
 
+        // note: this is a simple resolution method that only considers the primary collision.
+        // In a more complex system, you may want to consider multiple collisions
+        // and resolve them in order of significance.
         const secondaryCollision = this._getSecondaryCollision(
-          data!,
-          primaryCollision!
+          data,
+          primaryCollision
         );
-
         if (secondaryCollision) {
-          transform.position.x +=
+          totalAdjustmentX +=
             secondaryCollision.normal.x * secondaryCollision.overlap.x;
-          transform.position.y +=
+          totalAdjustmentY +=
             secondaryCollision.normal.y * secondaryCollision.overlap.y;
+        }
+
+        transform.position.x += totalAdjustmentX;
+        transform.position.y += totalAdjustmentY;
+
+        const events = collision.resolvers.find(
+          (resolver) => resolver.type === resolverType
+        )?.events;
+        if (events) {
+          events.forEach((event) => {
+            store.emit(event.event, event.payload);
+          });
         }
 
         collision.data.clear();
       });
-
-      this._entityCache.clear();
     });
+
+    this._entityCache.clear();
 
     this.emit("systemUpdated");
   }

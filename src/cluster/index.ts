@@ -6,6 +6,7 @@ export { Component } from "./core/ECS";
 export { Entity } from "./core/ECS";
 export { System } from "./core/ECS";
 export { Scene } from "./core/ECS";
+export { EventQueue } from "./core/ECS";
 
 export { Keyboard } from "./input";
 
