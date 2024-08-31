@@ -1,101 +1,122 @@
-import { Emitter } from "./Emitter";
+import { EventEmitter, Event } from "./Emitter";
 
+/** Type definition for the status of the store. */
+const STATUS = {
+  resting: "resting",
+  mutation: "mutation",
+  action: "action",
+} as const;
+
+/** Type definition for a mutation function. */
 type Mutation = (state: State, payload?: any) => void;
-type Action = (store: Store, payload?: any) => void;
-type State = {
-  [key: string]: any;
-};
 
+/** Type definition for an action function. */
+type Action = (store: Store, payload?: any) => void;
+
+/** Type definition for the state object. */
+type State = any;
+
+/** Type definition for the options to initialize the store. */
 type StoreOptions = {
   state?: State;
   actions?: {
     [key: string]: Action;
   };
   getters?: {
-    [key: string]: any;
+    [key: string]: (state: State) => any;
   };
   mutations?: {
     [key: string]: Mutation;
   };
 };
 
-export class Store extends Emitter {
-  private static _instance: Store | undefined = undefined;
-  private _status: string = "resting";
-  private _state: State = {};
-  private _mutations: {
-    [key: string]: Mutation;
-  } = {};
-  private _actions: {
-    [key: string]: Action;
-  } = {};
-  private _getters: {
-    [key: string]: any;
-  } = {};
+/**
+ * The Store class is a centralized state management system.
+ * It extends the EventEmitter to provide event-driven state changes.
+ */
+export class Store extends EventEmitter {
+  private _status: string = STATUS.resting;
+  private _state: State;
+  private _getters: Map<string, (state: State) => any>;
+  private _actions: Map<string, Action>;
+  private _mutations: Map<string, Mutation>;
 
-  constructor(options: StoreOptions = {}) {
+  /**
+   * Creates an instance of Store.
+   * @param options - The options to initialize the store.
+   */
+  constructor(options: StoreOptions) {
     super();
-    if (Store._instance) {
-      return Store._instance;
-    } else {
-      const {
-        state = {},
-        actions = {},
-        getters = {},
-        mutations = {},
-      } = options;
-      this._mutations = mutations;
-      this._getters = getters;
-      this._actions = actions;
-      this._status = "resting";
-      this._state = state;
 
-      const self = this;
-      self._state = state;
-      self._state = new Proxy(self._state, {
-        set: function (state, key, value) {
-          if (!state.hasOwnProperty(key))
-            throw new Error(`The key "${String(key)}" is not declared`);
-          if (self._status !== "mutation")
-            throw new Error(
-              `Use a mutation to set "${String(key)}" to "${value}"`
-            );
+    const { state = {}, actions = {}, getters = {}, mutations = {} } = options;
 
-          Reflect.set(state, key, value);
-          self.emit(`${String(key)}-changed`, self._state[String(key)]);
-          self._status = "resting";
-          return true;
-        },
-      });
+    this._state = new Proxy(state, {
+      set: (state, key, value) => {
+        if (!(key in state)) {
+          throw new Error(`The key "${String(key)}" is not declared`);
+        }
+        if (this._status !== STATUS.mutation) {
+          throw new Error(
+            `Use a mutation to set "${String(key)}" to "${value}"`
+          );
+        }
 
-      // Object.freeze(this);
-      Object.seal(this);
+        Reflect.set(state, key, value);
 
-      Store._instance = this;
+        this._status = STATUS.resting;
+        return true;
+      },
+    });
 
-      return this;
-    }
+    this._mutations = new Map(Object.entries(mutations));
+    this._actions = new Map(Object.entries(actions));
+    this._getters = new Map(Object.entries(getters));
+
+    Object.seal(this);
   }
 
+  /**
+   * Dispatches an action.
+   * @param actionKey - The key of the action to dispatch.
+   * @param payload - The payload to pass to the action.
+   * @returns True if the action was dispatched successfully.
+   */
   dispatch(actionKey: string, payload?: any): boolean {
-    if (typeof this._actions[actionKey] !== "function")
+    const action = this._actions.get(actionKey);
+    if (!action) {
       throw new Error(`Action ${actionKey} doesn't exist!`);
-    this._status = "action";
-    this._actions[actionKey](this, payload);
+    }
+    this._status = STATUS.action;
+    action(this, payload);
     return true;
   }
 
+  /**
+   * Commits a mutation.
+   * @param mutationKey - The key of the mutation to commit.
+   * @param payload - The payload to pass to the mutation.
+   * @returns True if the mutation was committed successfully.
+   */
   commit(mutationKey: string, payload?: any): boolean {
-    if (typeof this._mutations[mutationKey] !== "function")
+    const mutation = this._mutations.get(mutationKey);
+    if (!mutation) {
       throw new Error(`Mutation ${mutationKey} doesn't exist!`);
-    this._status = "mutation";
-    this._mutations[mutationKey](this._state, payload);
+    }
+    this._status = STATUS.mutation;
+    mutation(this._state, payload);
     return true;
   }
 
+  /**
+   * Gets the value of a getter.
+   * @param key - The key of the getter to retrieve.
+   * @returns The value returned by the getter.
+   */
   get(key: string): any {
-    if (typeof this._getters[key] !== "function")
+    const getter = this._getters.get(key);
+    if (!getter) {
       throw new Error(`Getter ${key} doesn't exist!`);
-    return this._getters[key](this._state);
+    }
+    return getter(this._state);
   }
 }

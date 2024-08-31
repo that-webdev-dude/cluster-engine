@@ -1,5 +1,7 @@
 import * as Cluster from "../../../cluster";
 import * as Components from "../components";
+import * as Events from "../events";
+import { store } from "../store";
 
 /** Renderer system
  * @required Transform, Zindex
@@ -79,7 +81,6 @@ export class RendererSystem extends Cluster.System {
     entity: Cluster.Entity
   ) {
     const sprite = entity.get<Components.SpriteComponent>("Sprite");
-
     if (sprite) {
       const { x, y } = sprite.indexToCoords;
       context.drawImage(
@@ -93,60 +94,67 @@ export class RendererSystem extends Cluster.System {
         sprite.width,
         sprite.height
       );
+    }
 
-      //debug
-      const collision = entity.get<Components.CollisionComponent>("Collision");
-      if (collision) {
-        const hitbox = collision.hitbox;
-        context.strokeStyle = "yellow";
-        context.strokeRect(0, 0, hitbox.width, hitbox.height);
-      }
+    const text = entity.get<Components.TextComponent>("Text");
+    if (text) {
+      context.font = text.font;
+      context.fillStyle = text.fill;
+      context.textAlign = text.align;
+      context.fillText(text.text, 0, 0);
+    }
+
+    //debug
+    const collision = entity.get<Components.CollisionComponent>("Collision");
+    if (collision) {
+      const hitbox = collision.hitbox;
+      context.strokeStyle = "yellow";
+      context.strokeRect(0, 0, hitbox.width, hitbox.height);
     }
   }
 
   update(entities: Set<Cluster.Entity>) {
     if (entities.size === 0) return;
 
-    Cluster.System.emit("systemStarted");
-
     this._clear();
 
     for (let entity of entities) {
+      if (entity.dead || !entity.active) continue;
+
+      const zindex =
+        entity.get<Components.ZindexComponent>("Zindex")?.zindex || 0;
+
+      let context = this._buffers?.get(zindex);
+      if (!context) context = this._createNewBuffer(zindex);
+
+      context.save();
+
       try {
-        if (entity.dead || !entity.active) continue;
+        const alpha =
+          entity.get<Components.AlphaComponent>("Alpha")?.alpha || 1;
 
-        const zindex =
-          entity.get<Components.ZindexComponent>("Zindex")?.zindex || 0;
+        const transform =
+          entity.get<Components.TransformComponent>("Transform")!;
 
-        let context = this._buffers?.get(zindex);
-        if (!context) context = this._createNewBuffer(zindex);
-
-        context.save();
-
-        try {
-          const alpha =
-            entity.get<Components.AlphaComponent>("Alpha")?.alpha || 1;
-          this._setGlobalAlpha(context, alpha);
-
-          const transform =
-            entity.get<Components.TransformComponent>("Transform")!;
-          this._setTransform(context, transform);
-
-          this._renderEntity(context, entity);
-        } catch (error) {
-          Cluster.System.emit("systemError", error);
-        } finally {
-          context.restore();
-        }
+        this._setGlobalAlpha(context, alpha);
+        this._setTransform(context, transform);
+        this._renderEntity(context, entity);
       } catch (error) {
-        Cluster.System.emit("systemError", error);
+        context.restore();
+        store.emit<Events.SystemError>({
+          type: "system-error",
+          data: {
+            origin: this.constructor.name,
+            error,
+          },
+        });
+      } finally {
+        context.restore();
       }
     }
 
     this._buffers?.forEach((context) => {
       this._context?.drawImage(context.canvas, 0, 0);
     });
-
-    Cluster.System.emit("systemUpdated");
   }
 }

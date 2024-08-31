@@ -23,7 +23,7 @@ export class Game {
 
   constructor(options: GameOptions) {
     const { width, height } = { ...DEFAULTS, ...options };
-    this._scene = new Scene();
+    this._scene = null;
     this._engine = new Engine();
     this._display = new Display({
       parentElementId: "#app",

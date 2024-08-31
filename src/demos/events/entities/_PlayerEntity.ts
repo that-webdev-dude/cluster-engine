@@ -16,6 +16,10 @@ export class PlayerEntity extends Cluster.Entity {
       velocity: new Cluster.Vector(0, 0),
     });
 
+    const boundaryComponent = new Components.BoundaryComponent({
+      boundary: "die",
+    });
+
     const spriteComponent = new Components.SpriteComponent({
       image: Images.playerImage,
       width: 64,
@@ -26,9 +30,15 @@ export class PlayerEntity extends Cluster.Entity {
       zindex: 1,
     });
 
+    const playerComponent = new Components.PlayerComponent({
+      invincible: false,
+    });
+
     this.components.set("Transform", transformComponent);
     this.components.set("Velocity", velocityComponent);
+    this.components.set("Boundary", boundaryComponent);
     this.components.set("Sprite", spriteComponent);
     this.components.set("Zindex", zindexComponent);
+    this.components.set("Player", playerComponent);
   }
 }

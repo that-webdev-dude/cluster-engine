@@ -2,4 +2,7 @@
 import { PlayerEntity } from "./_PlayerEntity";
 import { EnemyEntity } from "./_EnemyEntity";
 
-export { PlayerEntity, EnemyEntity };
+// UI
+import { UITextEntity } from "./_UITextEntity";
+
+export { PlayerEntity, EnemyEntity, UITextEntity };

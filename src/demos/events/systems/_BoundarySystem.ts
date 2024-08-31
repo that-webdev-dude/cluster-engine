@@ -1,5 +1,7 @@
 import * as Cluster from "../../../cluster";
 import * as Components from "../components";
+import * as Events from "../events";
+import { store } from "../store";
 
 /** Boundary system
  * @required Transform,
@@ -45,9 +47,7 @@ export class BoundarySystem extends Cluster.System {
   update(entities: Set<Cluster.Entity>) {
     if (entities.size === 0) return;
 
-    // this.emit("systemStarted");
-    Cluster.System.emit("systemStarted");
-
+    // systemStarted
     for (let entity of entities) {
       if (entity.dead || !entity.active) continue;
 
@@ -90,20 +90,32 @@ export class BoundarySystem extends Cluster.System {
               position.y > this._screenHeight ||
               position.y < -height
             ) {
-              // this.emit("entityDestroyed", entity.id);
-              Cluster.System.emit("entityDestroyed", entity.id);
+              entity.dead = true;
+
+              store.dispatch("increment");
+              store.emit<Events.EntityDestroyedEvent>({
+                type: "entity-destroyed",
+                data: { entity },
+              });
             }
             break;
           default:
             break;
         }
       } catch (error) {
-        // this.emit("systemError", error);
-        Cluster.System.emit("systemError", error);
+        store.emit<Events.SystemError>(
+          {
+            type: "system-error",
+            data: {
+              origin: "BoundarySystem",
+              error,
+            },
+          },
+          true
+        );
       }
     }
 
-    // this.emit("systemUpdated");
-    Cluster.System.emit("systemUpdated");
+    // systemUpdated
   }
 }
