@@ -33,6 +33,5 @@ export class UITextEntity extends Cluster.Entity {
       },
       true
     );
-    console.log(store.eventNames());
   }
 }

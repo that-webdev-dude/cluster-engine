@@ -1,5 +1,7 @@
 import * as Cluster from "../../../cluster";
 import * as Components from "../components";
+import * as Events from "../events";
+import { store } from "../store";
 
 /** Player system
  * @required Transform, Player
@@ -12,8 +14,6 @@ export class PlayerSystem extends Cluster.System {
 
   update(entities: Set<Cluster.Entity>, dt: number) {
     if (entities.size === 0) return;
-
-    // Cluster.System.emit("systemStarted");
 
     for (let entity of entities) {
       if (entity.dead || !entity.active) continue;
@@ -32,9 +32,23 @@ export class PlayerSystem extends Cluster.System {
           position.y += Cluster.Keyboard.y() * 100 * dt;
         }
 
-        // Cluster.System.emit("systemUpdated");
+        // update visibility when player is invincible
+        // const alphaComponent =
+        //   entity.get<Components.AlphaComponent>("Alpha");
+        // if (alphaComponent) {
+        //   alphaComponent.alpha = playerComponent.invincible ? 0.5 : 1;
+        // }
       } catch (error) {
-        // Cluster.System.emit("systemError", error);
+        store.emit<Events.SystemErrorEvent>(
+          {
+            type: "system-error",
+            data: {
+              origin: "PlayerSystem",
+              error,
+            },
+          },
+          true
+        );
       }
     }
   }

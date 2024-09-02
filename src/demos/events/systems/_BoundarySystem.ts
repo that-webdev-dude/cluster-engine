@@ -92,7 +92,6 @@ export class BoundarySystem extends Cluster.System {
             ) {
               entity.dead = true;
 
-              store.dispatch("increment");
               store.emit<Events.EntityDestroyedEvent>({
                 type: "entity-destroyed",
                 data: { entity },
@@ -103,7 +102,7 @@ export class BoundarySystem extends Cluster.System {
             break;
         }
       } catch (error) {
-        store.emit<Events.SystemError>(
+        store.emit<Events.SystemErrorEvent>(
           {
             type: "system-error",
             data: {

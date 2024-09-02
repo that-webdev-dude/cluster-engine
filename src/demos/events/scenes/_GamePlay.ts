@@ -15,14 +15,18 @@ export class GamePlay extends Cluster.Scene {
     this.addEntity(enemy);
     this.addEntity(uiText);
 
-    this.addSystem(new Systems.PlayerSystem());
-    this.addSystem(new Systems.BoundarySystem());
-    this.addSystem(new Systems.RendererSystem());
+    const PlayerSystem = new Systems.PlayerSystem();
+    const BoundarySystem = new Systems.BoundarySystem();
+    const CollisionSystem = new Systems.CollisionSystem();
+    const RendererSystem = new Systems.RendererSystem();
+    this.addSystem(PlayerSystem);
+    this.addSystem(BoundarySystem);
+    this.addSystem(CollisionSystem);
+    this.addSystem(RendererSystem);
 
     store.on("entity-destroyed", (event: Events.EntityDestroyedEvent) => {
       this.removeEntity(event.data.entity);
     });
-
     store.on("entity-created", (event: Events.EntityCreatedEvent) => {
       this.addEntity(event.data.entity);
     });

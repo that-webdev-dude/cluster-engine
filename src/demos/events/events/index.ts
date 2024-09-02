@@ -1,6 +1,6 @@
 import * as Cluster from "../../../cluster";
 
-export interface SystemError extends Cluster.Event {
+export interface SystemErrorEvent extends Cluster.Event {
   type: "system-error";
   data: {
     origin: string; // The name of the system that threw the error;
@@ -19,6 +19,14 @@ export interface EntityDestroyedEvent extends Cluster.Event {
   type: "entity-destroyed";
   data: {
     entity: Cluster.Entity;
+  };
+}
+
+export interface EntityHitEvent extends Cluster.Event {
+  type: "entity-hit";
+  data: {
+    entityA: Cluster.Entity;
+    entityB: Cluster.Entity;
   };
 }
 

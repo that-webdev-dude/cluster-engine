@@ -215,7 +215,6 @@ export class EventEmitter implements Emitter {
   }
 
   emit<T extends Event>(event: T, critical: boolean = false): void {
-    console.log(event, critical);
     if (critical) {
       this.simpleEmitter.emit(event);
     } else {
@@ -241,7 +240,7 @@ export class EventEmitter implements Emitter {
     return Array.from(
       new Set([
         ...this.simpleEmitter.eventNames(),
-        // ...this.queuedEmitter.eventNames(),
+        ...this.queuedEmitter.eventNames(),
       ])
     );
   }
