@@ -3,13 +3,13 @@ import * as Components from "../components";
 import * as Events from "../events";
 import { store } from "../store";
 
-/** Player system
- * @required Transform, Player
- * @emits systemError
+/** Ball system
+ * @required Transform, Ball
+ * @emits systemStarted, systemUpdated, systemError
  */
-export class PlayerSystem extends Cluster.System {
+export class BallSystem extends Cluster.System {
   constructor() {
-    super(["Player"]);
+    super(["Ball"]);
   }
 
   update(entities: Set<Cluster.Entity>, dt: number) {
@@ -19,25 +19,27 @@ export class PlayerSystem extends Cluster.System {
       if (entity.dead || !entity.active) continue;
 
       try {
-        const playerComponent =
-          entity.get<Components.PlayerComponent>("Player");
+        const ballComponent = entity.get<Components.BallComponent>("Ball");
 
-        if (!playerComponent) continue;
+        if (!ballComponent) continue;
 
-        const { speed } = playerComponent;
+        const { speed } = ballComponent;
 
         const position =
           entity.get<Components.TransformComponent>("Transform")?.position;
+        const velocity =
+          entity.get<Components.VelocityComponent>("Velocity")?.velocity;
 
-        if (position) {
-          position.x += Cluster.Keyboard.x() * speed * dt;
+        if (position && velocity) {
+          position.x += velocity.x * dt * speed;
+          position.y += velocity.y * dt * speed;
         }
       } catch (error) {
         store.emit<Events.SystemErrorEvent>(
           {
             type: "system-error",
             data: {
-              origin: "PlayerSystem",
+              origin: "BallSystem",
               error,
             },
           },

@@ -5,7 +5,7 @@ import { store } from "../store";
 
 /** Renderer system
  * @required Transform, Zindex
- * @supports Alpha,  Sprite, Rect, Text
+ * @supports Alpha, Sprite, Rect, Text
  * @emits systemStarted, systemUpdated, systemError
  */
 export class RendererSystem extends Cluster.System {
@@ -80,6 +80,7 @@ export class RendererSystem extends Cluster.System {
     context: OffscreenCanvasRenderingContext2D,
     entity: Cluster.Entity
   ) {
+    // sprite support
     const sprite = entity.get<Components.SpriteComponent>("Sprite");
     if (sprite) {
       const { x, y } = sprite.indexToCoords;
@@ -96,6 +97,19 @@ export class RendererSystem extends Cluster.System {
       );
     }
 
+    // rect support
+    const rect = entity.get<Components.RectComponent>("Rect");
+    if (rect) {
+      const { width, height, radius, fill, stroke } = rect;
+      context.fillStyle = fill;
+      context.strokeStyle = stroke;
+      context.beginPath();
+      context.roundRect(0, 0, width, height, radius);
+      context.fill();
+      context.stroke();
+    }
+
+    // text support
     const text = entity.get<Components.TextComponent>("Text");
     if (text) {
       context.font = text.font;

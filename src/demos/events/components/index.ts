@@ -7,8 +7,9 @@ import { TextComponent } from "./_TextComponent";
 import { TransformComponent } from "./_TransformComponent";
 import { VelocityComponent } from "./_VelocityComponent";
 import { ZindexComponent } from "./_ZindexComponent";
-
+import { RectComponent } from "./_RectComponent";
 import { PlayerComponent } from "./_PlayerComponent";
+import { BallComponent } from "./_BallComponent";
 
 export {
   AlphaComponent,
@@ -20,5 +21,7 @@ export {
   TransformComponent,
   VelocityComponent,
   ZindexComponent,
+  RectComponent,
   PlayerComponent,
+  BallComponent,
 };

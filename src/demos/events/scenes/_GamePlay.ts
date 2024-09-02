@@ -9,8 +9,14 @@ export class GamePlay extends Cluster.Scene {
     super();
 
     // entities
+    this.addEntity(new Entities.PlayerEntity());
+    this.addEntity(new Entities.BallEntity());
 
     // systems
+    this.addSystem(new Systems.PlayerSystem());
+    this.addSystem(new Systems.BallSystem());
+    this.addSystem(new Systems.BoundarySystem());
+    this.addSystem(new Systems.RendererSystem());
 
     // listeners
     store.on("entity-destroyed", (event: Events.EntityDestroyedEvent) => {

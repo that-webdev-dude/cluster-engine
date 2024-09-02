@@ -44,6 +44,31 @@ export class BoundarySystem extends Cluster.System {
     }
   }
 
+  private _bounce(
+    position: Cluster.Vector,
+    velocity: Cluster.Vector,
+    width: number,
+    height: number
+  ) {
+    let maxX = this._screenWidth - width;
+    let maxY = this._screenHeight - height;
+    if (position.x > maxX) {
+      position.x = maxX;
+      velocity.x *= -1;
+    } else if (position.x < 0) {
+      position.x = 0;
+      velocity.x *= -1;
+    }
+
+    if (position.y > maxY) {
+      position.y = maxY;
+      velocity.y *= -1;
+    } else if (position.y < 0) {
+      position.y = 0;
+      velocity.y *= -1;
+    }
+  }
+
   update(entities: Set<Cluster.Entity>) {
     if (entities.size === 0) return;
 
@@ -56,22 +81,47 @@ export class BoundarySystem extends Cluster.System {
           entity.get<Components.TransformComponent>("Transform");
         const boundaryComponent =
           entity.get<Components.BoundaryComponent>("Boundary");
-        const spriteComponent =
-          entity.get<Components.SpriteComponent>("Sprite");
 
-        if (!transformComponent || !boundaryComponent || !spriteComponent)
-          continue;
+        if (!transformComponent || !boundaryComponent) continue;
 
-        const { width, height } = spriteComponent;
+        const sprite = entity.get<Components.SpriteComponent>("Sprite");
+        const rect = entity.get<Components.RectComponent>("Rect");
+
+        if (sprite && rect) {
+          throw new Error(
+            "[BoundarySystem Error] Entity cannot have both Sprite and Rect components"
+          );
+        }
+
+        let width = 0;
+        let height = 0;
+
+        if (rect) {
+          width = rect.width;
+          height = rect.height;
+        } else if (sprite) {
+          width = sprite.width;
+          height = sprite.height;
+        }
+
         const { position } = transformComponent;
-        const { boundary } = boundaryComponent;
+        const { behavior } = boundaryComponent;
 
-        switch (boundary) {
+        switch (behavior) {
           case "contain":
             this._contain(position, width, height);
             break;
           case "wrap":
             this._wrap(position, width, height);
+            break;
+          case "bounce":
+            const velocityComponent =
+              entity.get<Components.VelocityComponent>("Velocity");
+
+            if (!velocityComponent) continue;
+
+            const { velocity } = velocityComponent;
+            this._bounce(position, velocity, width, height);
             break;
           case "sleep":
             if (

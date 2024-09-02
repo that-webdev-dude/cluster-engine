@@ -1,21 +1,21 @@
 import * as Cluster from "../../../cluster";
 
 interface PlayerOptions {
-  invincible: boolean;
+  speed: number;
 }
 
 /** Player component
  * the player component is used to store the player state
  * @tag Player
- * @options invincible
- * @properties invincible
+ * @options speed
+ * @properties speed
  */
 class PlayerComponent extends Cluster.Component {
-  invincible: boolean;
+  speed: number;
 
-  constructor({ invincible }: PlayerOptions) {
+  constructor({ speed }: PlayerOptions) {
     super("Player");
-    this.invincible = invincible;
+    this.speed = speed;
   }
 }
 
