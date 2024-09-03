@@ -1,5 +1,12 @@
 import * as Cluster from "../../../cluster";
 
+// generic events
+export interface EntityEvent extends Cluster.Event {
+  data: {
+    entity: Cluster.Entity;
+  };
+}
+
 export interface SystemErrorEvent extends Cluster.Event {
   type: "system-error";
   data: {

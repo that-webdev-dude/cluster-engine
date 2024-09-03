@@ -4,6 +4,7 @@ export const DISPLAY = {
 };
 
 export const COLLISION_LAYERS = {
-  // PLAYER: 0 << 0,
-  // ENEMY: 1 << 0,
+  player: 1 << 0,
+  ball: 2 << 0,
+  brick: 3 << 0,
 };

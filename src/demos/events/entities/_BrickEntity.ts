@@ -2,20 +2,12 @@ import * as Cluster from "../../../cluster";
 import * as Components from "../components";
 import { DISPLAY, COLLISION_LAYERS } from "../constants";
 
-export class PlayerEntity extends Cluster.Entity {
-  constructor() {
+export class BrickEntity extends Cluster.Entity {
+  constructor(position: Cluster.Vector) {
     super();
 
     const transformComponent = new Components.TransformComponent({
-      position: new Cluster.Vector(DISPLAY.width / 2 - 50, DISPLAY.height - 50),
-    });
-
-    const boundaryComponent = new Components.BoundaryComponent({
-      behavior: "contain",
-    });
-
-    const playerComponent = new Components.PlayerComponent({
-      speed: 400,
+      position: position,
     });
 
     const zindexComponent = new Components.ZindexComponent({
@@ -23,28 +15,45 @@ export class PlayerEntity extends Cluster.Entity {
     });
 
     const rectComponent = new Components.RectComponent({
-      width: 100,
+      width: 50,
       height: 20,
-      radius: 4,
-      fill: "cyan",
+      fill: "lime",
       stroke: "transparent",
     });
 
     const collisionComponent = new Components.CollisionComponent({
-      layer: COLLISION_LAYERS.player,
+      layer: COLLISION_LAYERS.brick,
       mask: COLLISION_LAYERS.ball,
       hitbox: {
         x: 0,
         y: 0,
-        width: 100,
+        width: 50,
         height: 20,
       },
       detectable: true,
+      resolvers: [
+        {
+          type: "die",
+          mask: COLLISION_LAYERS.ball,
+          events: [
+            {
+              type: "entity-destroyed",
+              data: {
+                entity: this,
+              },
+            },
+          ],
+          actions: [
+            //     {
+            //       name: "increment-score",
+            //       payload: 1,
+            //     },
+          ],
+        },
+      ],
     });
 
     this.add(transformComponent);
-    this.add(boundaryComponent);
-    this.add(playerComponent);
     this.add(zindexComponent);
     this.add(rectComponent);
     this.add(collisionComponent);

@@ -1,4 +1,5 @@
 import * as Cluster from "../../../cluster";
+import * as Events from "../events";
 
 export type CollisionResolverType =
   | "bounce"
@@ -11,12 +12,9 @@ export type CollisionResolverType =
 export interface CollisionResolver {
   type: CollisionResolverType;
   mask: number;
+  events?: Cluster.Event[];
   actions?: {
-    action: string;
-    payload: any;
-  }[];
-  events?: {
-    event: string;
+    name: string;
     payload: any;
   }[];
 }
@@ -33,12 +31,9 @@ export interface CollisionData {
   normal: Cluster.Vector;
   overlap: Cluster.Vector;
   area: number;
+  events?: Cluster.Event[];
   actions?: {
-    action: string;
-    payload: any;
-  }[];
-  events?: {
-    event: string;
+    name: string;
     payload: any;
   }[];
 }

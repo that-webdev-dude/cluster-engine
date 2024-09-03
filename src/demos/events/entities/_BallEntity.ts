@@ -1,5 +1,6 @@
 import * as Cluster from "../../../cluster";
 import * as Components from "../components";
+import * as Events from "../events";
 import { DISPLAY, COLLISION_LAYERS } from "../constants";
 
 export class BallEntity extends Cluster.Entity {
@@ -18,7 +19,7 @@ export class BallEntity extends Cluster.Entity {
     });
 
     const velocityComponent = new Components.VelocityComponent({
-      velocity: new Cluster.Vector(0.5, 1),
+      velocity: new Cluster.Vector(1, 1),
     });
 
     const boundaryComponent = new Components.BoundaryComponent({
@@ -37,11 +38,34 @@ export class BallEntity extends Cluster.Entity {
       stroke: "transparent",
     });
 
+    const collisionComponent = new Components.CollisionComponent({
+      layer: COLLISION_LAYERS.ball,
+      mask: COLLISION_LAYERS.player | COLLISION_LAYERS.brick,
+      hitbox: {
+        x: 0,
+        y: 0,
+        width: 10,
+        height: 10,
+      },
+      detectable: true,
+      resolvers: [
+        {
+          type: "bounce",
+          mask: COLLISION_LAYERS.brick,
+        },
+        {
+          type: "bounce",
+          mask: COLLISION_LAYERS.player,
+        },
+      ],
+    });
+
     this.add(ballComponent);
     this.add(transformComponent);
     this.add(velocityComponent);
     this.add(boundaryComponent);
     this.add(zindexComponent);
     this.add(rectComponent);
+    this.add(collisionComponent);
   }
 }

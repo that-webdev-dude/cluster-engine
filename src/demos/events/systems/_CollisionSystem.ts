@@ -11,25 +11,19 @@ interface ICollisionData {
   overlap: Cluster.Vector;
   area: number;
   actions?: {
-    action: string;
+    name: string;
     payload: any;
   }[];
-  events?: {
-    event: string;
-    payload: any;
-  }[];
+  events?: Cluster.Event[];
 }
 interface ICollisionResolver {
   type: ResolverType;
   mask: number;
   actions?: {
-    action: string;
+    name: string;
     payload: any;
   }[];
-  events?: {
-    event: string;
-    payload: any;
-  }[];
+  events?: Cluster.Event[];
 }
 interface ICollisionHitbox {
   x: number;
@@ -151,14 +145,14 @@ export class CollisionSystem extends Cluster.System {
     });
   }
 
-  /** emits the store events specified in the collision resolver. */
-  private _dispatchStoreEvent(resolver: ICollisionResolver) {
-    const { actions } = resolver;
-    if (actions) {
-      actions.forEach((action) => {
-        store.dispatch(action.action, action.payload);
-      });
-    }
+  /** dispatches a store action based on the collision resolver. */
+  private _dispatchStoreAction(action: { name: string; payload: any }) {
+    store.dispatch(action.name, action.payload);
+  }
+
+  /** emits a store event based on the collision resolver. */
+  private _emitStoreEvent(event: Cluster.Event) {
+    store.emit(event);
   }
 
   /** determines the direction of the collision normal based on the overlap. It compares the overlap in both axes and returns a vector pointing in the direction of the collision. */
@@ -201,33 +195,30 @@ export class CollisionSystem extends Cluster.System {
   }
 
   /** handles the sleep resolution making the entity inactive and emitting an event */
-  private _handleSleepResolution(
-    entity: Cluster.Entity,
-    resolvers: ICollisionResolver[],
-    targetLayer: number
-  ) {
-    const sleepResolverA = resolvers.find(
-      (resolver) => resolver.type === "sleep"
-    );
-    if (sleepResolverA && sleepResolverA.mask & targetLayer) {
-      entity.active = false;
-      this._dispatchStoreEvent(sleepResolverA);
-    }
-  }
+  // private _handleSleepResolution(
+  //   entity: Cluster.Entity,
+  //   resolvers: ICollisionResolver[],
+  //   targetLayer: number
+  // ) {
+  //   const sleepResolverA = resolvers.find(
+  //     (resolver) => resolver.type === "sleep"
+  //   );
+  //   if (sleepResolverA && sleepResolverA.mask & targetLayer) {
+  //     entity.active = false;
+  //   }
+  // }
 
   /* handles the die resolution, marking the entity as dead and emitting an event. */
-  private _handleDieResolution(
-    entity: Cluster.Entity,
-    resolvers: ICollisionResolver[],
-    targetLayer: number
-  ) {
-    const dieResolverA = resolvers.find((resolver) => resolver.type === "die");
-    if (dieResolverA && dieResolverA.mask & targetLayer) {
-      entity.dead = true;
-      //       this.emit("entityDestroyed", entity.id);
-      //       this._dispatchStoreEvent(dieResolverA);
-    }
-  }
+  // private _handleDieResolution(
+  //   entity: Cluster.Entity,
+  //   resolvers: ICollisionResolver[],
+  //   targetLayer: number
+  // ) {
+  //   const dieResolverA = resolvers.find((resolver) => resolver.type === "die");
+  //   if (dieResolverA && dieResolverA.mask & targetLayer) {
+  //     entity.dead = true;
+  //   }
+  // }
 
   /** checks if two entities are colliding by comparing their positions and hitboxes. */
   private _testCollision(
@@ -298,51 +289,40 @@ export class CollisionSystem extends Cluster.System {
             collisionB.hitbox
           )
         ) {
-          // emit the entity-hit event
-          // note: this event is emitted for every collision pair, regardless of whether the entities are dead or inactive
-          // this allows systems to respond to collisions even if the entities are not currently active
-          // however the actual collision resolution only happens for active and alive entities
-          // if many collisions are happening, this event may be emitted multiple times for the same entities
-          store.emit<Events.EntityHitEvent>({
-            type: "entity-hit",
-            data: {
-              entityA,
-              entityB,
-            },
-          });
+          // emit the entity-hit event?
 
           // no need to resolve collisions if one or both entities are dead
-          this._handleDieResolution(
-            entityA,
-            collisionA.resolvers,
-            collisionB.layer
-          );
-          this._handleDieResolution(
-            entityB,
-            collisionB.resolvers,
-            collisionA.layer
-          );
-          if (entityA.dead || entityB.dead) continue;
+          // this._handleDieResolution(
+          //   entityA,
+          //   collisionA.resolvers,
+          //   collisionB.layer
+          // );
+          // this._handleDieResolution(
+          //   entityB,
+          //   collisionB.resolvers,
+          //   collisionA.layer
+          // );
+          // if (entityA.dead || entityB.dead) continue;
 
           // no need to resolve collisions if one or both entities are inactive
-          this._handleSleepResolution(
-            entityA,
-            collisionA.resolvers,
-            collisionB.layer
-          );
-          this._handleSleepResolution(
-            entityB,
-            collisionB.resolvers,
-            collisionA.layer
-          );
-          if (!entityA.active || !entityB.active) continue;
+          // this._handleSleepResolution(
+          //   entityA,
+          //   collisionA.resolvers,
+          //   collisionB.layer
+          // );
+          // this._handleSleepResolution(
+          //   entityB,
+          //   collisionB.resolvers,
+          //   collisionA.layer
+          // );
+          // if (!entityA.active || !entityB.active) continue;
 
           // no need to resolve collisions if there are no resolvers
           const resolversA = collisionA.resolvers;
           const resolversB = collisionB.resolvers;
           if (resolversA.length === 0 && resolversB.length === 0) continue;
 
-          // // at this point we start collecting data
+          // at this point we start collecting data
           const overlap = this._getCollisionOverlap(
             transformA.position,
             collisionA.hitbox,
@@ -350,7 +330,7 @@ export class CollisionSystem extends Cluster.System {
             collisionB.hitbox
           );
 
-          if (resolversA) {
+          if (resolversA.length) {
             const normalA = this._getCollisionNormal(
               transformA.position,
               transformB.position,
@@ -367,7 +347,7 @@ export class CollisionSystem extends Cluster.System {
             );
           }
 
-          if (resolversB) {
+          if (resolversB.length) {
             const normalB = this._getCollisionNormal(
               transformB.position,
               transformA.position,
@@ -389,9 +369,9 @@ export class CollisionSystem extends Cluster.System {
 
     // resolve the collisions
     this._entityCache.forEach((entityIds, resolverType) => {
-      const resolutionEntities = activeEntities.filter((entity) =>
-        entityIds.has(entity.id)
-      );
+      const resolutionEntities = activeEntities.filter((entity) => {
+        return entityIds.has(entity.id);
+      });
 
       resolutionEntities.forEach((entity) => {
         const collision =
@@ -405,6 +385,8 @@ export class CollisionSystem extends Cluster.System {
         const data = collision.data.get(resolverType);
         if (!data || data.length === 0) return;
 
+        // here first we separate the entities
+        // then we resolve the collision for each entity
         const primaryCollision = this._getPrimaryCollision(data);
         if (!primaryCollision) return;
 
@@ -429,6 +411,54 @@ export class CollisionSystem extends Cluster.System {
 
         transform.position.x += totalAdjustmentX;
         transform.position.y += totalAdjustmentY;
+
+        switch (resolverType) {
+          case "bounce":
+            const velocity =
+              entity.get<Components.VelocityComponent>("Velocity");
+
+            if (!velocity) return;
+
+            if (primaryCollision.normal.x !== 0) {
+              velocity.velocity.x *= -1;
+            }
+            if (primaryCollision.normal.y !== 0) {
+              velocity.velocity.y *= -1;
+            }
+            break;
+
+          case "die":
+            entity.dead = true;
+            break;
+
+          case "stop":
+            // ... add stopping logic here
+            break;
+          case "sleep":
+            entity.active = false;
+            break;
+
+          case "slide":
+            // ... add sliding logic here
+            break;
+
+          default:
+            break;
+        }
+
+        const events = primaryCollision.events;
+        if (events) {
+          events.forEach((event) => {
+            this._emitStoreEvent(event);
+          });
+        }
+
+        const actions = primaryCollision.actions;
+        if (actions) {
+          actions.forEach((action) => {
+            this._dispatchStoreAction(action);
+          });
+        }
 
         collision.data.clear();
       });
