@@ -1,7 +1,3 @@
-// import { SystemEvents } from "../../cluster";
-// import { Emitter, QueuedEmitter, HybridEmitter } from "../../cluster";
-// import { EventEmitter } from "events";
-
 type EntityId = number;
 
 class ComponentIndex {

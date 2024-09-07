@@ -23,34 +23,12 @@ export class BrickEntity extends Cluster.Entity {
 
     const collisionComponent = new Components.CollisionComponent({
       layer: COLLISION_LAYERS.brick,
-      mask: COLLISION_LAYERS.ball,
       hitbox: {
         x: 0,
         y: 0,
         width: 50,
         height: 20,
       },
-      detectable: true,
-      resolvers: [
-        {
-          type: "die",
-          mask: COLLISION_LAYERS.ball,
-          events: [
-            {
-              type: "entity-destroyed",
-              data: {
-                entity: this,
-              },
-            },
-          ],
-          actions: [
-            //     {
-            //       name: "increment-score",
-            //       payload: 1,
-            //     },
-          ],
-        },
-      ],
     });
 
     this.add(transformComponent);

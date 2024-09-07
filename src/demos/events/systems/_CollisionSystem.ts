@@ -1,43 +1,14 @@
 import * as Cluster from "../../../cluster";
 import * as Components from "../components";
-import * as Events from "../events";
+import * as Types from "../types";
 import { store } from "../store";
-
-type EntityId = number;
-type ResolverType = "bounce" | "die" | "stop" | "sleep" | "none" | "slide";
-interface ICollisionData {
-  entity: Cluster.Entity;
-  normal: Cluster.Vector;
-  overlap: Cluster.Vector;
-  area: number;
-  actions?: {
-    name: string;
-    payload: any;
-  }[];
-  events?: Cluster.Event[];
-}
-interface ICollisionResolver {
-  type: ResolverType;
-  mask: number;
-  actions?: {
-    name: string;
-    payload: any;
-  }[];
-  events?: Cluster.Event[];
-}
-interface ICollisionHitbox {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-}
 
 /** Collision system
  * @required  Transform, Collision
  * @emits entityDestroyed, systemStarted, systemUpdated,
  */
 export class CollisionSystem extends Cluster.System {
-  private _entityCache: Map<ResolverType, Set<EntityId>>;
+  private _entityCache: Map<Types.CollisionResolverType, Set<Types.EntityId>>;
 
   constructor() {
     super(["Transform", "Collision"]);
@@ -46,9 +17,9 @@ export class CollisionSystem extends Cluster.System {
 
   /** returns the secondary collision based on the overlap and area. */
   private _getSecondaryCollision(
-    collisions: ICollisionData[],
-    dominantCollision: ICollisionData
-  ): ICollisionData | null {
+    collisions: Types.CollisionData[],
+    dominantCollision: Types.CollisionData
+  ): Types.CollisionData | null {
     // Filter out the dominant collision from the list
     const remainingCollisions = collisions.filter(
       (collision) => collision !== dominantCollision
@@ -89,8 +60,8 @@ export class CollisionSystem extends Cluster.System {
 
   /** returns the primary collision based on the overlap and area. */
   private _getPrimaryCollision(
-    collisions: ICollisionData[]
-  ): ICollisionData | null {
+    collisions: Types.CollisionData[]
+  ): Types.CollisionData | null {
     if (collisions.length === 0) return null;
 
     let dominantCollision = collisions[0];
@@ -114,7 +85,7 @@ export class CollisionSystem extends Cluster.System {
 
   /** processes the resolvers for the collision and caches the entities for later resolution. */
   private _processResolvers(
-    resolvers: ICollisionResolver[],
+    resolvers: Types.CollisionResolver[],
     collisionA: Components.CollisionComponent,
     collisionB: Components.CollisionComponent,
     entityA: Cluster.Entity,
@@ -173,9 +144,9 @@ export class CollisionSystem extends Cluster.System {
   /**calculates the overlap between the two entities along both the x and y axes. */
   private _getCollisionOverlap(
     positionA: Cluster.Vector,
-    hitboxA: ICollisionHitbox,
+    hitboxA: Types.CollisionHitbox,
     positionB: Cluster.Vector,
-    hitboxB: ICollisionHitbox
+    hitboxB: Types.CollisionHitbox
   ): Cluster.Vector {
     const overlapX = Math.max(
       0,
@@ -197,7 +168,7 @@ export class CollisionSystem extends Cluster.System {
   /** handles the sleep resolution making the entity inactive and emitting an event */
   // private _handleSleepResolution(
   //   entity: Cluster.Entity,
-  //   resolvers: ICollisionResolver[],
+  //   resolvers: Types.CollisionResolver[],
   //   targetLayer: number
   // ) {
   //   const sleepResolverA = resolvers.find(
@@ -211,7 +182,7 @@ export class CollisionSystem extends Cluster.System {
   /* handles the die resolution, marking the entity as dead and emitting an event. */
   // private _handleDieResolution(
   //   entity: Cluster.Entity,
-  //   resolvers: ICollisionResolver[],
+  //   resolvers: Types.CollisionResolver[],
   //   targetLayer: number
   // ) {
   //   const dieResolverA = resolvers.find((resolver) => resolver.type === "die");
@@ -223,9 +194,9 @@ export class CollisionSystem extends Cluster.System {
   /** checks if two entities are colliding by comparing their positions and hitboxes. */
   private _testCollision(
     positionA: Cluster.Vector,
-    hitboxA: ICollisionHitbox,
+    hitboxA: Types.CollisionHitbox,
     positionB: Cluster.Vector,
-    hitboxB: ICollisionHitbox
+    hitboxB: Types.CollisionHitbox
   ): boolean {
     return (
       positionA.x < positionB.x + hitboxB.width &&
@@ -273,67 +244,42 @@ export class CollisionSystem extends Cluster.System {
           continue;
         }
 
-        const transformA =
-          entityA.get<Components.TransformComponent>("Transform");
-        const transformB =
-          entityB.get<Components.TransformComponent>("Transform");
+        const hitboxA = collisionA.hitbox;
+        const hitboxB = collisionB.hitbox;
 
-        if (!transformA || !transformB) continue;
+        const positionA =
+          entityA.get<Components.TransformComponent>("Transform")?.position;
+        const positionB =
+          entityB.get<Components.TransformComponent>("Transform")?.position;
+
+        if (!positionA || !positionB) continue;
 
         // if an actual collision is detected
-        if (
-          this._testCollision(
-            transformA.position,
-            collisionA.hitbox,
-            transformB.position,
-            collisionB.hitbox
-          )
-        ) {
+        if (this._testCollision(positionA, hitboxA, positionB, hitboxB)) {
           // emit the entity-hit event?
 
           // no need to resolve collisions if one or both entities are dead
-          // this._handleDieResolution(
-          //   entityA,
-          //   collisionA.resolvers,
-          //   collisionB.layer
-          // );
-          // this._handleDieResolution(
-          //   entityB,
-          //   collisionB.resolvers,
-          //   collisionA.layer
-          // );
-          // if (entityA.dead || entityB.dead) continue;
 
           // no need to resolve collisions if one or both entities are inactive
-          // this._handleSleepResolution(
-          //   entityA,
-          //   collisionA.resolvers,
-          //   collisionB.layer
-          // );
-          // this._handleSleepResolution(
-          //   entityB,
-          //   collisionB.resolvers,
-          //   collisionA.layer
-          // );
-          // if (!entityA.active || !entityB.active) continue;
 
           // no need to resolve collisions if there are no resolvers
           const resolversA = collisionA.resolvers;
           const resolversB = collisionB.resolvers;
+
           if (resolversA.length === 0 && resolversB.length === 0) continue;
 
           // at this point we start collecting data
           const overlap = this._getCollisionOverlap(
-            transformA.position,
-            collisionA.hitbox,
-            transformB.position,
-            collisionB.hitbox
+            positionA,
+            hitboxA,
+            positionB,
+            hitboxB
           );
 
           if (resolversA.length) {
             const normalA = this._getCollisionNormal(
-              transformA.position,
-              transformB.position,
+              positionA,
+              positionB,
               overlap
             );
             this._processResolvers(
@@ -349,8 +295,8 @@ export class CollisionSystem extends Cluster.System {
 
           if (resolversB.length) {
             const normalB = this._getCollisionNormal(
-              transformB.position,
-              transformA.position,
+              positionB,
+              positionA,
               overlap
             );
             this._processResolvers(
@@ -416,7 +362,6 @@ export class CollisionSystem extends Cluster.System {
           case "bounce":
             const velocity =
               entity.get<Components.VelocityComponent>("Velocity");
-
             if (!velocity) return;
 
             if (primaryCollision.normal.x !== 0) {
@@ -431,15 +376,11 @@ export class CollisionSystem extends Cluster.System {
             entity.dead = true;
             break;
 
-          case "stop":
-            // ... add stopping logic here
-            break;
           case "sleep":
             entity.active = false;
             break;
 
-          case "slide":
-            // ... add sliding logic here
+          case "none":
             break;
 
           default:

@@ -19,7 +19,7 @@ export class BallEntity extends Cluster.Entity {
     });
 
     const velocityComponent = new Components.VelocityComponent({
-      velocity: new Cluster.Vector(1, 1),
+      velocity: new Cluster.Vector(0, 1),
     });
 
     const boundaryComponent = new Components.BoundaryComponent({
@@ -40,21 +40,20 @@ export class BallEntity extends Cluster.Entity {
 
     const collisionComponent = new Components.CollisionComponent({
       layer: COLLISION_LAYERS.ball,
-      mask: COLLISION_LAYERS.player | COLLISION_LAYERS.brick,
+      mask: COLLISION_LAYERS.brick | COLLISION_LAYERS.player,
       hitbox: {
         x: 0,
         y: 0,
         width: 10,
         height: 10,
       },
-      detectable: true,
       resolvers: [
         {
           type: "bounce",
           mask: COLLISION_LAYERS.brick,
         },
         {
-          type: "bounce",
+          type: "none",
           mask: COLLISION_LAYERS.player,
         },
       ],

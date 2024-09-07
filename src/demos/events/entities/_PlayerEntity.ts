@@ -32,14 +32,12 @@ export class PlayerEntity extends Cluster.Entity {
 
     const collisionComponent = new Components.CollisionComponent({
       layer: COLLISION_LAYERS.player,
-      mask: COLLISION_LAYERS.ball,
       hitbox: {
         x: 0,
         y: 0,
         width: 100,
         height: 20,
       },
-      detectable: true,
     });
 
     this.add(transformComponent);

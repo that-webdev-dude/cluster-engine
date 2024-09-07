@@ -1,48 +1,11 @@
 import * as Cluster from "../../../cluster";
-import * as Events from "../events";
-
-export type CollisionResolverType =
-  | "bounce"
-  | "die"
-  | "stop"
-  | "sleep"
-  | "none"
-  | "slide";
-
-export interface CollisionResolver {
-  type: CollisionResolverType;
-  mask: number;
-  events?: Cluster.Event[];
-  actions?: {
-    name: string;
-    payload: any;
-  }[];
-}
-
-export interface CollisionHitbox {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-}
-
-export interface CollisionData {
-  entity: Cluster.Entity;
-  normal: Cluster.Vector;
-  overlap: Cluster.Vector;
-  area: number;
-  events?: Cluster.Event[];
-  actions?: {
-    name: string;
-    payload: any;
-  }[];
-}
+import * as Types from "../types";
 
 export interface CollisionOptions {
   layer: number;
   mask?: number;
-  hitbox: CollisionHitbox;
-  resolvers?: CollisionResolver[];
+  hitbox: Types.CollisionHitbox;
+  resolvers?: Types.CollisionResolver[];
   detectable?: boolean;
 }
 
@@ -53,11 +16,11 @@ export interface CollisionOptions {
  * @properties data, mask, layer, hitbox, resolvers
  */
 export class CollisionComponent extends Cluster.Component {
-  readonly data: Map<CollisionResolverType, CollisionData[]>;
+  readonly data: Map<Types.CollisionResolverType, Types.CollisionData[]>;
   readonly mask: number;
   readonly layer: number;
-  readonly hitbox: CollisionHitbox;
-  readonly resolvers: CollisionResolver[];
+  readonly hitbox: Types.CollisionHitbox;
+  readonly resolvers: Types.CollisionResolver[];
   public detectable: boolean;
 
   constructor({
