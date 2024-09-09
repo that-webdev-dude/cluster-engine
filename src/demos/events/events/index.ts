@@ -57,3 +57,10 @@ export interface CountResetEvent extends Cluster.Event {
     count: number;
   };
 }
+
+export interface ScreenCollisionEvent extends Cluster.Event {
+  type: "screen-collision";
+  data?: {
+    collisionEdge: "top" | "bottom" | "left" | "right";
+  };
+}

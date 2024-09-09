@@ -21,6 +21,21 @@ export class BoundarySystem extends Cluster.System {
     this._screenWidth = display.width;
   }
 
+  private _testScreenCollision(
+    position: Cluster.Vector,
+    width: number,
+    height: number
+  ): string | undefined {
+    let maxX = this._screenWidth - width;
+    let maxY = this._screenHeight - height;
+
+    // return the screen edge where the collision happened
+    if (position.x > maxX) return "right";
+    if (position.x < 0) return "left";
+    if (position.y > maxY) return "bottom";
+    if (position.y < 0) return "top";
+  }
+
   private _contain(position: Cluster.Vector, width: number, height: number) {
     let maxX = this._screenWidth - width;
     let maxY = this._screenHeight - height;
@@ -105,7 +120,20 @@ export class BoundarySystem extends Cluster.System {
         }
 
         const { position } = transformComponent;
-        const { behavior } = boundaryComponent;
+        const { behavior, events } = boundaryComponent;
+
+        // test screen collision and emit events
+        const collisionEdge = this._testScreenCollision(
+          position,
+          width,
+          height
+        );
+        if (collisionEdge) {
+          events?.forEach((event) => {
+            event.data = { entity, collisionEdge };
+            store.emit(event);
+          });
+        }
 
         switch (behavior) {
           case "contain":

@@ -29,6 +29,20 @@ export class BrickEntity extends Cluster.Entity {
         width: 50,
         height: 20,
       },
+      resolvers: [
+        {
+          type: "die",
+          mask: COLLISION_LAYERS.ball,
+          events: [
+            {
+              type: "brick_destroyed",
+              data: {
+                entity: this,
+              },
+            },
+          ],
+        },
+      ],
     });
 
     this.add(transformComponent);

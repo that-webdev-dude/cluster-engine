@@ -8,7 +8,7 @@ function createArkanoidLevel(): Entities.BrickEntity[] {
   const brickWidth = 50;
   const brickHeight = 20;
   const brickPadding = 5;
-  const brickOffsetTop = 30;
+  const brickOffsetTop = 60;
   const brickOffsetLeft = 45;
 
   const level = [];
@@ -44,11 +44,14 @@ export class GamePlay extends Cluster.Scene {
     this.addSystem(new Systems.RendererSystem());
 
     // listeners
-    store.on("entity-destroyed", (event: Events.EntityDestroyedEvent) => {
+    store.on("brick_destroyed", (event: Events.EntityDestroyedEvent) => {
       this.removeEntity(event.data.entity);
     });
-    store.on("entity-created", (event: Events.EntityCreatedEvent) => {
-      this.addEntity(event.data.entity);
+
+    store.on("screen-collision", (event: Events.ScreenCollisionEvent) => {
+      if (event.data?.collisionEdge === "bottom") {
+        console.log("Game Over");
+      }
     });
   }
 

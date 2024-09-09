@@ -15,7 +15,7 @@ export class PlayerEntity extends Cluster.Entity {
     });
 
     const playerComponent = new Components.PlayerComponent({
-      speed: 400,
+      speed: 500,
     });
 
     const zindexComponent = new Components.ZindexComponent({

@@ -15,7 +15,6 @@ export class CollisionSystem extends Cluster.System {
     this._entityCache = new Map();
   }
 
-  /** returns the secondary collision based on the overlap and area. */
   private _getSecondaryCollision(
     collisions: Types.CollisionData[],
     dominantCollision: Types.CollisionData
@@ -58,7 +57,6 @@ export class CollisionSystem extends Cluster.System {
     return secondaryCollision;
   }
 
-  /** returns the primary collision based on the overlap and area. */
   private _getPrimaryCollision(
     collisions: Types.CollisionData[]
   ): Types.CollisionData | null {
@@ -83,7 +81,6 @@ export class CollisionSystem extends Cluster.System {
     return dominantCollision;
   }
 
-  /** processes the resolvers for the collision and caches the entities for later resolution. */
   private _processResolvers(
     resolvers: Types.CollisionResolver[],
     collisionA: Components.CollisionComponent,
@@ -91,6 +88,7 @@ export class CollisionSystem extends Cluster.System {
     entityA: Cluster.Entity,
     entityB: Cluster.Entity,
     normal: Cluster.Vector,
+    vector: Cluster.Vector,
     overlap: Cluster.Vector
   ) {
     resolvers.forEach((resolver) => {
@@ -101,6 +99,7 @@ export class CollisionSystem extends Cluster.System {
         collisionA.data.get(resolver.type)?.push({
           entity: entityB,
           overlap,
+          vector,
           normal: normal,
           area: overlap.x * overlap.y,
           events: resolver.events,
@@ -116,47 +115,60 @@ export class CollisionSystem extends Cluster.System {
     });
   }
 
-  /** dispatches a store action based on the collision resolver. */
   private _dispatchStoreAction(action: { name: string; payload: any }) {
     store.dispatch(action.name, action.payload);
   }
 
-  /** emits a store event based on the collision resolver. */
   private _emitStoreEvent(event: Cluster.Event) {
     store.emit(event);
   }
 
-  /** determines the direction of the collision normal based on the overlap. It compares the overlap in both axes and returns a vector pointing in the direction of the collision. */
+  private _getCollisionVector(
+    hitboundsA: Types.CollisionHitbox,
+    hitboundsB: Types.CollisionHitbox
+  ) {
+    const centerA = new Cluster.Vector(
+      hitboundsA.x + hitboundsA.width / 2,
+      hitboundsA.y + hitboundsA.height / 2
+    );
+    const centerB = new Cluster.Vector(
+      hitboundsB.x + hitboundsB.width / 2,
+      hitboundsB.y + hitboundsB.height / 2
+    );
+    return centerA.subtract(centerB);
+  }
+
   private _getCollisionNormal(
-    positionA: Cluster.Vector,
-    positionB: Cluster.Vector,
+    hitboundsA: Types.CollisionHitbox,
+    hitboundsB: Types.CollisionHitbox,
     overlap: { x: number; y: number }
   ): Cluster.Vector {
     // Assumption: Collision normal is determined based on the axis with the smaller overlap.
     // This is a common assumption for AABB collisions but may not hold for other collision types.
     if (overlap.x < overlap.y) {
-      return new Cluster.Vector(positionA.x < positionB.x ? -1 : 1, 0);
+      return new Cluster.Vector(hitboundsA.x < hitboundsB.x ? -1 : 1, 0);
     } else {
-      return new Cluster.Vector(0, positionA.y < positionB.y ? -1 : 1);
+      return new Cluster.Vector(0, hitboundsA.y < hitboundsB.y ? -1 : 1);
     }
   }
 
-  /**calculates the overlap between the two entities along both the x and y axes. */
   private _getCollisionOverlap(
-    positionA: Cluster.Vector,
-    hitboxA: Types.CollisionHitbox,
-    positionB: Cluster.Vector,
-    hitboxB: Types.CollisionHitbox
+    hitboundsA: Types.CollisionHitbox,
+    hitboundsB: Types.CollisionHitbox
   ): Cluster.Vector {
     const overlapX = Math.max(
       0,
-      Math.min(positionA.x + hitboxA.width, positionB.x + hitboxB.width) -
-        Math.max(positionA.x, positionB.x)
+      Math.min(
+        hitboundsA.x + hitboundsA.width,
+        hitboundsB.x + hitboundsB.width
+      ) - Math.max(hitboundsA.x, hitboundsB.x)
     );
     const overlapY = Math.max(
       0,
-      Math.min(positionA.y + hitboxA.height, positionB.y + hitboxB.height) -
-        Math.max(positionA.y, positionB.y)
+      Math.min(
+        hitboundsA.y + hitboundsA.height,
+        hitboundsB.y + hitboundsB.height
+      ) - Math.max(hitboundsA.y, hitboundsB.y)
     );
 
     // Note: This logic assumes axis-aligned bounding boxes (AABBs).
@@ -191,22 +203,30 @@ export class CollisionSystem extends Cluster.System {
   //   }
   // }
 
-  /** checks if two entities are colliding by comparing their positions and hitboxes. */
   private _testCollision(
-    positionA: Cluster.Vector,
-    hitboxA: Types.CollisionHitbox,
-    positionB: Cluster.Vector,
-    hitboxB: Types.CollisionHitbox
+    hitboundsA: Types.CollisionHitbox,
+    hitboundsB: Types.CollisionHitbox
   ): boolean {
     return (
-      positionA.x < positionB.x + hitboxB.width &&
-      positionA.x + hitboxA.width > positionB.x &&
-      positionA.y < positionB.y + hitboxB.height &&
-      positionA.y + hitboxA.height > positionB.y
+      hitboundsA.x < hitboundsB.x + hitboundsB.width &&
+      hitboundsA.x + hitboundsA.width > hitboundsB.x &&
+      hitboundsA.y < hitboundsB.y + hitboundsB.height &&
+      hitboundsA.y + hitboundsA.height > hitboundsB.y
     );
   }
 
-  /** checks if two entities can collide based on their layer and mask values. */
+  private _getHitbounds(
+    position: Cluster.Vector,
+    hitbox: { x: number; y: number; width: number; height: number }
+  ) {
+    return {
+      x: position.x + hitbox.x,
+      y: position.y + hitbox.y,
+      width: hitbox.width,
+      height: hitbox.height,
+    };
+  }
+
   private _validCollision(
     collisionA: Components.CollisionComponent,
     collisionB: Components.CollisionComponent
@@ -219,7 +239,6 @@ export class CollisionSystem extends Cluster.System {
     );
   }
 
-  /** Update method which orchestrates the entire collision detection and resolution process. */
   update(entities: Set<Cluster.Entity>, dt: number, t: number) {
     if (entities.size <= 1) return;
 
@@ -239,7 +258,6 @@ export class CollisionSystem extends Cluster.System {
 
         if (!collisionA || !collisionB) continue;
 
-        // check if a collision can happen using the layer and mask values
         if (!this._validCollision(collisionA, collisionB)) {
           continue;
         }
@@ -254,13 +272,12 @@ export class CollisionSystem extends Cluster.System {
 
         if (!positionA || !positionB) continue;
 
+        const hitboundsA = this._getHitbounds(positionA, hitboxA);
+        const hitboundsB = this._getHitbounds(positionB, hitboxB);
+
         // if an actual collision is detected
-        if (this._testCollision(positionA, hitboxA, positionB, hitboxB)) {
+        if (this._testCollision(hitboundsA, hitboundsB)) {
           // emit the entity-hit event?
-
-          // no need to resolve collisions if one or both entities are dead
-
-          // no need to resolve collisions if one or both entities are inactive
 
           // no need to resolve collisions if there are no resolvers
           const resolversA = collisionA.resolvers;
@@ -269,17 +286,13 @@ export class CollisionSystem extends Cluster.System {
           if (resolversA.length === 0 && resolversB.length === 0) continue;
 
           // at this point we start collecting data
-          const overlap = this._getCollisionOverlap(
-            positionA,
-            hitboxA,
-            positionB,
-            hitboxB
-          );
+          const overlap = this._getCollisionOverlap(hitboundsA, hitboundsB);
 
           if (resolversA.length) {
+            const vectorA = this._getCollisionVector(hitboundsA, hitboundsB);
             const normalA = this._getCollisionNormal(
-              positionA,
-              positionB,
+              hitboundsA,
+              hitboundsB,
               overlap
             );
             this._processResolvers(
@@ -289,16 +302,31 @@ export class CollisionSystem extends Cluster.System {
               entityA,
               entityB,
               normalA,
+              vectorA,
               overlap
             );
           }
 
           if (resolversB.length) {
+            const vectorB = this._getCollisionVector(hitboundsB, hitboundsA);
             const normalB = this._getCollisionNormal(
-              positionB,
-              positionA,
+              hitboundsB,
+              hitboundsA,
               overlap
             );
+
+            // here
+            // const centerA = new Cluster.Vector(
+            //   hitboundsA.x + hitboundsA.width / 2,
+            //   hitboundsA.y + hitboundsA.height / 2
+            // );
+            // const centerB = new Cluster.Vector(
+            //   hitboundsB.x + hitboundsB.width / 2,
+            //   hitboundsB.y + hitboundsB.height / 2
+            // );
+            // const collisionVector = centerA.subtract(centerB).normalize();
+            // console.log(collisionVector);
+
             this._processResolvers(
               resolversB,
               collisionB,
@@ -306,6 +334,7 @@ export class CollisionSystem extends Cluster.System {
               entityB,
               entityA,
               normalB,
+              vectorB,
               overlap
             );
           }
@@ -368,6 +397,12 @@ export class CollisionSystem extends Cluster.System {
               velocity.velocity.x *= -1;
             }
             if (primaryCollision.normal.y !== 0) {
+              const vx = Cluster.Cmath.clamp(
+                primaryCollision.vector.normalize().x,
+                -0.5,
+                0.5
+              );
+              velocity.velocity.x = vx;
               velocity.velocity.y *= -1;
             }
             break;

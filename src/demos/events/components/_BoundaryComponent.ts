@@ -1,7 +1,9 @@
 import * as Cluster from "../../../cluster";
+import * as Types from "../types";
 
 interface BoundaryOptions {
-  behavior: "contain" | "wrap" | "bounce" | "die" | "stop" | "sleep" | "none";
+  behavior: Types.BoundaryBehaviorType;
+  events?: Types.StoreEvent[];
 }
 
 /** Boundary component
@@ -11,11 +13,13 @@ interface BoundaryOptions {
  * @properties width, height, behavior
  */
 class BoundaryComponent extends Cluster.Component {
-  behavior: "contain" | "wrap" | "bounce" | "die" | "stop" | "sleep" | "none";
+  behavior: Types.BoundaryBehaviorType;
+  events?: Types.StoreEvent[];
 
-  constructor({ behavior }: BoundaryOptions) {
+  constructor({ behavior, events }: BoundaryOptions) {
     super("Boundary");
     this.behavior = behavior;
+    this.events = events || [];
   }
 }
 

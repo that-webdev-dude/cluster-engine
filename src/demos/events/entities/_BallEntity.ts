@@ -24,6 +24,11 @@ export class BallEntity extends Cluster.Entity {
 
     const boundaryComponent = new Components.BoundaryComponent({
       behavior: "bounce",
+      events: [
+        {
+          type: "screen-collision",
+        } as Events.ScreenCollisionEvent,
+      ],
     });
 
     const zindexComponent = new Components.ZindexComponent({
@@ -53,7 +58,7 @@ export class BallEntity extends Cluster.Entity {
           mask: COLLISION_LAYERS.brick,
         },
         {
-          type: "none",
+          type: "bounce",
           mask: COLLISION_LAYERS.player,
         },
       ],

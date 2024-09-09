@@ -20,6 +20,7 @@ export type CollisionData = {
   area: number;
   entity: Cluster.Entity;
   normal: Cluster.Vector;
+  vector: Cluster.Vector;
   overlap: Cluster.Vector;
   events?: StoreEvent[];
   actions?: StoreAction[];
@@ -40,11 +41,19 @@ export type CollisionResolver = {
 };
 
 export type CollisionResolverType =
-  | "directional-bounce"
-  | "simple-bounce"
   | "bounce"
   | "die"
   | "stop"
   | "sleep"
   | "none"
   | "slide";
+
+// boundary
+export type BoundaryBehaviorType =
+  | "contain"
+  | "bounce"
+  | "wrap"
+  | "die"
+  | "stop"
+  | "sleep"
+  | "none";
