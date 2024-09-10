@@ -92,6 +92,10 @@ export class Entity {
     return this.components.get(name) as T | undefined;
   }
 
+  has(name: string) {
+    return this.components.has(name);
+  }
+
   add(component: Component) {
     if (!component) return;
     this.components.set(component.name, component);

@@ -33,16 +33,16 @@ export class PlayerSystem extends Cluster.System {
           position.x += Cluster.Keyboard.x() * speed * dt;
         }
       } catch (error) {
-        store.emit<Events.SystemErrorEvent>(
-          {
-            type: "system-error",
-            data: {
-              origin: "PlayerSystem",
-              error,
-            },
-          },
-          true
-        );
+        // store.emit<Events.SystemErrorEvent>(
+        //   {
+        //     type: "system-error",
+        //     data: {
+        //       origin: "PlayerSystem",
+        //       error,
+        //     },
+        //   },
+        //   true
+        // );
       }
     }
   }

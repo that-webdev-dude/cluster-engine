@@ -1,5 +1,6 @@
 import * as Cluster from "../../../cluster";
 import * as Components from "../components";
+import * as Events from "../events";
 import * as Types from "../types";
 import { store } from "../store";
 
@@ -102,8 +103,6 @@ export class CollisionSystem extends Cluster.System {
           vector,
           normal: normal,
           area: overlap.x * overlap.y,
-          events: resolver.events,
-          actions: resolver.actions,
         });
 
         // cache the entity ids for later resolution
@@ -113,14 +112,6 @@ export class CollisionSystem extends Cluster.System {
         this._entityCache.get(resolver.type)?.add(entityA.id);
       }
     });
-  }
-
-  private _dispatchStoreAction(action: { name: string; payload: any }) {
-    store.dispatch(action.name, action.payload);
-  }
-
-  private _emitStoreEvent(event: Cluster.Event) {
-    store.emit(event);
   }
 
   private _getCollisionVector(
@@ -314,19 +305,6 @@ export class CollisionSystem extends Cluster.System {
               hitboundsA,
               overlap
             );
-
-            // here
-            // const centerA = new Cluster.Vector(
-            //   hitboundsA.x + hitboundsA.width / 2,
-            //   hitboundsA.y + hitboundsA.height / 2
-            // );
-            // const centerB = new Cluster.Vector(
-            //   hitboundsB.x + hitboundsB.width / 2,
-            //   hitboundsB.y + hitboundsB.height / 2
-            // );
-            // const collisionVector = centerA.subtract(centerB).normalize();
-            // console.log(collisionVector);
-
             this._processResolvers(
               resolversB,
               collisionB,
@@ -409,6 +387,12 @@ export class CollisionSystem extends Cluster.System {
 
           case "die":
             entity.dead = true;
+
+            // emit entity destroyed event
+            store.emit<Events.EntityDestroyedEvent>({
+              type: "entity-destroyed",
+              data: { entity },
+            });
             break;
 
           case "sleep":
@@ -422,19 +406,18 @@ export class CollisionSystem extends Cluster.System {
             break;
         }
 
-        const events = primaryCollision.events;
-        if (events) {
-          events.forEach((event) => {
-            this._emitStoreEvent(event);
-          });
-        }
+        // emit events and dispatch actions
+        // primaryCollision.events?.forEach((event) => {
+        //   event.data = { entity };
+        //   this._emitStoreEvent(event);
+        // });
 
-        const actions = primaryCollision.actions;
-        if (actions) {
-          actions.forEach((action) => {
-            this._dispatchStoreAction(action);
-          });
-        }
+        // const actions = primaryCollision.actions;
+        // if (actions) {
+        //   actions.forEach((action) => {
+        //     this._dispatchStoreAction(action);
+        //   });
+        // }
 
         collision.data.clear();
       });

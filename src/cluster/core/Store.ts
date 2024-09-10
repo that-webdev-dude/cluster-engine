@@ -1,22 +1,19 @@
 import { EventEmitter, Event } from "./Emitter";
 
-/** Type definition for the status of the store. */
 const STATUS = {
-  resting: "resting",
   mutation: "mutation",
+  resting: "resting",
   action: "action",
 } as const;
 
-/** Type definition for a mutation function. */
+type Getter = (state: State) => any;
+
 type Mutation = (state: State, payload?: any) => void;
 
-/** Type definition for an action function. */
 type Action = (store: Store, payload?: any) => void;
 
-/** Type definition for the state object. */
 type State = any;
 
-/** Type definition for the options to initialize the store. */
 type StoreOptions = {
   state?: State;
   actions?: {
@@ -37,7 +34,7 @@ type StoreOptions = {
 export class Store extends EventEmitter {
   private _status: string = STATUS.resting;
   private _state: State;
-  private _getters: Map<string, (state: State) => any>;
+  private _getters: Map<string, Getter>;
   private _actions: Map<string, Action>;
   private _mutations: Map<string, Mutation>;
 
@@ -112,11 +109,15 @@ export class Store extends EventEmitter {
    * @param key - The key of the getter to retrieve.
    * @returns The value returned by the getter.
    */
-  get(key: string): any {
-    const getter = this._getters.get(key);
+  get(getterKey: string): any {
+    const getter = this._getters.get(getterKey);
     if (!getter) {
-      throw new Error(`Getter ${key} doesn't exist!`);
+      throw new Error(`Getter ${getterKey} doesn't exist!`);
     }
     return getter(this._state);
   }
 }
+
+export type StoreEvent = Event;
+
+export type StoreAction = Action;

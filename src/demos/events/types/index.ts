@@ -9,9 +9,8 @@ export type StoreAction = {
   payload: any;
 };
 
-export type StoreEvent = {
+export type EventOptions = {
   type: string;
-  data?: any;
   critical?: boolean;
 };
 
@@ -22,8 +21,6 @@ export type CollisionData = {
   normal: Cluster.Vector;
   vector: Cluster.Vector;
   overlap: Cluster.Vector;
-  events?: StoreEvent[];
-  actions?: StoreAction[];
 };
 
 export type CollisionHitbox = {
@@ -36,8 +33,6 @@ export type CollisionHitbox = {
 export type CollisionResolver = {
   type: CollisionResolverType;
   mask: number;
-  events?: StoreEvent[];
-  actions?: StoreAction[];
 };
 
 export type CollisionResolverType =
@@ -57,3 +52,5 @@ export type BoundaryBehaviorType =
   | "stop"
   | "sleep"
   | "none";
+
+export type BoundaryCollisionEdgeType = "top" | "right" | "bottom" | "left";

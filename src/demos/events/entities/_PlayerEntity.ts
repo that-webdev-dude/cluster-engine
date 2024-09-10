@@ -1,5 +1,6 @@
 import * as Cluster from "../../../cluster";
 import * as Components from "../components";
+import * as Events from "../events";
 import { DISPLAY, COLLISION_LAYERS } from "../constants";
 
 export class PlayerEntity extends Cluster.Entity {

@@ -44,13 +44,10 @@ export class GamePlay extends Cluster.Scene {
     this.addSystem(new Systems.RendererSystem());
 
     // listeners
-    store.on("brick_destroyed", (event: Events.EntityDestroyedEvent) => {
-      this.removeEntity(event.data.entity);
-    });
-
-    store.on("screen-collision", (event: Events.ScreenCollisionEvent) => {
-      if (event.data?.collisionEdge === "bottom") {
-        console.log("Game Over");
+    store.on<Events.EntityDestroyedEvent>("entity-destroyed", (event) => {
+      const { entity } = event.data;
+      if (entity.type === "BrickEntity") {
+        this.removeEntity(entity);
       }
     });
   }

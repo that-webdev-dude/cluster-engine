@@ -2,6 +2,7 @@
 export { Game } from "./core/Game";
 export { Store } from "./core/Store";
 export { Assets } from "./core/Assets";
+export { Event } from "./core/Emitter";
 
 // ECS
 export { Component, Entity, System, Scene } from "./core/ECS";
@@ -14,6 +15,3 @@ export { Pool } from "./tools/Pool";
 export { Cmath } from "./tools/Cmath";
 export { Vector } from "./tools/Vector";
 export { Container } from "./tools/Container";
-
-// EVENTS
-export { EventEmitter, Event } from "./core/Emitter";

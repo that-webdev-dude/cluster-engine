@@ -24,11 +24,6 @@ export class BallEntity extends Cluster.Entity {
 
     const boundaryComponent = new Components.BoundaryComponent({
       behavior: "bounce",
-      events: [
-        {
-          type: "screen-collision",
-        } as Events.ScreenCollisionEvent,
-      ],
     });
 
     const zindexComponent = new Components.ZindexComponent({

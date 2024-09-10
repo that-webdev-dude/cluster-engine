@@ -10,9 +10,20 @@ export interface Emitter {
   eventNames(): string[];
 }
 
-export interface Event {
+// export interface Event {
+//   type: string;
+//   data: any;
+//   critical: boolean;
+// }
+
+export class Event {
   type: string;
-  data?: any;
+  data: any;
+
+  constructor(type: string, data: any = null) {
+    this.type = type;
+    this.data = data;
+  }
 }
 
 export class ImmediateEmitter implements Emitter {
@@ -159,7 +170,7 @@ export class QueuedEmitter implements Emitter {
 }
 
 export class EventEmitter implements Emitter {
-  private simpleEmitter: ImmediateEmitter = new ImmediateEmitter();
+  private immediateEmitter: ImmediateEmitter = new ImmediateEmitter();
   private queuedEmitter: QueuedEmitter = new QueuedEmitter();
 
   on<T extends Event>(
@@ -168,7 +179,7 @@ export class EventEmitter implements Emitter {
     critical: boolean = false
   ): void {
     if (critical) {
-      this.simpleEmitter.on(eventType, listener);
+      this.immediateEmitter.on(eventType, listener);
     } else {
       this.queuedEmitter.on(eventType, listener);
     }
@@ -180,7 +191,7 @@ export class EventEmitter implements Emitter {
     critical: boolean = false
   ): void {
     if (critical) {
-      this.simpleEmitter.once(eventType, listener);
+      this.immediateEmitter.once(eventType, listener);
     } else {
       this.queuedEmitter.once(eventType, listener);
     }
@@ -192,7 +203,7 @@ export class EventEmitter implements Emitter {
     critical: boolean = false
   ): void {
     if (critical) {
-      this.simpleEmitter.off(eventType, listener);
+      this.immediateEmitter.off(eventType, listener);
     } else {
       this.queuedEmitter.off(eventType, listener);
     }
@@ -216,7 +227,7 @@ export class EventEmitter implements Emitter {
 
   emit<T extends Event>(event: T, critical: boolean = false): void {
     if (critical) {
-      this.simpleEmitter.emit(event);
+      this.immediateEmitter.emit(event);
     } else {
       this.queuedEmitter.emit(event);
     }
@@ -227,19 +238,19 @@ export class EventEmitter implements Emitter {
   }
 
   clear(): void {
-    this.simpleEmitter.clear();
+    this.immediateEmitter.clear();
     this.queuedEmitter.clear();
   }
 
   removeAllListeners(eventType?: string): void {
-    this.simpleEmitter.removeAllListeners(eventType);
+    this.immediateEmitter.removeAllListeners(eventType);
     this.queuedEmitter.removeAllListeners(eventType);
   }
 
   eventNames(): string[] {
     return Array.from(
       new Set([
-        ...this.simpleEmitter.eventNames(),
+        ...this.immediateEmitter.eventNames(),
         ...this.queuedEmitter.eventNames(),
       ])
     );

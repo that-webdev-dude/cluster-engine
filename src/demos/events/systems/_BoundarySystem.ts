@@ -1,6 +1,7 @@
 import * as Cluster from "../../../cluster";
 import * as Components from "../components";
 import * as Events from "../events";
+import * as Types from "../types";
 import { store } from "../store";
 
 /** Boundary system
@@ -25,7 +26,7 @@ export class BoundarySystem extends Cluster.System {
     position: Cluster.Vector,
     width: number,
     height: number
-  ): string | undefined {
+  ): Types.BoundaryCollisionEdgeType | undefined {
     let maxX = this._screenWidth - width;
     let maxY = this._screenHeight - height;
 
@@ -120,7 +121,7 @@ export class BoundarySystem extends Cluster.System {
         }
 
         const { position } = transformComponent;
-        const { behavior, events } = boundaryComponent;
+        const { behavior } = boundaryComponent;
 
         // test screen collision and emit events
         const collisionEdge = this._testScreenCollision(
@@ -129,9 +130,9 @@ export class BoundarySystem extends Cluster.System {
           height
         );
         if (collisionEdge) {
-          events?.forEach((event) => {
-            event.data = { entity, collisionEdge };
-            store.emit(event);
+          store.emit<Events.BoundaryCollisionEvent>({
+            type: "boundary-collision",
+            data: { entity, collisionEdge },
           });
         }
 
@@ -170,7 +171,8 @@ export class BoundarySystem extends Cluster.System {
             ) {
               entity.dead = true;
 
-              store.emit({
+              // emit entity destroyed event
+              store.emit<Events.EntityDestroyedEvent>({
                 type: "entity-destroyed",
                 data: { entity },
               });
@@ -180,16 +182,16 @@ export class BoundarySystem extends Cluster.System {
             break;
         }
       } catch (error) {
-        store.emit(
-          {
-            type: "system-error",
-            data: {
-              origin: "BoundarySystem",
-              error,
-            },
-          },
-          true
-        );
+        // store.emit(
+        //   {
+        //     type: "system-error",
+        //     data: {
+        //       origin: "BoundarySystem",
+        //       error,
+        //     },
+        //   },
+        //   true
+        // );
       }
     }
 

@@ -1,9 +1,9 @@
 import * as Cluster from "../../../cluster";
+import * as Events from "../events";
 import * as Types from "../types";
 
 interface BoundaryOptions {
   behavior: Types.BoundaryBehaviorType;
-  events?: Types.StoreEvent[];
 }
 
 /** Boundary component
@@ -14,12 +14,10 @@ interface BoundaryOptions {
  */
 class BoundaryComponent extends Cluster.Component {
   behavior: Types.BoundaryBehaviorType;
-  events?: Types.StoreEvent[];
 
-  constructor({ behavior, events }: BoundaryOptions) {
+  constructor({ behavior }: BoundaryOptions) {
     super("Boundary");
     this.behavior = behavior;
-    this.events = events || [];
   }
 }
 

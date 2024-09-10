@@ -1,5 +1,6 @@
 import * as Cluster from "../../../cluster";
 import * as Components from "../components";
+import * as Events from "../events";
 import { DISPLAY, COLLISION_LAYERS } from "../constants";
 
 export class BrickEntity extends Cluster.Entity {
@@ -33,14 +34,6 @@ export class BrickEntity extends Cluster.Entity {
         {
           type: "die",
           mask: COLLISION_LAYERS.ball,
-          events: [
-            {
-              type: "brick_destroyed",
-              data: {
-                entity: this,
-              },
-            },
-          ],
         },
       ],
     });

@@ -155,16 +155,16 @@ export class RendererSystem extends Cluster.System {
         this._renderEntity(context, entity);
       } catch (error) {
         context.restore();
-        store.emit<Events.SystemErrorEvent>(
-          {
-            type: "system-error",
-            data: {
-              origin: this.constructor.name,
-              error,
-            },
-          },
-          true
-        );
+        // store.emit<Events.SystemErrorEvent>(
+        //   {
+        //     type: "system-error",
+        //     data: {
+        //       origin: this.constructor.name,
+        //       error,
+        //     },
+        //   },
+        //   true
+        // );
       } finally {
         context.restore();
       }

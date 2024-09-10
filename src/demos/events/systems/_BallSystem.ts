@@ -10,6 +10,19 @@ import { store } from "../store";
 export class BallSystem extends Cluster.System {
   constructor() {
     super(["Ball"]);
+
+    store.on<Events.BoundaryCollisionEvent>(
+      "boundary-collision",
+      this._handleBoundaryCollision.bind(this)
+    );
+  }
+
+  private _handleBoundaryCollision(event: Events.BoundaryCollisionEvent): void {
+    const { entity, collisionEdge } = event.data;
+
+    if (entity.has("Ball") && collisionEdge === "bottom") {
+      console.log("BallSystem: Ball hit bottom boundary");
+    }
   }
 
   update(entities: Set<Cluster.Entity>, dt: number) {
@@ -35,16 +48,7 @@ export class BallSystem extends Cluster.System {
           position.y += velocity.y * dt * speed;
         }
       } catch (error) {
-        store.emit<Events.SystemErrorEvent>(
-          {
-            type: "system-error",
-            data: {
-              origin: "BallSystem",
-              error,
-            },
-          },
-          true
-        );
+        // ...
       }
     }
   }

@@ -12,8 +12,8 @@ export interface CollisionOptions {
 /** Collision component
  * the collision component is used to store the collision data of an entity
  * @tag Collision
- * @options layer, mask, hitbox, resolvers
- * @properties data, mask, layer, hitbox, resolvers
+ * @options layer, mask, hitbox, resolvers, detectable
+ * @properties data, mask, layer, hitbox, resolvers, detectable
  */
 export class CollisionComponent extends Cluster.Component {
   readonly data: Map<Types.CollisionResolverType, Types.CollisionData[]>;
