@@ -16,7 +16,7 @@ body {
   width: 100vw;
   height: 100vh;
   padding: 1rem;
-  background-color: black;
+  background-color: white;
 }
 
 #app {
@@ -28,7 +28,7 @@ body {
 
   #display,
   canvas {
-    border: solid 1px rgba(190, 190, 190, 0.25);
+    border: solid 2px rgba(190, 190, 190, 0.25);
     margin: 0.5rem;
   }
 }

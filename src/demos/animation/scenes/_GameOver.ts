@@ -7,23 +7,15 @@ import { store } from "../store";
 export class GameOver extends Cluster.Scene {
   constructor() {
     super();
+
     // entities
-    this.addEntity(new Entities.RedBackgroundEntity());
-    this.addEntity(new Entities.GameOverTextEntity());
-    this.addEntity(new Entities.ActionTextEntity());
 
     // systems
-    this.addSystem(new Systems.RendererSystem());
+
+    // listeners
   }
 
   update(dt: number, t: number) {
-    if (Cluster.Keyboard.key("Enter")) {
-      if (Cluster.Keyboard.active) {
-        Cluster.Keyboard.active = false;
-        store.emit<Events.GameTitleEvent>({ type: "game-title" });
-      }
-    }
-
     super.update(dt, t);
     store.processEvents();
   }
