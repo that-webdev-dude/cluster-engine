@@ -49,16 +49,30 @@
 
 import * as Cluster from "./cluster";
 import * as Scenes from "./demos/events/scenes";
+import * as Events from "./demos/events/events";
+import { store } from "./demos/events/store";
 
 const width = 800;
 const height = 600;
-export default () => {
-  const game = new Cluster.Game({
-    height,
-    width,
-  });
+const game = new Cluster.Game({
+  height,
+  width,
+});
 
+store.on<Events.GamePlayEvent>("game-play", () => {
   game.setScene(new Scenes.GamePlay());
+});
+
+store.on<Events.GameOverEvent>("game-over", () => {
+  game.setScene(new Scenes.GameOver());
+});
+
+store.on<Events.GameTitleEvent>("game-title", () => {
+  game.setScene(new Scenes.GameTitle());
+});
+
+export default () => {
+  game.setScene(new Scenes.GameTitle());
   game.start();
 };
 

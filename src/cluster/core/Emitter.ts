@@ -10,21 +10,20 @@ export interface Emitter {
   eventNames(): string[];
 }
 
-// export interface Event {
+export interface Event {
+  type: string;
+  data?: any;
+}
+
+// export class Event {
 //   type: string;
 //   data: any;
-//   critical: boolean;
+
+//   constructor(type: string, data: any = null) {
+//     this.type = type;
+//     this.data = data;
+//   }
 // }
-
-export class Event {
-  type: string;
-  data: any;
-
-  constructor(type: string, data: any = null) {
-    this.type = type;
-    this.data = data;
-  }
-}
 
 export class ImmediateEmitter implements Emitter {
   private listeners: Map<string, EventListener<Event>[]> = new Map();

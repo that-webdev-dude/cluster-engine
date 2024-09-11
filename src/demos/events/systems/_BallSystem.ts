@@ -22,6 +22,7 @@ export class BallSystem extends Cluster.System {
 
     if (entity.has("Ball") && collisionEdge === "bottom") {
       console.log("BallSystem: Ball hit bottom boundary");
+      store.emit<Events.GameOverEvent>({ type: "game-over" });
     }
   }
 
