@@ -83,7 +83,7 @@ export class RendererSystem extends Cluster.System {
     // sprite support
     const sprite = entity.get<Components.SpriteComponent>("Sprite");
     if (sprite) {
-      const { x, y } = sprite.indexToCoords;
+      const { x, y } = sprite.indexToCoords(sprite.frame);
       context.drawImage(
         sprite.image,
         x,

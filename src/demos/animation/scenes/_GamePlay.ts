@@ -12,6 +12,7 @@ export class GamePlay extends Cluster.Scene {
     const zombieEntity = new Entities.ZombieEntity();
 
     // systems
+    const animationSystem = new Systems.AnimationSystem();
     const rendererSystem = new Systems.RendererSystem();
 
     // listeners
@@ -19,6 +20,7 @@ export class GamePlay extends Cluster.Scene {
     // init
     this.addEntity(zombieEntity);
 
+    this.addSystem(animationSystem);
     this.addSystem(rendererSystem);
   }
 

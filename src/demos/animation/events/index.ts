@@ -1,5 +1,15 @@
 import * as Cluster from "../../../cluster";
 
+// animation events
+export interface AnimationChangeEvent extends Cluster.Event {
+  type: "animation-change";
+  data: {
+    entity: Cluster.Entity;
+    animationName: string;
+  };
+}
+
+// boundary events
 export interface BoundaryCollisionEvent extends Cluster.Event {
   type: "boundary-collision";
   data: {
@@ -8,6 +18,7 @@ export interface BoundaryCollisionEvent extends Cluster.Event {
   };
 }
 
+// entity events
 export interface EntityDestroyedEvent extends Cluster.Event {
   type: "entity-destroyed";
   data: {
@@ -15,6 +26,7 @@ export interface EntityDestroyedEvent extends Cluster.Event {
   };
 }
 
+// game events
 export interface GamePlayEvent extends Cluster.Event {
   type: "game-play";
 }

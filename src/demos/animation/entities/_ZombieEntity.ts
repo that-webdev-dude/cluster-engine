@@ -20,6 +20,27 @@ export class ZombieEntity extends Cluster.Entity {
       frame: 0,
       width: 32,
       height: 32,
+      animations: [
+        {
+          name: "idle",
+          frames: [
+            { x: 2, y: 1 },
+            { x: 1, y: 1 },
+          ],
+          rate: 0.25,
+        },
+        {
+          name: "walk",
+          frames: [
+            { x: 0, y: 0 },
+            { x: 1, y: 0 },
+            { x: 2, y: 0 },
+            { x: 0, y: 1 },
+            { x: 1, y: 1 },
+          ],
+          rate: 0.075,
+        },
+      ],
     });
 
     this.add(zindexComponent);

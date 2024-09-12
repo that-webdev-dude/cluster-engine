@@ -15,3 +15,4 @@ export { Pool } from "./tools/Pool";
 export { Cmath } from "./tools/Cmath";
 export { Vector } from "./tools/Vector";
 export { Container } from "./tools/Container";
+export { AnimationItem } from "./tools/Animation";
