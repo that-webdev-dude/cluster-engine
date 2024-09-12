@@ -1,3 +1,3 @@
-import { Keyboard } from "./Keyboard";
+import { keyboardInstance as Keyboard } from "./Keyboard";
 
 export { Keyboard };

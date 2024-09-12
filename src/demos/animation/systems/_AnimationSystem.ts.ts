@@ -7,19 +7,6 @@ import { store } from "../store";
 export class AnimationSystem extends Cluster.System {
   constructor() {
     super(["Sprite"]);
-
-    store.on<Events.AnimationChangeEvent>(
-      "animation-change",
-      this._handleAnimationChange.bind(this)
-    );
-  }
-
-  private _handleAnimationChange(event: Events.AnimationChangeEvent) {
-    console.log("AnimationChangeEvent", event);
-    const { entity, animationName } = event.data;
-    const spriteComponent = entity.get<Components.SpriteComponent>("Sprite")!;
-    spriteComponent.currentAnimationName = animationName;
-    spriteComponent.animations.get(animationName)?.reset();
   }
 
   update(entities: Set<Cluster.Entity>, dt: number, t: number) {

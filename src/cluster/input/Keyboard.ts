@@ -1,60 +1,70 @@
-type KeyMap = {
-  [key: string]: boolean;
-};
-
-export class Keyboard {
-  private static _keys: KeyMap = {};
-  private static _preventDefaultKeys: Set<string> = new Set([
-    // ...
+class Keyboard {
+  private _keys: Map<string, boolean> = new Map();
+  private _preventDefaultKeys: Set<string> = new Set([
+    // Add specific keys here
   ]);
-  public static active: boolean = true;
+  private static _instance: Keyboard;
 
-  static {
-    document.addEventListener("keydown", Keyboard._handleKeyDown);
-    document.addEventListener("keyup", Keyboard._handleKeyUp);
+  public active: boolean = true;
+
+  private constructor() {
+    document.addEventListener("keydown", this._handleKeyDown.bind(this));
+    document.addEventListener("keyup", this._handleKeyUp.bind(this));
   }
 
-  private static _handleKeyDown(e: KeyboardEvent): void {
-    if (Keyboard._preventDefaultKeys.has(e.code)) {
+  private _handleKeyDown(e: KeyboardEvent): void {
+    if (this._preventDefaultKeys.has(e.code)) {
       e.preventDefault();
     }
-    Keyboard._keys[e.code] = true;
+    this._keys.set(e.code, true);
   }
 
-  private static _handleKeyUp(e: KeyboardEvent): void {
-    if (!Keyboard.active) Keyboard.active = true;
-    if (Keyboard._preventDefaultKeys.has(e.code)) {
+  private _handleKeyUp(e: KeyboardEvent): void {
+    if (!this.active) this.active = true;
+    if (this._preventDefaultKeys.has(e.code)) {
       e.preventDefault();
     }
-    Keyboard._keys[e.code] = false;
+    this._keys.set(e.code, false);
   }
 
-  public static key(key: string, value?: boolean): boolean {
-    if (!Keyboard.active) return false;
+  public static getInstance(): Keyboard {
+    if (!Keyboard._instance) {
+      Keyboard._instance = new Keyboard();
+    }
+    return Keyboard._instance;
+  }
+
+  public key(key: string, value?: boolean): boolean {
+    if (!this.active) return false;
     if (value !== undefined) {
-      Keyboard._keys[key] = value;
+      this._keys.set(key, value);
     }
 
-    return Keyboard._keys[key] || false;
+    return this._keys.get(key) || false;
   }
 
-  public static x(): number {
+  public x(): number {
     return (
-      (Number(Keyboard.key("ArrowRight")) || Number(Keyboard.key("KeyD"))) -
-      (Number(Keyboard.key("ArrowLeft")) || Number(Keyboard.key("KeyA")))
+      (Number(this.key("ArrowRight")) || Number(this.key("KeyD"))) -
+      (Number(this.key("ArrowLeft")) || Number(this.key("KeyA")))
     );
   }
 
-  public static y(): number {
+  public y(): number {
     return (
-      (Number(Keyboard.key("ArrowDown")) || Number(Keyboard.key("KeyS"))) -
-      (Number(Keyboard.key("ArrowUp")) || Number(Keyboard.key("KeyW")))
+      (Number(this.key("ArrowDown")) || Number(this.key("KeyS"))) -
+      (Number(this.key("ArrowUp")) || Number(this.key("KeyW")))
     );
   }
 
-  public static reset(): void {
-    Keyboard._keys = {};
+  public reset(): void {
+    this._keys.clear();
+  }
+
+  public destroy(): void {
+    document.removeEventListener("keydown", this._handleKeyDown.bind(this));
+    document.removeEventListener("keyup", this._handleKeyUp.bind(this));
   }
 }
 
-export default Keyboard;
+export const keyboardInstance = Keyboard.getInstance();

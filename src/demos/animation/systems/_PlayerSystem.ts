@@ -9,7 +9,7 @@ import { store } from "../store";
  */
 export class PlayerSystem extends Cluster.System {
   constructor() {
-    super(["Player"]);
+    super(["Player", "Transform", "Sprite"]);
   }
 
   update(entities: Set<Cluster.Entity>, dt: number) {
@@ -20,17 +20,22 @@ export class PlayerSystem extends Cluster.System {
 
       try {
         const playerComponent =
-          entity.get<Components.PlayerComponent>("Player");
+          entity.get<Components.PlayerComponent>("Player")!;
 
-        if (!playerComponent) continue;
+        const transformComponent =
+          entity.get<Components.TransformComponent>("Transform")!;
 
-        const { speed } = playerComponent;
+        const spriteComponent =
+          entity.get<Components.SpriteComponent>("Sprite")!;
 
-        const position =
-          entity.get<Components.TransformComponent>("Transform")?.position;
-
-        if (position) {
-          position.x += Cluster.Keyboard.x() * speed * dt;
+        if (Cluster.Keyboard.x() !== 0) {
+          const { speed } = playerComponent;
+          transformComponent.position.x += Cluster.Keyboard.x() * speed * dt;
+          transformComponent.anchor.x = -Cluster.Keyboard.x() * 16;
+          transformComponent.scale.x = Cluster.Keyboard.x();
+          spriteComponent.currentAnimationName = "walk";
+        } else {
+          spriteComponent.currentAnimationName = "idle";
         }
       } catch (error) {
         // store.emit<Events.SystemErrorEvent>(
