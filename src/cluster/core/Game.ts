@@ -1,6 +1,7 @@
 import { Display } from "./Display";
 import { Engine } from "./Engine";
 import { Assets } from "./Assets";
+import { Mouse } from "../input";
 import { Scene } from "./ECS";
 
 // just give the Game a scene to update
@@ -30,6 +31,9 @@ export class Game {
       width,
       height,
     });
+
+    // set the mouse input element to the display canvas
+    Mouse.element = this._display.view;
   }
 
   public setScene(scene: Scene): void {
@@ -40,6 +44,7 @@ export class Game {
     this._engine.update = (dt: number, t: number) => {
       if (!this._scene) return;
       this._scene.update(dt, t);
+      Mouse.update();
       updateCb(dt, t);
     };
 

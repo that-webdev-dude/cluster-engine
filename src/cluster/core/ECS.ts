@@ -89,7 +89,7 @@ export class Entity {
   }
 
   get<T extends Component>(name: string): T | undefined {
-    return this.components.get(name) as T | undefined;
+    return this.components.get(name) as T;
   }
 
   has(name: string) {

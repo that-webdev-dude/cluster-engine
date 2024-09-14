@@ -1,3 +1,4 @@
 import { keyboardInstance as Keyboard } from "./Keyboard";
+import { mouseInstance as Mouse } from "./Mouse";
 
-export { Keyboard };
+export { Keyboard, Mouse };

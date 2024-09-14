@@ -9,19 +9,23 @@ export class GamePlay extends Cluster.Scene {
     super();
 
     // entities
-    const zombieEntity = new Entities.PlayerEntity();
+    const playerEntity = new Entities.PlayerEntity();
+    const shotgunEntity = new Entities.ShotgunEntity(playerEntity);
 
     // systems
     const playerSystem = new Systems.PlayerSystem();
+    const shotgunSystem = new Systems.ShotgunSystem();
     const animationSystem = new Systems.AnimationSystem();
     const rendererSystem = new Systems.RendererSystem();
 
     // listeners
 
     // init
-    this.addEntity(zombieEntity);
+    this.addEntity(playerEntity);
+    this.addEntity(shotgunEntity);
 
     this.addSystem(playerSystem);
+    this.addSystem(shotgunSystem);
     this.addSystem(animationSystem);
     this.addSystem(rendererSystem);
   }

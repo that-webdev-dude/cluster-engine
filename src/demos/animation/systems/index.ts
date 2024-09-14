@@ -1,15 +1,7 @@
-import { AnimationSystem } from "./_AnimationSystem.ts";
-import { BoundarySystem } from "./_BoundarySystem";
-import { CollisionSystem } from "./_CollisionSystem";
-import { RendererSystem } from "./_RenderSystem";
-import { PlayerSystem } from "./_PlayerSystem";
-import { BallSystem } from "./_BallSystem";
-
-export {
-  AnimationSystem,
-  BoundarySystem,
-  CollisionSystem,
-  RendererSystem,
-  PlayerSystem,
-  BallSystem,
-};
+export { ShotgunSystem } from "./_ShotgunSystem";
+export { AnimationSystem } from "./_AnimationSystem";
+export { BoundarySystem } from "./_BoundarySystem";
+export { CollisionSystem } from "./_CollisionSystem";
+export { RendererSystem } from "./_RenderSystem";
+export { PlayerSystem } from "./_PlayerSystem";
+export { BallSystem } from "./_BallSystem";

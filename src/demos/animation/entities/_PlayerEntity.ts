@@ -3,6 +3,13 @@ import * as Components from "../components";
 import * as Constants from "../constants";
 import * as Images from "../images";
 
+// are made available to other entities with a tracker
+export const playerAnchor = new Cluster.Vector(-16, 0);
+export const playerPosition = new Cluster.Vector(
+  Constants.DISPLAY.width / 2 + 16,
+  Constants.DISPLAY.height - 64
+);
+
 export class PlayerEntity extends Cluster.Entity {
   constructor() {
     super();
@@ -16,11 +23,8 @@ export class PlayerEntity extends Cluster.Entity {
     });
 
     const transformComponent = new Components.TransformComponent({
-      anchor: new Cluster.Vector(-16, 0),
-      position: new Cluster.Vector(
-        Constants.DISPLAY.width / 2 + 16,
-        Constants.DISPLAY.height - 64
-      ),
+      anchor: playerAnchor,
+      position: playerPosition,
     });
 
     const spriteComponent = new Components.SpriteComponent({

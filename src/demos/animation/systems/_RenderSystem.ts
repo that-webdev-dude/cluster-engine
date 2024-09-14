@@ -119,12 +119,12 @@ export class RendererSystem extends Cluster.System {
     }
 
     //debug
-    const collision = entity.get<Components.CollisionComponent>("Collision");
-    if (collision) {
-      const hitbox = collision.hitbox;
-      context.strokeStyle = "yellow";
-      context.strokeRect(0, 0, hitbox.width, hitbox.height);
-    }
+    // const collision = entity.get<Components.CollisionComponent>("Collision");
+    // if (collision) {
+    //   const hitbox = collision.hitbox;
+    //   context.strokeStyle = "yellow";
+    //   context.strokeRect(0, 0, hitbox.width, hitbox.height);
+    // }
   }
 
   update(entities: Set<Cluster.Entity>) {

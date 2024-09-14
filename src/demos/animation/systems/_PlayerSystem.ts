@@ -31,23 +31,17 @@ export class PlayerSystem extends Cluster.System {
         if (Cluster.Keyboard.x() !== 0) {
           const { speed } = playerComponent;
           transformComponent.position.x += Cluster.Keyboard.x() * speed * dt;
-          transformComponent.anchor.x = -Cluster.Keyboard.x() * 16;
-          transformComponent.scale.x = Cluster.Keyboard.x();
           spriteComponent.currentAnimationName = "walk";
         } else {
           spriteComponent.currentAnimationName = "idle";
         }
+
+        let relativeMousePositionX =
+          Cluster.Mouse.position.x > transformComponent.position.x ? 1 : -1;
+        transformComponent.scale.x = relativeMousePositionX;
+        transformComponent.anchor.x = -relativeMousePositionX * 16;
       } catch (error) {
-        // store.emit<Events.SystemErrorEvent>(
-        //   {
-        //     type: "system-error",
-        //     data: {
-        //       origin: "PlayerSystem",
-        //       error,
-        //     },
-        //   },
-        //   true
-        // );
+        // do something with the error
       }
     }
   }

@@ -8,7 +8,7 @@ export { Event } from "./core/Emitter";
 export { Component, Entity, System, Scene } from "./core/ECS";
 
 // INPUT
-export { Keyboard } from "./input";
+export { Keyboard, Mouse } from "./input";
 
 // TOOLS
 export { Pool } from "./tools/Pool";
