@@ -1,9 +1,20 @@
-import './style.css';
+import "./style.css";
 
-const app = document.querySelector<HTMLDivElement>('#app');
+// public api design for cluster-engine
 
+// components
+
+// entities
+
+// systems
+
+// scenes
+// → entities
+// → systems
+
+const app = document.querySelector<HTMLDivElement>("#app");
 if (app) {
-  app.innerHTML = `
+    app.innerHTML = `
     <main class="app">
       <h1>cluster-engine</h1>
       <p>Vite + TypeScript starter with hot reload.</p>
