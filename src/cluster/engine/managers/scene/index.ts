@@ -11,14 +11,14 @@ export type {
     SceneManagerSnapshot,
     SceneManagerView,
     SceneSnapshot,
+    SceneCommands,
+    SceneRequestCommands,
 } from "./service/SceneManager.types";
 export type {
     Scene,
-    SceneCommands,
     SceneCtx,
     SceneDefinitionId,
     SceneInstanceId,
     SceneMountCallback,
     ScenePolicy,
-    SceneRequestCommands,
 } from "./Scene.types";

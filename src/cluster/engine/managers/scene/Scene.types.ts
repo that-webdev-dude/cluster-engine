@@ -13,20 +13,6 @@ export type SceneCtx<P, C, R> = {
     add(...systems: readonly System<P, C, R>[]): void;
 };
 
-export type SceneRequestCommands<P, C, R> = {
-    // Queues replacement of the active stack and applies it on the next flush.
-    set(scene: Scene<P, C, R>): void;
-    // Queues activation on the next flush. Duplicate active instance ids are ignored
-    // unless debug mode throws. Distinct scene instances can coexist.
-    push(scene: Scene<P, C, R>): void;
-    // Queues removal of the top active scene and applies it on the next flush.
-    pop(): void;
-};
-
-export type SceneCommands<P, C, R> = {
-    readonly request: SceneRequestCommands<P, C, R>;
-};
-
 export type SceneMountCallback<P, C, R> = (
     ctx: SceneCtx<P, C, R>,
 ) => void | (() => void);

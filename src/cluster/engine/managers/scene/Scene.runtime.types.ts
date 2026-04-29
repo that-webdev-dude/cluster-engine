@@ -3,9 +3,9 @@ import type {
     SceneDefinitionId,
     SceneInstanceId,
     ScenePolicy,
-} from "../Scene.types";
+} from "./Scene.types";
 
-export type ActiveScene<P, C, R> = Readonly<{
+export type MountedScene<P, C, R> = Readonly<{
     scene: Scene<P, C, R>;
     definitionId: SceneDefinitionId;
     instanceId: SceneInstanceId;

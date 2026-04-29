@@ -31,11 +31,6 @@ export function createScheduler<P, C, R>(
     const systemsByOwnerId: Map<SystemOwnerId, SystemMetadata<P, C, R>[]> =
         new Map();
 
-    function handleDispose() {
-        systemsByOwnerId.clear();
-        registrationSequence = 0;
-    }
-
     function register(registration: SchedulerRegistration<P, C, R>) {
         const { ownerId, system } = registration;
 

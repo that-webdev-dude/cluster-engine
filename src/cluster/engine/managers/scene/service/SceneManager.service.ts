@@ -1,12 +1,13 @@
-import type { Scene, SceneRequestCommands } from "../Scene.types";
+import type { Scene } from "../Scene.types";
 import type {
     SceneExecWindow,
     SceneExecutionPlan,
     SceneManagerConfig,
     SceneManagerService,
     SceneManagerSnapshot,
+    SceneRequestCommands,
 } from "./SceneManager.types";
-import type { ActiveScene } from "../modules/SceneRuntime.types";
+import type { MountedScene } from "../Scene.runtime.types";
 import {
     createLifecycle,
     type LifecycleLivePhase,
@@ -96,7 +97,7 @@ function createSceneManagerService<P, C, R>(
         );
     }
 
-    function deactivateScene(active?: ActiveScene<P, C, R>) {
+    function deactivateScene(active?: MountedScene<P, C, R>) {
         if (!active) return;
         sceneLifecycle.unmount(active);
     }

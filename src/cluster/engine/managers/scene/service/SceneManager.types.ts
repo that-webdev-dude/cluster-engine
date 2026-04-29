@@ -1,4 +1,4 @@
-import type { SceneCommands, SceneInstanceId } from "../Scene.types";
+import type { Scene, SceneInstanceId } from "../Scene.types";
 
 export type SceneExecPass = "input" | "fixedUpdate" | "preRender";
 
@@ -34,6 +34,20 @@ export type SceneManagerView = Readonly<{
     fixedUpdate: SceneExecWindow;
     preRender: SceneExecWindow;
 }>;
+
+export type SceneRequestCommands<P, C, R> = {
+    // Queues replacement of the active stack and applies it on the next flush.
+    set(scene: Scene<P, C, R>): void;
+    // Queues activation on the next flush. Duplicate active instance ids are ignored
+    // unless debug mode throws. Distinct scene instances can coexist.
+    push(scene: Scene<P, C, R>): void;
+    // Queues removal of the top active scene and applies it on the next flush.
+    pop(): void;
+};
+
+export type SceneCommands<P, C, R> = {
+    readonly request: SceneRequestCommands<P, C, R>;
+};
 
 export type SceneManagerConfig = Readonly<{
     debug?: boolean;
