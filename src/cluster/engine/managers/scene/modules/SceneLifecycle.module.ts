@@ -1,11 +1,11 @@
 import type { Scheduler } from "./Scheduler.module";
 import type { System } from "../../../types/system";
 import type {
-    ActiveScene,
     Scene,
     SceneCtx,
     SceneInstanceId,
 } from "../Scene.types";
+import type { ActiveScene } from "./SceneRuntime.types";
 import { resolveSceneInstanceId } from "../tools";
 
 export type SceneLifecycleModule<P, C, R> = Readonly<{

@@ -1,4 +1,4 @@
-import type { ActiveScene, Scene, SceneRequestCommands } from "../Scene.types";
+import type { Scene, SceneRequestCommands } from "../Scene.types";
 import type {
     SceneExecWindow,
     SceneExecutionPlan,
@@ -6,6 +6,7 @@ import type {
     SceneManagerService,
     SceneManagerSnapshot,
 } from "./SceneManager.types";
+import type { ActiveScene } from "../modules/SceneRuntime.types";
 import {
     createLifecycle,
     type LifecycleLivePhase,
@@ -32,8 +33,8 @@ function createEmptyPlan(): SceneExecutionPlan {
     return {
         stack: { instanceIds: [] },
         input: EMPTY_INPUT_WINDOW,
-        update: EMPTY_STACK_WINDOW,
-        render: EMPTY_STACK_WINDOW,
+        fixedUpdate: EMPTY_STACK_WINDOW,
+        preRender: EMPTY_STACK_WINDOW,
     };
 }
 
@@ -59,8 +60,8 @@ function samePlan(
     return (
         sameIds(left.stack.instanceIds, right.stack.instanceIds) &&
         sameWindow(left.input, right.input) &&
-        sameWindow(left.update, right.update) &&
-        sameWindow(left.render, right.render)
+        sameWindow(left.fixedUpdate, right.fixedUpdate) &&
+        sameWindow(left.preRender, right.preRender)
     );
 }
 
@@ -71,7 +72,7 @@ function createSceneManagerService<P, C, R>(
     const snapshot: SceneManagerSnapshot = {
         rev: 0,
         changed: false,
-        ...createEmptyPlan(),
+        plan: createEmptyPlan(),
     };
 
     const commandQueue = createSceneCommandQueueModule<P, C, R>();
@@ -81,20 +82,18 @@ function createSceneManagerService<P, C, R>(
     const sceneLifecycle = createSceneLifecycleModule<P, C, R>({ scheduler });
 
     function publish(plan: SceneExecutionPlan) {
-        const changed = !samePlan(snapshot, plan);
+        const changed = !samePlan(snapshot.plan, plan);
         snapshot.changed = changed;
         if (!changed) return;
 
         snapshot.rev += 1;
-        snapshot.stack = plan.stack;
-        snapshot.input = plan.input;
-        snapshot.update = plan.update;
-        snapshot.render = plan.render;
+        snapshot.plan = plan;
     }
 
     function activateScene(scene: Scene<P, C, R>) {
-        if (sceneStack.has(resolveSceneInstanceId(scene))) return;
-        sceneStack.push(sceneLifecycle.mount(scene));
+        sceneStack.push(resolveSceneInstanceId(scene), () =>
+            sceneLifecycle.mount(scene),
+        );
     }
 
     function deactivateScene(active?: ActiveScene<P, C, R>) {
@@ -146,24 +145,6 @@ function createSceneManagerService<P, C, R>(
 
         publish(executionPlanner.plan(sceneStack.activeScenes()));
     }
-
-    // function execute(ctx: C, phase: P, run: R) {
-    //     lifecycle.assertNotDisposed();
-    //     if (!lifecycle.isRunning()) return;
-
-    //     scheduler.execute({
-    //         phase,
-    //         ctx,
-    //         run,
-    //         scopeIds: snapshot.update.instanceIds,
-    //     });
-    // }
-
-    function executeInput() {}
-
-    function executeFixedUpdate() {}
-
-    function executePreRender() {}
 
     const request: SceneRequestCommands<P, C, R> = Object.freeze({
         set: commandQueue.set,

@@ -1,4 +1,4 @@
-import type { ActiveScene } from "../Scene.types";
+import type { ActiveScene } from "./SceneRuntime.types";
 import type {
     SceneExecOrder,
     SceneExecPass,
@@ -28,46 +28,47 @@ export function createExecutionPlanner<P, C, R>(): ExecutionPlanner<P, C, R> {
         return { instanceIds: active.map((a) => a.instanceId) };
     };
 
+    const getInputWindow = (active: readonly ActiveScene<P, C, R>[]) => {
+        const order: SceneExecOrder = "topToBottom";
+        const start = findCutoffIndex(
+            active,
+            (a) => (a.policy?.capturesInput ?? false) === true,
+        );
+        return {
+            order,
+            instanceIds: active.slice(start).map((a) => a.instanceId),
+        };
+    };
+
+    const getUpdateWindow = (active: readonly ActiveScene<P, C, R>[]) => {
+        const order: SceneExecOrder = "bottomToTop";
+        const start = findCutoffIndex(
+            active,
+            (a) => (a.policy?.blocksUpdateBelow ?? false) === true,
+        );
+        return {
+            order,
+            instanceIds: active.slice(start).map((a) => a.instanceId),
+        };
+    };
+
     const getWindow = (
         pass: SceneExecPass,
         active: readonly ActiveScene<P, C, R>[],
     ): SceneExecWindow => {
         switch (pass) {
             case "input": {
-                const order: SceneExecOrder = "topToBottom";
-                const start = findCutoffIndex(
-                    active,
-                    (a) => (a.policy?.capturesInput ?? false) === true,
-                );
-                return {
-                    order,
-                    instanceIds: active.slice(start).map((a) => a.instanceId),
-                };
+                return getInputWindow(active);
             }
-            case "update": {
+            case "fixedUpdate": {
                 // Update window: scan top -> bottom for the first blocksUpdateBelow cutoff,
                 // but express the resulting window instanceIds in stack order (bottom -> top).
-                // Execution traversal for update-pass phases is bottom -> top (e07/e06).
-                const order: SceneExecOrder = "bottomToTop";
-                const start = findCutoffIndex(
-                    active,
-                    (a) => (a.policy?.blocksUpdateBelow ?? false) === true,
-                );
-                return {
-                    order,
-                    instanceIds: active.slice(start).map((a) => a.instanceId),
-                };
+                // Execution traversal for update-pass phases is bottom -> top.
+                return getUpdateWindow(active);
             }
-            case "render": {
-                const order: SceneExecOrder = "bottomToTop";
-
-                // Render window: include only renderable scenes (default true),
-                // expressed in stack order (bottom -> top).
-                const instanceIds = active // bottom -> top
-                    .filter((a) => (a.policy?.render ?? true) === true)
-                    .map((a) => a.instanceId);
-
-                return { order, instanceIds };
+            case "preRender": {
+                // Pre-render uses the same scene activity window as fixed update.
+                return getUpdateWindow(active);
             }
         }
 
@@ -79,8 +80,8 @@ export function createExecutionPlanner<P, C, R>(): ExecutionPlanner<P, C, R> {
         return {
             stack: getSnapshot(active),
             input: getWindow("input", active),
-            update: getWindow("update", active),
-            render: getWindow("render", active),
+            fixedUpdate: getWindow("fixedUpdate", active),
+            preRender: getWindow("preRender", active),
         };
     }
 

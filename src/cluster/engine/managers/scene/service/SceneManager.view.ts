@@ -4,7 +4,7 @@ import type {
 } from "./SceneManager.types";
 
 export function createSceneManagerView(
-    getSnapshot: () => SceneManagerSnapshot
+    getSnapshot: () => SceneManagerSnapshot,
 ): SceneManagerView {
     return Object.freeze({
         get rev() {
@@ -14,16 +14,16 @@ export function createSceneManagerView(
             return getSnapshot().changed;
         },
         get stack() {
-            return getSnapshot().stack;
+            return getSnapshot().plan.stack;
         },
         get input() {
-            return getSnapshot().input;
+            return getSnapshot().plan.input;
         },
-        get update() {
-            return getSnapshot().update;
+        get fixedUpdate() {
+            return getSnapshot().plan.fixedUpdate;
         },
-        get render() {
-            return getSnapshot().render;
+        get preRender() {
+            return getSnapshot().plan.preRender;
         },
     });
 }

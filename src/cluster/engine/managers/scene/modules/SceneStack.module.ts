@@ -1,9 +1,12 @@
-import type { ActiveScene, SceneInstanceId } from "../Scene.types";
+import type { SceneInstanceId } from "../Scene.types";
+import type { ActiveScene } from "./SceneRuntime.types";
 
 export type SceneStack<P, C, R> = Readonly<{
     activeScenes(): ReadonlyArray<ActiveScene<P, C, R>>;
-    has(instanceId: SceneInstanceId): boolean;
-    push(active: ActiveScene<P, C, R>): void;
+    push(
+        instanceId: SceneInstanceId,
+        createActive: () => ActiveScene<P, C, R>,
+    ): ActiveScene<P, C, R> | undefined;
     pop(): ActiveScene<P, C, R> | undefined;
     clear(): void;
     size(): number;
@@ -17,41 +20,37 @@ export function createSceneStack<P, C, R>(
 
     let snapshot: ActiveScene<P, C, R>[] = [];
 
-    function has(instanceId: SceneInstanceId) {
-        const exists = ids.has(instanceId);
-        if (exists && debug) {
-            throw new Error(
-                `[SceneStack] SceneInstanceId ${instanceId} already active`,
-            );
+    function push(
+        instanceId: SceneInstanceId,
+        createActive: () => ActiveScene<P, C, R>,
+    ): ActiveScene<P, C, R> | undefined {
+        if (ids.has(instanceId)) {
+            if (debug) {
+                throw new Error(
+                    `[SceneStack] SceneInstanceId ${instanceId} already active`,
+                );
+            }
+            return undefined;
         }
-        return exists;
-    }
 
-    function push(active: ActiveScene<P, C, R>): boolean {
-        if (!active) {
-            if (debug) throw new Error("[SceneStack] push requires scene");
-            return false;
-        }
-        if (has(active.instanceId)) {
-            return false; // ignore in non-debug (has will throw if in debug)
-        }
+        const active = createActive();
         stack.push(active);
-        ids.add(active.instanceId);
+        ids.add(instanceId);
         snapshot = [...stack];
-        return true;
+        return active;
     }
 
     function pop() {
         const active = stack.pop();
-        ids.delete(active?.instanceId ?? "");
+        if (active) ids.delete(active.instanceId);
         snapshot = [...stack];
         return active;
     }
 
     function clear() {
-        snapshot.length = 0;
         stack.length = 0;
         ids.clear();
+        snapshot = [];
     }
 
     function size(): number {
@@ -66,7 +65,6 @@ export function createSceneStack<P, C, R>(
         activeScenes,
         push,
         pop,
-        has,
         size,
         clear,
     };

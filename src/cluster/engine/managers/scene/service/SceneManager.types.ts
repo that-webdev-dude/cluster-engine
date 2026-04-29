@@ -1,6 +1,6 @@
 import type { SceneCommands, SceneInstanceId } from "../Scene.types";
 
-export type SceneExecPass = "input" | "update" | "render";
+export type SceneExecPass = "input" | "fixedUpdate" | "preRender";
 
 export type SceneExecOrder = "bottomToTop" | "topToBottom";
 
@@ -16,17 +16,14 @@ export type SceneSnapshot = Readonly<{
 export type SceneExecutionPlan = Readonly<{
     stack: SceneSnapshot;
     input: SceneExecWindow;
-    update: SceneExecWindow;
-    render: SceneExecWindow;
+    fixedUpdate: SceneExecWindow;
+    preRender: SceneExecWindow;
 }>;
 
 export type SceneManagerSnapshot = {
     rev: number;
     changed: boolean;
-    stack: SceneSnapshot;
-    input: SceneExecWindow;
-    update: SceneExecWindow;
-    render: SceneExecWindow;
+    plan: SceneExecutionPlan;
 };
 
 export type SceneManagerView = Readonly<{
@@ -34,8 +31,8 @@ export type SceneManagerView = Readonly<{
     changed: boolean;
     stack: SceneSnapshot;
     input: SceneExecWindow;
-    update: SceneExecWindow;
-    render: SceneExecWindow;
+    fixedUpdate: SceneExecWindow;
+    preRender: SceneExecWindow;
 }>;
 
 export type SceneManagerConfig = Readonly<{

@@ -7,7 +7,6 @@ export type SceneInstanceId = string;
 export type ScenePolicy = {
     blocksUpdateBelow?: boolean;
     capturesInput?: boolean;
-    render?: boolean;
 };
 
 export type SceneCtx<P, C, R> = {
@@ -37,16 +36,7 @@ export type Scene<P, C, R> = {
     id: SceneDefinitionId;
     // Optional runtime instance id. Defaults to the definition id, which preserves
     // singleton-by-definition behavior until authors opt into distinct instances.
-    instanceId?: SceneInstanceId;
     policy?: ScenePolicy;
     onMount?: SceneMountCallback<P, C, R>;
-    instance?(key?: string): Scene<P, C, R>;
+    instanceId?: SceneInstanceId;
 };
-
-export type ActiveScene<P, C, R> = Readonly<{
-    scene: Scene<P, C, R>;
-    definitionId: SceneDefinitionId;
-    instanceId: SceneInstanceId;
-    policy?: ScenePolicy;
-    cleanup?: () => void;
-}>;
