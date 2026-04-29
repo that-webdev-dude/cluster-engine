@@ -1,34 +1,33 @@
 import type { Scene } from "../Scene.types";
 
-type SceneCommand<P, C, R> = {
+type SceneCommand<C, R> = {
     type: "set" | "push" | "pop";
-    scene?: Scene<P, C, R>;
+    scene?: Scene<C, R>;
 };
 
-export type SceneCommandQueueModule<P, C, R> = {
-    set(scene: Scene<P, C, R>): void;
-    push(scene: Scene<P, C, R>): void;
+export type SceneCommandQueueModule<C, R> = {
+    set(scene: Scene<C, R>): void;
+    push(scene: Scene<C, R>): void;
     pop(): void;
     flush(on: {
-        set: (scene: Scene<P, C, R>) => void;
-        push: (scene: Scene<P, C, R>) => void;
+        set: (scene: Scene<C, R>) => void;
+        push: (scene: Scene<C, R>) => void;
         pop: () => void;
     }): void;
     clear(): void;
 };
 
-export function createSceneCommandQueueModule<
-    P,
+export function createSceneCommandQueueModule<C, R>(): SceneCommandQueueModule<
     C,
-    R,
->(): SceneCommandQueueModule<P, C, R> {
-    const queue: SceneCommand<P, C, R>[] = [];
+    R
+> {
+    const queue: SceneCommand<C, R>[] = [];
 
-    function set(scene: Scene<P, C, R>) {
+    function set(scene: Scene<C, R>) {
         queue.push({ type: "set", scene });
     }
 
-    function push(scene: Scene<P, C, R>) {
+    function push(scene: Scene<C, R>) {
         queue.push({ type: "push", scene });
     }
 
@@ -37,8 +36,8 @@ export function createSceneCommandQueueModule<
     }
 
     function flush(on: {
-        set: (scene: Scene<P, C, R>) => void;
-        push: (scene: Scene<P, C, R>) => void;
+        set: (scene: Scene<C, R>) => void;
+        push: (scene: Scene<C, R>) => void;
         pop: () => void;
     }) {
         const pending = queue.splice(0); // wow

@@ -1,37 +1,36 @@
 import type { System, SystemOwnerId } from "../../../types/system";
+import type { SceneExecPass } from "../service/SceneManager.types";
 
-export type SchedulerRegistration<P, C, R> = {
+export type SchedulerRegistration<C, R> = {
     ownerId: SystemOwnerId;
-    system: System<P, C, R>;
+    system: System<C, R>;
 };
 
-export type SchedulerExecuteArgs<P, C, R> = {
+export type SchedulerExecuteArgs<C, R> = {
     ctx: C;
     run: R;
-    phase: P;
+    phase: SceneExecPass;
     scopeIds: readonly SystemOwnerId[] | SystemOwnerId;
 };
 
-export type SystemMetadata<P, C, R> = System<P, C, R> & {
+export type SystemMetadata<C, R> = System<C, R> & {
     ownerId: SystemOwnerId;
     registrationSequence: number;
 };
 
-export type Scheduler<P, C, R> = {
-    register(registration: SchedulerRegistration<P, C, R>): void;
+export type Scheduler<C, R> = {
+    register(registration: SchedulerRegistration<C, R>): void;
     unregister(ownerId?: SystemOwnerId): void;
-    execute(args: SchedulerExecuteArgs<P, C, R>): void;
+    execute(args: SchedulerExecuteArgs<C, R>): void;
 };
 
-export function createScheduler<P, C, R>(
-    debug: boolean = false,
-): Scheduler<P, C, R> {
+export function createScheduler<C, R>(debug: boolean = false): Scheduler<C, R> {
     let registrationSequence = 0;
 
-    const systemsByOwnerId: Map<SystemOwnerId, SystemMetadata<P, C, R>[]> =
+    const systemsByOwnerId: Map<SystemOwnerId, SystemMetadata<C, R>[]> =
         new Map();
 
-    function register(registration: SchedulerRegistration<P, C, R>) {
+    function register(registration: SchedulerRegistration<C, R>) {
         const { ownerId, system } = registration;
 
         if (!systemsByOwnerId.has(ownerId)) {
@@ -67,7 +66,7 @@ export function createScheduler<P, C, R>(
         }
     }
 
-    function execute(args: SchedulerExecuteArgs<P, C, R>) {
+    function execute(args: SchedulerExecuteArgs<C, R>) {
         const execOwners = Array.isArray(args.scopeIds)
             ? args.scopeIds
             : [args.scopeIds];

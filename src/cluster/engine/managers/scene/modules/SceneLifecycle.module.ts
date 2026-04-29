@@ -4,19 +4,19 @@ import type { Scene, SceneCtx, SceneInstanceId } from "../Scene.types";
 import type { MountedScene } from "../Scene.runtime.types";
 import { resolveSceneInstanceId } from "../tools";
 
-export type SceneLifecycleModule<P, C, R> = Readonly<{
-    mount(scene: Scene<P, C, R>): MountedScene<P, C, R>;
-    unmount(active: MountedScene<P, C, R>): void;
+export type SceneLifecycleModule<C, R> = Readonly<{
+    mount(scene: Scene<C, R>): MountedScene<C, R>;
+    unmount(active: MountedScene<C, R>): void;
 }>;
 
-export function createSceneLifecycleModule<P, C, R>(config: {
-    scheduler: Scheduler<P, C, R>;
-}): SceneLifecycleModule<P, C, R> {
+export function createSceneLifecycleModule<C, R>(config: {
+    scheduler: Scheduler<C, R>;
+}): SceneLifecycleModule<C, R> {
     const { scheduler } = config;
 
     function registerSystems(
         instanceId: SceneInstanceId,
-        ...systems: readonly System<P, C, R>[]
+        ...systems: readonly System<C, R>[]
     ) {
         for (const system of systems) {
             scheduler.register({
@@ -26,9 +26,9 @@ export function createSceneLifecycleModule<P, C, R>(config: {
         }
     }
 
-    function mount(scene: Scene<P, C, R>): MountedScene<P, C, R> {
+    function mount(scene: Scene<C, R>): MountedScene<C, R> {
         const instanceId = resolveSceneInstanceId(scene);
-        const ctx: SceneCtx<P, C, R> = {
+        const ctx: SceneCtx<C, R> = {
             add(...systems) {
                 registerSystems(instanceId, ...systems);
             },
@@ -45,7 +45,7 @@ export function createSceneLifecycleModule<P, C, R>(config: {
         };
     }
 
-    function unmount(active: MountedScene<P, C, R>): void {
+    function unmount(active: MountedScene<C, R>): void {
         active.cleanup?.();
         scheduler.unregister(active.instanceId);
     }

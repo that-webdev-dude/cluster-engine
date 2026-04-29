@@ -9,20 +9,20 @@ export type ScenePolicy = {
     capturesInput?: boolean;
 };
 
-export type SceneCtx<P, C, R> = {
-    add(...systems: readonly System<P, C, R>[]): void;
+export type SceneCtx<C, R> = {
+    add(...systems: readonly System<C, R>[]): void;
 };
 
-export type SceneMountCallback<P, C, R> = (
-    ctx: SceneCtx<P, C, R>,
+export type SceneMountCallback<C, R> = (
+    ctx: SceneCtx<C, R>,
 ) => void | (() => void);
 
-export type Scene<P, C, R> = {
+export type Scene<C, R> = {
     // Stable authoring definition id.
     id: SceneDefinitionId;
     // Optional runtime instance id. Defaults to the definition id, which preserves
     // singleton-by-definition behavior until authors opt into distinct instances.
     policy?: ScenePolicy;
-    onMount?: SceneMountCallback<P, C, R>;
+    onMount?: SceneMountCallback<C, R>;
     instanceId?: SceneInstanceId;
 };

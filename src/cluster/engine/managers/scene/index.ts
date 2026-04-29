@@ -7,6 +7,7 @@ export type {
     SceneExecPass,
     SceneExecWindow,
     SceneExecutionPlan,
+    SceneExecuteArgs as SceneExecutePassArgs,
     SceneManagerConfig,
     SceneManagerSnapshot,
     SceneManagerView,

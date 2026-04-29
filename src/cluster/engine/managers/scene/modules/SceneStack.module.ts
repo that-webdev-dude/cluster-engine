@@ -1,29 +1,29 @@
 import type { SceneInstanceId } from "../Scene.types";
 import type { MountedScene } from "../Scene.runtime.types";
 
-export type SceneStack<P, C, R> = Readonly<{
-    activeScenes(): ReadonlyArray<MountedScene<P, C, R>>;
+export type SceneStack<C, R> = Readonly<{
+    activeScenes(): ReadonlyArray<MountedScene<C, R>>;
     push(
         instanceId: SceneInstanceId,
-        createActive: () => MountedScene<P, C, R>,
-    ): MountedScene<P, C, R> | undefined;
-    pop(): MountedScene<P, C, R> | undefined;
+        createActive: () => MountedScene<C, R>,
+    ): MountedScene<C, R> | undefined;
+    pop(): MountedScene<C, R> | undefined;
     clear(): void;
     size(): number;
 }>;
 
-export function createSceneStack<P, C, R>(
+export function createSceneStack<C, R>(
     debug: boolean = false,
-): SceneStack<P, C, R> {
-    const stack: MountedScene<P, C, R>[] = [];
+): SceneStack<C, R> {
+    const stack: MountedScene<C, R>[] = [];
     const ids: Set<SceneInstanceId> = new Set();
 
-    let snapshot: MountedScene<P, C, R>[] = [];
+    let snapshot: MountedScene<C, R>[] = [];
 
     function push(
         instanceId: SceneInstanceId,
-        createActive: () => MountedScene<P, C, R>,
-    ): MountedScene<P, C, R> | undefined {
+        createActive: () => MountedScene<C, R>,
+    ): MountedScene<C, R> | undefined {
         if (ids.has(instanceId)) {
             if (debug) {
                 throw new Error(
@@ -57,7 +57,7 @@ export function createSceneStack<P, C, R>(
         return stack.length;
     }
 
-    function activeScenes(): ReadonlyArray<MountedScene<P, C, R>> {
+    function activeScenes(): ReadonlyArray<MountedScene<C, R>> {
         return snapshot;
     }
 

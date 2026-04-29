@@ -5,8 +5,8 @@ import type {
     ScenePolicy,
 } from "./Scene.types";
 
-export type MountedScene<P, C, R> = Readonly<{
-    scene: Scene<P, C, R>;
+export type MountedScene<C, R> = Readonly<{
+    scene: Scene<C, R>;
     definitionId: SceneDefinitionId;
     instanceId: SceneInstanceId;
     policy?: ScenePolicy;

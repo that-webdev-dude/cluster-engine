@@ -2,9 +2,9 @@
 export type SystemOwnerId = number | string;
 
 /** deprecated */
-export type System<P, C, R> = {
+export type System<C, R> = {
     id: string;
-    phase: P;
+    phase: "input" | "fixedUpdate" | "preRender";
     order: number;
     group: string;
     groupOrder: number;

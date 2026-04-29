@@ -7,14 +7,14 @@ import type {
     SceneSnapshot,
 } from "../service/SceneManager.types";
 
-export type ExecutionPlanner<P, C, R> = {
-    plan(active: readonly MountedScene<P, C, R>[]): SceneExecutionPlan;
+export type ExecutionPlanner<C, R> = {
+    plan(active: readonly MountedScene<C, R>[]): SceneExecutionPlan;
 };
 
-export function createExecutionPlanner<P, C, R>(): ExecutionPlanner<P, C, R> {
+export function createExecutionPlanner<C, R>(): ExecutionPlanner<C, R> {
     const findCutoffIndex = (
-        active: readonly MountedScene<P, C, R>[],
-        predicate: (a: MountedScene<P, C, R>) => boolean,
+        active: readonly MountedScene<C, R>[],
+        predicate: (a: MountedScene<C, R>) => boolean,
     ): number => {
         for (let i = active.length - 1; i >= 0; i--) {
             if (predicate(active[i])) return i;
@@ -23,12 +23,12 @@ export function createExecutionPlanner<P, C, R>(): ExecutionPlanner<P, C, R> {
     };
 
     const getSnapshot = (
-        active: readonly MountedScene<P, C, R>[],
+        active: readonly MountedScene<C, R>[],
     ): SceneSnapshot => {
         return { instanceIds: active.map((a) => a.instanceId) };
     };
 
-    const getInputWindow = (active: readonly MountedScene<P, C, R>[]) => {
+    const getInputWindow = (active: readonly MountedScene<C, R>[]) => {
         const order: SceneExecOrder = "topToBottom";
         const start = findCutoffIndex(
             active,
@@ -40,7 +40,7 @@ export function createExecutionPlanner<P, C, R>(): ExecutionPlanner<P, C, R> {
         };
     };
 
-    const getUpdateWindow = (active: readonly MountedScene<P, C, R>[]) => {
+    const getUpdateWindow = (active: readonly MountedScene<C, R>[]) => {
         const order: SceneExecOrder = "bottomToTop";
         const start = findCutoffIndex(
             active,
@@ -54,7 +54,7 @@ export function createExecutionPlanner<P, C, R>(): ExecutionPlanner<P, C, R> {
 
     const getWindow = (
         pass: SceneExecPass,
-        active: readonly MountedScene<P, C, R>[],
+        active: readonly MountedScene<C, R>[],
     ): SceneExecWindow => {
         switch (pass) {
             case "input": {
@@ -76,9 +76,7 @@ export function createExecutionPlanner<P, C, R>(): ExecutionPlanner<P, C, R> {
         return { order: "bottomToTop", instanceIds: [] };
     };
 
-    function plan(
-        active: readonly MountedScene<P, C, R>[],
-    ): SceneExecutionPlan {
+    function plan(active: readonly MountedScene<C, R>[]): SceneExecutionPlan {
         return {
             stack: getSnapshot(active),
             input: getWindow("input", active),

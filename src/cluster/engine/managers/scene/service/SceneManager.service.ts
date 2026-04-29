@@ -1,6 +1,6 @@
 import type { Scene } from "../Scene.types";
 import type {
-    SceneExecutePassArgs,
+    SceneExecuteArgs,
     SceneExecWindow,
     SceneExecutionPlan,
     SceneManagerConfig,
@@ -72,9 +72,9 @@ function getOrderedInstanceIds(window: SceneExecWindow): readonly string[] {
     return window.instanceIds.slice().reverse();
 }
 
-function createSceneManagerService<P, C, R>(
+function createSceneManagerService<C, R>(
     config?: SceneManagerConfig,
-): SceneManagerService<P, C, R> {
+): SceneManagerService<C, R> {
     const debug = config?.debug ?? false;
     const snapshot: SceneManagerSnapshot = {
         rev: 0,
@@ -82,11 +82,11 @@ function createSceneManagerService<P, C, R>(
         plan: createEmptyPlan(),
     };
 
-    const commandQueue = createSceneCommandQueueModule<P, C, R>();
-    const executionPlanner = createExecutionPlanner<P, C, R>();
-    const sceneStack = createSceneStack<P, C, R>(debug);
-    const scheduler = createScheduler<P, C, R>(debug);
-    const sceneLifecycle = createSceneLifecycleModule<P, C, R>({ scheduler });
+    const commandQueue = createSceneCommandQueueModule<C, R>();
+    const executionPlanner = createExecutionPlanner<C, R>();
+    const sceneStack = createSceneStack<C, R>(debug);
+    const scheduler = createScheduler<C, R>(debug);
+    const sceneLifecycle = createSceneLifecycleModule<C, R>({ scheduler });
 
     function publish(plan: SceneExecutionPlan) {
         const changed = !samePlan(snapshot.plan, plan);
@@ -97,25 +97,25 @@ function createSceneManagerService<P, C, R>(
         snapshot.plan = plan;
     }
 
-    function activateScene(scene: Scene<P, C, R>) {
+    function activateScene(scene: Scene<C, R>) {
         sceneStack.push(resolveSceneInstanceId(scene), () =>
             sceneLifecycle.mount(scene),
         );
     }
 
-    function deactivateScene(active?: MountedScene<P, C, R>) {
+    function deactivateScene(active?: MountedScene<C, R>) {
         if (!active) return;
         sceneLifecycle.unmount(active);
     }
 
-    function applySet(scene: Scene<P, C, R>) {
+    function applySet(scene: Scene<C, R>) {
         while (sceneStack.size()) {
             deactivateScene(sceneStack.pop());
         }
         activateScene(scene);
     }
 
-    function applyPush(scene: Scene<P, C, R>) {
+    function applyPush(scene: Scene<C, R>) {
         activateScene(scene);
     }
 
@@ -153,7 +153,7 @@ function createSceneManagerService<P, C, R>(
         publish(executionPlanner.plan(sceneStack.activeScenes()));
     }
 
-    function execute(args: SceneExecutePassArgs<P, C, R>) {
+    function execute(args: SceneExecuteArgs<C, R>) {
         lifecycle.assertNotDisposed();
         if (!lifecycle.isRunning()) return;
 
@@ -161,12 +161,12 @@ function createSceneManagerService<P, C, R>(
         scheduler.execute({
             ctx: args.ctx,
             run: args.run,
-            phase: args.pass as P,
+            phase: args.pass,
             scopeIds: getOrderedInstanceIds(window),
         });
     }
 
-    const request: SceneRequestCommands<P, C, R> = Object.freeze({
+    const request: SceneRequestCommands<C, R> = Object.freeze({
         set: commandQueue.set,
         push: commandQueue.push,
         pop: commandQueue.pop,
@@ -185,9 +185,9 @@ function createSceneManagerService<P, C, R>(
     };
 }
 
-export function createSceneManager<P, C, R>(
+export function createSceneManager<C, R>(
     config?: SceneManagerConfig,
-): SceneManagerService<P, C, R> {
+): SceneManagerService<C, R> {
     return createSceneManagerService(config);
 }
 

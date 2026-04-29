@@ -4,14 +4,13 @@ import type { Scene, ScenePolicy } from "../Scene.types";
 import type { System } from "../../../types/system";
 import type { SceneExecPass } from "./SceneManager.types";
 
-type TestPhase = SceneExecPass;
 type TestCtx = { log: string[] };
 type TestRun = number;
 
 function createTestSystem(
     id: string,
-    phase: TestPhase = "fixedUpdate",
-): System<TestPhase, TestCtx, TestRun> {
+    phase: SceneExecPass = "fixedUpdate",
+): System<TestCtx, TestRun> {
     return {
         id,
         phase,
@@ -28,10 +27,10 @@ function createTestScene(
     config: {
         instanceId?: string;
         policy?: ScenePolicy;
-        systems?: readonly System<TestPhase, TestCtx, TestRun>[];
+        systems?: readonly System<TestCtx, TestRun>[];
         onCleanup?: () => void;
     } = {},
-): Scene<TestPhase, TestCtx, TestRun> {
+): Scene<TestCtx, TestRun> {
     const {
         instanceId,
         policy,
@@ -52,9 +51,9 @@ function createTestScene(
 
 function createSceneWithPassSystem(
     instanceId: string,
-    phase: TestPhase,
+    phase: SceneExecPass,
     policy?: ScenePolicy,
-): Scene<TestPhase, TestCtx, TestRun> {
+): Scene<TestCtx, TestRun> {
     return createTestScene({
         instanceId,
         policy,
@@ -64,7 +63,7 @@ function createSceneWithPassSystem(
 
 describe("createSceneManager", () => {
     it("allows distinct instances of the same scene definition", async () => {
-        const manager = createSceneManager<TestPhase, TestCtx, TestRun>();
+        const manager = createSceneManager<TestCtx, TestRun>();
 
         await manager.start();
         manager.commands.request.push(
@@ -91,7 +90,7 @@ describe("createSceneManager", () => {
 
     it("keeps singleton-by-definition behavior for the default scene instance", async () => {
         let cleanupCount = 0;
-        const manager = createSceneManager<TestPhase, TestCtx, TestRun>();
+        const manager = createSceneManager<TestCtx, TestRun>();
 
         await manager.start();
         manager.commands.request.push(
@@ -114,7 +113,7 @@ describe("createSceneManager", () => {
     });
 
     it("executes systems registered during scene mount for the matching pass", async () => {
-        const manager = createSceneManager<TestPhase, TestCtx, TestRun>();
+        const manager = createSceneManager<TestCtx, TestRun>();
         const ctx: TestCtx = { log: [] };
 
         await manager.start();
@@ -129,7 +128,7 @@ describe("createSceneManager", () => {
     });
 
     it("does not execute queued scenes before flush", async () => {
-        const manager = createSceneManager<TestPhase, TestCtx, TestRun>();
+        const manager = createSceneManager<TestCtx, TestRun>();
         const ctx: TestCtx = { log: [] };
 
         await manager.start();
@@ -143,7 +142,7 @@ describe("createSceneManager", () => {
     });
 
     it("executes input from top to bottom", async () => {
-        const manager = createSceneManager<TestPhase, TestCtx, TestRun>();
+        const manager = createSceneManager<TestCtx, TestRun>();
         const ctx: TestCtx = { log: [] };
 
         await manager.start();
@@ -161,7 +160,7 @@ describe("createSceneManager", () => {
     });
 
     it("executes fixed update from bottom to top", async () => {
-        const manager = createSceneManager<TestPhase, TestCtx, TestRun>();
+        const manager = createSceneManager<TestCtx, TestRun>();
         const ctx: TestCtx = { log: [] };
 
         await manager.start();
@@ -179,7 +178,7 @@ describe("createSceneManager", () => {
     });
 
     it("executes pre-render from bottom to top", async () => {
-        const manager = createSceneManager<TestPhase, TestCtx, TestRun>();
+        const manager = createSceneManager<TestCtx, TestRun>();
         const ctx: TestCtx = { log: [] };
 
         await manager.start();
@@ -197,7 +196,7 @@ describe("createSceneManager", () => {
     });
 
     it("honors capturesInput by excluding scenes below the topmost capture", async () => {
-        const manager = createSceneManager<TestPhase, TestCtx, TestRun>();
+        const manager = createSceneManager<TestCtx, TestRun>();
         const ctx: TestCtx = { log: [] };
 
         await manager.start();
@@ -220,7 +219,7 @@ describe("createSceneManager", () => {
     });
 
     it("honors blocksUpdateBelow for fixed update and pre-render", async () => {
-        const manager = createSceneManager<TestPhase, TestCtx, TestRun>();
+        const manager = createSceneManager<TestCtx, TestRun>();
         const fixedCtx: TestCtx = { log: [] };
         const renderCtx: TestCtx = { log: [] };
 
@@ -269,7 +268,7 @@ describe("createSceneManager", () => {
     });
 
     it("does nothing after stop without throwing", async () => {
-        const manager = createSceneManager<TestPhase, TestCtx, TestRun>();
+        const manager = createSceneManager<TestCtx, TestRun>();
         const ctx: TestCtx = { log: [] };
 
         await manager.start();
@@ -286,7 +285,7 @@ describe("createSceneManager", () => {
     });
 
     it("throws after dispose in debug mode", async () => {
-        const manager = createSceneManager<TestPhase, TestCtx, TestRun>({
+        const manager = createSceneManager<TestCtx, TestRun>({
             debug: true,
         });
         const ctx: TestCtx = { log: [] };
