@@ -35,6 +35,12 @@ export type SceneManagerView = Readonly<{
     preRender: SceneExecWindow;
 }>;
 
+export type SceneExecutePassArgs<P, C, R> = Readonly<{
+    pass: SceneExecPass;
+    ctx: C;
+    run: R;
+}>;
+
 export type SceneRequestCommands<P, C, R> = {
     // Queues replacement of the active stack and applies it on the next flush.
     set(scene: Scene<P, C, R>): void;
@@ -57,6 +63,7 @@ export type SceneManagerService<P, C, R> = Readonly<{
     start(): Promise<boolean>;
     stop(): Promise<boolean>;
     flush(): void;
+    execute(args: SceneExecutePassArgs<P, C, R>): void;
     dispose(): Promise<boolean>;
     view: SceneManagerView;
     commands: SceneCommands<P, C, R>;

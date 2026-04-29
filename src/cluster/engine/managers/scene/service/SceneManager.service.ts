@@ -1,5 +1,6 @@
 import type { Scene } from "../Scene.types";
 import type {
+    SceneExecutePassArgs,
     SceneExecWindow,
     SceneExecutionPlan,
     SceneManagerConfig,
@@ -64,6 +65,11 @@ function samePlan(
         sameWindow(left.fixedUpdate, right.fixedUpdate) &&
         sameWindow(left.preRender, right.preRender)
     );
+}
+
+function getOrderedInstanceIds(window: SceneExecWindow): readonly string[] {
+    if (window.order === "bottomToTop") return window.instanceIds;
+    return window.instanceIds.slice().reverse();
 }
 
 function createSceneManagerService<P, C, R>(
@@ -147,6 +153,19 @@ function createSceneManagerService<P, C, R>(
         publish(executionPlanner.plan(sceneStack.activeScenes()));
     }
 
+    function execute(args: SceneExecutePassArgs<P, C, R>) {
+        lifecycle.assertNotDisposed();
+        if (!lifecycle.isRunning()) return;
+
+        const window = snapshot.plan[args.pass];
+        scheduler.execute({
+            ctx: args.ctx,
+            run: args.run,
+            phase: args.pass as P,
+            scopeIds: getOrderedInstanceIds(window),
+        });
+    }
+
     const request: SceneRequestCommands<P, C, R> = Object.freeze({
         set: commandQueue.set,
         push: commandQueue.push,
@@ -158,6 +177,7 @@ function createSceneManagerService<P, C, R>(
         start: lifecycle.start,
         stop: lifecycle.stop,
         flush,
+        execute: execute,
         dispose: lifecycle.dispose,
         commands: Object.freeze({
             request,
