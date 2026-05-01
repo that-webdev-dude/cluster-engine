@@ -13,5 +13,11 @@ export function createWorldManagerView(
         get storeCount() {
             return getSnapshot().storeCount;
         },
+        get entityCount() {
+            return getSnapshot().entityCount;
+        },
+        get debug() {
+            return getSnapshot().debug;
+        },
     });
 }

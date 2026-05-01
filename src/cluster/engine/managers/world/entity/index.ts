@@ -1,6 +1,13 @@
 export type EntityId = string;
 
-export type Entity = {
+export type EntityComponentPrimitive = number | string;
+
+export type EntityComponent = Readonly<
+    Record<string, EntityComponentPrimitive>
+>;
+
+export type Entity = Readonly<{
     id: EntityId;
-    [key: string]: any;
-};
+} & {
+    [componentName: string]: EntityId | EntityComponent;
+}>;

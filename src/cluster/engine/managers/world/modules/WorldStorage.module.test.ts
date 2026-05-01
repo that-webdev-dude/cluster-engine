@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { createWorldStorageModule } from "./WorldStorage.module";
+import type { Entity } from "../entity";
 
 describe("createWorldStorageModule", () => {
     it("spawns entities into stores and tracks counts", () => {
@@ -156,13 +157,13 @@ describe("createWorldStorageModule", () => {
             storage.spawn("store.a", {
                 id: "array-component",
                 position: [0, 0],
-            }),
+            } as unknown as Entity),
         ).toThrow("must be a plain object");
         expect(() =>
             storage.spawn("store.a", {
                 id: "nested",
                 position: { value: { x: 0 } },
-            }),
+            } as unknown as Entity),
         ).toThrow("must be a finite number or string");
 
         storage.spawn("store.a", {
@@ -192,5 +193,76 @@ describe("createWorldStorageModule", () => {
                 position: { x: 1, z: 1 },
             }),
         ).toThrow("fields do not match archetype position");
+    });
+
+    it("queries matching components within one store", () => {
+        const storage = createWorldStorageModule();
+
+        storage.spawn("store.a", {
+            id: "a",
+            position: { x: 0, y: 0 },
+            velocity: { x: 1, y: 1 },
+        });
+        storage.spawn("store.a", {
+            id: "b",
+            position: { x: 2, y: 2 },
+        });
+        storage.spawn("store.b", {
+            id: "c",
+            position: { x: 3, y: 3 },
+            velocity: { x: 4, y: 4 },
+        });
+
+        const rows = storage.query("store.a", ["position", "velocity"]);
+
+        expect(rows).toHaveLength(1);
+        expect(rows[0].entityId).toBe("a");
+        expect(rows[0].components.position.x()).toBe(0);
+        expect(rows[0].components.velocity.y()).toBe(1);
+    });
+
+    it("allows query mutation of existing primitive fields", () => {
+        const storage = createWorldStorageModule();
+
+        storage.spawn("store.a", {
+            id: "a",
+            position: { x: 0, y: 0 },
+        });
+
+        const [row] = storage.query("store.a", ["position"]);
+        row.components.position.x(10);
+        row.components.position.y("north");
+
+        const [updated] = storage.query("store.a", ["position"]);
+        expect(updated.components.position.x()).toBe(10);
+        expect(updated.components.position.y()).toBe("north");
+    });
+
+    it("creates copied debug snapshots", () => {
+        const storage = createWorldStorageModule();
+
+        storage.spawn("store.a", {
+            id: "a",
+            position: { x: 0, y: 0 },
+        });
+
+        const before = storage.createDebugSnapshot();
+        const [row] = storage.query("store.a", ["position"]);
+        row.components.position.x(99);
+        const after = storage.createDebugSnapshot();
+
+        expect(before.stores[0].archetypes[0].entities[0].components.position.x)
+            .toBe(0);
+        expect(after.stores[0].archetypes[0].entities[0].components.position.x)
+            .toBe(99);
+        expect(Object.isFrozen(before)).toBe(true);
+    });
+
+    it("throws on missing destroy in debug mode", () => {
+        const storage = createWorldStorageModule({ debug: true });
+
+        expect(() => storage.destroy("store.a", "missing")).toThrow(
+            "entity missing not found in store store.a",
+        );
     });
 });

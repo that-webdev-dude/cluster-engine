@@ -27,6 +27,44 @@ export type WorldDestroyResult = Readonly<{
     moved?: WorldEntityRecord;
 }>;
 
+export type WorldQueryFieldAccessor = {
+    (): ComponentPrimitive;
+    (value: ComponentPrimitive): void;
+};
+
+export type WorldQueryRow = Readonly<{
+    entityId: EntityId;
+    storeId: WorldStoreId;
+    archetypeId: ArchetypeId;
+    components: Readonly<
+        Record<string, Readonly<Record<string, WorldQueryFieldAccessor>>>
+    >;
+}>;
+
+export type WorldDebugEntitySnapshot = Readonly<{
+    entityId: EntityId;
+    archetypeId: ArchetypeId;
+    components: Readonly<Record<string, Readonly<Record<string, ComponentPrimitive>>>>;
+}>;
+
+export type WorldDebugArchetypeSnapshot = Readonly<{
+    archetypeId: ArchetypeId;
+    componentNames: readonly string[];
+    entities: readonly WorldDebugEntitySnapshot[];
+}>;
+
+export type WorldDebugStoreSnapshot = Readonly<{
+    storeId: WorldStoreId;
+    entityCount: number;
+    archetypes: readonly WorldDebugArchetypeSnapshot[];
+}>;
+
+export type WorldDebugSnapshot = Readonly<{
+    storeCount: number;
+    entityCount: number;
+    stores: readonly WorldDebugStoreSnapshot[];
+}>;
+
 export type WorldStorageConfig = Readonly<{
     debug?: boolean;
 }>;
@@ -39,6 +77,11 @@ export type WorldStorageModule = {
     getStoreIds(): readonly WorldStoreId[];
     getStoreCount(): number;
     getEntityCount(storeId?: WorldStoreId): number;
+    query(
+        storeId: WorldStoreId,
+        componentNames: readonly string[],
+    ): readonly WorldQueryRow[];
+    createDebugSnapshot(): WorldDebugSnapshot;
     dispose(): void;
 };
 
@@ -57,8 +100,9 @@ type WorldStore = {
 };
 
 export function createWorldStorageModule(
-    _config?: WorldStorageConfig,
+    config?: WorldStorageConfig,
 ): WorldStorageModule {
+    const debug = config?.debug ?? false;
     const stores = new Map<WorldStoreId, WorldStore>();
 
     function spawn(
@@ -95,13 +139,13 @@ export function createWorldStorageModule(
         assertEntityId(entityId);
 
         const store = stores.get(storeId);
-        if (!store) return { destroyed: false };
+        if (!store) return handleMissingDestroy(storeId, entityId);
 
         const record = store.entities.get(entityId);
-        if (!record) return { destroyed: false };
+        if (!record) return handleMissingDestroy(storeId, entityId);
 
         const storage = store.archetypes.get(record.archetypeId);
-        if (!storage) return { destroyed: false };
+        if (!storage) return handleMissingDestroy(storeId, entityId);
 
         const movedEntityId = findEntityAtRow(
             store,
@@ -174,6 +218,66 @@ export function createWorldStorageModule(
         return count;
     }
 
+    function query(
+        storeId: WorldStoreId,
+        componentNames: readonly string[],
+    ): readonly WorldQueryRow[] {
+        assertStoreId(storeId);
+        const requestedNames = normalizeComponentNames(componentNames);
+        if (requestedNames.length === 0) return [];
+
+        const store = stores.get(storeId);
+        if (!store) return [];
+
+        const rows: WorldQueryRow[] = [];
+        for (const storage of store.archetypes.values()) {
+            if (!archetypeContains(storage.archetype, requestedNames)) {
+                continue;
+            }
+
+            for (const chunk of storage) {
+                for (let row = 0; row < chunk.count; row++) {
+                    const entityId = findEntityIdAtRow(
+                        store,
+                        storage.archetype.name,
+                        chunk.id,
+                        row,
+                    );
+                    if (!entityId) continue;
+
+                    rows.push({
+                        entityId,
+                        storeId,
+                        archetypeId: storage.archetype.name,
+                        components: bindQueryComponents(
+                            chunk.components,
+                            storage.archetype,
+                            requestedNames,
+                            row,
+                        ),
+                    });
+                }
+            }
+        }
+
+        return rows;
+    }
+
+    function createDebugSnapshot(): WorldDebugSnapshot {
+        const storeSnapshots = Array.from(stores.entries())
+            .sort(([left], [right]) => left.localeCompare(right))
+            .map(([storeId, store]) => createStoreSnapshot(storeId, store));
+
+        return deepFreeze({
+            storeCount: storeSnapshots.length,
+            entityCount: storeSnapshots.reduce(
+                (count, store) => count + store.entityCount,
+                0,
+            ),
+            stores: storeSnapshots,
+        });
+    }
+
     return {
         spawn,
         destroy,
@@ -182,6 +286,8 @@ export function createWorldStorageModule(
         getStoreIds,
         getStoreCount,
         getEntityCount,
+        query,
+        createDebugSnapshot,
         dispose: clear,
     };
 
@@ -207,6 +313,19 @@ export function createWorldStorageModule(
         const storage = new Storage(createArchetype(parsed));
         store.archetypes.set(parsed.archetypeId, storage);
         return storage;
+    }
+
+    function handleMissingDestroy(
+        storeId: WorldStoreId,
+        entityId: EntityId,
+    ): WorldDestroyResult {
+        if (debug) {
+            throw new Error(
+                `WorldStorage.destroy: entity ${entityId} not found in store ${storeId}`,
+            );
+        }
+
+        return { destroyed: false };
     }
 }
 
@@ -394,6 +513,174 @@ function findEntityAtRow(
     return movedEntityId;
 }
 
+function findEntityIdAtRow(
+    store: WorldStore,
+    archetypeId: ArchetypeId,
+    chunkId: number,
+    row: number,
+): EntityId | undefined {
+    for (const record of store.entities.values()) {
+        if (
+            record.archetypeId === archetypeId &&
+            record.chunkId === chunkId &&
+            record.row === row
+        ) {
+            return record.entityId;
+        }
+    }
+
+    return undefined;
+}
+
+function normalizeComponentNames(
+    componentNames: readonly string[],
+): readonly string[] {
+    const normalized = Array.from(new Set(componentNames)).sort();
+    for (const componentName of normalized) {
+        assertComponentName(componentName);
+    }
+    return normalized;
+}
+
+function archetypeContains(
+    archetype: Archetype<ComponentSchema>,
+    componentNames: readonly string[],
+): boolean {
+    for (const componentName of componentNames) {
+        if (!archetype.descriptors.byName.has(componentName)) {
+            return false;
+        }
+    }
+    return true;
+}
+
+function bindQueryComponents(
+    components: Record<string, Record<string, (row: number, value?: ComponentPrimitive) => ComponentPrimitive | void>>,
+    archetype: Archetype<ComponentSchema>,
+    componentNames: readonly string[],
+    row: number,
+): Readonly<Record<string, Readonly<Record<string, WorldQueryFieldAccessor>>>> {
+    const result: Record<
+        string,
+        Readonly<Record<string, WorldQueryFieldAccessor>>
+    > = Object.create(null);
+
+    for (const componentName of componentNames) {
+        const descriptor = archetype.descriptors.byName.get(componentName);
+        const source = components[componentName];
+        if (!descriptor || !source) continue;
+
+        const fields: Record<string, WorldQueryFieldAccessor> =
+            Object.create(null);
+        for (const fieldName of descriptor.fields) {
+            const accessor = source[fieldName];
+            fields[fieldName] = ((value?: ComponentPrimitive) => {
+                if (value === undefined) {
+                    return accessor(row) as ComponentPrimitive;
+                }
+                accessor(row, value);
+            }) as WorldQueryFieldAccessor;
+        }
+
+        result[componentName] = Object.freeze(fields);
+    }
+
+    return Object.freeze(result);
+}
+
+function createStoreSnapshot(
+    storeId: WorldStoreId,
+    store: WorldStore,
+): WorldDebugStoreSnapshot {
+    const archetypes = Array.from(store.archetypes.entries())
+        .sort(([left], [right]) => left.localeCompare(right))
+        .map(([archetypeId, storage]) =>
+            createArchetypeSnapshot(storeId, store, archetypeId, storage),
+        );
+
+    return {
+        storeId,
+        entityCount: store.entities.size,
+        archetypes,
+    };
+}
+
+function createArchetypeSnapshot(
+    storeId: WorldStoreId,
+    store: WorldStore,
+    archetypeId: ArchetypeId,
+    storage: Storage<ComponentSchema>,
+): WorldDebugArchetypeSnapshot {
+    const componentNames = Array.from(storage.archetype.descriptors.byName.keys()).sort();
+    const entities: WorldDebugEntitySnapshot[] = [];
+
+    for (const chunk of storage) {
+        for (let row = 0; row < chunk.count; row++) {
+            const entityId = findEntityIdAtRow(store, archetypeId, chunk.id, row);
+            if (!entityId) continue;
+
+            entities.push({
+                entityId,
+                archetypeId,
+                components: copyComponents(
+                    chunk.components as Record<
+                        string,
+                        Record<
+                            string,
+                            (
+                                row: number,
+                                value?: ComponentPrimitive,
+                            ) => ComponentPrimitive | void
+                        >
+                    >,
+                    storage.archetype,
+                    componentNames,
+                    row,
+                ),
+            });
+        }
+    }
+
+    entities.sort((left, right) => left.entityId.localeCompare(right.entityId));
+
+    return {
+        archetypeId,
+        componentNames,
+        entities,
+    };
+}
+
+function copyComponents(
+    components: Record<
+        string,
+        Record<
+            string,
+            (row: number, value?: ComponentPrimitive) => ComponentPrimitive | void
+        >
+    >,
+    archetype: Archetype<ComponentSchema>,
+    componentNames: readonly string[],
+    row: number,
+): Readonly<Record<string, Readonly<Record<string, ComponentPrimitive>>>> {
+    const result: Record<string, Readonly<Record<string, ComponentPrimitive>>> =
+        Object.create(null);
+
+    for (const componentName of componentNames) {
+        const descriptor = archetype.descriptors.byName.get(componentName);
+        const source = components[componentName];
+        if (!descriptor || !source) continue;
+
+        const fields: Record<string, ComponentPrimitive> = Object.create(null);
+        for (const fieldName of Array.from(descriptor.fields).sort()) {
+            fields[fieldName] = source[fieldName](row) as ComponentPrimitive;
+        }
+
+        result[componentName] = Object.freeze(fields);
+    }
+
+    return Object.freeze(result);
+}
+
 function clearWorldStore(store: WorldStore): void {
     for (const storage of store.archetypes.values()) {
         storage.dispose();
@@ -463,4 +750,17 @@ function signatureFor(archetypeId: ArchetypeId): bigint {
         hash = (hash * 31n + BigInt(archetypeId.charCodeAt(index))) & 0xffffn;
     }
     return hash;
+}
+
+function deepFreeze<T>(value: T): T {
+    if (!value || typeof value !== "object") return value;
+
+    Object.freeze(value);
+    for (const child of Object.values(value)) {
+        if (child && typeof child === "object" && !Object.isFrozen(child)) {
+            deepFreeze(child);
+        }
+    }
+
+    return value;
 }

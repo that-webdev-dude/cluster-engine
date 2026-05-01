@@ -16,16 +16,25 @@ export type WorldCommandDestroy = {
     };
 };
 
-export type WorldCommand = WorldCommandSpawn | WorldCommandDestroy;
+export type WorldCommandClear = {
+    type: "clear";
+};
+
+export type WorldCommand =
+    | WorldCommandSpawn
+    | WorldCommandDestroy
+    | WorldCommandClear;
 
 export type WorldCommandQueueModule = {
     spawn(storeId: string, entity: Entity): void;
     destroy(storeId: string, entityId: EntityId): void;
+    clear(): void;
     flush(on: {
         spawn: (storeId: string, entity: Entity) => void;
         destroy: (storeId: string, entityId: EntityId) => void;
+        clear: () => void;
     }): void;
-    clear(): void;
+    reset(): void;
 };
 
 export function createWorldCommandQueueModule(): WorldCommandQueueModule {
@@ -51,35 +60,42 @@ export function createWorldCommandQueueModule(): WorldCommandQueueModule {
         });
     }
 
+    function clear() {
+        queue.push({
+            type: "clear",
+        });
+    }
+
     function flush(on: {
         spawn: (storeId: string, entity: Entity) => void;
         destroy: (storeId: string, entityId: EntityId) => void;
+        clear: () => void;
     }) {
-        const pending = queue.splice(0); // wow
+        const pending = queue.splice(0);
         for (const cmd of pending) {
-            const { storeId } = cmd.payload;
-
             switch (cmd.type) {
                 case "spawn":
-                    const { entity } = cmd.payload;
-                    if (entity) on.spawn(storeId, entity);
+                    on.spawn(cmd.payload.storeId, cmd.payload.entity);
                     break;
                 case "destroy":
-                    const { entityId } = cmd.payload;
-                    if (entityId) on.destroy(storeId, entityId);
+                    on.destroy(cmd.payload.storeId, cmd.payload.entityId);
+                    break;
+                case "clear":
+                    on.clear();
                     break;
             }
         }
     }
 
-    function clear() {
+    function reset() {
         queue.length = 0;
     }
 
     return {
         spawn,
         destroy,
-        flush,
         clear,
+        flush,
+        reset,
     };
 }

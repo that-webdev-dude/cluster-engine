@@ -105,6 +105,14 @@ Initial spawns still become live only when the orchestrator calls `world.flush()
 
 Systems run through the scene manager, but consume the world through frame context. The scene manager decides which systems execute for `input`, `fixedUpdate`, and `preRender`; the world manager provides store-scoped commands and query access to the data those systems operate on.
 
+The first runtime query surface is:
+
+```ts
+query(storeId, componentNames)
+```
+
+Queries return row views for entities in one store whose archetype contains every requested component. Query rows allow reading and writing existing primitive component fields, but do not expose component add/remove operations or storage internals.
+
 ## Commands
 
 The first runtime command set should stay small:
@@ -166,13 +174,11 @@ A published snapshot should be safe for downstream engine consumers to hold for 
 
 Publication should do as little transformation as possible. Expensive layout decisions should already be represented in world storage or in cached runtime metadata by the time `publish()` runs.
 
-The first published views are likely:
+The first published view is:
 
 - debug snapshot.
-- optional inspection snapshot.
-- presentation snapshot.
 
-Presentation-facing publication may filter entities by presentable components and convert component data into a frame input shape owned by a lower-level presentation service. The game orchestrator should not depend on that shape directly.
+The debug snapshot is copied from live storage during `publish()` and is safe to hold for the rest of the frame. Presentation-facing publication may later filter entities by presentable components and convert component data into a frame input shape owned by a lower-level presentation service. The game orchestrator should not depend on that shape directly.
 
 ## Orchestrator Usage
 
@@ -225,6 +231,7 @@ The service should be split into small private modules only when the behavior ju
 
 - `CommandQueue.module.ts`: stores pending spawn, destroy, and clear commands.
 - `WorldStorage.module.ts`: owns store indexes, entity metadata, archetype keys, and archetype-local storage.
+- `WorldPublisher.module.ts`: converts copied storage snapshots into revisioned published manager snapshots.
 - `Storage`: owns chunk allocation and component field columns for one archetype.
 - `Query.module.ts`: resolves component-set queries into hot-path iterators or views.
 - `Publisher.module.ts`: converts live storage into stable published snapshots.

@@ -10,24 +10,21 @@ import {
     LifecycleLivePhase,
 } from "../../../controllers/Lifecycle.controller";
 import { createWorldCommandQueueModule } from "../modules/WorldCommandQueue.module";
+import { createWorldPublisherModule } from "../modules/WorldPublisher.module";
 import { createWorldStorageModule } from "../modules/WorldStorage.module";
 
 function createWorldManagerService(
     config?: WorldManagerConfig,
 ): WorldManagerService {
     const debug = config?.debug ?? false;
-    const snapshot: WorldManagerSnapshot = {
-        rev: 0,
-        changed: false,
-        storeCount: 0,
-    };
 
     const commandQueue = createWorldCommandQueueModule();
     const worldStorage = createWorldStorageModule({ debug });
-    let publishedEntityCount = 0;
+    const publisher = createWorldPublisherModule();
+    let snapshot: WorldManagerSnapshot = publisher.snapshot();
 
     const handleDispose = (_from: LifecycleLivePhase) => {
-        commandQueue.clear();
+        commandQueue.reset();
         worldStorage.dispose();
         publishSnapshot();
     };
@@ -46,6 +43,10 @@ function createWorldManagerService(
         worldStorage.destroy(storeId, entityId);
     }
 
+    function applyClear() {
+        worldStorage.clear();
+    }
+
     function flush() {
         lifecycle.assertNotDisposed();
         if (!lifecycle.isRunning()) return;
@@ -53,6 +54,7 @@ function createWorldManagerService(
         commandQueue.flush({
             spawn: applySpawn,
             destroy: applyDestroy,
+            clear: applyClear,
         });
     }
 
@@ -64,18 +66,14 @@ function createWorldManagerService(
     }
 
     function publishSnapshot() {
-        const storeCount = worldStorage.getStoreCount();
-        const entityCount = worldStorage.getEntityCount();
-        const changed =
-            snapshot.storeCount !== storeCount ||
-            publishedEntityCount !== entityCount;
+        snapshot = publisher.publish(worldStorage.createDebugSnapshot());
+    }
 
-        snapshot.changed = changed;
-        if (!changed) return;
+    function query(storeId: string, componentNames: readonly string[]) {
+        lifecycle.assertNotDisposed();
+        if (!lifecycle.isRunning()) return [];
 
-        snapshot.rev += 1;
-        snapshot.storeCount = storeCount;
-        publishedEntityCount = entityCount;
+        return worldStorage.query(storeId, componentNames);
     }
 
     const request = Object.freeze({
@@ -83,6 +81,7 @@ function createWorldManagerService(
             commandQueue.spawn(storeId, entity),
         destroy: (storeId: string, entityId: EntityId) =>
             commandQueue.destroy(storeId, entityId),
+        clear: () => commandQueue.clear(),
     });
 
     return {
@@ -91,6 +90,7 @@ function createWorldManagerService(
         stop: lifecycle.stop,
         flush,
         publish,
+        query,
         dispose: lifecycle.dispose,
         commands: Object.freeze({
             request,
