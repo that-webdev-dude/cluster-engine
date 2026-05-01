@@ -1,4 +1,4 @@
-import type { Entity, EntityId } from "../service/WorldManager.types";
+import type { Entity, EntityId } from "../entity";
 
 export type WorldCommandSpawn = {
     type: "spawn";
