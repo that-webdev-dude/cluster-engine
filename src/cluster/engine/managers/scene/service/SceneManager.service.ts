@@ -177,7 +177,7 @@ function createSceneManagerService<C, R>(
         start: lifecycle.start,
         stop: lifecycle.stop,
         flush,
-        execute: execute,
+        execute,
         dispose: lifecycle.dispose,
         commands: Object.freeze({
             request,
