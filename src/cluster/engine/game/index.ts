@@ -16,6 +16,7 @@ export type {
     GameAuthoredScene,
     GameAuthoredSceneSetupCtx,
     GameCtx,
+    GameDebugView,
     GameEntity,
     GameRun,
     GameSceneCommands,

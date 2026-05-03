@@ -6,7 +6,7 @@ export function scene(config: SceneConfig): GameAuthoredScene {
     return Object.freeze({
         id: config.id,
         instanceId: config.instanceId,
-        policy: config.policy,
+        options: config.options,
         setup: config.setup,
     });
 }

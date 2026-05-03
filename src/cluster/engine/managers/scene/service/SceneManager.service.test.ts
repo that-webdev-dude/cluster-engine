@@ -43,7 +43,7 @@ function createTestScene(
         instanceId,
         policy,
         onMount(ctx) {
-            ctx.add(...systems);
+            ctx.addSystems(...systems);
             return onCleanup;
         },
     };

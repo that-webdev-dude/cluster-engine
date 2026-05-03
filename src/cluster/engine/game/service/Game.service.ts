@@ -1,6 +1,7 @@
 import {
     GameAuthoredScene,
     GameCtx,
+    GameDebugView,
     GameRun,
     GameSceneCommands,
     GameWorldCommands,
@@ -13,7 +14,8 @@ import {
 import { createSceneManager } from "../../managers/scene";
 import { createWorldManager, type Entity } from "../../managers/world";
 import { createLoop } from "../../services/loop";
-import { GamePlatform, GameRuntimeScene } from "./Game.types";
+import { GamePlatform } from "./Game.types";
+import { createAuthoredSceneAdapter } from "../modules/AuthoredSceneAdapter";
 
 export type GameConfig = {
     canvas: HTMLCanvasElement | OffscreenCanvas;
@@ -25,6 +27,7 @@ export type GameConfig = {
 };
 
 export type Game = {
+    readonly debug: GameDebugView;
     start(): Promise<boolean>;
     stop(): Promise<boolean>;
     dispose(): Promise<boolean>;
@@ -35,41 +38,35 @@ export function createGame(config: GameConfig): Game {
 
     const sceneManager = createSceneManager<GameCtx, GameRun>({ debug });
     const worldManager = createWorldManager({ debug });
-
-    function toRuntimeScene(
-        authoredScene: GameAuthoredScene,
-    ): GameRuntimeScene {
-        const instanceId = authoredScene.instanceId ?? authoredScene.id;
-        return {
-            id: authoredScene.id,
-            instanceId,
-            policy: authoredScene.policy,
-            onMount(runtimeCtx) {
-                return authoredScene.setup({
-                    addSystem(system) {
-                        runtimeCtx.addSystems(system);
-                    },
-                    addEntity(entity) {
-                        worldManager.commands.request.spawn(instanceId, entity);
-                    },
-                });
-            },
-        };
-    }
+    const authoredSceneAdapter = createAuthoredSceneAdapter({
+        spawnEntity(storeId: string, entity: Entity) {
+            worldManager.commands.request.spawn(storeId, entity);
+        },
+    });
 
     const sceneCommands: GameSceneCommands = {
         request: {
             set(scene: GameAuthoredScene) {
-                sceneManager.commands.request.set(toRuntimeScene(scene));
+                sceneManager.commands.request.set(
+                    authoredSceneAdapter.toRuntimeScene(scene),
+                );
             },
             push(scene: GameAuthoredScene) {
-                sceneManager.commands.request.push(toRuntimeScene(scene));
+                sceneManager.commands.request.push(
+                    authoredSceneAdapter.toRuntimeScene(scene),
+                );
             },
             pop() {
                 sceneManager.commands.request.pop();
             },
         },
     } as const;
+
+    if (config.initialScene) {
+        sceneManager.commands.request.set(
+            authoredSceneAdapter.toRuntimeScene(config.initialScene),
+        );
+    }
 
     const worldCommands: GameWorldCommands = {
         request: {
@@ -85,9 +82,14 @@ export function createGame(config: GameConfig): Game {
         },
     } as const;
 
-    if (config.initialScene) {
-        sceneManager.commands.request.set(toRuntimeScene(config.initialScene));
-    }
+    const debugView: GameDebugView = Object.freeze({
+        get sceneStack() {
+            return sceneManager.view.stack;
+        },
+        get world() {
+            return worldManager.view.debug;
+        },
+    });
 
     let frameGameCtx: GameCtx | undefined;
 
@@ -185,6 +187,7 @@ export function createGame(config: GameConfig): Game {
     }
 
     return {
+        debug: debugView,
         start,
         stop,
         dispose,

@@ -1,6 +1,6 @@
 import { EnginePlatform } from "../../types/patform";
-import { Scene, ScenePolicy } from "../../managers/scene";
-import { Entity } from "../../managers/world";
+import { Scene, ScenePolicy, SceneManagerView } from "../../managers/scene";
+import { Entity, WorldManagerView } from "../../managers/world";
 import { System } from "../../types/system";
 
 export type GameSceneCommands = {
@@ -33,15 +33,20 @@ export type GameSystem = System<GameCtx, GameRun>;
 export type GameRuntimeScene = Scene<GameCtx, GameRun>;
 
 export type GameAuthoredSceneSetupCtx = {
-    addSystem(system: GameSystem): void;
-    addEntity(entity: GameEntity): void;
+    addSystems(...systems: GameSystem[]): void;
+    addEntities(...entities: GameEntity[]): void;
 };
 
 export type GameAuthoredScene = {
     id: string;
     instanceId?: string;
-    policy?: ScenePolicy;
+    options?: ScenePolicy;
     setup(sceneSetupCtx: GameAuthoredSceneSetupCtx): void | (() => void);
 };
 
 export type GamePlatform = EnginePlatform;
+
+export type GameDebugView = Readonly<{
+    sceneStack: SceneManagerView["stack"];
+    world: WorldManagerView["debug"];
+}>;
