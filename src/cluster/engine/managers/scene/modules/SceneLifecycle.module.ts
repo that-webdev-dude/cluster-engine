@@ -29,7 +29,7 @@ export function createSceneLifecycleModule<C, R>(config: {
     function mount(scene: Scene<C, R>): MountedScene<C, R> {
         const instanceId = resolveSceneInstanceId(scene);
         const ctx: SceneCtx<C, R> = {
-            add(...systems) {
+            addSystems(...systems) {
                 registerSystems(instanceId, ...systems);
             },
         };

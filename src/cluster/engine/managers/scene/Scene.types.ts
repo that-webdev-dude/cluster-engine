@@ -10,7 +10,7 @@ export type ScenePolicy = {
 };
 
 export type SceneCtx<C, R> = {
-    add(...systems: readonly System<C, R>[]): void;
+    addSystems(...systems: readonly System<C, R>[]): void;
 };
 
 export type SceneMountCallback<C, R> = (
