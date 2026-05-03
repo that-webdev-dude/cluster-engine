@@ -1,71 +1,20 @@
 import {
+    GameAuthoredScene,
+    GameCtx,
+    GameRun,
+    GameSceneCommands,
+    GameWorldCommands,
+} from "./Game.types";
+import {
     createLifecycle,
     type LifecycleLivePhase,
     type LifecycleActivePhase,
 } from "../../controllers/Lifecycle.controller";
-import { createSceneManager, Scene } from "../../managers/scene";
-import { createWorldManager, Entity } from "../../managers/world";
+import { createSceneManager } from "../../managers/scene";
+import { createWorldManager, type Entity } from "../../managers/world";
 import { createLoop } from "../../services/loop";
-import type { System } from "../../types/system";
+import { GamePlatform, GameRuntimeScene } from "./Game.types";
 
-/**
- * ----------------------------------------------------------------
- * service specific types
- * ----------------------------------------------------------------
- */
-
-export type GameSceneCommands = {
-    request: {
-        set(scene: GameAuthoredScene): void;
-        push(scene: GameAuthoredScene): void;
-        pop(): void;
-    };
-};
-
-export type GameWorldCommands = {
-    request: {
-        spawn(entity: Entity): void;
-        destroy(entityId: string): void;
-        clear(): void;
-    };
-};
-
-export type GameCtx = {
-    scene: GameSceneCommands;
-    world: GameWorldCommands;
-};
-
-export type GameRun = number;
-
-export type GameEntity = Entity;
-
-export type GameSystem = System<GameCtx, GameRun>;
-
-export type GameRuntimeScene = Scene<GameCtx, GameRun>;
-
-export type GameAuthoredSceneSetupCtx = {
-    addSystems(...systems: readonly GameSystem[]): void;
-    addEntities(...entities: readonly GameEntity[]): void;
-};
-
-export type GameAuthoredScene = {
-    id: string;
-    // options?: scenePolicy here
-    setup(sceneSetupCtx: GameAuthoredSceneSetupCtx): void | (() => void);
-};
-
-export type GamePlatform = {
-    window?: Window;
-    document?: Document;
-    requestFrame?: (cb: FrameRequestCallback) => number;
-    cancelFrame?: (id: number) => void;
-};
-
-/**
- * ----------------------------------------------------------------
- * service implementation
- * ----------------------------------------------------------------
- */
 export type GameConfig = {
     canvas: HTMLCanvasElement | OffscreenCanvas;
     // service?: ServiceOptions;
@@ -90,65 +39,21 @@ export function createGame(config: GameConfig): Game {
     function toRuntimeScene(
         authoredScene: GameAuthoredScene,
     ): GameRuntimeScene {
-        const instanceId = authoredScene.id;
+        const instanceId = authoredScene.instanceId ?? authoredScene.id;
         return {
             id: authoredScene.id,
             instanceId,
+            policy: authoredScene.policy,
             onMount(runtimeCtx) {
                 return authoredScene.setup({
-                    addSystems(...systems) {
-                        runtimeCtx.addSystems(...systems);
+                    addSystem(system) {
+                        runtimeCtx.addSystems(system);
                     },
-                    addEntities(...entities) {
-                        for (const entity of entities) {
-                            worldManager.commands.request.spawn(
-                                instanceId,
-                                entity,
-                            );
-                        }
+                    addEntity(entity) {
+                        worldManager.commands.request.spawn(instanceId, entity);
                     },
                 });
             },
-        };
-    }
-
-    function scopedWorldCommands(storeId: string): GameWorldCommands {
-        return {
-            request: {
-                spawn(entity: Entity) {
-                    worldManager.commands.request.spawn(storeId, entity);
-                },
-                destroy(entityId: string) {
-                    worldManager.commands.request.destroy(storeId, entityId);
-                },
-                clear() {
-                    worldManager.commands.request.clear();
-                },
-            },
-        } as const;
-    }
-
-    function createScopedWorldCommands() {
-        let storeId = "";
-        const commands = {
-            request: {
-                spawn(entity: Entity) {
-                    worldManager.commands.request.spawn(storeId, entity);
-                },
-                destroy(entityId: string) {
-                    worldManager.commands.request.destroy(storeId, entityId);
-                },
-                clear() {
-                    worldManager.commands.request.clear();
-                },
-            },
-        } as const;
-
-        return {
-            bind(newStoreId: string) {
-                storeId = newStoreId;
-            },
-            commands,
         };
     }
 
@@ -166,23 +71,30 @@ export function createGame(config: GameConfig): Game {
         },
     } as const;
 
+    const worldCommands: GameWorldCommands = {
+        request: {
+            spawn(storeId: string, entity: Entity) {
+                worldManager.commands.request.spawn(storeId, entity);
+            },
+            destroy(storeId: string, entityId: string) {
+                worldManager.commands.request.destroy(storeId, entityId);
+            },
+            clear() {
+                worldManager.commands.request.clear();
+            },
+        },
+    } as const;
+
     if (config.initialScene) {
         sceneManager.commands.request.set(toRuntimeScene(config.initialScene));
     }
 
-    const worldCommands = createScopedWorldCommands();
-
     let frameGameCtx: GameCtx | undefined;
 
-    // if (config.initialScene) {
-    //     sceneManager.commands.set(config.initialScene);
-    // }
-
-    const createGameCtx = (sceneId: string): GameCtx => {
-        worldCommands.bind(sceneId);
+    const createGameCtx = (): GameCtx => {
         return {
             scene: sceneCommands,
-            world: worldCommands.commands,
+            world: worldCommands,
         };
     };
 
@@ -198,36 +110,33 @@ export function createGame(config: GameConfig): Game {
     function runBeginUpdate() {
         sceneManager.flush();
         worldManager.flush();
+        worldManager.publish();
+        frameGameCtx = createGameCtx();
     }
 
     function runFixedUpdate(dt: number) {
-        for (const sceneId of sceneManager.view.fixedUpdate.instanceIds) {
-            const ctx = createGameCtx(sceneId);
-            sceneManager.execute({
-                ctx,
-                run: dt,
-                pass: "fixedUpdate",
-            });
-        }
-        for (const sceneId of sceneManager.view.input.instanceIds) {
-            const ctx = createGameCtx(sceneId);
-            sceneManager.execute({
-                ctx,
-                run: dt,
-                pass: "input",
-            });
-        }
+        if (!frameGameCtx) return;
+
+        sceneManager.execute({
+            ctx: frameGameCtx,
+            run: dt,
+            pass: "input",
+        });
+        sceneManager.execute({
+            ctx: frameGameCtx,
+            run: dt,
+            pass: "fixedUpdate",
+        });
     }
 
     function runPreRender(alpha: number) {
-        for (const sceneId of sceneManager.view.preRender.instanceIds) {
-            const ctx = createGameCtx(sceneId);
-            sceneManager.execute({
-                ctx,
-                run: alpha,
-                pass: "preRender",
-            });
-        }
+        if (!frameGameCtx) return;
+
+        sceneManager.execute({
+            ctx: frameGameCtx,
+            run: alpha,
+            pass: "preRender",
+        });
     }
 
     function runRender(_alpha: number) {
@@ -250,7 +159,7 @@ export function createGame(config: GameConfig): Game {
     }
 
     async function handleDispose(_from: LifecycleLivePhase) {
-        await loop.stop();
+        await loop.dispose();
         await sceneManager.dispose();
         await worldManager.dispose();
     }

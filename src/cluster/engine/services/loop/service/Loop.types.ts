@@ -1,4 +1,4 @@
-import { type EnginePlatform } from "../../../types/shared";
+import { type EnginePlatform } from "../../../types/patform";
 
 export type LoopAnyCallback = () => void;
 export type LoopFixedCallback = (dt: number) => void;
