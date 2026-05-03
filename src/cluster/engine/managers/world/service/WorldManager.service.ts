@@ -103,3 +103,5 @@ export function createWorldManager(
 ): WorldManagerService {
     return createWorldManagerService(config);
 }
+
+export type { WorldManagerService } from "./WorldManager.types";

@@ -8,8 +8,6 @@ import type {
 export type WorldManagerSnapshot = {
     rev: number;
     changed: boolean;
-    storeCount: number;
-    entityCount: number;
     debug: WorldDebugSnapshot;
 };
 

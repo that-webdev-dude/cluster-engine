@@ -10,12 +10,6 @@ export function createWorldManagerView(
         get changed() {
             return getSnapshot().changed;
         },
-        get storeCount() {
-            return getSnapshot().storeCount;
-        },
-        get entityCount() {
-            return getSnapshot().entityCount;
-        },
         get debug() {
             return getSnapshot().debug;
         },
