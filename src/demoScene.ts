@@ -1,7 +1,7 @@
 import { createSceneManager } from "./cluster/engine/managers/scene/Scene.manager";
 import type { Scene } from "./cluster/engine/managers/scene/Scene.types";
 import type { SceneExecPass } from "./cluster/engine/managers/scene/service/SceneManager.types";
-import type { System } from "./cluster/engine/types/system";
+import type { System } from "./cluster/engine/systems";
 
 type DemoSceneCtx = {
     log: string[];

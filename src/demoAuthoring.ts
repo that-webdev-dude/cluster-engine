@@ -1,5 +1,5 @@
 import type { Scene } from "./cluster/engine/managers/scene";
-import type { System } from "./cluster/engine/types/system";
+import type { System } from "./cluster/engine/systems";
 import type { Entity } from "./cluster/engine/managers/world/entity";
 
 type GameRun = number;

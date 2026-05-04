@@ -1,6 +1,6 @@
 import { createSceneManager } from "./cluster/engine/managers/scene/Scene.manager";
 import type { Scene } from "./cluster/engine/managers/scene/Scene.types";
-import type { System } from "./cluster/engine/types/system";
+import type { System } from "./cluster/engine/systems";
 import { createWorldManager } from "./cluster/engine/managers/world/World.manager";
 import type { WorldManager } from "./cluster/engine/managers/world/World.manager";
 
@@ -32,12 +32,14 @@ function createMovementSystem(): System<DemoAllCtx, DemoAllRun> {
                 const position = row.components.position;
                 const velocity = row.components.velocity;
                 const nextX =
-                    Number(position.x()) + Number(velocity.x()) * run.dt;
+                    Number(position.x.read()) +
+                    Number(velocity.x.read()) * run.dt;
                 const nextY =
-                    Number(position.y()) + Number(velocity.y()) * run.dt;
+                    Number(position.y.read()) +
+                    Number(velocity.y.read()) * run.dt;
 
-                position.x(nextX);
-                position.y(nextY);
+                position.x.write(nextX);
+                position.y.write(nextY);
                 ctx.log.push(`${row.entityId}:position(${nextX},${nextY})`);
             }
         },

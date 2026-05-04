@@ -19,7 +19,24 @@ export default async () => {
     worldManager.flush();
     worldManager.publish();
 
-    const rows = worldManager.query(storeId, ["position"]);
+    const rows = worldManager.query(storeId, ["position", "velocity"]);
+    const [moving] = rows;
+    const beforePosition = moving
+        ? {
+              x: moving.components.position.x.read(),
+              y: moving.components.position.y.read(),
+          }
+        : undefined;
+
+    if (moving) {
+        const position = moving.components.position;
+        const velocity = moving.components.velocity;
+        position.x.write(Number(position.x.read()) + Number(velocity.x.read()));
+        position.y.write(Number(position.y.read()) + Number(velocity.y.read()));
+    }
+
+    worldManager.publish();
+
     const store = worldManager.view.debug.stores.find(
         (snapshot) => snapshot.storeId === storeId,
     );
@@ -33,7 +50,10 @@ export default async () => {
         storeCount: worldManager.view.debug.storeCount,
         totalEntityCount: worldManager.view.debug.entityCount,
         demoStoreEntityCount: store?.entityCount ?? 0,
-        positionQueryCount: rows.length,
+        movementQueryCount: rows.length,
+        beforePosition,
+        afterPosition: entity?.components.position,
+        queryApiUpdatedPosition: entity?.components.position.x === 21,
         entityInStore: Boolean(entity),
         entity,
     });
