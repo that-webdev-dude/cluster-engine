@@ -1,125 +1,100 @@
 # Scene Manager
 
-The scene manager owns the active scene stack for the engine. It is a manager-style service: scene mutations are queued, applied at a frame boundary with `flush()`, then published as a stable execution plan for the current frame.
+The scene manager owns the active scene stack and the scene-owned systems that
+run for each frame pass. It is a manager-style engine service: scene mutations
+are queued, applied with `flush()`, and exposed through a stable read-only
+execution plan.
 
-Use it when an orchestrator needs to decide which scene-owned systems participate in `input`, `fixedUpdate`, and `preRender` without exposing stack internals or the private scheduler.
+Use it from an orchestrator when you need scene stack behavior without exposing
+stack internals or the private scheduler.
 
-## Responsibilities
+## What It Does
 
-- Queue scene changes through `commands.request.set(scene)`, `push(scene)`, and `pop()`.
-- Apply queued changes during `flush()`.
-- Mount scenes when they become active and unmount them when removed.
-- Provide `SceneCtx.add(...)` during `onMount` so scenes can register systems.
-- Keep scene-owned systems scoped to the scene instance that registered them.
-- Publish a read-only `view` containing the stack and pass execution windows.
-- Execute scene-owned systems for one pass through `execute({ pass, ctx, run })`.
-- Dispose mounted scenes, cleanup callbacks, queued commands, and registered systems.
+- Queues scene requests with `commands.request.set(scene)`, `push(scene)`, and
+  `pop()`.
+- Applies queued scene changes during `flush()`.
+- Mounts scenes, provides `SceneCtx.addSystems(...)`, and runs scene cleanup on
+  unmount.
+- Keeps registered systems scoped to the scene instance that mounted them.
+- Publishes pass windows through `view.stack`, `view.input`,
+  `view.fixedUpdate`, and `view.preRender`.
+- Executes scene-owned systems with `execute({ pass, ctx, run })`.
 
-It does not own the main loop, game context creation, rendering, world state, assets, input latching, or camera updates. Those belong to the higher-level `Game` orchestrator and sibling services.
+The scene manager does not own the main loop, world data, rendering, assets,
+input, camera state, or game authoring sugar. A higher-level game orchestrator
+coordinates those services.
 
-## Scene Model
+## Runtime Model
 
-A `Scene<C, R>` is a runtime unit with:
+A `Scene<C, R>` has:
 
-- `id`: stable authoring id.
-- `instanceId`: optional runtime id. When omitted, the scene uses `id`, which gives singleton-by-definition behavior.
-- `policy`: optional stack policy.
-- `onMount(ctx)`: optional callback for registering systems and returning cleanup.
+- `id`: stable scene definition id.
+- `instanceId`: optional runtime instance id. Defaults to `id`.
+- `policy`: optional stack behavior.
+- `onMount(ctx)`: optional setup callback that may register systems and return
+  cleanup.
 
-Scene systems use fixed scene execution passes:
+Systems use the shared runtime `System<C, R>` type from `engine/systems`.
+Scene execution passes are:
 
 ```ts
 "input" | "fixedUpdate" | "preRender"
 ```
 
-The scene manager is generic only over `C` and `R`, the frame context and run payload passed into system execution. It is intentionally not generic over phase because the scene stack planner knows these three passes explicitly.
+Input runs top-to-bottom. Fixed update and pre-render run bottom-to-top. Scene
+policies can capture input or block update below the topmost matching scene.
 
-## Execution Plan
-
-`flush()` drains queued scene commands, updates the active stack, and publishes a `SceneExecutionPlan`:
-
-- `stack`: active scene instance ids in stack order, bottom to top.
-- `input`: scenes eligible for input execution.
-- `fixedUpdate`: scenes eligible for fixed update execution.
-- `preRender`: scenes eligible for pre-render execution.
-
-Each pass window includes `instanceIds` plus an execution `order`.
-
-Input uses `topToBottom`. The planner starts at the topmost scene with `capturesInput: true`; scenes below it are excluded. If no scene captures input, all active scenes are included.
-
-Fixed update and pre-render use `bottomToTop`. The planner starts at the topmost scene with `blocksUpdateBelow: true`; scenes below it are excluded. If no scene blocks update below, all active scenes are included.
-
-## Implementation
-
-The service is split into small private modules:
-
-- `CommandQueue.module.ts`: stores pending `set`, `push`, and `pop` requests.
-- `SceneStack.module.ts`: owns active mounted scenes and prevents duplicate active `instanceId`s.
-- `SceneLifecycle.module.ts`: mounts/unmounts scenes, runs cleanup callbacks, and registers/unregisters scene systems.
-- `ExecutionPlanner.module.ts`: converts the active stack and scene policies into pass windows.
-- `Scheduler.module.ts`: privately stores and executes systems by owner scene, pass, group, order, and registration sequence.
-- `SceneManager.view.ts`: exposes the published snapshot through read-only getters.
-
-The scheduler is deliberately private. Consumers should not pass scope ids or access scheduler internals; they should call `execute(...)` and let the scene manager honor the published plan.
-
-## Orchestrator Usage
-
-The orchestrator should create the frame context once per frame, call `flush()` at the structural mutation boundary, then execute scene passes in loop order.
+## Usage
 
 ```ts
-const sceneManager = createSceneManager<GameCtx, number>({ debug });
+import { createSceneManager, type Scene } from "./cluster/engine/managers/scene";
+import type { System } from "./cluster/engine/systems";
 
-sceneManager.commands.request.set(initialScene);
+type FrameCtx = { log: string[] };
+type FrameRun = number;
 
-function runBeginUpdate() {
-    display.latch();
-    input.latch(display.view);
-    assets.latch();
+const system: System<FrameCtx, FrameRun> = {
+    id: "demo.fixed",
+    phase: "fixedUpdate",
+    group: "main",
+    groupOrder: 0,
+    order: 0,
+    execute(ctx, dt) {
+        ctx.log.push(`tick:${dt}`);
+    },
+};
 
-    sceneManager.flush();
-    worldManager.flush();
+const scene: Scene<FrameCtx, FrameRun> = {
+    id: "demo.scene",
+    onMount(ctx) {
+        ctx.addSystems(system);
+    },
+};
 
-    frameGameCtx = createGameCtx();
-}
+const scenes = createSceneManager<FrameCtx, FrameRun>({ debug: true });
 
-function runFixedUpdate(dt: number) {
-    if (!frameGameCtx) return;
+await scenes.start();
+scenes.commands.request.set(scene);
 
-    sceneManager.execute({
-        pass: "input",
-        ctx: frameGameCtx,
-        run: dt,
-    });
+// Structural boundary.
+scenes.flush();
 
-    sceneManager.execute({
-        pass: "fixedUpdate",
-        ctx: frameGameCtx,
-        run: dt,
-    });
-
-    camera.tick(dt);
-}
-
-function runPreRender(alpha: number) {
-    if (!frameGameCtx) return;
-
-    sceneManager.execute({
-        pass: "preRender",
-        ctx: frameGameCtx,
-        run: alpha,
-    });
-
-    camera.latch(alpha);
-}
+// Frame execution.
+scenes.execute({
+    pass: "fixedUpdate",
+    ctx: { log: [] },
+    run: 16,
+});
 ```
 
-Important frame rule: `execute(...)` does not call `flush()`. Queue scene requests whenever needed, but apply them at the orchestrator's chosen frame boundary with `flush()` before executing passes.
+`execute(...)` never calls `flush()`. Queue scene requests whenever needed, but
+apply them at the orchestrator's structural boundary.
 
 ## Lifecycle
 
-`start()` enables `flush()` and `execute(...)`.
+- `start()` enables `flush()` and `execute(...)`.
+- `stop()` preserves state but makes `flush()` and `execute(...)` no-ops.
+- `dispose()` clears queued commands, unmounts scenes, unregisters systems, and
+  publishes an empty plan.
 
-`stop()` leaves state intact but `flush()` and `execute(...)` become no-ops while stopped.
-
-`dispose()` clears pending commands, unmounts active scenes, unregisters systems, publishes an empty plan, and rejects later calls through the lifecycle guard in debug mode.
-
+In debug mode, calls after dispose throw through the shared lifecycle guard.

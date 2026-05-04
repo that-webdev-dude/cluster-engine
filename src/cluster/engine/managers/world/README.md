@@ -1,263 +1,107 @@
 # World Manager
 
-The world manager owns runtime entity data for the engine. It is a manager-style service: entity mutations are queued, applied at a frame boundary with `flush()`, then published as stable snapshots for downstream engine consumers.
+The world manager owns runtime entity data for the engine. It is a
+manager-style service: structural changes are queued, applied with `flush()`,
+and published as stable snapshots with `publish()`.
 
-Use it when an orchestrator or store-scoped system needs to spawn entities, destroy entities, query live component data, or publish frame-stable world output without exposing storage internals.
+Use it from an orchestrator or frame context when systems need to spawn,
+destroy, query, or mutate store-scoped entity data without knowing storage
+internals.
 
-## Responsibilities
+## What It Does
 
-- Queue world changes through store-scoped commands.
-- Apply queued structural changes during `flush()`.
-- Store entities by `storeId` and archetype.
-- Keep every entity scoped to the `storeId` that created it.
-- Assign each entity to one archetype when it is spawned.
-- Provide query access for systems during frame execution.
-- Publish stable snapshots through `publish()` for downstream engine consumers.
-- Dispose queued commands, live storage, indexes, and published snapshots.
+- Queues world commands through `commands.request`.
+- Applies queued structural changes during `flush()`.
+- Stores entities by `storeId` and archetype.
+- Enforces immutable component composition: systems may edit existing fields,
+  but cannot add or remove components.
+- Provides live query rows for systems during frame execution.
+- Publishes copied debug snapshots through `view.debug`.
+- Keeps mutation and publication separate.
 
-It does not own scene scheduling, scene stack policy, system registration, the main loop, presentation, input, assets, camera state, or authoring sugar. Those belong to the scene manager, game orchestrator, presentation services, sibling services, or higher-level authoring helpers.
-
-The game orchestrator should not know about presentation-specific world views. World publication can feed lower-level engine presentation services, but game code should not call presentation APIs or depend on presentation-shaped snapshots.
-
-## Core Invariants
-
-Entity component composition is immutable.
-
-An entity is assigned to an archetype when spawned, based on its initial component set. During the entity lifecycle, systems may mutate component field values but may not add or remove components. Changing component shape requires destroying the entity and spawning a replacement.
-
-Every entity has exactly one store scope.
-
-Entities created during setup or by a running system are owned by one `storeId`. A scene instance may choose to use its instance id as its world `storeId`, but the world manager does not know about scenes. When an owner is torn down, higher-level orchestration can clear the matching store without inspecting authoring-level state.
-
-Structural changes are deferred.
-
-Calls such as `spawn(...)`, `destroy(...)`, and `clear()` queue commands. They do not mutate live storage immediately. The orchestrator decides when queued changes become visible by calling `flush()`.
-
-Publication is separate from mutation.
-
-`flush()` updates live world storage. `publish()` creates stable snapshots from that storage. Downstream frame consumers should read published snapshots, not live mutable component arrays.
+The world manager does not own scenes, scheduling, rendering, input, camera
+state, assets, or authoring helpers.
 
 ## Data Model
 
-An entity is a stable runtime record with:
+An entity belongs to exactly one store and one archetype:
 
-- `entityId`: runtime identity.
-- `storeId`: owner store scope.
-- `archetypeId`: component-set identity.
-- component field values.
+- `storeId`: owner scope, often a scene instance id.
+- `entityId`: runtime identity within the store.
+- `archetypeId`: sorted component-name set, such as `"position|velocity"`.
 
-A component is a named record whose fields are storage primitives. For the first world manager version, component fields should be limited to:
+Component fields are storage primitives:
 
 ```ts
 number | string
 ```
 
-No nested objects, arrays, functions, or arbitrary values are part of the component storage contract.
-
-An archetype is the sorted set of component names for an entity. Examples:
-
-```ts
-"position"
-"position|velocity"
-"position|sprite"
-```
-
-Entities with the same component set live in the same archetype storage. Archetype storage should be laid out as structure-of-arrays data: numeric component fields can later use typed arrays, while string fields use normal arrays. The public contract should not depend on the internal array type.
-
-## Authoring Flow
-
-The author-facing API should be ergonomic and live above the runtime manager.
-
-Authors should be able to define:
-
-- entity templates with initial components.
-- systems with an `execute(ctx, run)` function and execution phase.
-- scenes with setup logic, internal scene state, initial spawns, and scene-owned systems.
-
-An authoring scene might conceptually do this:
-
-```ts
-const levelOne = scene({
-    id: "level.one",
-    setup(ctx) {
-        ctx.spawn(playerTemplate, {
-            position: { x: 20, y: 40 },
-        });
-
-        ctx.add(movementSystem);
-    },
-});
-```
-
-That shape is authoring sugar. Runtime services should receive smaller commands and registrations. The world manager should not need to know how the authoring helper was written.
-
-## Runtime Flow
-
-When a scene mounts, its setup function can receive a context that maps the scene instance to a world `storeId`.
-
-That context can:
-
-- queue initial world spawns for the scene's chosen world `storeId`.
-- register systems with the scene manager.
-- create scene-local state captured by those systems.
-
-Initial spawns still become live only when the orchestrator calls `world.flush()`.
-
-Systems run through the scene manager, but consume the world through frame context. The scene manager decides which systems execute for `input`, `fixedUpdate`, and `preRender`; the world manager provides store-scoped commands and query access to the data those systems operate on.
-
-The first runtime query surface is:
-
-```ts
-query(storeId, componentNames)
-```
-
-Queries return row views for entities in one store whose archetype contains every requested component. Query rows allow reading and writing existing primitive component fields, but do not expose component add/remove operations or storage internals.
+Nested objects, arrays, functions, and arbitrary values are not component field
+values.
 
 ## Commands
 
-The first runtime command set should stay small:
+Commands are queued. They do not change live storage until `flush()`.
 
 ```ts
-spawn(storeId, entity)
-destroy(storeId, entityId)
-clear()
+world.commands.request.spawn("level#1", {
+    id: "player",
+    position: { x: 0, y: 0 },
+    velocity: { x: 1, y: 0 },
+});
+
+world.commands.request.destroy("level#1", "player");
+world.commands.request.clearStore("level#1");
+world.commands.request.clear();
 ```
 
-`spawn(...)` computes the archetype from the initial component set and inserts the entity into that store's archetype storage during `flush()`.
+Use `clearStore(storeId)` when a higher-level owner, such as a scene instance,
+is being torn down. Use `clear()` for full world reset or disposal-style flows.
 
-`destroy(...)` removes a specific entity from a store during `flush()`.
+## Query
 
-`clear()` is mainly for disposal, tests, and full world reset.
-
-The world manager should not expose:
-
-```ts
-addComponent(...)
-removeComponent(...)
-```
-
-Those operations violate the immutable component-composition rule.
-
-## Flush
-
-`flush()` drains the command queue and applies structural changes to live storage.
-
-For spawns, it should:
-
-- resolve the store scope.
-- validate component names and field values.
-- compute the archetype key.
-- create runtime entity metadata.
-- insert component fields into the matching archetype storage.
-- update entity and store indexes.
-
-For destroys, it should:
-
-- find the entity metadata.
-- remove the entity from its archetype storage.
-- update entity and store indexes.
-- ignore or report duplicate destroys according to debug mode.
-
-For clear, it should:
-
-- remove all live entities from storage.
-- reset entity and store indexes.
-- leave schemas and reusable storage metadata intact when that helps later allocations.
-
-`flush()` should not publish snapshots. Publication is a separate frame step.
-
-## Publish
-
-`publish()` creates stable read snapshots from live world storage.
-
-A published snapshot should be safe for downstream engine consumers to hold for the rest of the frame. It should not expose mutable live component arrays.
-
-Publication should do as little transformation as possible. Expensive layout decisions should already be represented in world storage or in cached runtime metadata by the time `publish()` runs.
-
-The first published view is:
-
-- debug snapshot.
-
-The debug snapshot is copied from live storage during `publish()` and is safe to hold for the rest of the frame. Presentation-facing publication may later filter entities by presentable components and convert component data into a frame input shape owned by a lower-level presentation service. The game orchestrator should not depend on that shape directly.
-
-## Orchestrator Usage
-
-The game orchestrator owns the frame pipeline. A typical shape is:
+Queries read and write live component fields inside one store.
 
 ```ts
-function runBeginUpdate() {
-    display.latch();
-    input.latch(display.view);
-    assets.latch();
+const rows = world.query("level#1", ["position", "velocity"]);
 
-    sceneManager.flush();
-    worldManager.flush();
+for (const row of rows) {
+    const position = row.components.position;
+    const velocity = row.components.velocity;
 
-    frameGameCtx = createGameCtx();
-}
+    const nextX = Number(position.x.read()) + Number(velocity.x.read()) * dt;
+    const nextY = Number(position.y.read()) + Number(velocity.y.read()) * dt;
 
-function runFixedUpdate(dt: number) {
-    if (!frameGameCtx) return;
-
-    sceneManager.execute({ pass: "input", ctx: frameGameCtx, run: { dt } });
-    sceneManager.execute({ pass: "fixedUpdate", ctx: frameGameCtx, run: { dt } });
-
-    worldManager.flush();
-}
-
-function runPreRender(alpha: number) {
-    if (!frameGameCtx) return;
-
-    sceneManager.execute({
-        pass: "preRender",
-        ctx: frameGameCtx,
-        run: { alpha },
-    });
-
-    camera.latch(alpha);
-    worldManager.publish();
+    position.x.write(nextX);
+    position.y.write(nextY);
 }
 ```
 
-The second `worldManager.flush()` after fixed update is optional policy, but useful when systems spawn or destroy entities during simulation and those changes should be visible before pre-render.
+Query rows are live mutable views, not snapshots. Field writes accept only
+finite numbers or strings. If a row becomes stale because its entity was
+destroyed or moved by storage compaction, later reads or writes throw.
 
-`flush()` is an orchestrator-facing boundary. Setup and systems may queue world commands for a `storeId`, but they should not decide when structural changes are applied.
+## Publication
 
-`publish()` may also be orchestrator-facing, but it should remain engine-facing rather than game-presentation-facing. The game pipeline can ask the world to publish without knowing how presentation services consume the result.
+`flush()` updates live storage. `publish()` copies live storage into a stable
+debug snapshot:
 
-## Implementation
+```ts
+world.flush();
+world.publish();
 
-The service should be split into small private modules only when the behavior justifies it. Likely modules are:
+console.log(world.view.debug.stores);
+```
 
-- `CommandQueue.module.ts`: stores pending spawn, destroy, and clear commands.
-- `WorldStorage.module.ts`: owns store indexes, entity metadata, archetype keys, and archetype-local storage.
-- `WorldPublisher.module.ts`: converts copied storage snapshots into revisioned published manager snapshots.
-- `Storage`: owns chunk allocation and component field columns for one archetype.
-- `Query.module.ts`: resolves component-set queries into hot-path iterators or views.
-- `Publisher.module.ts`: converts live storage into stable published snapshots.
-- `WorldManager.view.ts`: exposes published snapshots and revision state through read-only getters.
-
-The internal storage should be private. Consumers should go through commands, scoped world context, query helpers, or published views.
+Published snapshots are safe to hold for the frame. Systems should use
+`query(...)` for live simulation data and published views for downstream
+read-only consumers.
 
 ## Lifecycle
 
-`start()` enables `flush()`, query access, and `publish()`.
+- `start()` enables `flush()`, `query(...)`, and `publish()`.
+- `stop()` preserves live storage but makes `flush()` and `publish()` no-ops.
+- `dispose()` clears queued commands, live storage, indexes, and published
+  snapshots.
 
-`stop()` leaves live state intact, but `flush()` and `publish()` become no-ops while stopped.
-
-`dispose()` clears pending commands, live storage, indexes, and published snapshots, then rejects later calls through the lifecycle guard in debug mode.
-
-## Deferred Work
-
-The first implementation should focus on the runtime contract before optimizing storage.
-
-Safe deferrals:
-
-- typed-array allocation strategy.
-- chunk compaction policy.
-- generated query accessors.
-- presentation-specific sorting caches.
-- snapshot diffing and revision minimization.
-- authoring helper package shape.
-
-Do not defer the store scope invariant, immutable component composition, or `flush()`/`publish()` separation. Those are foundation rules.
+In debug mode, calls after dispose throw through the shared lifecycle guard.
