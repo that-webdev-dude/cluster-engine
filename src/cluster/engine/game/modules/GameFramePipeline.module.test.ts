@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { createGameFramePipeline } from "./GameFramePipeline.module";
 import type { GameCtx } from "../service/Game.types";
 import type { DisplayView } from "../../services/display";
+import type { InputView } from "../../services/input";
 import type {
     SceneExecutePassArgs,
     SceneManagerService,
@@ -42,9 +43,55 @@ function createTestDisplay(): DisplayView {
     };
 }
 
+function createTestInput(): InputView {
+    return {
+        keyboard: {
+            down() {
+                return false;
+            },
+            pressed() {
+                return false;
+            },
+            released() {
+                return false;
+            },
+        },
+        pointer: {
+            x: 0,
+            y: 0,
+            dx: 0,
+            dy: 0,
+            wheelX: 0,
+            wheelY: 0,
+            buttons: {
+                down() {
+                    return false;
+                },
+                pressed() {
+                    return false;
+                },
+                released() {
+                    return false;
+                },
+            },
+            pointers: {
+                count: 0,
+                has() {
+                    return false;
+                },
+                get() {
+                    return false;
+                },
+                forEach() {},
+            },
+        },
+    };
+}
+
 function createTestCtx(): GameCtx {
     return {
         display: createTestDisplay(),
+        input: createTestInput(),
         scene: {
             request: {
                 set() {},
