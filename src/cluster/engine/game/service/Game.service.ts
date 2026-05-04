@@ -100,7 +100,12 @@ export function createGame(config: GameConfig): Game {
     const createGameCtx = (): GameCtx => {
         return {
             scene: sceneCommands,
-            world: worldCommands,
+            world: {
+                query(storeId: string, componentNames: readonly string[]) {
+                    return worldManager.query(storeId, componentNames);
+                },
+                commands: worldCommands,
+            },
         };
     };
 

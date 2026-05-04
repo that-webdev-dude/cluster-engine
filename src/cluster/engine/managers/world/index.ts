@@ -6,6 +6,7 @@ export type {
     WorldManagerConfig,
     WorldManagerSnapshot,
     WorldManagerView,
+    WorldManagerQueryRow,
     WorldCommands,
 } from "./service/WorldManager.types";
 

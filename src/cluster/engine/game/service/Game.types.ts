@@ -1,6 +1,10 @@
 import { EnginePlatform } from "../../types/patform";
 import { Scene, ScenePolicy, SceneManagerView } from "../../managers/scene";
-import { Entity, WorldManagerView } from "../../managers/world";
+import {
+    Entity,
+    WorldManagerView,
+    WorldManagerQueryRow,
+} from "../../managers/world";
 import { System } from "../../systems";
 
 export type GameSceneCommands = {
@@ -19,9 +23,17 @@ export type GameWorldCommands = {
     };
 };
 
+export type GameCtxWorld = {
+    query(
+        storeId: string,
+        componentNames: readonly string[],
+    ): readonly WorldManagerQueryRow[];
+    commands: GameWorldCommands;
+};
+
 export type GameCtx = {
     scene: GameSceneCommands;
-    world: GameWorldCommands;
+    world: GameCtxWorld;
 };
 
 export type GameRun = number;

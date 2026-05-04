@@ -5,6 +5,8 @@ import type {
     WorldStoreId,
 } from "../modules/WorldStorage.module";
 
+export type WorldManagerQueryRow = WorldQueryRow;
+
 export type WorldManagerSnapshot = {
     rev: number;
     changed: boolean;
