@@ -1,8 +1,9 @@
-import {
+import type {
     GameAuthoredScene,
     GameCtx,
     GameDebugView,
     GameRun,
+    GamePlatform,
     GameSceneCommands,
     GameWorldCommands,
 } from "./Game.types";
@@ -14,8 +15,8 @@ import {
 import { createSceneManager } from "../../managers/scene";
 import { createWorldManager, type Entity } from "../../managers/world";
 import { createLoop } from "../../services/loop";
-import { GamePlatform } from "./Game.types";
-import { createAuthoredSceneAdapter } from "../modules/AuthoredSceneAdapter";
+import { createAuthoredSceneAdapter } from "../modules/AuthoredSceneAdapter.module";
+import { createGameFramePipeline } from "../modules/GameFramePipeline.module";
 
 export type GameConfig = {
     canvas: HTMLCanvasElement | OffscreenCanvas;
@@ -100,6 +101,25 @@ export function createGame(config: GameConfig): Game {
         };
     };
 
+    const framePipeline = createGameFramePipeline({
+        sceneManager,
+        worldManager,
+        createGameCtx,
+    });
+    function runBeginUpdate() {
+        frameGameCtx = framePipeline.beginUpdate();
+    }
+    function runFixedUpdate(dt: number) {
+        if (!frameGameCtx) return;
+        framePipeline.fixedUpdate(frameGameCtx, dt);
+    }
+    function runPreRender(alpha: number) {
+        if (!frameGameCtx) return;
+        framePipeline.preRender(frameGameCtx, alpha);
+    }
+    function runRender(alpha: number) {
+        framePipeline.render(alpha);
+    }
     const loop = createLoop({
         onBeginUpdate: runBeginUpdate,
         onFixedUpdate: runFixedUpdate,
@@ -109,69 +129,27 @@ export function createGame(config: GameConfig): Game {
         debug,
     });
 
-    function runBeginUpdate() {
-        sceneManager.flush();
-        worldManager.flush();
-        worldManager.publish();
-        frameGameCtx = createGameCtx();
-    }
-
-    function runFixedUpdate(dt: number) {
-        if (!frameGameCtx) return;
-
-        sceneManager.execute({
-            ctx: frameGameCtx,
-            run: dt,
-            pass: "input",
-        });
-        sceneManager.execute({
-            ctx: frameGameCtx,
-            run: dt,
-            pass: "fixedUpdate",
-        });
-    }
-
-    function runPreRender(alpha: number) {
-        if (!frameGameCtx) return;
-
-        sceneManager.execute({
-            ctx: frameGameCtx,
-            run: alpha,
-            pass: "preRender",
-        });
-    }
-
-    function runRender(_alpha: number) {
-        worldManager.flush();
-        worldManager.publish();
-
-        // start the render pipeline
-    }
-
     async function handleStart() {
         await worldManager.start();
         await sceneManager.start();
         await loop.start();
     }
-
     async function handleStop(_from: LifecycleActivePhase) {
         await loop.stop();
         await sceneManager.stop();
         await worldManager.stop();
     }
-
     async function handleDispose(_from: LifecycleLivePhase) {
         await loop.dispose();
         await sceneManager.dispose();
         await worldManager.dispose();
     }
-
     const lifecycle = createLifecycle({
         tag: "Game",
-        debug,
         onStart: handleStart,
         onStop: handleStop,
         onDispose: handleDispose,
+        debug,
     });
 
     async function start(): Promise<boolean> {
