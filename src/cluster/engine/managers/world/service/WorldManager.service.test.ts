@@ -181,10 +181,10 @@ describe("createWorldManager", () => {
 
         expect(rows).toHaveLength(1);
         expect(rows[0].entityId).toBe("moving");
-        rows[0].components.position.x(42);
+        rows[0].components.position.x.write(42);
 
         const [updated] = manager.query("store.a", ["position"]);
-        expect(updated.components.position.x()).toBe(42);
+        expect(updated.components.position.x.read()).toBe(42);
     });
 
     it("publishes copied debug snapshots", async () => {
@@ -201,7 +201,7 @@ describe("createWorldManager", () => {
         const before = manager.view.debug;
         const rev = manager.view.rev;
         const [row] = manager.query("store.a", ["position"]);
-        row.components.position.x(10);
+        row.components.position.x.write(10);
 
         expect(
             before.stores[0].archetypes[0].entities[0].components.position.x,

@@ -7,7 +7,8 @@ import type {
 import { assertComponentName } from "./WorldEntitySchema.module";
 import type {
     ArchetypeId,
-    WorldQueryFieldAccessor,
+    WorldEntityRecord,
+    WorldQueryField,
     WorldQueryRow,
     WorldStore,
     WorldStoreId,
@@ -20,11 +21,17 @@ export type WorldQueryRowLookup = (
     row: number,
 ) => EntityId | undefined;
 
+export type WorldQueryRecordFreshness = (
+    store: WorldStore,
+    record: WorldEntityRecord,
+) => boolean;
+
 export function createWorldQueryRows(
     storeId: WorldStoreId,
     store: WorldStore | undefined,
     componentNames: readonly string[],
     findEntityIdAtRow: WorldQueryRowLookup,
+    isCurrentEntityRecord: WorldQueryRecordFreshness,
 ): readonly WorldQueryRow[] {
     const requestedNames = normalizeComponentNames(componentNames);
     if (requestedNames.length === 0) return [];
@@ -45,6 +52,8 @@ export function createWorldQueryRows(
                     row,
                 );
                 if (!entityId) continue;
+                const record = store.entities.get(entityId);
+                if (!record) continue;
 
                 rows.push({
                     entityId,
@@ -54,6 +63,9 @@ export function createWorldQueryRows(
                         chunk.components,
                         storage.archetype,
                         requestedNames,
+                        store,
+                        record,
+                        isCurrentEntityRecord,
                         row,
                     ),
                 });
@@ -96,11 +108,14 @@ function bindQueryComponents(
     >,
     archetype: Archetype<ComponentSchema>,
     componentNames: readonly string[],
+    store: WorldStore,
+    record: WorldEntityRecord,
+    isCurrentEntityRecord: WorldQueryRecordFreshness,
     row: number,
-): Readonly<Record<string, Readonly<Record<string, WorldQueryFieldAccessor>>>> {
+): Readonly<Record<string, Readonly<Record<string, WorldQueryField>>>> {
     const result: Record<
         string,
-        Readonly<Record<string, WorldQueryFieldAccessor>>
+        Readonly<Record<string, WorldQueryField>>
     > = Object.create(null);
 
     for (const componentName of componentNames) {
@@ -108,20 +123,45 @@ function bindQueryComponents(
         const source = components[componentName];
         if (!descriptor || !source) continue;
 
-        const fields: Record<string, WorldQueryFieldAccessor> =
-            Object.create(null);
+        const fields: Record<string, WorldQueryField> = Object.create(null);
         for (const fieldName of descriptor.fields) {
             const accessor = source[fieldName];
-            fields[fieldName] = ((value?: ComponentPrimitive) => {
-                if (value === undefined) {
+            fields[fieldName] = Object.freeze({
+                read() {
+                    assertFresh(store, record, isCurrentEntityRecord);
                     return accessor(row) as ComponentPrimitive;
-                }
-                accessor(row, value);
-            }) as WorldQueryFieldAccessor;
+                },
+                write(value: ComponentPrimitive) {
+                    assertFresh(store, record, isCurrentEntityRecord);
+                    assertComponentPrimitive(value);
+                    accessor(row, value);
+                },
+            });
         }
 
         result[componentName] = Object.freeze(fields);
     }
 
     return Object.freeze(result);
+}
+
+function assertFresh(
+    store: WorldStore,
+    record: WorldEntityRecord,
+    isCurrentEntityRecord: WorldQueryRecordFreshness,
+): void {
+    if (isCurrentEntityRecord(store, record)) return;
+
+    throw new Error(
+        `WorldQuery: stale row for entity ${record.entityId} in store ${record.storeId}`,
+    );
+}
+
+function assertComponentPrimitive(value: unknown): asserts value is ComponentPrimitive {
+    if (typeof value === "string") return;
+    if (typeof value === "number" && Number.isFinite(value)) return;
+
+    throw new TypeError(
+        "WorldQuery.write: value must be a finite number or string",
+    );
 }

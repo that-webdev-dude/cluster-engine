@@ -26,7 +26,7 @@ export type {
     WorldDebugStoreSnapshot,
     WorldDestroyResult,
     WorldEntityRecord,
-    WorldQueryFieldAccessor,
+    WorldQueryField,
     WorldQueryRow,
     WorldStorageConfig,
     WorldStorageModule,
@@ -152,6 +152,7 @@ export function createWorldStorageModule(
             storeIndex.get(storeId),
             componentNames,
             storeIndex.findEntityIdAtRow,
+            storeIndex.isCurrentEntityRecord,
         );
     }
 

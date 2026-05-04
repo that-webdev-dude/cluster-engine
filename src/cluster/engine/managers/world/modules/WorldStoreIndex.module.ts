@@ -42,6 +42,10 @@ export type WorldStoreIndex = Readonly<{
         chunkId: number,
         row: number,
     ): EntityId | undefined;
+    isCurrentEntityRecord(
+        store: WorldStore,
+        record: WorldEntityRecord,
+    ): boolean;
 }>;
 
 export function createWorldStoreIndex(): WorldStoreIndex {
@@ -181,6 +185,20 @@ export function createWorldStoreIndex(): WorldStoreIndex {
         return undefined;
     }
 
+    function isCurrentEntityRecord(
+        store: WorldStore,
+        record: WorldEntityRecord,
+    ): boolean {
+        const current = store.entities.get(record.entityId);
+        return (
+            current?.storeId === record.storeId &&
+            current.archetypeId === record.archetypeId &&
+            current.chunkId === record.chunkId &&
+            current.row === record.row &&
+            current.generation === record.generation
+        );
+    }
+
     return {
         entries,
         get,
@@ -195,6 +213,7 @@ export function createWorldStoreIndex(): WorldStoreIndex {
         createEntityRecord,
         findEntityAtRow,
         findEntityIdAtRow,
+        isCurrentEntityRecord,
     };
 }
 

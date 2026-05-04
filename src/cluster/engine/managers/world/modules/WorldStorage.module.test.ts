@@ -217,8 +217,8 @@ describe("createWorldStorageModule", () => {
 
         expect(rows).toHaveLength(1);
         expect(rows[0].entityId).toBe("a");
-        expect(rows[0].components.position.x()).toBe(0);
-        expect(rows[0].components.velocity.y()).toBe(1);
+        expect(rows[0].components.position.x.read()).toBe(0);
+        expect(rows[0].components.velocity.y.read()).toBe(1);
     });
 
     it("allows query mutation of existing primitive fields", () => {
@@ -230,12 +230,12 @@ describe("createWorldStorageModule", () => {
         });
 
         const [row] = storage.query("store.a", ["position"]);
-        row.components.position.x(10);
-        row.components.position.y("north");
+        row.components.position.x.write(10);
+        row.components.position.y.write("north");
 
         const [updated] = storage.query("store.a", ["position"]);
-        expect(updated.components.position.x()).toBe(10);
-        expect(updated.components.position.y()).toBe("north");
+        expect(updated.components.position.x.read()).toBe(10);
+        expect(updated.components.position.y.read()).toBe("north");
     });
 
     it("creates copied debug snapshots", () => {
@@ -248,7 +248,7 @@ describe("createWorldStorageModule", () => {
 
         const before = storage.createDebugSnapshot();
         const [row] = storage.query("store.a", ["position"]);
-        row.components.position.x(99);
+        row.components.position.x.write(99);
         const after = storage.createDebugSnapshot();
 
         expect(before.stores[0].archetypes[0].entities[0].components.position.x)

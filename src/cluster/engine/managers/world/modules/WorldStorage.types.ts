@@ -20,17 +20,17 @@ export type WorldDestroyResult = Readonly<{
     moved?: WorldEntityRecord;
 }>;
 
-export type WorldQueryFieldAccessor = {
-    (): ComponentPrimitive;
-    (value: ComponentPrimitive): void;
-};
+export type WorldQueryField = Readonly<{
+    read(): ComponentPrimitive;
+    write(value: ComponentPrimitive): void;
+}>;
 
 export type WorldQueryRow = Readonly<{
     entityId: EntityId;
     storeId: WorldStoreId;
     archetypeId: ArchetypeId;
     components: Readonly<
-        Record<string, Readonly<Record<string, WorldQueryFieldAccessor>>>
+        Record<string, Readonly<Record<string, WorldQueryField>>>
     >;
 }>;
 
