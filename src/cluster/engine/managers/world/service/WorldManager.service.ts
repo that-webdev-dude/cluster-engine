@@ -43,6 +43,10 @@ function createWorldManagerService(
         worldStorage.destroy(storeId, entityId);
     }
 
+    function applyClearStore(storeId: string) {
+        worldStorage.clearStore(storeId);
+    }
+
     function applyClear() {
         worldStorage.clear();
     }
@@ -55,6 +59,7 @@ function createWorldManagerService(
             spawn: applySpawn,
             destroy: applyDestroy,
             clear: applyClear,
+            clearStore: applyClearStore,
         });
     }
 
@@ -82,6 +87,7 @@ function createWorldManagerService(
         destroy: (storeId: string, entityId: EntityId) =>
             commandQueue.destroy(storeId, entityId),
         clear: () => commandQueue.clear(),
+        clearStore: (storeId: string) => commandQueue.clearStore(storeId),
     });
 
     return {

@@ -19,6 +19,7 @@ export type WorldCommands = {
     readonly request: {
         spawn(storeId: WorldStoreId, entity: Entity): void;
         destroy(storeId: WorldStoreId, entityId: EntityId): void;
+        clearStore(storeId: WorldStoreId): void;
         clear(): void;
     };
 };

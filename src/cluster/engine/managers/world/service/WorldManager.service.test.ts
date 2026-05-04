@@ -106,6 +106,35 @@ describe("createWorldManager", () => {
         expect(manager.view.entityCount).toBe(0);
     });
 
+    it("applies queued store clear during flush", async () => {
+        const manager = createWorldManager();
+
+        await manager.start();
+        manager.commands.request.spawn("store.a", {
+            id: "a",
+            position: { x: 0, y: 0 },
+        });
+        manager.commands.request.spawn("store.b", {
+            id: "b",
+            position: { x: 1, y: 1 },
+        });
+        manager.flush();
+        manager.publish();
+
+        manager.commands.request.clearStore("store.a");
+        manager.publish();
+
+        expect(manager.view.storeCount).toBe(2);
+        expect(manager.view.entityCount).toBe(2);
+
+        manager.flush();
+        manager.publish();
+
+        expect(manager.view.storeCount).toBe(1);
+        expect(manager.view.entityCount).toBe(1);
+        expect(manager.view.debug.stores[0].storeId).toBe("store.b");
+    });
+
     it("applies queued spawn clear spawn in order", async () => {
         const manager = createWorldManager();
 

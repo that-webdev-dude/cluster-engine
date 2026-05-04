@@ -86,6 +86,7 @@ function createFakeWorldManager(log: string[]): WorldManagerService {
             request: {
                 spawn() {},
                 destroy() {},
+                clearStore() {},
                 clear() {},
             },
         },

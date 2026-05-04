@@ -6,6 +6,7 @@ import type { Entity } from "../../managers/world";
 
 export type AuthoredSceneAdapterDeps = Readonly<{
     spawnEntity(storeId: string, entity: Entity): void;
+    clearStore(storeId: string): void;
 }>;
 
 export type AuthoredSceneAdapter = Readonly<{
@@ -25,7 +26,7 @@ export function createAuthoredSceneAdapter(
             instanceId,
             policy: authoredScene.options,
             onMount(runtimeCtx) {
-                return authoredScene.setup({
+                const authoredCleanup = authoredScene.setup({
                     addSystems(...systems) {
                         runtimeCtx.addSystems(...systems);
                     },
@@ -35,6 +36,16 @@ export function createAuthoredSceneAdapter(
                         }
                     },
                 });
+
+                return () => {
+                    try {
+                        if (typeof authoredCleanup === "function") {
+                            authoredCleanup();
+                        }
+                    } finally {
+                        deps.clearStore(instanceId);
+                    }
+                };
             },
         };
     }

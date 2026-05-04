@@ -43,6 +43,9 @@ export function createGame(config: GameConfig): Game {
         spawnEntity(storeId: string, entity: Entity) {
             worldManager.commands.request.spawn(storeId, entity);
         },
+        clearStore(storeId: string) {
+            worldManager.commands.request.clearStore(storeId);
+        },
     });
 
     const sceneCommands: GameSceneCommands = {
