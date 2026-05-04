@@ -1,16 +1,7 @@
 import "./style.css";
+import demoGame from "./demoGame";
 
-// public api design for cluster-engine
-
-// components
-
-// entities
-
-// systems
-
-// scenes
-// → entities
-// → systems
+demoGame();
 
 const app = document.querySelector<HTMLDivElement>("#app");
 if (app) {
