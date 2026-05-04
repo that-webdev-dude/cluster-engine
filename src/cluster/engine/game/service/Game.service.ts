@@ -45,6 +45,7 @@ export function createGame(config: GameConfig): Game {
     });
     const sceneManager = createSceneManager<GameCtx, GameRun>({ debug });
     const worldManager = createWorldManager({ debug });
+
     const authoredSceneAdapter = createAuthoredSceneAdapter({
         spawnEntity(storeId: string, entity: Entity) {
             worldManager.commands.request.spawn(storeId, entity);
