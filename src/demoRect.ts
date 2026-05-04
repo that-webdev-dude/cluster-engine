@@ -1,5 +1,4 @@
 import { createGame, entity, scene, system } from "./cluster/engine/game";
-import demoScene from "./demoScene";
 
 function createDisplay() {
     const app = document.querySelector<HTMLDivElement>("#app");
@@ -31,6 +30,8 @@ function drawRect(
 
 export default async () => {
     const SCENE_ID = "demo-scene";
+    const DISPLAY_WIDTH = 800;
+    const DISPLAY_HEIGHT = 600;
     const PARTICLE_SIZE = 4;
     const PARTICLE_COUNT = 100;
 
@@ -39,8 +40,8 @@ export default async () => {
     function createParticles(count: number) {
         const entities = [];
         for (let i = 0; i < count; i++) {
-            const x = Math.random() * (display.width - PARTICLE_SIZE);
-            const y = Math.random() * (display.height - PARTICLE_SIZE);
+            const x = Math.random() * (DISPLAY_WIDTH - PARTICLE_SIZE);
+            const y = Math.random() * (DISPLAY_HEIGHT - PARTICLE_SIZE);
 
             const entity = {
                 id: `rect-${i}`,
@@ -95,17 +96,20 @@ export default async () => {
                     x += vx * (dt / 1000);
                     y += vy * (dt / 1000);
 
-                    if (x < 0 || x > display.width - PARTICLE_SIZE) {
+                    const maxX = ctx.display.w - PARTICLE_SIZE;
+                    const maxY = ctx.display.h - PARTICLE_SIZE;
+
+                    if (x < 0 || x > maxX) {
                         x = Math.max(
                             0,
-                            Math.min(display.width - PARTICLE_SIZE, x),
+                            Math.min(maxX, x),
                         );
                         velocity.x.write(-vx);
                     }
-                    if (y < 0 || y > display.height - PARTICLE_SIZE) {
+                    if (y < 0 || y > maxY) {
                         y = Math.max(
                             0,
-                            Math.min(display.height - PARTICLE_SIZE, y),
+                            Math.min(maxY, y),
                         );
                         velocity.y.write(-vy);
                     }
@@ -121,7 +125,7 @@ export default async () => {
         id: "render",
         phase: "preRender",
         execute: (ctx, alpha) => {
-            display.ctx.clearRect(0, 0, display.width, display.height);
+            display.ctx.clearRect(0, 0, ctx.display.w, ctx.display.h);
 
             ctx.world
                 .query(SCENE_ID, ["position", "prevPosition", "size"])
@@ -159,6 +163,10 @@ export default async () => {
 
     const game = createGame({
         canvas: display.canvas,
+        display: {
+            mode: "fixed",
+            size: { w: DISPLAY_WIDTH, h: DISPLAY_HEIGHT },
+        },
         initialScene: demoScene,
     });
 

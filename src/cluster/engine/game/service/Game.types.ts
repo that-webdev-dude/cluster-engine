@@ -5,6 +5,7 @@ import {
     WorldManagerView,
     WorldManagerQueryRow,
 } from "../../managers/world";
+import type { DisplayView } from "../../services/display";
 import { System } from "../../systems";
 
 export type GameSceneCommands = {
@@ -32,6 +33,7 @@ export type GameCtxWorld = {
 };
 
 export type GameCtx = {
+    display: DisplayView;
     scene: GameSceneCommands;
     world: GameCtxWorld;
 };

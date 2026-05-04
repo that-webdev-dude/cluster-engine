@@ -1,14 +1,50 @@
 import { describe, expect, it } from "vitest";
 import { createGameFramePipeline } from "./GameFramePipeline.module";
 import type { GameCtx } from "../service/Game.types";
+import type { DisplayView } from "../../services/display";
 import type {
     SceneExecutePassArgs,
     SceneManagerService,
 } from "../../managers/scene";
 import type { WorldManagerService } from "../../managers/world";
 
+function createTestDisplay(): DisplayView {
+    return {
+        rev: 0,
+        w: 320,
+        h: 240,
+        dpr: 1,
+        changed: false,
+        cssToSurface(x, y, out) {
+            const result = out ?? { x: 0, y: 0 };
+            result.x = x;
+            result.y = y;
+            return result;
+        },
+        surfaceToCss(x, y, out) {
+            const result = out ?? { x: 0, y: 0 };
+            result.x = x;
+            result.y = y;
+            return result;
+        },
+        surfaceToClient(x, y, out) {
+            const result = out ?? { x: 0, y: 0 };
+            result.x = x;
+            result.y = y;
+            return result;
+        },
+        clientToSurface(clientX, clientY, out) {
+            const result = out ?? { x: 0, y: 0 };
+            result.x = clientX;
+            result.y = clientY;
+            return result;
+        },
+    };
+}
+
 function createTestCtx(): GameCtx {
     return {
+        display: createTestDisplay(),
         scene: {
             request: {
                 set() {},
@@ -17,10 +53,15 @@ function createTestCtx(): GameCtx {
             },
         },
         world: {
-            request: {
-                spawn() {},
-                destroy() {},
-                clear() {},
+            query() {
+                return [];
+            },
+            commands: {
+                request: {
+                    spawn() {},
+                    destroy() {},
+                    clear() {},
+                },
             },
         },
     };

@@ -14,14 +14,14 @@ import {
 } from "../../controllers/Lifecycle.controller";
 import { createSceneManager } from "../../managers/scene";
 import { createWorldManager, type Entity } from "../../managers/world";
+import { createDisplay, type DisplayOptions } from "../../services/display";
 import { createLoop } from "../../services/loop";
 import { createAuthoredSceneAdapter } from "../modules/AuthoredSceneAdapter.module";
 import { createGameFramePipeline } from "../modules/GameFramePipeline.module";
 
 export type GameConfig = {
     canvas: HTMLCanvasElement | OffscreenCanvas;
-    // service?: ServiceOptions;
-    // ...
+    display?: DisplayOptions;
     initialScene: GameAuthoredScene;
     platform?: GamePlatform;
     debug?: boolean;
@@ -35,8 +35,14 @@ export type Game = {
 };
 
 export function createGame(config: GameConfig): Game {
-    const { platform, debug = false } = config;
+    const { canvas, platform, debug = false } = config;
 
+    const display = createDisplay({
+        platform,
+        canvas,
+        debug,
+        options: config.display,
+    });
     const sceneManager = createSceneManager<GameCtx, GameRun>({ debug });
     const worldManager = createWorldManager({ debug });
     const authoredSceneAdapter = createAuthoredSceneAdapter({
@@ -99,6 +105,7 @@ export function createGame(config: GameConfig): Game {
 
     const createGameCtx = (): GameCtx => {
         return {
+            display: display.view,
             scene: sceneCommands,
             world: {
                 query(storeId: string, componentNames: readonly string[]) {
@@ -115,6 +122,7 @@ export function createGame(config: GameConfig): Game {
         createGameCtx,
     });
     function runBeginUpdate() {
+        display.latch();
         frameGameCtx = framePipeline.beginUpdate();
     }
     function runFixedUpdate(dt: number) {
@@ -138,6 +146,7 @@ export function createGame(config: GameConfig): Game {
     });
 
     async function handleStart() {
+        await display.start();
         await worldManager.start();
         await sceneManager.start();
         await loop.start();
@@ -146,11 +155,13 @@ export function createGame(config: GameConfig): Game {
         await loop.stop();
         await sceneManager.stop();
         await worldManager.stop();
+        await display.stop();
     }
     async function handleDispose(_from: LifecycleLivePhase) {
         await loop.dispose();
         await sceneManager.dispose();
         await worldManager.dispose();
+        await display.dispose();
     }
     const lifecycle = createLifecycle({
         tag: "Game",
