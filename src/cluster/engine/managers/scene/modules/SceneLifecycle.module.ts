@@ -1,5 +1,5 @@
 import type { Scheduler } from "./Scheduler.module";
-import type { System } from "../../../types/system";
+import type { System } from "../../../systems";
 import type { Scene, SceneCtx, SceneInstanceId } from "../Scene.types";
 import type { MountedScene } from "../Scene.runtime.types";
 import { resolveSceneInstanceId } from "../tools";

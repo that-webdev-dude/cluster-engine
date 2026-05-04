@@ -1,6 +1,7 @@
 import type { Scene, SceneInstanceId } from "../Scene.types";
+import type { SystemPhase } from "../../../systems";
 
-export type SceneExecPass = "input" | "fixedUpdate" | "preRender";
+export type SceneExecPass = SystemPhase;
 
 export type SceneExecOrder = "bottomToTop" | "topToBottom";
 

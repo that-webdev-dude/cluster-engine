@@ -1,7 +1,7 @@
 import { EnginePlatform } from "../../types/patform";
 import { Scene, ScenePolicy, SceneManagerView } from "../../managers/scene";
 import { Entity, WorldManagerView } from "../../managers/world";
-import { System } from "../../types/system";
+import { System } from "../../systems";
 
 export type GameSceneCommands = {
     request: {

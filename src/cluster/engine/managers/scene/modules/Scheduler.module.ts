@@ -1,4 +1,4 @@
-import type { System, SystemOwnerId } from "../../../types/system";
+import type { System, SystemOwnerId } from "../../../systems";
 import type { SceneExecPass } from "../service/SceneManager.types";
 
 export type SchedulerRegistration<C, R> = {

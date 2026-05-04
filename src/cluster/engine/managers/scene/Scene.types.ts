@@ -1,4 +1,4 @@
-import { System } from "../../types/system";
+import type { System } from "../../systems";
 
 export type SceneDefinitionId = string;
 

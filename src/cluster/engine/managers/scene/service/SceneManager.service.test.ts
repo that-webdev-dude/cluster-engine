@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { createSceneManager } from "./SceneManager.service";
 import type { Scene, ScenePolicy } from "../Scene.types";
-import type { System } from "../../../types/system";
+import type { System } from "../../../systems";
 import type { SceneExecPass } from "./SceneManager.types";
 
 type TestCtx = { log: string[] };
