@@ -5,14 +5,14 @@ import type { GameCtx, GameRun } from "../service/Game.types";
 export type GameFramePipelineDeps = Readonly<{
     sceneManager: SceneManagerService<GameCtx, GameRun>;
     worldManager: WorldManagerService;
-    createGameCtx(): GameCtx;
+    createGameCtx(scopeId: string): GameCtx;
 }>;
 
 export type GameFramePipeline = Readonly<{
-    beginUpdate(): GameCtx;
-    input(ctx: GameCtx): void;
-    fixedUpdate(ctx: GameCtx, dt: number): void;
-    preRender(ctx: GameCtx, alpha: number): void;
+    beginUpdate(): void;
+    input(): void;
+    fixedUpdate(dt: number): void;
+    preRender(alpha: number): void;
     render(alpha: number): void;
 }>;
 
@@ -21,33 +21,31 @@ export function createGameFramePipeline(
 ): GameFramePipeline {
     const { sceneManager, worldManager, createGameCtx } = deps;
 
-    function beginUpdate(): GameCtx {
+    function beginUpdate() {
         sceneManager.flush();
         worldManager.flush();
         worldManager.publish();
-
-        return createGameCtx();
     }
 
-    function input(ctx: GameCtx): void {
-        sceneManager.execute({
-            ctx,
+    function input(): void {
+        sceneManager.scopedExecute({
+            scope: createGameCtx,
             run: 0,
             pass: "input",
         });
     }
 
-    function fixedUpdate(ctx: GameCtx, dt: number): void {
-        sceneManager.execute({
-            ctx,
+    function fixedUpdate(dt: number): void {
+        sceneManager.scopedExecute({
+            scope: createGameCtx,
             run: dt,
             pass: "fixedUpdate",
         });
     }
 
-    function preRender(ctx: GameCtx, alpha: number): void {
-        sceneManager.execute({
-            ctx,
+    function preRender(alpha: number): void {
+        sceneManager.scopedExecute({
+            scope: createGameCtx,
             run: alpha,
             pass: "preRender",
         });

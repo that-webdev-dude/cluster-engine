@@ -42,6 +42,12 @@ export type SceneExecuteArgs<C, R> = Readonly<{
     run: R;
 }>;
 
+export type SceneScopedExecuteArgs<C, R> = Readonly<{
+    run: R;
+    pass: SceneExecPass;
+    scope: (scopeId: string) => C;
+}>;
+
 export type SceneRequestCommands<C, R> = {
     // Queues replacement of the active stack and applies it on the next flush.
     set(scene: Scene<C, R>): void;
@@ -65,6 +71,7 @@ export type SceneManagerService<C, R> = Readonly<{
     stop(): Promise<boolean>;
     flush(): void;
     execute(args: SceneExecuteArgs<C, R>): void;
+    scopedExecute(args: SceneScopedExecuteArgs<C, R>): void;
     dispose(): Promise<boolean>;
     view: SceneManagerView;
     commands: SceneCommands<C, R>;

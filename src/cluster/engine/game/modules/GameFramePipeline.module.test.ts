@@ -3,10 +3,7 @@ import { createGameFramePipeline } from "./GameFramePipeline.module";
 import type { GameCtx } from "../service/Game.types";
 import type { DisplayView } from "../../services/display";
 import type { InputView } from "../../services/input";
-import type {
-    SceneExecutePassArgs,
-    SceneManagerService,
-} from "../../managers/scene";
+import type { SceneManagerService } from "../../managers/scene";
 import type { WorldManagerService } from "../../managers/world";
 
 function createTestDisplay(): DisplayView {
@@ -88,7 +85,7 @@ function createTestInput(): InputView {
     };
 }
 
-function createTestCtx(): GameCtx {
+function createTestCtx(_scopeId: string = "test.scope"): GameCtx {
     return {
         display: createTestDisplay(),
         input: createTestInput(),
@@ -124,8 +121,12 @@ function createFakeSceneManager(
         flush() {
             log.push("scene.flush");
         },
-        execute(args: SceneExecutePassArgs<GameCtx, number>) {
+        execute(args) {
             log.push(`scene.execute:${args.pass}:${args.run}`);
+        },
+        scopedExecute(args) {
+            log.push(`scene.scopedExecute:${args.pass}:${args.run}`);
+            args.scope("test.scope");
         },
         view: {
             rev: 0,
@@ -184,28 +185,19 @@ function createFakeWorldManager(log: string[]): WorldManagerService {
 describe("createGameFramePipeline", () => {
     it("flushes scene changes and publishes world before creating frame context", () => {
         const log: string[] = [];
-        const ctx = createTestCtx();
         const pipeline = createGameFramePipeline({
             sceneManager: createFakeSceneManager(log),
             worldManager: createFakeWorldManager(log),
-            createGameCtx() {
-                log.push("createGameCtx");
-                return ctx;
-            },
+            createGameCtx: createTestCtx,
         });
 
         const result = pipeline.beginUpdate();
 
-        expect(result).toBe(ctx);
-        expect(log).toEqual([
-            "scene.flush",
-            "world.flush",
-            "world.publish",
-            "createGameCtx",
-        ]);
+        expect(result).toBeUndefined();
+        expect(log).toEqual(["scene.flush", "world.flush", "world.publish"]);
     });
 
-    it("executes input before fixed update during fixed update", () => {
+    it("executes input through scoped scene execution", () => {
         const log: string[] = [];
         const pipeline = createGameFramePipeline({
             sceneManager: createFakeSceneManager(log),
@@ -213,12 +205,22 @@ describe("createGameFramePipeline", () => {
             createGameCtx: createTestCtx,
         });
 
-        pipeline.fixedUpdate(createTestCtx(), 16);
+        pipeline.input();
 
-        expect(log).toEqual([
-            "scene.execute:input:16",
-            "scene.execute:fixedUpdate:16",
-        ]);
+        expect(log).toEqual(["scene.scopedExecute:input:0"]);
+    });
+
+    it("executes fixed update through scoped scene execution", () => {
+        const log: string[] = [];
+        const pipeline = createGameFramePipeline({
+            sceneManager: createFakeSceneManager(log),
+            worldManager: createFakeWorldManager(log),
+            createGameCtx: createTestCtx,
+        });
+
+        pipeline.fixedUpdate(16);
+
+        expect(log).toEqual(["scene.scopedExecute:fixedUpdate:16"]);
     });
 
     it("executes pre-render during pre-render", () => {
@@ -229,9 +231,9 @@ describe("createGameFramePipeline", () => {
             createGameCtx: createTestCtx,
         });
 
-        pipeline.preRender(createTestCtx(), 0.5);
+        pipeline.preRender(0.5);
 
-        expect(log).toEqual(["scene.execute:preRender:0.5"]);
+        expect(log).toEqual(["scene.scopedExecute:preRender:0.5"]);
     });
 
     it("flushes and publishes world during render", () => {

@@ -19,25 +19,24 @@ export type GameSceneCommands = {
 
 export type GameWorldCommands = {
     request: {
-        spawn(storeId: string, entity: Entity): void;
-        destroy(storeId: string, entityId: string): void;
+        spawn(entity: Entity): void;
+        destroy(entityId: string): void;
         clear(): void;
     };
 };
 
-export type GameCtxWorld = {
-    query(
-        storeId: string,
-        componentNames: readonly string[],
-    ): readonly WorldManagerQueryRow[];
-    commands: GameWorldCommands;
-};
+export type GameWorldQuery = (
+    componemtnNames: readonly string[],
+) => readonly WorldManagerQueryRow[];
 
 export type GameCtx = {
     display: DisplayView;
     input: InputView;
     scene: GameSceneCommands;
-    world: GameCtxWorld;
+    world: {
+        query: GameWorldQuery;
+        commands: GameWorldCommands;
+    };
 };
 
 export type GameRun = number;

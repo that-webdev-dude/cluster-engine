@@ -13,6 +13,13 @@ export type SchedulerExecuteArgs<C, R> = {
     scopeIds: readonly SystemOwnerId[] | SystemOwnerId;
 };
 
+export type SchedulerScopedExecuteArgs<C, R> = {
+    run: R;
+    phase: SceneExecPass;
+    scope: (scopeId: string) => C;
+    scopeIds: readonly SystemOwnerId[] | SystemOwnerId;
+};
+
 export type SystemMetadata<C, R> = System<C, R> & {
     ownerId: SystemOwnerId;
     registrationSequence: number;
@@ -22,6 +29,7 @@ export type Scheduler<C, R> = {
     register(registration: SchedulerRegistration<C, R>): void;
     unregister(ownerId?: SystemOwnerId): void;
     execute(args: SchedulerExecuteArgs<C, R>): void;
+    scopedExecute(args: SchedulerScopedExecuteArgs<C, R>): void;
 };
 
 export function createScheduler<C, R>(debug: boolean = false): Scheduler<C, R> {
@@ -112,6 +120,54 @@ export function createScheduler<C, R>(debug: boolean = false): Scheduler<C, R> {
         }
     }
 
+    function scopedExecute(args: SchedulerScopedExecuteArgs<C, R>) {
+        const execOwners = Array.isArray(args.scopeIds)
+            ? args.scopeIds
+            : [args.scopeIds];
+
+        for (const ownerId of execOwners) {
+            const systems = systemsByOwnerId.get(ownerId);
+            if (!systems) continue;
+
+            const systemsToExecute = systems
+                .filter((system) => system.phase === args.phase)
+                .slice()
+                .sort((a, b) => {
+                    if (a.groupOrder !== b.groupOrder) {
+                        return a.groupOrder - b.groupOrder;
+                    }
+
+                    if (a.group !== b.group) {
+                        return a.group.localeCompare(b.group);
+                    }
+
+                    if (a.order !== b.order) {
+                        return a.order - b.order;
+                    }
+
+                    return a.registrationSequence - b.registrationSequence;
+                });
+
+            const ctx = args.scope(ownerId as string); // a ctx per ownerId (once per scene)
+
+            for (const system of systemsToExecute) {
+                try {
+                    system.execute(ctx, args.run);
+                } catch (error) {
+                    if (debug) {
+                        throw new Error(
+                            `SchedulerModule: system "${
+                                system.id
+                            }" failed during phase "${String(
+                                args.phase,
+                            )}": ${formatError(error)}`,
+                        );
+                    }
+                }
+            }
+        }
+    }
+
     function formatError(error: unknown): string {
         if (error instanceof Error) return error.message;
         return String(error);
@@ -119,6 +175,7 @@ export function createScheduler<C, R>(debug: boolean = false): Scheduler<C, R> {
 
     return {
         execute,
+        scopedExecute,
         register,
         unregister,
     };

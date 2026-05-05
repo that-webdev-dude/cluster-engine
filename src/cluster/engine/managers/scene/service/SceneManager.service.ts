@@ -7,6 +7,7 @@ import type {
     SceneManagerService,
     SceneManagerSnapshot,
     SceneRequestCommands,
+    SceneScopedExecuteArgs,
 } from "./SceneManager.types";
 import type { MountedScene } from "../Scene.runtime.types";
 import {
@@ -166,6 +167,19 @@ function createSceneManagerService<C, R>(
         });
     }
 
+    function scopedExecute(args: SceneScopedExecuteArgs<C, R>) {
+        lifecycle.assertNotDisposed();
+        if (!lifecycle.isRunning()) return;
+
+        const window = snapshot.plan[args.pass];
+        scheduler.scopedExecute({
+            scope: args.scope,
+            run: args.run,
+            phase: args.pass,
+            scopeIds: getOrderedInstanceIds(window),
+        });
+    }
+
     const request: SceneRequestCommands<C, R> = Object.freeze({
         set: commandQueue.set,
         push: commandQueue.push,
@@ -178,6 +192,7 @@ function createSceneManagerService<C, R>(
         stop: lifecycle.stop,
         flush,
         execute,
+        scopedExecute,
         dispose: lifecycle.dispose,
         commands: Object.freeze({
             request,

@@ -63,44 +63,6 @@ export function createGame(config: GameConfig): Game {
         },
     });
 
-    const sceneCommands: GameSceneCommands = {
-        request: {
-            set(scene: GameAuthoredScene) {
-                sceneManager.commands.request.set(
-                    authoredSceneAdapter.toRuntimeScene(scene),
-                );
-            },
-            push(scene: GameAuthoredScene) {
-                sceneManager.commands.request.push(
-                    authoredSceneAdapter.toRuntimeScene(scene),
-                );
-            },
-            pop() {
-                sceneManager.commands.request.pop();
-            },
-        },
-    } as const;
-
-    if (config.initialScene) {
-        sceneManager.commands.request.set(
-            authoredSceneAdapter.toRuntimeScene(config.initialScene),
-        );
-    }
-
-    const worldCommands: GameWorldCommands = {
-        request: {
-            spawn(storeId: string, entity: Entity) {
-                worldManager.commands.request.spawn(storeId, entity);
-            },
-            destroy(storeId: string, entityId: string) {
-                worldManager.commands.request.destroy(storeId, entityId);
-            },
-            clear() {
-                worldManager.commands.request.clear();
-            },
-        },
-    } as const;
-
     const debugView: GameDebugView = Object.freeze({
         get sceneStack() {
             return sceneManager.view.stack;
@@ -110,18 +72,56 @@ export function createGame(config: GameConfig): Game {
         },
     });
 
-    let frameGameCtx: GameCtx | undefined;
+    if (config.initialScene) {
+        sceneManager.commands.request.set(
+            authoredSceneAdapter.toRuntimeScene(config.initialScene),
+        );
+    }
 
-    const createGameCtx = (): GameCtx => {
+    const createGameCtx = (storeId: string) => {
         return {
             display: display.view,
             input: input.view,
-            scene: sceneCommands,
+            scene: {
+                request: {
+                    set(scene: GameAuthoredScene) {
+                        sceneManager.commands.request.set(
+                            authoredSceneAdapter.toRuntimeScene(scene),
+                        );
+                    },
+                    push(scene: GameAuthoredScene) {
+                        sceneManager.commands.request.push(
+                            authoredSceneAdapter.toRuntimeScene(scene),
+                        );
+                    },
+                    pop() {
+                        sceneManager.commands.request.pop();
+                    },
+                },
+            },
             world: {
-                query(storeId: string, componentNames: readonly string[]) {
+                query(componentNames: readonly string[]) {
                     return worldManager.query(storeId, componentNames);
                 },
-                commands: worldCommands,
+                commands: {
+                    request: {
+                        spawn(entity: Entity) {
+                            worldManager.commands.request.spawn(
+                                storeId,
+                                entity,
+                            );
+                        },
+                        destroy(entityId: string) {
+                            worldManager.commands.request.destroy(
+                                storeId,
+                                entityId,
+                            );
+                        },
+                        clear() {
+                            worldManager.commands.request.clearStore(storeId);
+                        },
+                    },
+                },
             },
         };
     };
@@ -134,19 +134,16 @@ export function createGame(config: GameConfig): Game {
     function runBeginUpdate() {
         display.latch();
         input.latch(display.view);
-        frameGameCtx = framePipeline.beginUpdate();
+        framePipeline.beginUpdate();
     }
     function runInput() {
-        if (!frameGameCtx) return;
-        framePipeline.input(frameGameCtx);
+        framePipeline.input();
     }
     function runFixedUpdate(dt: number) {
-        if (!frameGameCtx) return;
-        framePipeline.fixedUpdate(frameGameCtx, dt);
+        framePipeline.fixedUpdate(dt);
     }
     function runPreRender(alpha: number) {
-        if (!frameGameCtx) return;
-        framePipeline.preRender(frameGameCtx, alpha);
+        framePipeline.preRender(alpha);
     }
     function runRender(alpha: number) {
         framePipeline.render(alpha);
@@ -193,15 +190,12 @@ export function createGame(config: GameConfig): Game {
     async function start(): Promise<boolean> {
         return lifecycle.start();
     }
-
     async function stop(): Promise<boolean> {
         return lifecycle.stop();
     }
-
     async function dispose(): Promise<boolean> {
         return lifecycle.dispose();
     }
-
     return {
         debug: debugView,
         start,

@@ -127,6 +127,37 @@ describe("createSceneManager", () => {
         expect(ctx.log).toEqual(["demo.scene.fixedUpdate:16"]);
     });
 
+    it("executes systems with contexts scoped by scene instance id", async () => {
+        const manager = createSceneManager<TestCtx, TestRun>();
+        const log: string[] = [];
+
+        await manager.start();
+        manager.commands.request.push(
+            createSceneWithPassSystem("bottom", "fixedUpdate"),
+        );
+        manager.commands.request.push(
+            createSceneWithPassSystem("top", "fixedUpdate"),
+        );
+        manager.flush();
+
+        manager.scopedExecute({
+            pass: "fixedUpdate",
+            run: 16,
+            scope(scopeId) {
+                const ctx = { log };
+                ctx.log.push(`scope:${scopeId}`);
+                return ctx;
+            },
+        });
+
+        expect(log).toEqual([
+            "scope:bottom",
+            "bottom.fixedUpdate:16",
+            "scope:top",
+            "top.fixedUpdate:16",
+        ]);
+    });
+
     it("does not execute queued scenes before flush", async () => {
         const manager = createSceneManager<TestCtx, TestRun>();
         const ctx: TestCtx = { log: [] };
