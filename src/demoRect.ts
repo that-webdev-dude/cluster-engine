@@ -79,7 +79,7 @@ export default async () => {
         phase: "fixedUpdate",
         execute: (ctx, dt) => {
             ctx.world
-                .query(SCENE_ID, ["position", "prevPosition", "velocity"])
+                .query(["position", "prevPosition", "velocity"])
                 .forEach((result) => {
                     const position = result.components.position;
                     const prevPosition = result.components.prevPosition;
@@ -100,17 +100,11 @@ export default async () => {
                     const maxY = ctx.display.h - PARTICLE_SIZE;
 
                     if (x < 0 || x > maxX) {
-                        x = Math.max(
-                            0,
-                            Math.min(maxX, x),
-                        );
+                        x = Math.max(0, Math.min(maxX, x));
                         velocity.x.write(-vx);
                     }
                     if (y < 0 || y > maxY) {
-                        y = Math.max(
-                            0,
-                            Math.min(maxY, y),
-                        );
+                        y = Math.max(0, Math.min(maxY, y));
                         velocity.y.write(-vy);
                     }
 
@@ -128,7 +122,7 @@ export default async () => {
             display.ctx.clearRect(0, 0, ctx.display.w, ctx.display.h);
 
             ctx.world
-                .query(SCENE_ID, ["position", "prevPosition", "size"])
+                .query(["position", "prevPosition", "size"])
                 .forEach((result) => {
                     const position = result.components.position;
                     const prevPosition = result.components.prevPosition;
@@ -168,6 +162,7 @@ export default async () => {
             size: { w: DISPLAY_WIDTH, h: DISPLAY_HEIGHT },
         },
         initialScene: demoScene,
+        debug: true,
     });
 
     await game.start();

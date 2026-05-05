@@ -23,15 +23,11 @@ export default async () => {
                     execute(gameCtx, dt) {
                         log.push(`fixedUpdate:${dt}`);
                         gameCtx.world.commands.request.spawn(
-                            storeId,
                             entity("demo.spawned", {
                                 position: { x: dt, y: dt },
                             }),
                         );
-                        gameCtx.world.commands.request.destroy(
-                            storeId,
-                            "demo.player",
-                        );
+                        gameCtx.world.commands.request.destroy("demo.player");
                         log.push("destroy:demo.player");
                     },
                 }),
