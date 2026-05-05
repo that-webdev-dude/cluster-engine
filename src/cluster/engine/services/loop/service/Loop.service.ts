@@ -13,6 +13,7 @@ function createLoopService(config: LoopConfig): LoopService {
     const maxUpdatesPerFrame = config.maxUpdatesPerFrame ?? 5;
 
     const beginUpdate = config.onBeginUpdate;
+    const input = config.onInput;
     const fixedUpdate = config.onFixedUpdate;
     const preRender = config.onPreRender;
     const render = config.onRender;
@@ -37,7 +38,7 @@ function createLoopService(config: LoopConfig): LoopService {
         if (!requestFrame) {
             if (debug) {
                 throw new Error(
-                    "LoopService: platform requestFrame is required"
+                    "LoopService: platform requestFrame is required",
                 );
             }
             return;
@@ -48,7 +49,7 @@ function createLoopService(config: LoopConfig): LoopService {
         if (!cancelFrame) {
             if (debug) {
                 throw new Error(
-                    "LoopService: platform cancelFrame is required"
+                    "LoopService: platform cancelFrame is required",
                 );
             }
             return;
@@ -109,6 +110,7 @@ function createLoopService(config: LoopConfig): LoopService {
         accumulatedTimeMs += frameDeltaMs;
 
         beginUpdate();
+        input();
 
         while (
             accumulatedTimeMs >= fixedStepMs &&

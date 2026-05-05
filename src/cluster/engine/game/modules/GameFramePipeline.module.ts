@@ -10,6 +10,7 @@ export type GameFramePipelineDeps = Readonly<{
 
 export type GameFramePipeline = Readonly<{
     beginUpdate(): GameCtx;
+    input(ctx: GameCtx): void;
     fixedUpdate(ctx: GameCtx, dt: number): void;
     preRender(ctx: GameCtx, alpha: number): void;
     render(alpha: number): void;
@@ -28,13 +29,15 @@ export function createGameFramePipeline(
         return createGameCtx();
     }
 
-    function fixedUpdate(ctx: GameCtx, dt: number): void {
+    function input(ctx: GameCtx): void {
         sceneManager.execute({
             ctx,
-            run: dt,
+            run: 0,
             pass: "input",
         });
+    }
 
+    function fixedUpdate(ctx: GameCtx, dt: number): void {
         sceneManager.execute({
             ctx,
             run: dt,
@@ -57,6 +60,7 @@ export function createGameFramePipeline(
 
     return Object.freeze({
         beginUpdate,
+        input,
         fixedUpdate,
         preRender,
         render,

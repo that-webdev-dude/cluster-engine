@@ -136,6 +136,10 @@ export function createGame(config: GameConfig): Game {
         input.latch(display.view);
         frameGameCtx = framePipeline.beginUpdate();
     }
+    function runInput() {
+        if (!frameGameCtx) return;
+        framePipeline.input(frameGameCtx);
+    }
     function runFixedUpdate(dt: number) {
         if (!frameGameCtx) return;
         framePipeline.fixedUpdate(frameGameCtx, dt);
@@ -149,6 +153,7 @@ export function createGame(config: GameConfig): Game {
     }
     const loop = createLoop({
         onBeginUpdate: runBeginUpdate,
+        onInput: runInput,
         onFixedUpdate: runFixedUpdate,
         onPreRender: runPreRender,
         onRender: runRender,

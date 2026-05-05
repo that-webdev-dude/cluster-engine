@@ -1,4 +1,4 @@
 import "./style.css";
-import demoGame from "./demoRect";
+import demoInput from "./demoInput";
 
-demoGame();
+demoInput();

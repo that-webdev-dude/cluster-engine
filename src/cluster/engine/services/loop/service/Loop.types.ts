@@ -8,6 +8,7 @@ export type LoopPlatform = Pick<EnginePlatform, "requestFrame" | "cancelFrame">;
 
 export type LoopConfig = {
     onBeginUpdate: LoopAnyCallback;
+    onInput: LoopAnyCallback;
     onFixedUpdate: LoopFixedCallback;
     onPreRender: LoopFrameCallback;
     onRender: LoopFrameCallback;
