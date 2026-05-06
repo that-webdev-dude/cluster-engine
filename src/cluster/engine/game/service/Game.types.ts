@@ -54,7 +54,6 @@ export type GameAuthoredSceneSetupCtx = {
 
 export type GameAuthoredScene = {
     id: string;
-    instanceId?: string;
     options?: ScenePolicy;
     setup(sceneSetupCtx: GameAuthoredSceneSetupCtx): void | (() => void);
 };
