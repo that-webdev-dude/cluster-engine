@@ -25,7 +25,6 @@ describe("createAuthoredSceneAdapter", () => {
 
         const runtimeScene = adapter.toRuntimeScene({
             id: "level.one",
-            instanceId: "level.one#1",
             setup(ctx) {
                 ctx.addEntities({
                     id: "player",

@@ -3,6 +3,7 @@ import type {
     GameRuntimeScene,
 } from "../service/Game.types";
 import type { Entity } from "../../managers/world";
+import { resolveSceneInstanceId } from "../../managers/scene/tools";
 
 export type AuthoredSceneAdapterDeps = Readonly<{
     spawnEntity(storeId: string, entity: Entity): void;
@@ -19,7 +20,7 @@ export function createAuthoredSceneAdapter(
     function toRuntimeScene(
         authoredScene: GameAuthoredScene,
     ): GameRuntimeScene {
-        const instanceId = authoredScene.instanceId ?? authoredScene.id;
+        const instanceId = resolveSceneInstanceId(authoredScene); // for now instanceId is equal to id.
 
         return {
             id: authoredScene.id,

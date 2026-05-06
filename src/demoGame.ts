@@ -13,7 +13,6 @@ export default async () => {
 
     const demoScene = scene({
         id: "demo.game",
-        instanceId: storeId,
         setup(ctx) {
             log.push("setup");
             ctx.addEntities(player);

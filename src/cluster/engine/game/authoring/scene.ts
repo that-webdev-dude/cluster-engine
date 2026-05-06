@@ -5,7 +5,7 @@ export type SceneConfig = GameAuthoredScene;
 export function scene(config: SceneConfig): GameAuthoredScene {
     return Object.freeze({
         id: config.id,
-        instanceId: config.instanceId,
+        // instanceId: config.instanceId,
         options: config.options,
         setup: config.setup,
     });
