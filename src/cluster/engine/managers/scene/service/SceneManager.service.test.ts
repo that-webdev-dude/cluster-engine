@@ -326,6 +326,6 @@ describe("createSceneManager", () => {
 
         expect(() =>
             manager.execute({ pass: "fixedUpdate", ctx, run: 16 }),
-        ).toThrow("SceneManager: called after dispose()");
+        ).toThrow("SceneManager.assertNotDisposed: called after dispose()");
     });
 });

@@ -27,7 +27,7 @@ export function createSceneStack<C, R>(
         if (ids.has(instanceId)) {
             if (debug) {
                 throw new Error(
-                    `[SceneStack] SceneInstanceId ${instanceId} already active`,
+                    `SceneStack.push: scene instance ${instanceId} is already active`,
                 );
             }
             return undefined;

@@ -113,7 +113,7 @@ export class Chunk<S extends ComponentSchema> {
 
         if (this.count >= this.capacity) {
             throw new Error(
-                `[Chunk.allocate]: Chunk is full - maxEntities = ${this.capacity}`,
+                `Chunk.allocate: chunk is full (capacity: ${this.capacity})`,
             );
         }
 
@@ -140,7 +140,7 @@ export class Chunk<S extends ComponentSchema> {
         const lastRow = this.count - 1;
         if (row < 0 || row >= this.count) {
             throw new Error(
-                `Row ${row} out of bounds, nothing to delete; chunk count: ${this.count}, chunk arche: ${this.archetype.name}`,
+                `Chunk.delete: row ${row} out of bounds (count: ${this.count}, archetype: ${this.archetype.name})`,
             );
         }
 
@@ -193,7 +193,7 @@ export class Chunk<S extends ComponentSchema> {
         this.generations = [];
 
         if (this.debug) {
-            console.log(`[Chunk.dispose]: chunk disposed`);
+            console.log("Chunk.dispose: chunk disposed");
         }
     }
 
@@ -209,7 +209,9 @@ export class Chunk<S extends ComponentSchema> {
         }
         const column = (columnMap as any)[descriptor.name] as T | undefined;
         if (!column) {
-            throw new Error(`View for ${descriptor.name} not found`);
+            throw new Error(
+                `Chunk.getColumn: column for ${descriptor.name} not found`,
+            );
         }
         return column;
     }
@@ -262,7 +264,7 @@ export class Chunk<S extends ComponentSchema> {
     private incrementCount(): void {
         const currentCount = this.count;
         if (currentCount >= this.capacity) {
-            throw new Error("Chunk is full");
+            throw new Error("Chunk.incrementCount: chunk is full");
         }
         this.countValue = currentCount + 1;
     }
@@ -270,13 +272,15 @@ export class Chunk<S extends ComponentSchema> {
     private decrementCount(): void {
         const currentCount = this.count;
         if (currentCount === 0) {
-            throw new Error("Chunk is empty. count is already 0");
+            throw new Error("Chunk.decrementCount: chunk is empty");
         }
         this.countValue = currentCount - 1;
     }
 
     private assertAlive(): void {
-        if (this.destroyed) throw new Error("Chunk has been destroyed");
+        if (this.destroyed) {
+            throw new Error("Chunk.assertAlive: chunk has been destroyed");
+        }
     }
 
     private buildAccessors(): ComponentAccessors<S> {

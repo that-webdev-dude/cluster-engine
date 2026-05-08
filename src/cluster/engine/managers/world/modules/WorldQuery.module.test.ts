@@ -110,7 +110,7 @@ describe("createWorldQueryRows", () => {
         store.entities.delete("moving");
 
         expect(() => row.components.position.x.read()).toThrow(
-            "WorldQuery: stale row for entity moving in store store.a",
+            "WorldQuery.assertFresh: stale row for entity moving in store store.a",
         );
     });
 
@@ -151,7 +151,7 @@ describe("createWorldQueryRows", () => {
         );
 
         expect(() => staleB.components.position.x.write(10)).toThrow(
-            "WorldQuery: stale row for entity b in store store.a",
+            "WorldQuery.assertFresh: stale row for entity b in store store.a",
         );
     });
 });

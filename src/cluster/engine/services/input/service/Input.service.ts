@@ -60,7 +60,9 @@ function copyPointer(source: PointerSnapshot): PointerSnapshot {
 }
 
 function createInputService(config: InputConfig): InputService {
-    if (!config.canvas) throw new Error("InputService: canvas is required");
+    if (!config.canvas) {
+        throw new Error("InputService.create: canvas is required");
+    }
 
     const debug = config.debug ?? false;
     const env = {

@@ -114,12 +114,12 @@ export class Storage<S extends ComponentSchema> {
         const chunk = this.getChunk(chunkId);
         if (!chunk) {
             throw new Error(
-                `Storage.delete: illegal attempt to delete - the chunkId ${chunkId} doesn't exists`,
+                `Storage.delete: chunk ${chunkId} does not exist`,
             );
         }
 
         if (chunk.count === 0) {
-            console.warn(`Storage.delete: the chunk is already empty !!!!`);
+            console.warn("Storage.delete: chunk is already empty");
             return undefined;
         }
 
@@ -134,7 +134,7 @@ export class Storage<S extends ComponentSchema> {
         this.liveRecords--;
 
         if (chunk.count < 0)
-            console.warn(`Storage.delete: the chunk has a count < 0 !!!!`);
+            console.warn("Storage.delete: chunk count is below zero");
 
         const remainingCount = chunk.count;
         if (remainingCount === 0) {
@@ -221,7 +221,7 @@ export class Storage<S extends ComponentSchema> {
         const chunk = this.chunks.get(chunkId);
         if (!chunk) {
             throw new Error(
-                `Storage.assign: illegal assignement - the chunkId ${chunkId} doesn't exists`,
+                `Storage.assign: chunk ${chunkId} does not exist`,
             );
         }
 
@@ -306,7 +306,7 @@ export class Storage<S extends ComponentSchema> {
         const chunk = this.chunks.get(chunkId);
         if (!chunk) {
             throw new Error(
-                `Storage.destroyChunk: illegal attempt to destroy - the chunkId ${chunkId} doesn't exists`,
+                `Storage.destroyChunk: chunk ${chunkId} does not exist`,
             );
         }
 

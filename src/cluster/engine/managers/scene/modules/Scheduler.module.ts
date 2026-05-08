@@ -49,7 +49,7 @@ export function createScheduler<C, R>(debug: boolean = false): Scheduler<C, R> {
         if (systems?.find((t) => t.id === system.id) !== undefined) {
             if (debug) {
                 throw new Error(
-                    "SchedulerModule: attempt to add a system twice for the same scope!",
+                    "Scheduler.register: system is already registered for owner",
                 );
             }
             return;
@@ -108,7 +108,7 @@ export function createScheduler<C, R>(debug: boolean = false): Scheduler<C, R> {
                 } catch (error) {
                     if (debug) {
                         throw new Error(
-                            `SchedulerModule: system "${
+                            `Scheduler.execute: system "${
                                 system.id
                             }" failed during phase "${String(
                                 args.phase,
@@ -156,7 +156,7 @@ export function createScheduler<C, R>(debug: boolean = false): Scheduler<C, R> {
                 } catch (error) {
                     if (debug) {
                         throw new Error(
-                            `SchedulerModule: system "${
+                            `Scheduler.scopedExecute: system "${
                                 system.id
                             }" failed during phase "${String(
                                 args.phase,

@@ -251,13 +251,13 @@ describe("createWorldManager", () => {
         await manager.dispose();
 
         expect(() => manager.flush()).toThrow(
-            "WorldService: called after dispose()",
+            "WorldService.assertNotDisposed: called after dispose()",
         );
         expect(() => manager.publish()).toThrow(
-            "WorldService: called after dispose()",
+            "WorldService.assertNotDisposed: called after dispose()",
         );
         expect(() => manager.query("store.a", ["position"])).toThrow(
-            "WorldService: called after dispose()",
+            "WorldService.assertNotDisposed: called after dispose()",
         );
     });
 

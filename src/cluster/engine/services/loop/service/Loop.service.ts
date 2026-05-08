@@ -38,7 +38,7 @@ function createLoopService(config: LoopConfig): LoopService {
         if (!requestFrame) {
             if (debug) {
                 throw new Error(
-                    "LoopService: platform requestFrame is required",
+                    "LoopService.assertRequestFrameNotUndefined: platform requestFrame is required",
                 );
             }
             return;
@@ -49,7 +49,7 @@ function createLoopService(config: LoopConfig): LoopService {
         if (!cancelFrame) {
             if (debug) {
                 throw new Error(
-                    "LoopService: platform cancelFrame is required",
+                    "LoopService.assertCancelFrameNotUndefined: platform cancelFrame is required",
                 );
             }
             return;

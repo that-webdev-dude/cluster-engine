@@ -153,7 +153,7 @@ function assertFresh(
     if (isCurrentEntityRecord(store, record)) return;
 
     throw new Error(
-        `WorldQuery: stale row for entity ${record.entityId} in store ${record.storeId}`,
+        `WorldQuery.assertFresh: stale row for entity ${record.entityId} in store ${record.storeId}`,
     );
 }
 

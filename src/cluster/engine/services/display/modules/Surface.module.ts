@@ -1,8 +1,8 @@
 import type { Rect } from "../../../types/geometry";
 
 enum ErrorMsg {
-    CANVAS_SIZE_CHANGED = "canvas size has changed from external code",
-    NON_UNIFORM_SCALING = "non-uniform scaling: conversions must use sx/sy separately",
+    CANVAS_SIZE_CHANGED = "DisplaySurface.apply: canvas size changed from external code",
+    NON_UNIFORM_SCALING = "DisplaySurface.apply: non-uniform scaling requires separate sx/sy conversions",
 }
 
 const EPS = 1e-6;

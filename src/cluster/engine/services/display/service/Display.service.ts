@@ -25,7 +25,9 @@ export type DisplayService = Readonly<{
 }>;
 
 function createDisplayService(config: DisplayConfig): DisplayService {
-    if (!config.canvas) throw new Error("DisplayService: canvas is required");
+    if (!config.canvas) {
+        throw new Error("DisplayService.create: canvas is required");
+    }
 
     let pendingResize = true;
     let pendingFullscreen = true;
@@ -124,7 +126,9 @@ function createDisplayService(config: DisplayConfig): DisplayService {
     const getRectOrFallback = (): Rect => {
         if (snapshot.rect) return snapshot.rect;
         if (debug) {
-            throw new Error("DisplayService: DisplayView.rect is undefined");
+            throw new Error(
+                "DisplayService.getRectOrFallback: DisplayView.rect is undefined",
+            );
         }
 
         const cssW = snapshot.cssW ?? snapshot.w / snapshot.dpr;

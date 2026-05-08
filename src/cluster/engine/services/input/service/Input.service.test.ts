@@ -219,7 +219,7 @@ describe("createInput", () => {
         await input.dispose();
 
         expect(() => input.latch(createFrame())).toThrow(
-            "InputService: called after dispose()",
+            "InputService.assertNotDisposed: called after dispose()",
         );
     });
 });

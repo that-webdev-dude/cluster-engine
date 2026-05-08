@@ -119,19 +119,25 @@ export function validateArchetypeFields(
 
 export function assertStoreId(storeId: string): void {
     if (typeof storeId !== "string" || storeId.trim().length === 0) {
-        throw new Error("WorldStorage: storeId must be a non-empty string");
+        throw new Error(
+            "WorldStorage.assertStoreId: storeId must be a non-empty string",
+        );
     }
 }
 
 export function assertEntityId(entityId: EntityId): void {
     if (typeof entityId !== "string" || entityId.trim().length === 0) {
-        throw new Error("WorldStorage: entityId must be a non-empty string");
+        throw new Error(
+            "WorldStorage.assertEntityId: entityId must be a non-empty string",
+        );
     }
 }
 
 export function assertComponentName(componentName: string): void {
     if (componentName.trim().length === 0) {
-        throw new Error("WorldStorage: component name must be non-empty");
+        throw new Error(
+            "WorldStorage.assertComponentName: component name must be non-empty",
+        );
     }
 }
 
@@ -172,7 +178,7 @@ function parseComponent(
 function assertFieldName(componentName: string, fieldName: string): void {
     if (fieldName.trim().length === 0) {
         throw new Error(
-            `WorldStorage: field name for component ${componentName} must be non-empty`,
+            `WorldStorage.assertFieldName: field name for component ${componentName} must be non-empty`,
         );
     }
 }

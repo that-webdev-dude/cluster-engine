@@ -45,7 +45,7 @@ export function createLifecycle(config: LifecycleConfig = {}): Lifecycle {
     let currentPhase: LifecyclePhase = "stopped";
 
     function fail(message: string): never {
-        throw new Error(`${tag}: ${message}`);
+        throw new Error(`${tag}.assertNotDisposed: ${message}`);
     }
 
     function ensureNotDisposed(): boolean {
@@ -147,7 +147,7 @@ export function createLifecycle(config: LifecycleConfig = {}): Lifecycle {
         }
 
         if (errors.length > 1) {
-            throw new AggregateError(errors, `${tag}: dispose() failed`);
+            throw new AggregateError(errors, `${tag}.dispose: failed`);
         }
 
         return true;

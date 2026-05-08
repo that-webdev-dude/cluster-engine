@@ -92,7 +92,7 @@ describe("createDisplay", () => {
         await display.dispose();
 
         expect(() => display.latch()).toThrow(
-            "DisplayService: called after dispose()",
+            "DisplayService.assertNotDisposed: called after dispose()",
         );
     });
 });
