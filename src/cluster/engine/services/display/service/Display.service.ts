@@ -124,7 +124,7 @@ function createDisplayService(config: DisplayConfig): DisplayService {
     const getRectOrFallback = (): Rect => {
         if (snapshot.rect) return snapshot.rect;
         if (debug) {
-            throw new Error("DisplayView.rect is undefined");
+            throw new Error("DisplayService: DisplayView.rect is undefined");
         }
 
         const cssW = snapshot.cssW ?? snapshot.w / snapshot.dpr;
