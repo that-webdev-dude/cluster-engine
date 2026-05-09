@@ -42,17 +42,30 @@ display.stop()
 This order is current behavior. Future renderer or asset services may require
 new lifecycle dependencies.
 
-## Current Loop Phases
+## Current Loop Timing
 
-The loop service currently drives:
+The loop service currently owns platform frame callbacks, fixed-step
+accumulation, update-step capping, frame delta clamping, and interpolation
+alpha calculation. It reports timing frames instead of directly invoking engine
+phases:
 
 ```text
-beginUpdate
-input
-fixedUpdate
-preRender
-render
+onFrameUpdate:
+  frameDeltaMs
+  rawFrameDeltaMs
+  fixedStepMs
+  updateSteps
+  droppedUpdates
+
+onFrameRender:
+  alpha
+  frameDeltaMs
+  rawFrameDeltaMs
 ```
+
+The game frame pipeline maps these timing frames onto current engine phases.
+The loop service should remain a timing primitive rather than an owner of
+display, input, simulation, scene, world, or rendering semantics.
 
 Scene systems currently use:
 
@@ -69,25 +82,27 @@ data layout are designed.
 Current frame pipeline:
 
 ```text
-beginUpdate:
-  display.latch()
-  input.latch(display.view)
-  sceneManager.flush()
-  worldManager.flush()
-  worldManager.publish()
+onFrameUpdate:
+  beginUpdate:
+    display.latch()
+    input.latch(display.view)
+    sceneManager.flush()
+    worldManager.flush()
+    worldManager.publish()
 
-input:
-  sceneManager.scopedExecute(pass: "input")
+  input:
+    sceneManager.scopedExecute(pass: "input")
 
-fixedUpdate:
-  sceneManager.scopedExecute(pass: "fixedUpdate")
+  fixedUpdate, repeated updateSteps times:
+    sceneManager.scopedExecute(pass: "fixedUpdate")
 
-preRender:
-  sceneManager.scopedExecute(pass: "preRender")
+onFrameRender:
+  preRender:
+    sceneManager.scopedExecute(pass: "preRender")
 
-render:
-  worldManager.flush()
-  worldManager.publish()
+  render:
+    worldManager.flush()
+    worldManager.publish()
 ```
 
 This is a snapshot of current behavior, not a command to preserve these exact
