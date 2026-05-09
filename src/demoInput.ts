@@ -64,8 +64,8 @@ export default async () => {
     });
 
     const movementSystem = system({
-        id: "input-demo.fixedUpdate",
-        phase: "fixedUpdate",
+        id: "input-demo.update",
+        phase: "update",
         execute(ctx, dt) {
             const speed = 260 * (dt / 1000);
 
@@ -100,10 +100,20 @@ export default async () => {
         },
     });
 
-    const renderSystem = system({
-        id: "input-demo.render",
-        phase: "preRender",
-        execute(ctx) {
+    const demoScene = scene({
+        id: "demo.input",
+        setup(ctx) {
+            ctx.addSystems(inputSystem, movementSystem);
+        },
+    });
+
+    const game = createGame({
+        canvas: display.canvas,
+        display: {
+            mode: "fixed",
+            size: { w: DISPLAY_WIDTH, h: DISPLAY_HEIGHT },
+        },
+        prepareRender(ctx) {
             const canvasCtx = display.ctx;
             const pointer = ctx.input.pointer;
             const isPressed = pointer.buttons.down(0);
@@ -153,21 +163,6 @@ export default async () => {
                 16,
                 52,
             );
-        },
-    });
-
-    const demoScene = scene({
-        id: "demo.input",
-        setup(ctx) {
-            ctx.addSystems(inputSystem, movementSystem, renderSystem);
-        },
-    });
-
-    const game = createGame({
-        canvas: display.canvas,
-        display: {
-            mode: "fixed",
-            size: { w: DISPLAY_WIDTH, h: DISPLAY_HEIGHT },
         },
         initialScene: demoScene,
     });

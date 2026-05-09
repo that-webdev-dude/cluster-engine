@@ -32,6 +32,7 @@ export default async () => {
     let verticalScene: GameAuthoredScene;
     let game: Game;
     let lastLoggedScene = "";
+    const renderConfigs: Record<string, { label: string; color: string }> = {};
 
     function logSceneFlow() {
         const activeScene = game.debug.sceneStack.instanceIds[0];
@@ -71,6 +72,10 @@ export default async () => {
         nextScene: () => GameAuthoredScene;
     }) {
         const particles = createParticles(config.id, config.direction);
+        renderConfigs[config.id] = {
+            label: config.label,
+            color: config.color,
+        };
 
         return scene({
             id: config.id,
@@ -92,7 +97,7 @@ export default async () => {
                     }),
                     system({
                         id: `${config.id}.move`,
-                        phase: "fixedUpdate",
+                        phase: "update",
                         execute(gameCtx, dt) {
                             gameCtx.world
                                 .query(["position", "velocity"])
@@ -111,30 +116,6 @@ export default async () => {
                                         (y + vy * (dt / 1000)) % HEIGHT,
                                     );
                                 });
-                        },
-                    }),
-                    system({
-                        id: `${config.id}.render`,
-                        phase: "preRender",
-                        execute(gameCtx) {
-                            display.ctx.clearRect(0, 0, WIDTH, HEIGHT);
-                            display.ctx.fillStyle = config.color;
-
-                            gameCtx.world.query(["position"]).forEach((row) => {
-                                const position = row.components.position;
-                                display.ctx.fillRect(
-                                    position.x.read() as number,
-                                    position.y.read() as number,
-                                    PARTICLE_SIZE,
-                                    PARTICLE_SIZE,
-                                );
-                            });
-
-                            display.ctx.fillStyle = "black";
-                            display.ctx.font = "16px sans-serif";
-                            display.ctx.fillText(config.label, 16, 28);
-
-                            logSceneFlow();
                         },
                     }),
                 );
@@ -165,6 +146,39 @@ export default async () => {
             size: { w: WIDTH, h: HEIGHT },
         },
         initialScene: horizontalScene,
+        prepareRender(ctx) {
+            const activeScene = ctx.sceneStack.instanceIds[0];
+            const renderConfig = activeScene
+                ? renderConfigs[activeScene]
+                : undefined;
+
+            display.ctx.clearRect(0, 0, WIDTH, HEIGHT);
+            display.ctx.fillStyle = renderConfig?.color ?? "black";
+
+            for (const store of ctx.world.stores) {
+                for (const archetype of store.archetypes) {
+                    for (const entity of archetype.entities) {
+                        const position = entity.components.position;
+                        if (!position) continue;
+
+                        display.ctx.fillRect(
+                            position.x as number,
+                            position.y as number,
+                            PARTICLE_SIZE,
+                            PARTICLE_SIZE,
+                        );
+                    }
+                }
+            }
+
+            if (renderConfig) {
+                display.ctx.fillStyle = "black";
+                display.ctx.font = "16px sans-serif";
+                display.ctx.fillText(renderConfig.label, 16, 28);
+            }
+
+            logSceneFlow();
+        },
         debug: true,
     });
 

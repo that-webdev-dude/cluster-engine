@@ -21,7 +21,7 @@ const entityIds = ["demo.player", "demo.enemy"] as const;
 function createMovementSystem(): System<DemoAllCtx, DemoAllRun> {
     return {
         id: "demo.level.movement",
-        phase: "fixedUpdate",
+        phase: "update",
         order: 0,
         group: "simulation",
         groupOrder: 0,
@@ -92,7 +92,7 @@ export default async () => {
     await worldManager.start();
 
     sceneManager.commands.request.set(scene);
-    sceneManager.execute({ pass: "fixedUpdate", ctx, run: { dt: 16 } });
+    sceneManager.execute({ pass: "update", ctx, run: { dt: 16 } });
     worldManager.publish();
 
     const beforeFlushMetrics = {
@@ -112,7 +112,7 @@ export default async () => {
         archetype.entities.map((entity) => entity.entityId),
     );
 
-    sceneManager.execute({ pass: "fixedUpdate", ctx, run: { dt: 16 } });
+    sceneManager.execute({ pass: "update", ctx, run: { dt: 16 } });
     worldManager.publish();
 
     const playerAfterMove = worldManager.view.debug.stores
@@ -132,7 +132,7 @@ export default async () => {
         mountCount,
         cleanupCount,
         mountedEntityIds,
-        fixedUpdateLog: ctx.log,
+        updateLog: ctx.log,
         playerAfterMove,
         finalSceneStackCount: sceneManager.view.stack.instanceIds.length,
         finalWorldEntityCount: worldManager.view.debug.entityCount,

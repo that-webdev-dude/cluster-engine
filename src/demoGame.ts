@@ -18,9 +18,9 @@ export default async () => {
             ctx.addEntities(player);
             ctx.addSystems(
                 system({
-                    id: "demo.game.fixedUpdate",
+                    id: "demo.game.update",
                     execute(gameCtx, dt) {
-                        log.push(`fixedUpdate:${dt}`);
+                        log.push(`update:${dt}`);
                         gameCtx.world.commands.request.spawn(
                             entity("demo.spawned", {
                                 position: { x: dt, y: dt },
@@ -75,6 +75,6 @@ export default async () => {
         playerDestroyed: !entityIds.includes("demo.player"),
         spawnedCreated: entityIds.includes("demo.spawned"),
         setupRan: log.includes("setup"),
-        fixedUpdateRan: log.some((entry) => entry.startsWith("fixedUpdate:")),
+        updateRan: log.some((entry) => entry.startsWith("update:")),
     });
 };

@@ -40,8 +40,7 @@ export default async () => {
             mountCount += 1;
             sceneCtx.addSystems(
                 createDemoSystem("demo.scene.input", "input"),
-                createDemoSystem("demo.scene.fixedUpdate", "fixedUpdate"),
-                createDemoSystem("demo.scene.preRender", "preRender"),
+                createDemoSystem("demo.scene.update", "update"),
             );
 
             return () => {
@@ -53,7 +52,7 @@ export default async () => {
     await sceneManager.start();
 
     sceneManager.commands.request.push(scene);
-    sceneManager.execute({ pass: "fixedUpdate", ctx, run: 16 });
+    sceneManager.execute({ pass: "update", ctx, run: 16 });
 
     const queuedExecutionCount = ctx.log.length;
 
@@ -63,13 +62,11 @@ export default async () => {
         changed: sceneManager.view.changed,
         stackInstanceIds: sceneManager.view.stack.instanceIds,
         inputWindow: sceneManager.view.input,
-        fixedUpdateWindow: sceneManager.view.fixedUpdate,
-        preRenderWindow: sceneManager.view.preRender,
+        updateWindow: sceneManager.view.update,
     };
 
     sceneManager.execute({ pass: "input", ctx, run: 1 });
-    sceneManager.execute({ pass: "fixedUpdate", ctx, run: 16 });
-    sceneManager.execute({ pass: "preRender", ctx, run: 0.5 });
+    sceneManager.execute({ pass: "update", ctx, run: 16 });
 
     sceneManager.commands.request.pop();
     sceneManager.flush();

@@ -76,7 +76,7 @@ export default async () => {
 
     const movementSystem = system({
         id: "movement",
-        phase: "fixedUpdate",
+        phase: "update",
         execute: (ctx, dt) => {
             ctx.world
                 .query(["position", "prevPosition", "velocity"])
@@ -114,35 +114,6 @@ export default async () => {
         },
     });
 
-    // temporary render system using display for now
-    const renderSystem = system({
-        id: "render",
-        phase: "preRender",
-        execute: (ctx, alpha) => {
-            display.ctx.clearRect(0, 0, ctx.display.w, ctx.display.h);
-
-            ctx.world
-                .query(["position", "prevPosition", "size"])
-                .forEach((result) => {
-                    const position = result.components.position;
-                    const prevPosition = result.components.prevPosition;
-                    const size = result.components.size;
-
-                    const x = position.x.read() as number;
-                    const y = position.y.read() as number;
-                    const prevX = prevPosition.x.read() as number;
-                    const prevY = prevPosition.y.read() as number;
-                    const width = size.width.read() as number;
-                    const height = size.height.read() as number;
-
-                    const drawX = prevX + (x - prevX) * alpha;
-                    const drawY = prevY + (y - prevY) * alpha;
-
-                    drawRect(display.ctx, drawX, drawY, width, height);
-                });
-        },
-    });
-
     const demoScene = scene({
         id: SCENE_ID,
         options: {
@@ -151,7 +122,7 @@ export default async () => {
         },
         setup(ctx) {
             ctx.addEntities(...particles);
-            ctx.addSystems(movementSystem, renderSystem);
+            ctx.addSystems(movementSystem);
         },
     });
 
@@ -162,6 +133,32 @@ export default async () => {
             size: { w: DISPLAY_WIDTH, h: DISPLAY_HEIGHT },
         },
         initialScene: demoScene,
+        prepareRender(ctx) {
+            display.ctx.clearRect(0, 0, ctx.display.w, ctx.display.h);
+
+            for (const store of ctx.world.stores) {
+                for (const archetype of store.archetypes) {
+                    for (const entity of archetype.entities) {
+                        const position = entity.components.position;
+                        const prevPosition = entity.components.prevPosition;
+                        const size = entity.components.size;
+                        if (!position || !prevPosition || !size) continue;
+
+                        const x = position.x as number;
+                        const y = position.y as number;
+                        const prevX = prevPosition.x as number;
+                        const prevY = prevPosition.y as number;
+                        const width = size.width as number;
+                        const height = size.height as number;
+
+                        const drawX = prevX + (x - prevX) * ctx.alpha;
+                        const drawY = prevY + (y - prevY) * ctx.alpha;
+
+                        drawRect(display.ctx, drawX, drawY, width, height);
+                    }
+                }
+            }
+        },
         debug: true,
     });
 

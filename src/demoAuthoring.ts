@@ -55,7 +55,7 @@ const demoScene = scene({
     setup(ctx) {
         ctx.addSystem({
             id: "demo.system",
-            phase: "fixedUpdate",
+            phase: "update",
             order: 0,
             group: "main",
             groupOrder: 0,
