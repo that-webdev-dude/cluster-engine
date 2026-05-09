@@ -1,8 +1,8 @@
 # Loop Service
 
 The loop service owns the engine's frame clock. It is a small runtime service:
-platform frame callbacks drive the engine frame phases, fixed-step updates are
-accumulated, and frame interpolation is passed to render-facing callbacks.
+platform frame callbacks drive fixed-step timing, update steps are accumulated,
+and frame interpolation is reported to render-facing orchestration.
 
 Use it from an orchestrator when engine services and managers need a coherent
 frame order without owning `requestAnimationFrame` directly.
@@ -10,40 +10,44 @@ frame order without owning `requestAnimationFrame` directly.
 ## What It Does
 
 - Requests and cancels platform animation frames.
-- Runs `beginUpdate` once at the start of each frame.
-- Runs `input` once per frame before fixed updates.
-- Accumulates elapsed time and runs bounded fixed updates.
+- Accumulates elapsed time and reports bounded fixed update counts.
 - Clamps very large frame deltas to avoid runaway catch-up work.
-- Computes `alpha` for interpolation-facing `preRender` and `render` phases.
+- Computes `alpha` for interpolation-facing render orchestration.
+- Calls `onFrameUpdate(frame)` once per platform frame with timing metadata.
+- Calls `onFrameRender(frame)` once per platform frame with interpolation
+  metadata.
 - Resets accumulated timing state on stop.
 
 The loop service does not own display, input, world data, scene state, or
-rendering. The game orchestrator wires loop callbacks to the frame pipeline.
-The render domain is not implemented yet; the current `render` callback is a
-frame phase hook reserved for render-facing work.
+rendering. The game orchestrator maps loop timing frames onto the frame
+pipeline. The loop reports how many fixed updates are due; it does not decide
+which engine phases run inside those updates.
 
 ## Usage
 
 ```ts
-import { createLoop } from "./cluster/engine/services/loop";
+import {
+    createLoop,
+    type LoopFrameRender,
+    type LoopFrameUpdate,
+} from "./cluster/engine/services/loop";
 
+function onFrameUpdate(frame: LoopFrameUpdate) {
+    runBeginUpdate();
+    runInput();
+    for (let i = 0; i < frame.updateSteps; i++) {
+        runFixedUpdate(frame.fixedStepMs);
+    }
+}
+function onFrameRender(frame: LoopFrameRender) {
+    runPreRender(frame.alpha);
+    runRender(frame.alpha);
+}
 const loop = createLoop({
-    onBeginUpdate() {
-        display.latch();
-        input.latch(display.view);
-    },
-    onInput() {
-        framePipeline.input();
-    },
-    onFixedUpdate(dt) {
-        framePipeline.fixedUpdate(dt);
-    },
-    onPreRender(alpha) {
-        framePipeline.preRender(alpha);
-    },
-    onRender(alpha) {
-        framePipeline.render(alpha);
-    },
+    onFrameUpdate,
+    onFrameRender,
+    platform,
+    debug,
 });
 
 await loop.start();

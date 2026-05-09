@@ -12,11 +12,8 @@ function createLoopService(config: LoopConfig): LoopService {
     const fixedStepMs = config.fixedStepMs ?? 1000 / 60;
     const maxUpdatesPerFrame = config.maxUpdatesPerFrame ?? 5;
 
-    const beginUpdate = config.onBeginUpdate;
-    const input = config.onInput;
-    const fixedUpdate = config.onFixedUpdate;
-    const preRender = config.onPreRender;
-    const render = config.onRender;
+    const onFrameUpdate = config.onFrameUpdate;
+    const onFrameRender = config.onFrameRender;
 
     const requestFrame =
         config.platform?.requestFrame ??
@@ -104,30 +101,43 @@ function createLoopService(config: LoopConfig): LoopService {
             lastFrameTimestamp = frameTimestamp;
         }
 
-        const frameDeltaMs = Math.min(frameTimestamp - lastFrameTimestamp, 250);
+        const rawFrameDeltaMs = frameTimestamp - lastFrameTimestamp;
+        const frameDeltaMs = Math.min(rawFrameDeltaMs, 250);
         updateSteps = 0;
         lastFrameTimestamp = frameTimestamp;
         accumulatedTimeMs += frameDeltaMs;
-
-        beginUpdate();
-        input();
 
         while (
             accumulatedTimeMs >= fixedStepMs &&
             updateSteps < maxUpdatesPerFrame
         ) {
-            fixedUpdate(fixedStepMs);
             accumulatedTimeMs -= fixedStepMs;
             updateSteps++;
         }
+
+        const hitUpdateLimit = updateSteps === maxUpdatesPerFrame;
+        const droppedUpdates =
+            hitUpdateLimit && accumulatedTimeMs >= fixedStepMs;
 
         if (updateSteps === maxUpdatesPerFrame) {
             accumulatedTimeMs = 0;
         }
         const alpha = accumulatedTimeMs / fixedStepMs;
 
-        preRender(alpha);
-        render(alpha);
+        onFrameUpdate({
+            frameDeltaMs,
+            rawFrameDeltaMs,
+            fixedStepMs,
+            updateSteps,
+            droppedUpdates,
+        });
+
+        onFrameRender({
+            alpha,
+            frameDeltaMs,
+            rawFrameDeltaMs,
+        });
+
         frameRequestId = requestFrame(loop);
     }
 

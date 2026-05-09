@@ -46,14 +46,14 @@ describe("createAuthoredSceneAdapter", () => {
         });
 
         expect(systems).toEqual([testSystem]);
-        expect(log).toEqual(["spawn:level.one#1:player"]);
+        expect(log).toEqual(["spawn:level.one:player"]);
 
         cleanup?.();
 
         expect(log).toEqual([
-            "spawn:level.one#1:player",
+            "spawn:level.one:player",
             "authoredCleanup",
-            "clearStore:level.one#1",
+            "clearStore:level.one",
         ]);
     });
 

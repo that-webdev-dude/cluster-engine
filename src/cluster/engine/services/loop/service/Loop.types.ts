@@ -1,18 +1,26 @@
 import { type EnginePlatform } from "../../../types/patform";
 
-export type LoopAnyCallback = () => void;
-export type LoopFixedCallback = (dt: number) => void;
-export type LoopFrameCallback = (alpha: number) => void;
+export type LoopFrameUpdate = {
+    frameDeltaMs: number;
+    rawFrameDeltaMs: number;
+    fixedStepMs: number;
+    updateSteps: number;
+    droppedUpdates: boolean;
+};
+
+export type LoopFrameRender = {
+    alpha: number;
+    frameDeltaMs: number;
+    rawFrameDeltaMs: number;
+};
 
 export type LoopPlatform = Pick<EnginePlatform, "requestFrame" | "cancelFrame">;
+export type LoopUpdateCallback = (update: LoopFrameUpdate) => void;
+export type LoopRenderCallback = (render: LoopFrameRender) => void;
 
 export type LoopConfig = {
-    onBeginUpdate: LoopAnyCallback;
-    onInput: LoopAnyCallback;
-    onFixedUpdate: LoopFixedCallback;
-    onPreRender: LoopFrameCallback;
-    onRender: LoopFrameCallback;
-
+    onFrameUpdate: LoopUpdateCallback;
+    onFrameRender: LoopRenderCallback;
     platform?: LoopPlatform;
     fixedStepMs?: number;
     maxUpdatesPerFrame?: number;

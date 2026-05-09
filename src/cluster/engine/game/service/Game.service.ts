@@ -16,7 +16,11 @@ import { createSceneManager } from "../../managers/scene";
 import { createWorldManager, type Entity } from "../../managers/world";
 import { createDisplay, type DisplayOptions } from "../../services/display";
 import { createInput, type InputOptions } from "../../services/input";
-import { createLoop } from "../../services/loop";
+import {
+    createLoop,
+    LoopFrameRender,
+    LoopFrameUpdate,
+} from "../../services/loop";
 import { createAuthoredSceneAdapter } from "../modules/AuthoredSceneAdapter.module";
 import { createGameFramePipeline } from "../modules/GameFramePipeline.module";
 
@@ -148,12 +152,20 @@ export function createGame(config: GameConfig): Game {
     function runRender(alpha: number) {
         framePipeline.render(alpha);
     }
+    function onFrameUpdate(frame: LoopFrameUpdate) {
+        runBeginUpdate();
+        runInput();
+        for (let i = 0; i < frame.updateSteps; i++) {
+            runFixedUpdate(frame.fixedStepMs);
+        }
+    }
+    function onFrameRender(frame: LoopFrameRender) {
+        runPreRender(frame.alpha);
+        runRender(frame.alpha);
+    }
     const loop = createLoop({
-        onBeginUpdate: runBeginUpdate,
-        onInput: runInput,
-        onFixedUpdate: runFixedUpdate,
-        onPreRender: runPreRender,
-        onRender: runRender,
+        onFrameUpdate,
+        onFrameRender,
         platform,
         debug,
     });
