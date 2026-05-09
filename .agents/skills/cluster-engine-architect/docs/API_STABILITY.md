@@ -18,7 +18,7 @@ Use this guide to decide whether to preserve, evolve, or redesign an API.
 | Command-buffered structural mutation | Stable | Names may change; principle should remain. |
 | Package `index.ts` boundaries | Stable | Prefer package imports for public use. |
 | `GameCtx` shape | Provisional | May change with renderer, resources, queries, and world storage. |
-| System phases | Provisional | `preRender` and render handoff are not final. |
+| System phases | Provisional | Author-facing phases are currently `input` and `update`; render handoff is not final. |
 | Entity authoring helper | Provisional | Must not dictate final world layout. |
 | World query row API | Provisional | Likely to evolve for scale and data layout. |
 | Renderer ownership | Experimental | Not designed yet. |

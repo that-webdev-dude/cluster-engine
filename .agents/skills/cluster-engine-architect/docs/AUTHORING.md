@@ -43,7 +43,7 @@ separate authored/runtime component models.
 ## Current Systems
 
 Systems currently wrap the shared runtime system contract and default to the
-`fixedUpdate` phase:
+`update` phase:
 
 ```ts
 const movement = system({
@@ -62,8 +62,9 @@ const movement = system({
 ```
 
 Future system APIs may need better query declarations, access modes, scheduling
-metadata, parallelism constraints, render extraction hooks, or fixed/variable
-step separation.
+metadata, parallelism constraints, or fixed/variable step separation. Render
+preparation should stay outside normal `GameSystem` execution unless a future
+renderer-owned extraction API explicitly introduces it.
 
 ## Current Scenes
 

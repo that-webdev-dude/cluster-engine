@@ -70,12 +70,13 @@ display, input, simulation, scene, world, or rendering semantics.
 Scene systems currently use:
 
 ```ts
-"input" | "fixedUpdate" | "preRender"
+"input" | "update"
 ```
 
-These names are not final architecture. `preRender`, input sampling, render
-handoff, and publication timing may change when the renderer service and world
-data layout are designed.
+`update` is author-facing even though the game frame pipeline currently runs it
+with fixed-step timing. Render preparation is no longer a normal scene system
+phase; `GameConfig.prepareRender` is a temporary read-only bridge until the
+renderer service and world data layout are designed.
 
 ## Current Frame Pipeline
 
@@ -93,16 +94,17 @@ onFrameUpdate:
   input:
     sceneManager.scopedExecute(pass: "input")
 
-  fixedUpdate, repeated updateSteps times:
-    sceneManager.scopedExecute(pass: "fixedUpdate")
+  update, repeated updateSteps times:
+    sceneManager.scopedExecute(pass: "update")
 
 onFrameRender:
-  preRender:
-    sceneManager.scopedExecute(pass: "preRender")
-
-  render:
+  prepareRender:
     worldManager.flush()
     worldManager.publish()
+    config.prepareRender(readOnlyCtx)
+
+  render:
+    future renderer boundary
 ```
 
 This is a snapshot of current behavior, not a command to preserve these exact
