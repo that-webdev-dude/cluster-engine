@@ -81,22 +81,24 @@ beginUpdate:
 input:
   sceneManager.scopedExecute(pass: "input")
 
-fixedUpdate:
-  sceneManager.scopedExecute(pass: "fixedUpdate")
+update, repeated updateSteps times:
+  sceneManager.scopedExecute(pass: "update")
 
-preRender:
-  sceneManager.scopedExecute(pass: "preRender")
-
-render:
+prepareRender:
   worldManager.flush()
   worldManager.publish()
+  config.prepareRender(readOnlyCtx)
+
+render:
+  future renderer boundary
 ```
 
 Scene requests made by systems are queued and applied at the next
 `sceneManager.flush()`. World commands are queued and applied at the next
-`worldManager.flush()`. The render-phase world flush and publish make world
+`worldManager.flush()`. The prepare-render world flush and publish make world
 commands requested by scene systems visible to downstream read-only consumers
-before the frame ends.
+before the frame ends. `prepareRender` is a temporary read-only bridge until a
+renderer service owns extraction and draw preparation.
 
 ## Usage
 
@@ -107,6 +109,9 @@ import { level } from "./level";
 const game = createGame({
     canvas,
     initialScene: level,
+    prepareRender(ctx) {
+        console.log(ctx.alpha, ctx.world.stores);
+    },
     debug: true,
 });
 

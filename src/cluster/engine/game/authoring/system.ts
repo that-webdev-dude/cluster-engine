@@ -15,7 +15,7 @@ export function system(config: SystemConfig): GameSystem {
     const { order = 0, group = "main", groupOrder = 0 } = config.advanced ?? {};
     return Object.freeze({
         id: config.id,
-        phase: config.phase ?? "fixedUpdate",
+        phase: config.phase ?? "update",
         order: order,
         group: group,
         groupOrder: groupOrder,

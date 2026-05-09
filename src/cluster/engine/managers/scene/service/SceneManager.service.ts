@@ -36,8 +36,7 @@ function createEmptyPlan(): SceneExecutionPlan {
     return {
         stack: { instanceIds: [] },
         input: EMPTY_INPUT_WINDOW,
-        fixedUpdate: EMPTY_STACK_WINDOW,
-        preRender: EMPTY_STACK_WINDOW,
+        update: EMPTY_STACK_WINDOW,
     };
 }
 
@@ -63,8 +62,7 @@ function samePlan(
     return (
         sameIds(left.stack.instanceIds, right.stack.instanceIds) &&
         sameWindow(left.input, right.input) &&
-        sameWindow(left.fixedUpdate, right.fixedUpdate) &&
-        sameWindow(left.preRender, right.preRender)
+        sameWindow(left.update, right.update)
     );
 }
 

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { createGameFramePipeline } from "./GameFramePipeline.module";
-import type { GameCtx } from "../service/Game.types";
+import type { GameCtx, GamePrepareRenderCtx } from "../service/Game.types";
 import type { DisplayView } from "../../services/display";
 import type { InputView } from "../../services/input";
 import type { SceneManagerService } from "../../managers/scene";
@@ -111,6 +111,20 @@ function createTestCtx(_scopeId: string = "test.scope"): GameCtx {
     };
 }
 
+function createTestPrepareRenderCtx(alpha: number): GamePrepareRenderCtx {
+    return {
+        alpha,
+        display: createTestDisplay(),
+        input: createTestInput(),
+        sceneStack: { instanceIds: [] },
+        world: {
+            storeCount: 0,
+            entityCount: 0,
+            stores: [],
+        },
+    };
+}
+
 function createFakeSceneManager(
     log: string[],
 ): SceneManagerService<GameCtx, number> {
@@ -133,8 +147,7 @@ function createFakeSceneManager(
             changed: false,
             stack: { instanceIds: [] },
             input: { order: "topToBottom", instanceIds: [] },
-            fixedUpdate: { order: "bottomToTop", instanceIds: [] },
-            preRender: { order: "bottomToTop", instanceIds: [] },
+            update: { order: "bottomToTop", instanceIds: [] },
         },
         commands: {
             request: {
@@ -189,6 +202,7 @@ describe("createGameFramePipeline", () => {
             sceneManager: createFakeSceneManager(log),
             worldManager: createFakeWorldManager(log),
             createGameCtx: createTestCtx,
+            createPrepareRenderCtx: createTestPrepareRenderCtx,
         });
 
         const result = pipeline.beginUpdate();
@@ -203,6 +217,7 @@ describe("createGameFramePipeline", () => {
             sceneManager: createFakeSceneManager(log),
             worldManager: createFakeWorldManager(log),
             createGameCtx: createTestCtx,
+            createPrepareRenderCtx: createTestPrepareRenderCtx,
         });
 
         pipeline.input();
@@ -210,42 +225,59 @@ describe("createGameFramePipeline", () => {
         expect(log).toEqual(["scene.scopedExecute:input:0"]);
     });
 
-    it("executes fixed update through scoped scene execution", () => {
+    it("executes update through scoped scene execution", () => {
         const log: string[] = [];
         const pipeline = createGameFramePipeline({
             sceneManager: createFakeSceneManager(log),
             worldManager: createFakeWorldManager(log),
             createGameCtx: createTestCtx,
+            createPrepareRenderCtx: createTestPrepareRenderCtx,
         });
 
-        pipeline.fixedUpdate(16);
+        pipeline.update(16);
 
-        expect(log).toEqual(["scene.scopedExecute:fixedUpdate:16"]);
+        expect(log).toEqual(["scene.scopedExecute:update:16"]);
     });
 
-    it("executes pre-render during pre-render", () => {
+    it("flushes, publishes, and invokes prepareRender with read-only context", () => {
         const log: string[] = [];
         const pipeline = createGameFramePipeline({
             sceneManager: createFakeSceneManager(log),
             worldManager: createFakeWorldManager(log),
             createGameCtx: createTestCtx,
+            createPrepareRenderCtx: (alpha) => {
+                log.push(`createPrepareRenderCtx:${alpha}`);
+                return createTestPrepareRenderCtx(alpha);
+            },
+            prepareRender(ctx) {
+                log.push(`prepareRender:${ctx.alpha}`);
+                expect("scene" in ctx).toBe(false);
+                expect("commands" in ctx.world).toBe(false);
+                expect("query" in ctx.world).toBe(false);
+            },
         });
 
-        pipeline.preRender(0.5);
+        pipeline.prepareRender(0.5);
 
-        expect(log).toEqual(["scene.scopedExecute:preRender:0.5"]);
+        expect(log).toEqual([
+            "world.flush",
+            "world.publish",
+            "createPrepareRenderCtx:0.5",
+            "prepareRender:0.5",
+        ]);
     });
 
-    it("flushes and publishes world during render", () => {
+    it("keeps render as a placeholder boundary without executing systems", () => {
         const log: string[] = [];
         const pipeline = createGameFramePipeline({
             sceneManager: createFakeSceneManager(log),
             worldManager: createFakeWorldManager(log),
             createGameCtx: createTestCtx,
+            createPrepareRenderCtx: createTestPrepareRenderCtx,
         });
 
         pipeline.render(0.25);
 
-        expect(log).toEqual(["world.flush", "world.publish"]);
+        expect(log).toEqual([]);
     });
 });

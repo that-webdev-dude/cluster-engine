@@ -1,25 +1,38 @@
 import type { SceneManagerService } from "../../managers/scene";
 import type { WorldManagerService } from "../../managers/world";
-import type { GameCtx, GameRun } from "../service/Game.types";
+import type {
+    GameCtx,
+    GamePrepareRender,
+    GamePrepareRenderCtx,
+    GameRun,
+} from "../service/Game.types";
 
 export type GameFramePipelineDeps = Readonly<{
     sceneManager: SceneManagerService<GameCtx, GameRun>;
     worldManager: WorldManagerService;
     createGameCtx(scopeId: string): GameCtx;
+    createPrepareRenderCtx(alpha: number): GamePrepareRenderCtx;
+    prepareRender?: GamePrepareRender;
 }>;
 
 export type GameFramePipeline = Readonly<{
     beginUpdate(): void;
     input(): void;
-    fixedUpdate(dt: number): void;
-    preRender(alpha: number): void;
+    update(dt: number): void;
+    prepareRender(alpha: number): void;
     render(alpha: number): void;
 }>;
 
 export function createGameFramePipeline(
     deps: GameFramePipelineDeps,
 ): GameFramePipeline {
-    const { sceneManager, worldManager, createGameCtx } = deps;
+    const {
+        sceneManager,
+        worldManager,
+        createGameCtx,
+        createPrepareRenderCtx,
+        prepareRender: runPrepareRender,
+    } = deps;
 
     function beginUpdate() {
         sceneManager.flush();
@@ -35,32 +48,29 @@ export function createGameFramePipeline(
         });
     }
 
-    function fixedUpdate(dt: number): void {
+    function update(dt: number): void {
         sceneManager.scopedExecute({
             scope: createGameCtx,
             run: dt,
-            pass: "fixedUpdate",
+            pass: "update",
         });
     }
 
-    function preRender(alpha: number): void {
-        sceneManager.scopedExecute({
-            scope: createGameCtx,
-            run: alpha,
-            pass: "preRender",
-        });
+    function prepareRender(alpha: number): void {
+        worldManager.flush();
+        worldManager.publish();
+        runPrepareRender?.(createPrepareRenderCtx(alpha));
     }
 
     function render(_alpha: number): void {
-        worldManager.flush();
-        worldManager.publish();
+        // Placeholder boundary for the future renderer service.
     }
 
     return Object.freeze({
         beginUpdate,
         input,
-        fixedUpdate,
-        preRender,
+        update,
+        prepareRender,
         render,
     });
 }

@@ -2,6 +2,8 @@ import type {
     GameAuthoredScene,
     GameCtx,
     GameDebugView,
+    GamePrepareRender,
+    GamePrepareRenderCtx,
     GameRun,
     GamePlatform,
     GameSceneCommands,
@@ -29,6 +31,7 @@ export type GameConfig = {
     display?: DisplayOptions;
     input?: InputOptions;
     initialScene: GameAuthoredScene;
+    prepareRender?: GamePrepareRender;
     platform?: GamePlatform;
     debug?: boolean;
 };
@@ -130,10 +133,22 @@ export function createGame(config: GameConfig): Game {
         };
     };
 
+    const createPrepareRenderCtx = (alpha: number): GamePrepareRenderCtx => {
+        return {
+            alpha,
+            display: display.view,
+            input: input.view,
+            sceneStack: sceneManager.view.stack,
+            world: worldManager.view.debug,
+        };
+    };
+
     const framePipeline = createGameFramePipeline({
         sceneManager,
         worldManager,
         createGameCtx,
+        createPrepareRenderCtx,
+        prepareRender: config.prepareRender,
     });
     function runBeginUpdate() {
         display.latch();
@@ -143,11 +158,11 @@ export function createGame(config: GameConfig): Game {
     function runInput() {
         framePipeline.input();
     }
-    function runFixedUpdate(dt: number) {
-        framePipeline.fixedUpdate(dt);
+    function runUpdate(dt: number) {
+        framePipeline.update(dt);
     }
-    function runPreRender(alpha: number) {
-        framePipeline.preRender(alpha);
+    function runPrepareRender(alpha: number) {
+        framePipeline.prepareRender(alpha);
     }
     function runRender(alpha: number) {
         framePipeline.render(alpha);
@@ -156,11 +171,11 @@ export function createGame(config: GameConfig): Game {
         runBeginUpdate();
         runInput();
         for (let i = 0; i < frame.updateSteps; i++) {
-            runFixedUpdate(frame.fixedStepMs);
+            runUpdate(frame.fixedStepMs);
         }
     }
     function onFrameRender(frame: LoopFrameRender) {
-        runPreRender(frame.alpha);
+        runPrepareRender(frame.alpha);
         runRender(frame.alpha);
     }
     const loop = createLoop({

@@ -4,7 +4,7 @@ import type { GameSystem } from "../service/Game.types";
 
 const testSystem: GameSystem = {
     id: "test.system",
-    phase: "fixedUpdate",
+    phase: "update",
     order: 0,
     group: "main",
     groupOrder: 0,

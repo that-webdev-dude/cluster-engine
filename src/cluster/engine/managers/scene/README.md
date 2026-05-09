@@ -16,8 +16,8 @@ stack internals or the private scheduler.
 - Mounts scenes, provides `SceneCtx.addSystems(...)`, and runs scene cleanup on
   unmount.
 - Keeps registered systems scoped to the scene instance that mounted them.
-- Publishes pass windows through `view.stack`, `view.input`,
-  `view.fixedUpdate`, and `view.preRender`.
+- Publishes pass windows through `view.stack`, `view.input`, and
+  `view.update`.
 - Executes scene-owned systems with `execute({ pass, ctx, run })`.
 
 The scene manager does not own the main loop, world data, rendering, assets,
@@ -38,11 +38,11 @@ Systems use the shared runtime `System<C, R>` type from `engine/systems`.
 Scene execution passes are:
 
 ```ts
-"input" | "fixedUpdate" | "preRender"
+"input" | "update"
 ```
 
-Input runs top-to-bottom. Fixed update and pre-render run bottom-to-top. Scene
-policies can capture input or block update below the topmost matching scene.
+Input runs top-to-bottom. Update runs bottom-to-top. Scene policies can capture
+input or block update below the topmost matching scene.
 
 ## Usage
 
@@ -54,8 +54,8 @@ type FrameCtx = { log: string[] };
 type FrameRun = number;
 
 const system: System<FrameCtx, FrameRun> = {
-    id: "demo.fixed",
-    phase: "fixedUpdate",
+    id: "demo.update",
+    phase: "update",
     group: "main",
     groupOrder: 0,
     order: 0,
@@ -81,7 +81,7 @@ scenes.flush();
 
 // Frame execution.
 scenes.execute({
-    pass: "fixedUpdate",
+    pass: "update",
     ctx: { log: [] },
     run: 16,
 });

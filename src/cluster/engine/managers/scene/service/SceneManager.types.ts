@@ -17,8 +17,7 @@ export type SceneSnapshot = Readonly<{
 export type SceneExecutionPlan = Readonly<{
     stack: SceneSnapshot;
     input: SceneExecWindow;
-    fixedUpdate: SceneExecWindow;
-    preRender: SceneExecWindow;
+    update: SceneExecWindow;
 }>;
 
 export type SceneManagerSnapshot = {
@@ -32,8 +31,7 @@ export type SceneManagerView = Readonly<{
     changed: boolean;
     stack: SceneSnapshot;
     input: SceneExecWindow;
-    fixedUpdate: SceneExecWindow;
-    preRender: SceneExecWindow;
+    update: SceneExecWindow;
 }>;
 
 export type SceneExecuteArgs<C, R> = Readonly<{

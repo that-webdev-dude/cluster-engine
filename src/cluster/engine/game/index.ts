@@ -18,6 +18,8 @@ export type {
     GameCtx,
     GameDebugView,
     GameEntity,
+    GamePrepareRender,
+    GamePrepareRenderCtx,
     GameRun,
     GameSceneCommands,
     GameSystem,

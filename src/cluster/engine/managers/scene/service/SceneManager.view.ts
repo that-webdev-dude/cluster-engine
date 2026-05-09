@@ -19,11 +19,8 @@ export function createSceneManagerView(
         get input() {
             return getSnapshot().plan.input;
         },
-        get fixedUpdate() {
-            return getSnapshot().plan.fixedUpdate;
-        },
-        get preRender() {
-            return getSnapshot().plan.preRender;
+        get update() {
+            return getSnapshot().plan.update;
         },
     });
 }

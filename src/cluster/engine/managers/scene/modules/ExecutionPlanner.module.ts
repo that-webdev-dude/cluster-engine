@@ -60,14 +60,10 @@ export function createExecutionPlanner<C, R>(): ExecutionPlanner<C, R> {
             case "input": {
                 return getInputWindow(active);
             }
-            case "fixedUpdate": {
+            case "update": {
                 // Update window: scan top -> bottom for the first blocksUpdateBelow cutoff,
                 // but express the resulting window instanceIds in stack order (bottom -> top).
                 // Execution traversal for update-pass phases is bottom -> top.
-                return getUpdateWindow(active);
-            }
-            case "preRender": {
-                // Pre-render uses the same scene activity window as fixed update.
                 return getUpdateWindow(active);
             }
         }
@@ -80,8 +76,7 @@ export function createExecutionPlanner<C, R>(): ExecutionPlanner<C, R> {
         return {
             stack: getSnapshot(active),
             input: getWindow("input", active),
-            fixedUpdate: getWindow("fixedUpdate", active),
-            preRender: getWindow("preRender", active),
+            update: getWindow("update", active),
         };
     }
 

@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { createGame } from "./Game.service";
 import { scene } from "../authoring/scene";
-import { system } from "../authoring/system";
 
 describe("createGame display integration", () => {
     it("starts, latches, and exposes display and input through frame context", async () => {
@@ -15,29 +14,23 @@ describe("createGame display integration", () => {
         const inputReads: boolean[] = [];
         const testScene = scene({
             id: "display.test",
-            setup(ctx) {
-                ctx.addSystems(
-                    system({
-                        id: "display.read",
-                        phase: "preRender",
-                        execute(gameCtx) {
-                            displayReads.push({
-                                w: gameCtx.display.w,
-                                h: gameCtx.display.h,
-                                changed: gameCtx.display.changed,
-                            });
-                            inputReads.push(
-                                gameCtx.input.keyboard.pressed("KeyA"),
-                            );
-                            log.push(`display:${gameCtx.display.w}`);
-                        },
-                    }),
-                );
-            },
+            setup() {},
         });
         const game = createGame({
             canvas,
             initialScene: testScene,
+            prepareRender(gameCtx) {
+                displayReads.push({
+                    w: gameCtx.display.w,
+                    h: gameCtx.display.h,
+                    changed: gameCtx.display.changed,
+                });
+                inputReads.push(gameCtx.input.keyboard.pressed("KeyA"));
+                log.push(`display:${gameCtx.display.w}`);
+                expect("scene" in gameCtx).toBe(false);
+                expect("commands" in gameCtx.world).toBe(false);
+                expect("query" in gameCtx.world).toBe(false);
+            },
             display: {
                 mode: "fixed",
                 size: { w: 320, h: 240 },

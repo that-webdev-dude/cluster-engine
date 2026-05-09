@@ -9,7 +9,7 @@ type TestRun = number;
 
 function createTestSystem(
     id: string,
-    phase: SceneExecPass = "fixedUpdate",
+    phase: SceneExecPass = "update",
 ): System<TestCtx, TestRun> {
     return {
         id,
@@ -34,7 +34,7 @@ function createTestScene(
     const {
         instanceId,
         policy,
-        systems = [createTestSystem("demo.modal.fixedUpdate")],
+        systems = [createTestSystem("demo.modal.update")],
         onCleanup,
     } = config;
 
@@ -78,11 +78,7 @@ describe("createSceneManager", () => {
             "demo.modal#1",
             "demo.modal#2",
         ]);
-        expect(manager.view.fixedUpdate.instanceIds).toEqual([
-            "demo.modal#1",
-            "demo.modal#2",
-        ]);
-        expect(manager.view.preRender.instanceIds).toEqual([
+        expect(manager.view.update.instanceIds).toEqual([
             "demo.modal#1",
             "demo.modal#2",
         ]);
@@ -118,13 +114,13 @@ describe("createSceneManager", () => {
 
         await manager.start();
         manager.commands.request.push(
-            createSceneWithPassSystem("demo.scene", "fixedUpdate"),
+            createSceneWithPassSystem("demo.scene", "update"),
         );
         manager.flush();
 
-        manager.execute({ pass: "fixedUpdate", ctx, run: 16 });
+        manager.execute({ pass: "update", ctx, run: 16 });
 
-        expect(ctx.log).toEqual(["demo.scene.fixedUpdate:16"]);
+        expect(ctx.log).toEqual(["demo.scene.update:16"]);
     });
 
     it("executes systems with contexts scoped by scene instance id", async () => {
@@ -133,15 +129,15 @@ describe("createSceneManager", () => {
 
         await manager.start();
         manager.commands.request.push(
-            createSceneWithPassSystem("bottom", "fixedUpdate"),
+            createSceneWithPassSystem("bottom", "update"),
         );
         manager.commands.request.push(
-            createSceneWithPassSystem("top", "fixedUpdate"),
+            createSceneWithPassSystem("top", "update"),
         );
         manager.flush();
 
         manager.scopedExecute({
-            pass: "fixedUpdate",
+            pass: "update",
             run: 16,
             scope(scopeId) {
                 const ctx = { log };
@@ -152,9 +148,9 @@ describe("createSceneManager", () => {
 
         expect(log).toEqual([
             "scope:bottom",
-            "bottom.fixedUpdate:16",
+            "bottom.update:16",
             "scope:top",
-            "top.fixedUpdate:16",
+            "top.update:16",
         ]);
     });
 
@@ -164,10 +160,10 @@ describe("createSceneManager", () => {
 
         await manager.start();
         manager.commands.request.push(
-            createSceneWithPassSystem("demo.scene", "fixedUpdate"),
+            createSceneWithPassSystem("demo.scene", "update"),
         );
 
-        manager.execute({ pass: "fixedUpdate", ctx, run: 16 });
+        manager.execute({ pass: "update", ctx, run: 16 });
 
         expect(ctx.log).toEqual([]);
     });
@@ -190,40 +186,22 @@ describe("createSceneManager", () => {
         expect(ctx.log).toEqual(["top.input:1", "bottom.input:1"]);
     });
 
-    it("executes fixed update from bottom to top", async () => {
+    it("executes update from bottom to top", async () => {
         const manager = createSceneManager<TestCtx, TestRun>();
         const ctx: TestCtx = { log: [] };
 
         await manager.start();
         manager.commands.request.push(
-            createSceneWithPassSystem("bottom", "fixedUpdate"),
+            createSceneWithPassSystem("bottom", "update"),
         );
         manager.commands.request.push(
-            createSceneWithPassSystem("top", "fixedUpdate"),
+            createSceneWithPassSystem("top", "update"),
         );
         manager.flush();
 
-        manager.execute({ pass: "fixedUpdate", ctx, run: 2 });
+        manager.execute({ pass: "update", ctx, run: 2 });
 
-        expect(ctx.log).toEqual(["bottom.fixedUpdate:2", "top.fixedUpdate:2"]);
-    });
-
-    it("executes pre-render from bottom to top", async () => {
-        const manager = createSceneManager<TestCtx, TestRun>();
-        const ctx: TestCtx = { log: [] };
-
-        await manager.start();
-        manager.commands.request.push(
-            createSceneWithPassSystem("bottom", "preRender"),
-        );
-        manager.commands.request.push(
-            createSceneWithPassSystem("top", "preRender"),
-        );
-        manager.flush();
-
-        manager.execute({ pass: "preRender", ctx, run: 0.5 });
-
-        expect(ctx.log).toEqual(["bottom.preRender:0.5", "top.preRender:0.5"]);
+        expect(ctx.log).toEqual(["bottom.update:2", "top.update:2"]);
     });
 
     it("honors capturesInput by excluding scenes below the topmost capture", async () => {
@@ -249,53 +227,35 @@ describe("createSceneManager", () => {
         expect(ctx.log).toEqual(["tooltip.input:1", "menu.input:1"]);
     });
 
-    it("honors blocksUpdateBelow for fixed update and pre-render", async () => {
+    it("honors blocksUpdateBelow for update", async () => {
         const manager = createSceneManager<TestCtx, TestRun>();
-        const fixedCtx: TestCtx = { log: [] };
-        const renderCtx: TestCtx = { log: [] };
+        const ctx: TestCtx = { log: [] };
 
         await manager.start();
         manager.commands.request.push(
             createTestScene({
                 instanceId: "base",
-                systems: [
-                    createTestSystem("base.fixedUpdate", "fixedUpdate"),
-                    createTestSystem("base.preRender", "preRender"),
-                ],
+                systems: [createTestSystem("base.update", "update")],
             }),
         );
         manager.commands.request.push(
             createTestScene({
                 instanceId: "menu",
                 policy: { blocksUpdateBelow: true },
-                systems: [
-                    createTestSystem("menu.fixedUpdate", "fixedUpdate"),
-                    createTestSystem("menu.preRender", "preRender"),
-                ],
+                systems: [createTestSystem("menu.update", "update")],
             }),
         );
         manager.commands.request.push(
             createTestScene({
                 instanceId: "tooltip",
-                systems: [
-                    createTestSystem("tooltip.fixedUpdate", "fixedUpdate"),
-                    createTestSystem("tooltip.preRender", "preRender"),
-                ],
+                systems: [createTestSystem("tooltip.update", "update")],
             }),
         );
         manager.flush();
 
-        manager.execute({ pass: "fixedUpdate", ctx: fixedCtx, run: 2 });
-        manager.execute({ pass: "preRender", ctx: renderCtx, run: 0.5 });
+        manager.execute({ pass: "update", ctx, run: 2 });
 
-        expect(fixedCtx.log).toEqual([
-            "menu.fixedUpdate:2",
-            "tooltip.fixedUpdate:2",
-        ]);
-        expect(renderCtx.log).toEqual([
-            "menu.preRender:0.5",
-            "tooltip.preRender:0.5",
-        ]);
+        expect(ctx.log).toEqual(["menu.update:2", "tooltip.update:2"]);
     });
 
     it("does nothing after stop without throwing", async () => {
@@ -304,13 +264,13 @@ describe("createSceneManager", () => {
 
         await manager.start();
         manager.commands.request.push(
-            createSceneWithPassSystem("demo.scene", "fixedUpdate"),
+            createSceneWithPassSystem("demo.scene", "update"),
         );
         manager.flush();
         await manager.stop();
 
         expect(() =>
-            manager.execute({ pass: "fixedUpdate", ctx, run: 16 }),
+            manager.execute({ pass: "update", ctx, run: 16 }),
         ).not.toThrow();
         expect(ctx.log).toEqual([]);
     });
@@ -325,7 +285,7 @@ describe("createSceneManager", () => {
         await manager.dispose();
 
         expect(() =>
-            manager.execute({ pass: "fixedUpdate", ctx, run: 16 }),
+            manager.execute({ pass: "update", ctx, run: 16 }),
         ).toThrow("SceneManager.assertNotDisposed: called after dispose()");
     });
 });

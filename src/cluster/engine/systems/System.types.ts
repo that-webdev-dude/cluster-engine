@@ -1,6 +1,6 @@
 export type SystemOwnerId = number | string;
 
-export type SystemPhase = "input" | "fixedUpdate" | "preRender";
+export type SystemPhase = "input" | "update";
 
 export type System<C, R> = Readonly<{
     id: string;
