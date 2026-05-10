@@ -7,3 +7,7 @@ coverage
 .backup
 .artifacts
 .plans
+
+# AI stuff
+# AGENTS.md
+# .agents
