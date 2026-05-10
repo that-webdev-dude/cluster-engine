@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { createRender2DPrepare } from "./Render2DPrepare.module";
+import {
+    createRender2DPrepare,
+    type Render2DPreparedFrame,
+} from "./Render2DPrepare.module";
 import type { RenderFrameInput, RenderItem2D } from "../service/Render.types";
 
 function createInput(
@@ -25,6 +28,14 @@ function createRect(overrides: Partial<Extract<RenderItem2D, { kind: "rect" }>> 
     };
 }
 
+function activeItems(frame: Render2DPreparedFrame) {
+    return frame.items.slice(0, frame.itemCount);
+}
+
+function activeBatches(frame: Render2DPreparedFrame) {
+    return frame.batches.slice(0, frame.batchCount);
+}
+
 describe("createRender2DPrepare", () => {
     it("accepts empty layers and item lists", () => {
         const prepare = createRender2DPrepare();
@@ -38,8 +49,10 @@ describe("createRender2DPrepare", () => {
             ]),
         );
 
-        expect(frame.items).toEqual([]);
-        expect(frame.batches).toEqual([]);
+        expect(frame.itemCount).toBe(0);
+        expect(frame.batchCount).toBe(0);
+        expect(activeItems(frame)).toEqual([]);
+        expect(activeBatches(frame)).toEqual([]);
         expect(frame.stats).toMatchObject({
             passCount: 1,
             commandCount: 0,
@@ -80,7 +93,7 @@ describe("createRender2DPrepare", () => {
         );
 
         expect(
-            frame.items.map((item) => ({
+            activeItems(frame).map((item) => ({
                 layerId: item.layerId,
                 sortKey: item.sortKey,
                 sourceIndex: item.sourceIndex,
@@ -109,8 +122,10 @@ describe("createRender2DPrepare", () => {
             ]),
         );
 
-        expect(frame.items).toHaveLength(1);
-        expect(frame.batches).toHaveLength(1);
+        expect(frame.itemCount).toBe(1);
+        expect(frame.batchCount).toBe(1);
+        expect(activeItems(frame)).toHaveLength(1);
+        expect(activeBatches(frame)).toHaveLength(1);
         expect(frame.stats).toMatchObject({
             commandCount: 1,
             batchCount: 1,
@@ -161,7 +176,7 @@ describe("createRender2DPrepare", () => {
             ]),
         );
 
-        expect(frame.items.map((item) => item.vertexCount)).toEqual([
+        expect(activeItems(frame).map((item) => item.vertexCount)).toEqual([
             6, 6, 6, 6,
         ]);
         expect(frame.stats).toMatchObject({
@@ -186,7 +201,8 @@ describe("createRender2DPrepare", () => {
             ]),
         );
 
-        expect(frame.batches).toEqual([
+        expect(frame.batchCount).toBe(1);
+        expect(activeBatches(frame)).toEqual([
             expect.objectContaining({
                 layerId: "main",
                 pipelineFamily: "solid-2d",
@@ -232,7 +248,7 @@ describe("createRender2DPrepare", () => {
         );
 
         expect(
-            frame.batches.map((batch) => ({
+            activeBatches(frame).map((batch) => ({
                 layerId: batch.layerId,
                 pipelineFamily: batch.pipelineFamily,
                 vertexLayout: batch.vertexLayout,
@@ -312,7 +328,9 @@ describe("createRender2DPrepare", () => {
             batchCount: 1,
             vertexCount: 30_000,
         });
-        expect(frame.batches[0]).toMatchObject({
+        expect(frame.itemCount).toBe(5_000);
+        expect(frame.batchCount).toBe(1);
+        expect(activeBatches(frame)[0]).toMatchObject({
             itemStart: 0,
             itemCount: 5_000,
             vertexCount: 30_000,
@@ -346,9 +364,18 @@ describe("createRender2DPrepare", () => {
                 ),
             );
 
-        expect(createFrameAt(0).items[0]).toMatchObject({ x: 10, y: 20 });
-        expect(createFrameAt(0.5).items[0]).toMatchObject({ x: 20, y: 40 });
-        expect(createFrameAt(1).items[0]).toMatchObject({ x: 30, y: 60 });
+        expect(activeItems(createFrameAt(0))[0]).toMatchObject({
+            x: 10,
+            y: 20,
+        });
+        expect(activeItems(createFrameAt(0.5))[0]).toMatchObject({
+            x: 20,
+            y: 40,
+        });
+        expect(activeItems(createFrameAt(1))[0]).toMatchObject({
+            x: 30,
+            y: 60,
+        });
     });
 
     it("falls back to current transform values when previous values are missing", () => {
@@ -372,7 +399,52 @@ describe("createRender2DPrepare", () => {
             ]),
         );
 
-        expect(frame.items[0]).toMatchObject({ x: 30, y: 60 });
+        expect(activeItems(frame)[0]).toMatchObject({ x: 30, y: 60 });
+    });
+
+    it("ignores stale arena entries after preparing a smaller frame", () => {
+        const prepare = createRender2DPrepare();
+        const largerFrame = prepare.prepare(
+            createInput([
+                {
+                    id: "main",
+                    order: 0,
+                    items: [
+                        createRect({ sortKey: 0 }),
+                        createRect({ sortKey: 1, resourceId: "solid.a" }),
+                        createRect({ sortKey: 2, blend: "alpha" }),
+                    ],
+                },
+            ]),
+        );
+
+        expect(largerFrame.itemCount).toBe(3);
+        expect(largerFrame.batchCount).toBe(3);
+        expect(largerFrame.items.length).toBeGreaterThanOrEqual(3);
+        expect(largerFrame.batches.length).toBeGreaterThanOrEqual(3);
+
+        const smallerFrame = prepare.prepare(
+            createInput([
+                {
+                    id: "main",
+                    order: 0,
+                    items: [],
+                },
+            ]),
+        );
+
+        expect(smallerFrame.itemCount).toBe(0);
+        expect(smallerFrame.batchCount).toBe(0);
+        expect(activeItems(smallerFrame)).toEqual([]);
+        expect(activeBatches(smallerFrame)).toEqual([]);
+        expect(smallerFrame.stats).toMatchObject({
+            passCount: 1,
+            commandCount: 0,
+            batchCount: 0,
+            vertexCount: 0,
+        });
+        expect(smallerFrame.items.length).toBeGreaterThanOrEqual(3);
+        expect(smallerFrame.batches.length).toBeGreaterThanOrEqual(3);
     });
 
     it("rejects invalid alpha in debug mode", () => {

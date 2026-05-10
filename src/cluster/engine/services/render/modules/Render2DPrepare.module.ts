@@ -42,7 +42,9 @@ export type Render2DPreparedBatch = Readonly<{
 export type Render2DPreparedFrame = Readonly<{
     target: RenderTargetInfo;
     items: readonly Render2DPreparedItem[];
+    itemCount: number;
     batches: readonly Render2DPreparedBatch[];
+    batchCount: number;
     stats: RenderFrameStats;
 }>;
 
@@ -468,8 +470,10 @@ export function createRender2DPrepare(
 
             return {
                 target: input.target,
-                items: preparedItems.slice(0, preparedItemCount),
-                batches: preparedBatches.slice(0, preparedBatchCount),
+                items: preparedItems,
+                itemCount: preparedItemCount,
+                batches: preparedBatches,
+                batchCount: preparedBatchCount,
                 stats,
             };
         },
