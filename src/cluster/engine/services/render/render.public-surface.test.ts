@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import * as renderPackage from "./index";
 import { createRender } from "./index";
 import type {
+    RenderBackend,
     RenderBlendMode,
     RenderCameraInput,
     RenderConfig,
@@ -25,7 +26,10 @@ describe("render public surface", () => {
         expect(Object.keys(renderPackage)).toEqual(["createRender"]);
         expect(renderPackage.createRender).toBe(createRender);
 
+        expectTypeOf<RenderBackend>().toEqualTypeOf<"none" | "webgl2" | "webgpu">();
         expectTypeOf<RenderConfig>().toHaveProperty("canvas");
+        expectTypeOf<RenderConfig>().not.toHaveProperty("backend");
+        expectTypeOf<RenderConfig>().not.toHaveProperty("preferredBackend");
         expectTypeOf<RenderFrameInput>().toMatchTypeOf<
             Readonly<{
                 target: RenderTargetInfo;
@@ -48,6 +52,12 @@ describe("render public surface", () => {
         >();
         expectTypeOf<RenderTextureResourceConfig>().toHaveProperty("data");
         expectTypeOf<RenderView>().toHaveProperty("lastSubmitResult");
+        expectTypeOf<RenderView>().not.toHaveProperty("caps");
+        expectTypeOf<RenderView>().not.toHaveProperty("gfxCaps");
+        expectTypeOf<RenderView>().not.toHaveProperty("handle");
+        expectTypeOf<RenderView>().not.toHaveProperty("adapter");
+        expectTypeOf<RenderView>().not.toHaveProperty("device");
+        expectTypeOf<RenderView>().not.toHaveProperty("context");
 
         expect("FrameBuilder" in renderPackage).toBe(false);
         expect("Render2DPrepare" in renderPackage).toBe(false);

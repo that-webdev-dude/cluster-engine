@@ -15,6 +15,13 @@ function createRuntime(gl = createFakeWebGl2()): GfxRuntime {
     };
 }
 
+function createWebGpuRuntime(): GfxRuntime {
+    return {
+        backend: "webgpu",
+        caps: {},
+    };
+}
+
 function createInput(layers: RenderFrameInput["layers"]): RenderFrameInput {
     return {
         target: { w: 100, h: 100, dpr: 1 },
@@ -44,6 +51,53 @@ describe("createSubmitFrame", () => {
                 fallbackResourceCount: 0,
             },
         });
+
+        await pipelineLibrary.dispose();
+        await gpuResource.dispose();
+    });
+
+    it("skips non-WebGL2 runtimes without touching WebGL2 submit APIs", async () => {
+        const gl = createFakeWebGl2();
+        const gpuResource = createGpuResource({});
+        const pipelineLibrary = createPipelineLibrary({});
+        await gpuResource.start();
+        await pipelineLibrary.start();
+        const frame = createRender2DPrepare().prepare(
+            createInput([
+                {
+                    id: "main",
+                    order: 0,
+                    items: [
+                        {
+                            kind: "rect",
+                            sortKey: 0,
+                            x: 0,
+                            y: 0,
+                            w: 10,
+                            h: 10,
+                        },
+                    ],
+                },
+            ]),
+        );
+        const submitFrame = createSubmitFrame({
+            getRuntime: createWebGpuRuntime,
+            gpuResource,
+            pipelineLibrary,
+        });
+
+        expect(submitFrame.submit(frame)).toEqual({
+            result: { status: "skipped", reason: "no-submitter" },
+            metrics: {
+                drawCallCount: 0,
+                vertexCount: 0,
+                skippedResourceCount: 0,
+                fallbackResourceCount: 0,
+            },
+        });
+        expect(gl.viewport).not.toHaveBeenCalled();
+        expect(gl.clear).not.toHaveBeenCalled();
+        expect(gl.drawArrays).not.toHaveBeenCalled();
 
         await pipelineLibrary.dispose();
         await gpuResource.dispose();

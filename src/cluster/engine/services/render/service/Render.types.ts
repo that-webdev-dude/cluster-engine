@@ -1,4 +1,4 @@
-export type RenderBackend = "none" | "webgl2";
+export type RenderBackend = "none" | "webgl2" | "webgpu";
 
 export type RenderGraphicsState = "unavailable" | "ok" | "lost";
 

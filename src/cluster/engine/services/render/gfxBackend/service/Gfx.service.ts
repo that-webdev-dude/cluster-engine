@@ -2,11 +2,18 @@ import { createLifecycle } from "../../../../controllers/Lifecycle.controller";
 import { createGfxView } from "./Gfx.view";
 import type { GfxCaps, GfxConfig, GfxSnapshot, GfxView } from "./Gfx.types";
 
-export type GfxRuntime = Readonly<{
+export type GfxWebGl2Runtime = Readonly<{
     backend: "webgl2";
     caps: GfxCaps;
     handle: WebGL2RenderingContext;
 }>;
+
+export type GfxWebGpuRuntime = Readonly<{
+    backend: "webgpu";
+    caps: GfxCaps;
+}>;
+
+export type GfxRuntime = GfxWebGl2Runtime | GfxWebGpuRuntime;
 
 export type GfxService = Readonly<{
     view: GfxView;
@@ -67,7 +74,7 @@ function createGfxService(config: GfxConfig): GfxService {
         canvas.addEventListener("webglcontextlost", onContextLost);
     }
 
-    function tryAcquireWebGl2(): GfxRuntime | undefined {
+    function tryAcquireWebGl2(): GfxWebGl2Runtime | undefined {
         if (typeof canvas.getContext !== "function") return undefined;
         const gl = canvas.getContext("webgl2") as WebGL2RenderingContext | null;
         if (!gl) return undefined;

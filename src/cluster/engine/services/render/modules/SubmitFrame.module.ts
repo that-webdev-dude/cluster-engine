@@ -566,7 +566,7 @@ export function createSubmitFrame(config: SubmitFrameConfig): SubmitFrameModule 
     let vertexArena: Float32Array<ArrayBufferLike> = new Float32Array(0);
 
     function submitWebGl2Batch(
-        runtime: GfxRuntime,
+        runtime: Extract<GfxRuntime, { backend: "webgl2" }>,
         frame: Render2DPreparedFrame,
         batch: Render2DPreparedBatch,
     ): BatchSubmitReport {
@@ -658,7 +658,7 @@ export function createSubmitFrame(config: SubmitFrameConfig): SubmitFrameModule 
             }
 
             const runtime = config.getRuntime();
-            if (!runtime) {
+            if (!runtime || runtime.backend !== "webgl2") {
                 return {
                     result: { status: "skipped", reason: "no-submitter" },
                     metrics: EMPTY_SUBMIT_METRICS,

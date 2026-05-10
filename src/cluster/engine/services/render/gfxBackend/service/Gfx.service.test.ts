@@ -11,7 +11,12 @@ describe("GfxService", () => {
 
         expect(gfx.view.backend).toBe("webgl2");
         expect(gfx.view.state).toBe("ok");
-        expect(gfx.getRuntime()?.handle).toBe(gl);
+        const runtime = gfx.getRuntime();
+        expect(runtime?.backend).toBe("webgl2");
+        if (runtime?.backend !== "webgl2") {
+            throw new Error("expected WebGL2 runtime");
+        }
+        expect(runtime.handle).toBe(gl);
 
         await gfx.dispose();
     });
