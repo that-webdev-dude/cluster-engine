@@ -6,7 +6,7 @@ boundary: game owns extraction and driving, `RenderFrameInput` stays
 renderer-domain input, and backend runtime handles remain private to the render
 service package.
 
-## Phase 1: Backend Runtime Model
+## Phase 1 ✅: Backend Runtime Model
 
 Introduce a private backend model that can represent `none`, `webgl2`, and
 `webgpu` without changing public render input.
@@ -18,7 +18,7 @@ Introduce a private backend model that can represent `none`, `webgl2`, and
   caps optional.
 - Validate render public-surface tests still protect the narrow package barrel.
 
-## Phase 2: Backend Selection And Diagnostics
+## Phase 2 ✅: Backend Selection And Diagnostics
 
 Add backend selection policy and clear debug state for unavailable or lost
 backends.
@@ -32,7 +32,7 @@ backends.
 - Add WebGPU feature detection behind safe browser capability checks.
 - Test WebGPU unavailable, WebGL2 fallback, no backend, and lost-state latching.
 
-## Phase 3: Submitter Split
+## Phase 3 ✅: Submitter Split
 
 Separate backend-neutral frame submission from backend-specific draw code.
 
@@ -44,7 +44,7 @@ Separate backend-neutral frame submission from backend-specific draw code.
 - Test no-frame, no-submitter, lost-backend, empty-frame, and WebGL2 submitted
   paths through the coordinator.
 
-## Phase 4: Portable Pipeline Descriptors
+## Phase 4 ✅: Portable Pipeline Descriptors
 
 Make pipeline records describe renderer intent instead of GLSL source.
 
@@ -56,7 +56,7 @@ Make pipeline records describe renderer intent instead of GLSL source.
 - Test descriptor normalization, cache keys, backend invalidation, and WebGL2
   recompilation after loss.
 
-## Phase 5: Backend-Aware GPU Resources
+## Phase 5 ✅: Backend-Aware GPU Resources
 
 Keep logical renderer handles stable while allowing each backend to own native
 objects.

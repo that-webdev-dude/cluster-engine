@@ -12,3 +12,4 @@ Load this index before opening individual decision records. Keep entries short.
 | 0006 | Game Owns Render Service Wiring | renderer/runtime/api | Accepted | createGame owns render lifecycle and frame driving; GameConfig.prepareRender is removed instead of kept as a parallel render hook. |
 | 0007 | Renderer Owns Backend Policy | renderer/runtime/api | Accepted | Backend selection is internal to render; public APIs do not choose WebGPU/WebGL2, and caps/native handles stay private. |
 | 0008 | Render Pipeline Descriptors Are Portable | renderer/runtime/api | Accepted | Pipeline descriptors describe renderer intent; backend compilers select GLSL/WGSL privately, and descriptor types stay out of public render API. |
+| 0009 | Render GPU Resources Are Backend-Aware | renderer/runtime/api | Accepted | Logical GPU resource handles stay backend-neutral; native WebGL2/WebGPU objects live only in private backend-specific gpuResource record state. |

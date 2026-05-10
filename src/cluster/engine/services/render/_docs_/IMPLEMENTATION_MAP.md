@@ -16,8 +16,8 @@ package is implementation detail unless exported there.
 - `modules/SubmitFrame.module.ts` submits prepared batches to the active backend.
 - `gfxBackend/` owns graphics context acquisition, capability reads, and context
   loss state.
-- `gpuResource/` owns renderer GPU handles, texture registration, uploads,
-  fallback texture resolution, and transient buffers.
+- `gpuResource/` owns backend-aware renderer GPU handles, texture registration,
+  uploads, fallback texture resolution, and transient buffers.
 - `pipelineLibrary/` owns portable pipeline descriptors plus backend-specific
   program compilation/caching.
 
