@@ -10,22 +10,10 @@ function createDisplay() {
         app.appendChild(canvas);
     }
     return {
-        ctx: canvas.getContext("2d") as CanvasRenderingContext2D,
         width: canvas.width,
         height: canvas.height,
         canvas,
     };
-}
-
-function drawRect(
-    ctx: CanvasRenderingContext2D,
-    x: number,
-    y: number,
-    width: number,
-    height: number,
-) {
-    ctx.fillStyle = "black";
-    ctx.fillRect(x, y, width, height);
 }
 
 export default async () => {
@@ -58,8 +46,8 @@ export default async () => {
                     y: (Math.random() - 0.5) * 400,
                 },
                 size: {
-                    width: PARTICLE_SIZE,
-                    height: PARTICLE_SIZE,
+                    w: PARTICLE_SIZE,
+                    h: PARTICLE_SIZE,
                 },
                 color: {
                     r: 0,
@@ -133,32 +121,6 @@ export default async () => {
             size: { w: DISPLAY_WIDTH, h: DISPLAY_HEIGHT },
         },
         initialScene: demoScene,
-        prepareRender(ctx) {
-            display.ctx.clearRect(0, 0, ctx.display.w, ctx.display.h);
-
-            for (const store of ctx.world.stores) {
-                for (const archetype of store.archetypes) {
-                    for (const entity of archetype.entities) {
-                        const position = entity.components.position;
-                        const prevPosition = entity.components.prevPosition;
-                        const size = entity.components.size;
-                        if (!position || !prevPosition || !size) continue;
-
-                        const x = position.x as number;
-                        const y = position.y as number;
-                        const prevX = prevPosition.x as number;
-                        const prevY = prevPosition.y as number;
-                        const width = size.width as number;
-                        const height = size.height as number;
-
-                        const drawX = prevX + (x - prevX) * ctx.alpha;
-                        const drawY = prevY + (y - prevY) * ctx.alpha;
-
-                        drawRect(display.ctx, drawX, drawY, width, height);
-                    }
-                }
-            }
-        },
         debug: true,
     });
 

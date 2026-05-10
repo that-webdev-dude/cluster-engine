@@ -17,7 +17,6 @@ function createDisplay() {
 
     return {
         canvas,
-        ctx: canvas.getContext("2d") as CanvasRenderingContext2D,
     };
 }
 
@@ -32,7 +31,6 @@ export default async () => {
     let verticalScene: GameAuthoredScene;
     let game: Game;
     let lastLoggedScene = "";
-    const renderConfigs: Record<string, { label: string; color: string }> = {};
 
     function logSceneFlow() {
         const activeScene = game.debug.sceneStack.instanceIds[0];
@@ -42,26 +40,44 @@ export default async () => {
         console.log("Scene flow demo", {
             activeScene,
             stores: game.debug.world.stores.map((store) => store.storeId),
+            render: game.debug.render.stats,
         });
     }
 
     function createParticles(
         sceneId: string,
         direction: "horizontal" | "vertical",
+        color: { r: number; g: number; b: number },
     ) {
         return Array.from({ length: PARTICLE_COUNT }, (_, index) => {
             const speed = 60 + Math.random() * 180;
+            const x = Math.random() * WIDTH;
+            const y = Math.random() * HEIGHT;
+
             return entity(`${sceneId}.particle.${index}`, {
                 position: {
-                    x: Math.random() * WIDTH,
-                    y: Math.random() * HEIGHT,
+                    x,
+                    y,
+                },
+                prevPosition: {
+                    x,
+                    y,
                 },
                 velocity: {
                     x: direction === "horizontal" ? speed : 0,
                     y: direction === "vertical" ? speed : 0,
                 },
+                size: {
+                    w: PARTICLE_SIZE,
+                    h: PARTICLE_SIZE,
+                },
+                color,
             });
         });
+    }
+
+    function wrapPosition(value: number, max: number): number {
+        return ((value % max) + max) % max;
     }
 
     function createFlowScene(config: {
@@ -71,11 +87,11 @@ export default async () => {
         direction: "horizontal" | "vertical";
         nextScene: () => GameAuthoredScene;
     }) {
-        const particles = createParticles(config.id, config.direction);
-        renderConfigs[config.id] = {
-            label: config.label,
-            color: config.color,
-        };
+        const color =
+            config.direction === "horizontal"
+                ? { r: 0.12, g: 0.44, b: 0.92 }
+                : { r: 0.82, g: 0.6, b: 0.13 };
+        const particles = createParticles(config.id, config.direction, color);
 
         return scene({
             id: config.id,
@@ -90,6 +106,7 @@ export default async () => {
                         id: `${config.id}.toggle`,
                         phase: "input",
                         execute(gameCtx) {
+                            logSceneFlow();
                             if (gameCtx.input.keyboard.pressed("Space")) {
                                 gameCtx.scene.request.set(config.nextScene());
                             }
@@ -100,21 +117,29 @@ export default async () => {
                         phase: "update",
                         execute(gameCtx, dt) {
                             gameCtx.world
-                                .query(["position", "velocity"])
+                                .query(["position", "prevPosition", "velocity"])
                                 .forEach((row) => {
                                     const position = row.components.position;
+                                    const prevPosition =
+                                        row.components.prevPosition;
                                     const velocity = row.components.velocity;
                                     const x = position.x.read() as number;
                                     const y = position.y.read() as number;
                                     const vx = velocity.x.read() as number;
                                     const vy = velocity.y.read() as number;
+                                    const nextX = x + vx * (dt / 1000);
+                                    const nextY = y + vy * (dt / 1000);
+                                    const wrappedX =
+                                        nextX < 0 || nextX >= WIDTH;
+                                    const wrappedY =
+                                        nextY < 0 || nextY >= HEIGHT;
+                                    const renderX = wrapPosition(nextX, WIDTH);
+                                    const renderY = wrapPosition(nextY, HEIGHT);
 
-                                    position.x.write(
-                                        (x + vx * (dt / 1000)) % WIDTH,
-                                    );
-                                    position.y.write(
-                                        (y + vy * (dt / 1000)) % HEIGHT,
-                                    );
+                                    prevPosition.x.write(wrappedX ? renderX : x);
+                                    prevPosition.y.write(wrappedY ? renderY : y);
+                                    position.x.write(renderX);
+                                    position.y.write(renderY);
                                 });
                         },
                     }),
@@ -146,39 +171,6 @@ export default async () => {
             size: { w: WIDTH, h: HEIGHT },
         },
         initialScene: horizontalScene,
-        prepareRender(ctx) {
-            const activeScene = ctx.sceneStack.instanceIds[0];
-            const renderConfig = activeScene
-                ? renderConfigs[activeScene]
-                : undefined;
-
-            display.ctx.clearRect(0, 0, WIDTH, HEIGHT);
-            display.ctx.fillStyle = renderConfig?.color ?? "black";
-
-            for (const store of ctx.world.stores) {
-                for (const archetype of store.archetypes) {
-                    for (const entity of archetype.entities) {
-                        const position = entity.components.position;
-                        if (!position) continue;
-
-                        display.ctx.fillRect(
-                            position.x as number,
-                            position.y as number,
-                            PARTICLE_SIZE,
-                            PARTICLE_SIZE,
-                        );
-                    }
-                }
-            }
-
-            if (renderConfig) {
-                display.ctx.fillStyle = "black";
-                display.ctx.font = "16px sans-serif";
-                display.ctx.fillText(renderConfig.label, 16, 28);
-            }
-
-            logSceneFlow();
-        },
         debug: true,
     });
 
