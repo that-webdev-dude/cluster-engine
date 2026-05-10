@@ -11,5 +11,23 @@ export function createGfxView(getSnapshot: () => GfxSnapshot): GfxView {
         get caps() {
             return getSnapshot().caps;
         },
+        get requestedBackend() {
+            return getSnapshot().requestedBackend;
+        },
+        get selectedBackend() {
+            return getSnapshot().selectedBackend;
+        },
+        get fallbackBackend() {
+            return getSnapshot().fallbackBackend;
+        },
+        get unavailableBackend() {
+            return getSnapshot().unavailableBackend;
+        },
+        get detectedBackends() {
+            return getSnapshot().detectedBackends;
+        },
+        get lostBackend() {
+            return getSnapshot().lostBackend;
+        },
     });
 }

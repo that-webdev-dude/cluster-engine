@@ -1,6 +1,12 @@
 import { createLifecycle } from "../../../../controllers/Lifecycle.controller";
 import { createGfxView } from "./Gfx.view";
-import type { GfxCaps, GfxConfig, GfxSnapshot, GfxView } from "./Gfx.types";
+import type {
+    GfxBackend,
+    GfxCaps,
+    GfxConfig,
+    GfxSnapshot,
+    GfxView,
+} from "./Gfx.types";
 
 export type GfxWebGl2Runtime = Readonly<{
     backend: "webgl2";
@@ -46,6 +52,18 @@ function isHtmlCanvasLike(
     );
 }
 
+function detectWebGpuBackend(): boolean {
+    const root = globalThis as typeof globalThis & { navigator?: unknown };
+    const navigator = root.navigator;
+    return (
+        typeof navigator === "object" &&
+        navigator !== null &&
+        "gpu" in navigator &&
+        (navigator as { gpu?: unknown }).gpu !== undefined &&
+        (navigator as { gpu?: unknown }).gpu !== null
+    );
+}
+
 function createGfxService(config: GfxConfig): GfxService {
     const debug = config.debug ?? false;
     const canvas = config.canvas;
@@ -53,9 +71,13 @@ function createGfxService(config: GfxConfig): GfxService {
         backend: "none",
         state: "unavailable",
         caps: {},
+        requestedBackend: "auto",
+        selectedBackend: "none",
+        detectedBackends: [],
     };
     let runtime: GfxRuntime | undefined;
     let pendingState: GfxSnapshot["state"] | undefined;
+    let pendingLostBackend: GfxBackend | undefined;
     let onContextLost: EventListener | undefined;
 
     function detachWebGl2LossListener(): void {
@@ -70,8 +92,21 @@ function createGfxService(config: GfxConfig): GfxService {
         onContextLost = (event: Event) => {
             event.preventDefault?.();
             pendingState = "lost";
+            pendingLostBackend = "webgl2";
         };
         canvas.addEventListener("webglcontextlost", onContextLost);
+    }
+
+    function resetSnapshot(): void {
+        snapshot.backend = "none";
+        snapshot.state = "unavailable";
+        snapshot.caps = {};
+        snapshot.requestedBackend = "auto";
+        snapshot.selectedBackend = "none";
+        snapshot.fallbackBackend = undefined;
+        snapshot.unavailableBackend = undefined;
+        snapshot.detectedBackends = [];
+        snapshot.lostBackend = undefined;
     }
 
     function tryAcquireWebGl2(): GfxWebGl2Runtime | undefined {
@@ -97,35 +132,35 @@ function createGfxService(config: GfxConfig): GfxService {
         tag: "GfxService",
         debug,
         onStart: () => {
+            resetSnapshot();
+            snapshot.detectedBackends = detectWebGpuBackend() ? ["webgpu"] : [];
             runtime = tryAcquireWebGl2();
             if (!runtime) {
-                snapshot.backend = "none";
-                snapshot.state = "unavailable";
-                snapshot.caps = {};
+                snapshot.unavailableBackend = "webgl2";
                 return;
             }
 
             snapshot.backend = runtime.backend;
+            snapshot.selectedBackend = runtime.backend;
             snapshot.state = "ok";
             snapshot.caps = runtime.caps;
             pendingState = undefined;
+            pendingLostBackend = undefined;
             attachWebGl2LossListener();
         },
         onStop: () => {
             detachWebGl2LossListener();
             runtime = undefined;
             pendingState = undefined;
-            snapshot.backend = "none";
-            snapshot.state = "unavailable";
-            snapshot.caps = {};
+            pendingLostBackend = undefined;
+            resetSnapshot();
         },
         onDispose: () => {
             detachWebGl2LossListener();
             runtime = undefined;
             pendingState = undefined;
-            snapshot.backend = "none";
-            snapshot.state = "unavailable";
-            snapshot.caps = {};
+            pendingLostBackend = undefined;
+            resetSnapshot();
         },
     });
 
@@ -134,7 +169,9 @@ function createGfxService(config: GfxConfig): GfxService {
         if (!lifecycle.isRunning()) return;
         if (!pendingState) return;
         snapshot.state = pendingState;
+        snapshot.lostBackend = pendingLostBackend;
         pendingState = undefined;
+        pendingLostBackend = undefined;
     }
 
     function getRuntime(): GfxRuntime | undefined {
