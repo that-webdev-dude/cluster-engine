@@ -4,15 +4,42 @@ import { createPipelineLibrary } from "./PipelineLibrary.service";
 import type { PipelineDescriptor } from "./PipelineLibrary.types";
 
 const DESC: PipelineDescriptor = {
-    key: "solid",
-    pass: "main",
-    shader: {
-        vertex: "vertex",
-        fragment: "fragment",
-    },
+    shaderFamily: "solid-2d",
+    passKey: "main",
+    materialKey: "solid",
+    primitive: "triangles",
+    blend: "opaque",
+    vertexLayoutKey: "position-color-2d",
 };
+const DESC_KEY =
+    "render.pipeline|pass=main|shader=solid-2d|material=solid|primitive=triangles|blend=opaque|layout=position-color-2d";
 
 describe("PipelineLibraryService", () => {
+    it("normalizes descriptor intent into a stable backend-neutral key", async () => {
+        const gl = createFakeWebGl2();
+        const pipelines = createPipelineLibrary({});
+        await pipelines.start();
+
+        const pipeline = pipelines.getWebGl2Pipeline({
+            desc: { ...DESC, materialKey: " solid " },
+            gl,
+        });
+        const record = pipelines.peekPipeline(DESC_KEY);
+
+        expect(pipeline).toBeDefined();
+        expect(record).toMatchObject({
+            key: DESC_KEY,
+            backend: "webgl2",
+            invalidated: false,
+        });
+        expect(gl.shaderSource).toHaveBeenCalledWith(
+            expect.any(Object),
+            expect.stringContaining("#version 300 es"),
+        );
+
+        await pipelines.dispose();
+    });
+
     it("compiles and caches WebGL2 programs by descriptor key", async () => {
         const gl = createFakeWebGl2();
         const pipelines = createPipelineLibrary({});
@@ -42,6 +69,31 @@ describe("PipelineLibraryService", () => {
         expect(restoredGl.createProgram).toHaveBeenCalledTimes(1);
 
         await pipelines.dispose();
+    });
+
+    it("returns undefined for unsupported WebGL2 descriptors in production and throws in debug", async () => {
+        const gl = createFakeWebGl2();
+        const unsupported = {
+            ...DESC,
+            shaderFamily: "unsupported-2d",
+        } as unknown as PipelineDescriptor;
+        const pipelines = createPipelineLibrary({});
+        await pipelines.start();
+
+        expect(
+            pipelines.getWebGl2Pipeline({ desc: unsupported, gl }),
+        ).toBeUndefined();
+
+        const debugPipelines = createPipelineLibrary({ debug: true });
+        await debugPipelines.start();
+        expect(() =>
+            debugPipelines.getWebGl2Pipeline({ desc: unsupported, gl }),
+        ).toThrow(
+            "PipelineLibraryService: unsupported WebGL2 pipeline descriptor - shaderFamily=unsupported-2d, vertexLayoutKey=position-color-2d",
+        );
+
+        await pipelines.dispose();
+        await debugPipelines.dispose();
     });
 
     it("returns undefined for compile failures in production and throws in debug", async () => {

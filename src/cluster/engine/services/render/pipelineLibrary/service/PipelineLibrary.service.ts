@@ -4,6 +4,7 @@ import {
     type LifecycleLivePhase,
 } from "../../../../controllers/Lifecycle.controller";
 import type { GfxBackend } from "../../gfxBackend";
+import { resolveWebGl2ShaderSource } from "../modules/WebGl2PipelineCompiler.module";
 import type {
     PipelineDescriptor,
     PipelineHandle,
@@ -54,6 +55,22 @@ function createPipelineLibraryService(
         return `pipeline:${++nextPipelineId}`;
     }
 
+    function encodePipelineKeyPart(value: string): string {
+        return encodeURIComponent(value);
+    }
+
+    function createPipelineKey(desc: PipelineDescriptor): PipelineLibraryKey {
+        return [
+            "render.pipeline",
+            `pass=${encodePipelineKeyPart(desc.passKey)}`,
+            `shader=${encodePipelineKeyPart(desc.shaderFamily)}`,
+            `material=${encodePipelineKeyPart(desc.materialKey)}`,
+            `primitive=${encodePipelineKeyPart(desc.primitive)}`,
+            `blend=${encodePipelineKeyPart(desc.blend)}`,
+            `layout=${encodePipelineKeyPart(desc.vertexLayoutKey)}`,
+        ].join("|");
+    }
+
     function assertRunning(methodName: string): boolean {
         if (lifecycle.isRunning()) return true;
         if (debug) {
@@ -65,17 +82,17 @@ function createPipelineLibraryService(
     }
 
     function normalizeDescriptor(desc: PipelineDescriptor): PipelineDescriptor {
-        const key = desc.key.trim();
-        if (!key && debug) {
-            throw new Error("PipelineLibraryService: pipeline key is required");
+        const materialKey = desc.materialKey.trim();
+        if (!materialKey && debug) {
+            throw new Error("PipelineLibraryService: material key is required");
         }
         return {
-            key: key || `pipeline:auto:${nextPipelineId + 1}`,
-            pass: desc.pass,
-            shader: desc.shader,
-            blend: desc.blend ?? "opaque",
-            primitive: desc.primitive ?? "triangles",
-            layoutKey: desc.layoutKey,
+            shaderFamily: desc.shaderFamily,
+            passKey: desc.passKey,
+            materialKey: materialKey || "material:auto",
+            primitive: desc.primitive,
+            blend: desc.blend,
+            vertexLayoutKey: desc.vertexLayoutKey,
         };
     }
 
@@ -136,15 +153,25 @@ function createPipelineLibraryService(
         gl: WebGL2RenderingContext,
         desc: PipelineDescriptor,
     ): WebGLProgram | undefined {
+        const shaderSource = resolveWebGl2ShaderSource(desc);
+        if (!shaderSource) {
+            if (debug) {
+                throw new Error(
+                    `PipelineLibraryService: unsupported WebGL2 pipeline descriptor - shaderFamily=${desc.shaderFamily}, vertexLayoutKey=${desc.vertexLayoutKey}`,
+                );
+            }
+            return undefined;
+        }
+
         const vertexShader = compileWebGlShader(
             gl,
             gl.VERTEX_SHADER,
-            desc.shader.vertex,
+            shaderSource.vertex,
         );
         const fragmentShader = compileWebGlShader(
             gl,
             gl.FRAGMENT_SHADER,
-            desc.shader.fragment,
+            shaderSource.fragment,
         );
         if (!vertexShader || !fragmentShader) {
             if (vertexShader) gl.deleteShader(vertexShader);
@@ -229,11 +256,12 @@ function createPipelineLibraryService(
         if (!assertRunning("getWebGl2Pipeline")) return undefined;
         lastWebGl2Context = args.gl;
         const normalized = normalizeDescriptor(args.desc);
-        const existing = pipelinesByKey.get(normalized.key);
+        const key = createPipelineKey(normalized);
+        const existing = pipelinesByKey.get(key);
         const record =
             existing ??
             ({
-                key: normalized.key,
+                key,
                 handle: createPipelineHandle(),
                 backend: currentBackend,
                 desc: normalized,
@@ -241,8 +269,8 @@ function createPipelineLibraryService(
             } satisfies PipelineRecord);
 
         if (!existing) {
-            pipelinesByKey.set(normalized.key, record);
-            pipelineKeyByHandle.set(record.handle, normalized.key);
+            pipelinesByKey.set(key, record);
+            pipelineKeyByHandle.set(record.handle, key);
         }
 
         if (

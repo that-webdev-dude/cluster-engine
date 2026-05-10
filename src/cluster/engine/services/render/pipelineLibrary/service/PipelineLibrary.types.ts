@@ -8,19 +8,18 @@ export type PipelineLibraryConfig = Readonly<{
 export type PipelineLibraryKey = string;
 export type PipelineHandle = `pipeline:${number}`;
 export type PipelinePrimitive = "triangles" | "lines";
-
-export type PipelineShaderSource = Readonly<{
-    vertex: string;
-    fragment: string;
-}>;
+export type PipelineShaderFamily = "solid-2d" | "textured-2d";
+export type PipelineVertexLayoutKey =
+    | "position-color-2d"
+    | "position-uv-tint-2d";
 
 export type PipelineDescriptor = Readonly<{
-    key: PipelineLibraryKey;
-    pass: RenderLayerId;
-    shader: PipelineShaderSource;
-    blend?: RenderBlendMode;
-    primitive?: PipelinePrimitive;
-    layoutKey?: string;
+    shaderFamily: PipelineShaderFamily;
+    passKey: RenderLayerId;
+    materialKey: string;
+    primitive: PipelinePrimitive;
+    blend: RenderBlendMode;
+    vertexLayoutKey: PipelineVertexLayoutKey;
 }>;
 
 export type PipelineLibrarySyncArgs = Readonly<{

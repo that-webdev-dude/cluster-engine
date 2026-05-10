@@ -80,45 +80,6 @@ const WEBGL2_VERTEX_LAYOUTS: Record<
     },
 };
 
-const SOLID_VERTEX_SHADER = `#version 300 es
-layout(location = 0) in vec2 a_position;
-layout(location = 1) in vec4 a_color;
-out vec4 v_color;
-void main() {
-    v_color = a_color;
-    gl_Position = vec4(a_position, 0.0, 1.0);
-}`;
-
-const SOLID_FRAGMENT_SHADER = `#version 300 es
-precision mediump float;
-in vec4 v_color;
-out vec4 outColor;
-void main() {
-    outColor = v_color;
-}`;
-
-const TEXTURED_VERTEX_SHADER = `#version 300 es
-layout(location = 0) in vec2 a_position;
-layout(location = 1) in vec2 a_uv;
-layout(location = 2) in vec4 a_tint;
-out vec2 v_uv;
-out vec4 v_tint;
-void main() {
-    v_uv = a_uv;
-    v_tint = a_tint;
-    gl_Position = vec4(a_position, 0.0, 1.0);
-}`;
-
-const TEXTURED_FRAGMENT_SHADER = `#version 300 es
-precision mediump float;
-uniform sampler2D u_texture;
-in vec2 v_uv;
-in vec4 v_tint;
-out vec4 outColor;
-void main() {
-    outColor = texture(u_texture, v_uv) * v_tint;
-}`;
-
 function createMutableSubmitMetrics(): MutableSubmitMetrics {
     return {
         drawCallCount: 0,
@@ -152,28 +113,22 @@ function mergeSubmitMetrics(
 function getPipelineDescriptor(batch: Render2DPreparedBatch): PipelineDescriptor {
     if (batch.pipelineFamily === "textured-2d") {
         return {
-            key: `render.webgl2.2d.textured.${batch.blendMode}`,
-            pass: batch.layerId,
+            shaderFamily: "textured-2d",
+            passKey: batch.layerId,
+            materialKey: "textured",
             primitive: "triangles",
             blend: batch.blendMode,
-            layoutKey: "position-uv-tint-2d",
-            shader: {
-                vertex: TEXTURED_VERTEX_SHADER,
-                fragment: TEXTURED_FRAGMENT_SHADER,
-            },
+            vertexLayoutKey: "position-uv-tint-2d",
         };
     }
 
     return {
-        key: `render.webgl2.2d.solid.${batch.blendMode}`,
-        pass: batch.layerId,
+        shaderFamily: "solid-2d",
+        passKey: batch.layerId,
+        materialKey: "solid",
         primitive: "triangles",
         blend: batch.blendMode,
-        layoutKey: "position-color-2d",
-        shader: {
-            vertex: SOLID_VERTEX_SHADER,
-            fragment: SOLID_FRAGMENT_SHADER,
-        },
+        vertexLayoutKey: "position-color-2d",
     };
 }
 
