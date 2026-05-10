@@ -18,8 +18,8 @@ package is implementation detail unless exported there.
   loss state.
 - `gpuResource/` owns renderer GPU handles, texture registration, uploads,
   fallback texture resolution, and transient buffers.
-- `pipelineLibrary/` owns backend pipeline descriptors and WebGL2 program
-  compilation/caching.
+- `pipelineLibrary/` owns portable pipeline descriptors plus backend-specific
+  program compilation/caching.
 
 ## Flow
 
