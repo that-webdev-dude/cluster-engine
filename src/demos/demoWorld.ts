@@ -1,4 +1,4 @@
-import { createWorldManager } from "./cluster/engine/managers/world/World.manager";
+import { createWorldManager } from "../cluster/engine/managers/world/World.manager";
 
 const worldManager = createWorldManager({
     debug: true,

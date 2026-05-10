@@ -1,8 +1,8 @@
-import { createSceneManager } from "./cluster/engine/managers/scene/Scene.manager";
-import type { Scene } from "./cluster/engine/managers/scene/Scene.types";
-import type { System } from "./cluster/engine/systems";
-import { createWorldManager } from "./cluster/engine/managers/world/World.manager";
-import type { WorldManager } from "./cluster/engine/managers/world/World.manager";
+import { createSceneManager } from "../cluster/engine/managers/scene/Scene.manager";
+import type { Scene } from "../cluster/engine/managers/scene/Scene.types";
+import type { System } from "../cluster/engine/systems";
+import { createWorldManager } from "../cluster/engine/managers/world/World.manager";
+import type { WorldManager } from "../cluster/engine/managers/world/World.manager";
 
 type DemoAllCtx = {
     log: string[];

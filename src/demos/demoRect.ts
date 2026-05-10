@@ -1,4 +1,4 @@
-import { createGame, entity, scene, system } from "./cluster/engine/game";
+import { createGame, entity, scene, system } from "../cluster/engine/game";
 
 function createDisplay() {
     const app = document.querySelector<HTMLDivElement>("#app");

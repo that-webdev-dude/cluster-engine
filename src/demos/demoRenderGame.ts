@@ -1,4 +1,4 @@
-import { createGame, entity, scene, system } from "./cluster/engine/game";
+import { createGame, entity, scene, system } from "../cluster/engine/game";
 
 const WIDTH = 800;
 const HEIGHT = 600;
@@ -41,7 +41,8 @@ function createMetricsPanel(): HTMLPreElement {
     panel.style.borderRadius = "8px";
     panel.style.background = "#ffffff";
     panel.style.color = "#27272a";
-    panel.style.font = "12px/1.45 ui-monospace, SFMono-Regular, Consolas, monospace";
+    panel.style.font =
+        "12px/1.45 ui-monospace, SFMono-Regular, Consolas, monospace";
     panel.style.whiteSpace = "pre-wrap";
 
     document.querySelector<HTMLDivElement>("#app")?.appendChild(panel);

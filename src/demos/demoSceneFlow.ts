@@ -5,7 +5,7 @@ import {
     system,
     type Game,
     type GameAuthoredScene,
-} from "./cluster/engine/game";
+} from "../cluster/engine/game";
 
 function createDisplay() {
     const app = document.querySelector<HTMLDivElement>("#app");
@@ -136,8 +136,12 @@ export default async () => {
                                     const renderX = wrapPosition(nextX, WIDTH);
                                     const renderY = wrapPosition(nextY, HEIGHT);
 
-                                    prevPosition.x.write(wrappedX ? renderX : x);
-                                    prevPosition.y.write(wrappedY ? renderY : y);
+                                    prevPosition.x.write(
+                                        wrappedX ? renderX : x,
+                                    );
+                                    prevPosition.y.write(
+                                        wrappedY ? renderY : y,
+                                    );
                                     position.x.write(renderX);
                                     position.y.write(renderY);
                                 });

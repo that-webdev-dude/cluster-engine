@@ -1,4 +1,4 @@
-import { createGame, entity, scene, system } from "./cluster/engine/game";
+import { createGame, entity, scene, system } from "../cluster/engine/game";
 
 export default async () => {
     const log: string[] = [];

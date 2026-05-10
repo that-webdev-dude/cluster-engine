@@ -1,4 +1,4 @@
 import "./style.css";
-import demoRenderGame from "./demoRenderGame";
+import demoRenderGame from "./demos/demoRenderGame";
 
 demoRenderGame();

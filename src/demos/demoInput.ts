@@ -1,4 +1,4 @@
-import { createGame, entity, scene, system } from "./cluster/engine/game";
+import { createGame, entity, scene, system } from "../cluster/engine/game";
 
 function createDisplay() {
     const app = document.querySelector<HTMLDivElement>("#app");
@@ -50,11 +50,7 @@ export default async () => {
         phase: "input",
         execute(ctx) {
             const pointer = ctx.input.pointer;
-            const [row] = ctx.world.query([
-                "position",
-                "prevPosition",
-                "size",
-            ]);
+            const [row] = ctx.world.query(["position", "prevPosition", "size"]);
             if (!row) return;
 
             const position = row.components.position;
