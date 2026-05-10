@@ -8,5 +8,10 @@ texture resolution, transient vertex buffers, upload flushing, and resource
 release. Public game, world, and authored code should refer only to renderer
 resource ids in `RenderFrameInput`; they should not receive these handles.
 
-The current implementation targets WebGL2. Longer-lived resource policy and
-asset integration remain provisional.
+Logical resource handles are backend-neutral. Native backend objects live behind
+backend-specific private record state, with the active WebGL2 path exposed
+through compatibility wrappers used by the WebGL2 submitter. WebGPU-ready
+descriptor fields exist only as render internals until device and surface
+ownership land.
+
+Longer-lived resource policy and asset integration remain provisional.

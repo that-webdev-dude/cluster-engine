@@ -16,13 +16,16 @@ export type GpuResourceHandle =
 export type GpuTextureFormat = "rgba8";
 export type GpuBufferKind = "vertex" | "index" | "uniform" | "storage";
 export type GpuSamplerFilter = "nearest" | "linear";
+export type GpuSamplerAddressMode = "clamp-to-edge" | "repeat" | "mirror-repeat";
 export type GpuBufferUploadUsage = "static-draw" | "dynamic-draw" | "stream-draw";
+export type GpuTextureUsage = "sampled" | "copy-dst" | "render-target";
 
 export type GpuTextureDesc = Readonly<{
     label?: string;
     width: number;
     height: number;
     format?: GpuTextureFormat;
+    usage?: readonly GpuTextureUsage[];
 }>;
 
 export type GpuBufferDesc = Readonly<{
@@ -35,6 +38,8 @@ export type GpuSamplerDesc = Readonly<{
     label?: string;
     minFilter?: GpuSamplerFilter;
     magFilter?: GpuSamplerFilter;
+    addressModeU?: GpuSamplerAddressMode;
+    addressModeV?: GpuSamplerAddressMode;
 }>;
 
 export type GpuTextureResourceConfig = Readonly<{
@@ -47,6 +52,34 @@ export type GpuTextureResourceConfig = Readonly<{
     minFilter?: GpuSamplerFilter;
     magFilter?: GpuSamplerFilter;
 }>;
+
+export type GpuTextureBackendState = {
+    webgl2?: {
+        texture?: WebGLTexture;
+    };
+    webgpu?: {
+        texture?: unknown;
+        view?: unknown;
+    };
+};
+
+export type GpuBufferBackendState = {
+    webgl2?: {
+        buffer?: WebGLBuffer;
+    };
+    webgpu?: {
+        buffer?: unknown;
+    };
+};
+
+export type GpuSamplerBackendState = {
+    webgl2?: {
+        sampler?: WebGLSampler;
+    };
+    webgpu?: {
+        sampler?: unknown;
+    };
+};
 
 export type GpuBufferUploadRequest = Readonly<{
     kind?: "buffer";

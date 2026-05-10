@@ -3,16 +3,29 @@ import {
     type LifecycleActivePhase,
     type LifecycleLivePhase,
 } from "../../../../controllers/Lifecycle.controller";
+import {
+    bufferKindToWebGlTarget,
+    createWebGl2Buffer,
+    createWebGl2Sampler,
+    createWebGl2Texture,
+    deleteWebGl2Buffer as deleteWebGl2NativeBuffer,
+    deleteWebGl2Sampler as deleteWebGl2NativeSampler,
+    deleteWebGl2Texture as deleteWebGl2NativeTexture,
+    uploadUsageToWebGlUsage,
+    uploadWebGl2Texture as uploadWebGl2NativeTexture,
+} from "../modules/WebGl2Resource.module";
 import type {
+    GpuBufferBackendState,
     GpuBufferDesc,
     GpuBufferHandle,
-    GpuBufferUploadRequest,
     GpuResourceConfig,
     GpuResourceContextState,
     GpuResourceHandle,
     GpuResourceSyncArgs,
+    GpuSamplerBackendState,
     GpuSamplerDesc,
     GpuSamplerHandle,
+    GpuTextureBackendState,
     GpuTextureDesc,
     GpuTextureFormat,
     GpuTextureHandle,
@@ -44,23 +57,23 @@ export type GpuResourceService = Readonly<{
 
 type TextureRecord = {
     desc: Required<Pick<GpuTextureDesc, "width" | "height" | "format">> &
-        Pick<GpuTextureDesc, "label">;
+        Pick<GpuTextureDesc, "label" | "usage">;
     sampler?: GpuSamplerHandle;
     invalidated: boolean;
-    webgl2Texture?: WebGLTexture;
+    native: GpuTextureBackendState;
     retainedUpload?: RetainedTextureUpload;
 };
 
 type BufferRecord = {
     desc: GpuBufferDesc;
     invalidated: boolean;
-    webgl2Buffer?: WebGLBuffer;
+    native: GpuBufferBackendState;
 };
 
 type SamplerRecord = {
     desc: GpuSamplerDesc;
     invalidated: boolean;
-    webgl2Sampler?: WebGLSampler;
+    native: GpuSamplerBackendState;
 };
 
 type RetainedTextureUpload = {
@@ -137,27 +150,27 @@ function createGpuResourceService(config: GpuResourceConfig): GpuResourceService
         record: BufferRecord | undefined,
         gl = lastWebGl2Context,
     ): void {
-        if (!record?.webgl2Buffer || !gl) return;
-        gl.deleteBuffer(record.webgl2Buffer);
-        record.webgl2Buffer = undefined;
+        const buffer = record?.native.webgl2?.buffer;
+        deleteWebGl2NativeBuffer(gl, buffer);
+        if (record?.native.webgl2) record.native.webgl2.buffer = undefined;
     }
 
     function deleteWebGl2Texture(
         record: TextureRecord | undefined,
         gl = lastWebGl2Context,
     ): void {
-        if (!record?.webgl2Texture || !gl) return;
-        gl.deleteTexture(record.webgl2Texture);
-        record.webgl2Texture = undefined;
+        const texture = record?.native.webgl2?.texture;
+        deleteWebGl2NativeTexture(gl, texture);
+        if (record?.native.webgl2) record.native.webgl2.texture = undefined;
     }
 
     function deleteWebGl2Sampler(
         record: SamplerRecord | undefined,
         gl = lastWebGl2Context,
     ): void {
-        if (!record?.webgl2Sampler || !gl) return;
-        gl.deleteSampler(record.webgl2Sampler);
-        record.webgl2Sampler = undefined;
+        const sampler = record?.native.webgl2?.sampler;
+        deleteWebGl2NativeSampler(gl, sampler);
+        if (record?.native.webgl2) record.native.webgl2.sampler = undefined;
     }
 
     function deleteWebGl2Objects(gl = lastWebGl2Context): void {
@@ -183,8 +196,10 @@ function createGpuResourceService(config: GpuResourceConfig): GpuResourceService
                 width: normalizePositiveInteger(desc.width, "texture width"),
                 height: normalizePositiveInteger(desc.height, "texture height"),
                 format: desc.format ?? "rgba8",
+                usage: desc.usage ?? ["sampled", "copy-dst"],
             },
             invalidated: contextState !== "ok",
+            native: {},
         });
         return handle;
     }
@@ -195,6 +210,7 @@ function createGpuResourceService(config: GpuResourceConfig): GpuResourceService
         samplers.set(handle, {
             desc,
             invalidated: contextState !== "ok",
+            native: {},
         });
         return handle;
     }
@@ -292,6 +308,7 @@ function createGpuResourceService(config: GpuResourceConfig): GpuResourceService
                 kind: desc.kind,
             },
             invalidated: contextState !== "ok",
+            native: {},
         });
         transientBuffers.add(handle);
         return handle;
@@ -332,37 +349,16 @@ function createGpuResourceService(config: GpuResourceConfig): GpuResourceService
         lastWebGl2Context = gl;
         const record = buffers.get(handle);
         if (!record) return undefined;
-        if (record.webgl2Buffer) return record.webgl2Buffer;
-        const buffer = gl.createBuffer();
+        if (record.native.webgl2?.buffer) return record.native.webgl2.buffer;
+        const buffer = createWebGl2Buffer(gl);
         if (!buffer) {
             if (debug) {
                 throw new Error("GpuResourceService: failed to create WebGL buffer");
             }
             return undefined;
         }
-        record.webgl2Buffer = buffer;
+        record.native.webgl2 = { buffer };
         return buffer;
-    }
-
-    function textureFormatToWebGl(
-        gl: WebGL2RenderingContext,
-        format: GpuTextureFormat,
-    ) {
-        switch (format) {
-            case "rgba8":
-                return {
-                    internalFormat: gl.RGBA8,
-                    format: gl.RGBA,
-                    type: gl.UNSIGNED_BYTE,
-                };
-        }
-    }
-
-    function samplerFilterToWebGl(
-        gl: WebGL2RenderingContext,
-        filter: GpuSamplerDesc["minFilter"],
-    ): number {
-        return filter === "nearest" ? gl.NEAREST : gl.LINEAR;
     }
 
     function getWebGl2Sampler(
@@ -372,20 +368,10 @@ function createGpuResourceService(config: GpuResourceConfig): GpuResourceService
         if (!handle) return undefined;
         const record = samplers.get(handle);
         if (!record) return undefined;
-        if (record.webgl2Sampler) return record.webgl2Sampler;
-        const sampler = gl.createSampler();
+        if (record.native.webgl2?.sampler) return record.native.webgl2.sampler;
+        const sampler = createWebGl2Sampler(gl, record.desc);
         if (!sampler) return undefined;
-        gl.samplerParameteri(
-            sampler,
-            gl.TEXTURE_MIN_FILTER,
-            samplerFilterToWebGl(gl, record.desc.minFilter),
-        );
-        gl.samplerParameteri(
-            sampler,
-            gl.TEXTURE_MAG_FILTER,
-            samplerFilterToWebGl(gl, record.desc.magFilter),
-        );
-        record.webgl2Sampler = sampler;
+        record.native.webgl2 = { sampler };
         record.invalidated = false;
         return sampler;
     }
@@ -396,36 +382,10 @@ function createGpuResourceService(config: GpuResourceConfig): GpuResourceService
         upload: RetainedTextureUpload,
     ): void {
         const record = textures.get(handle);
-        const texture = record?.webgl2Texture ?? getWebGl2Texture(handle, gl);
+        const texture = record?.native.webgl2?.texture ?? getWebGl2Texture(handle, gl);
         if (!record || !texture) return;
-        const format = textureFormatToWebGl(gl, upload.format);
-        gl.bindTexture(gl.TEXTURE_2D, texture);
-        gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
-        gl.texImage2D(
-            gl.TEXTURE_2D,
-            0,
-            format.internalFormat,
-            upload.width,
-            upload.height,
-            0,
-            format.format,
-            format.type,
-            upload.data,
-        );
         const sampler = record.sampler ? samplers.get(record.sampler) : undefined;
-        gl.texParameteri(
-            gl.TEXTURE_2D,
-            gl.TEXTURE_MIN_FILTER,
-            samplerFilterToWebGl(gl, sampler?.desc.minFilter),
-        );
-        gl.texParameteri(
-            gl.TEXTURE_2D,
-            gl.TEXTURE_MAG_FILTER,
-            samplerFilterToWebGl(gl, sampler?.desc.magFilter),
-        );
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-        gl.bindTexture(gl.TEXTURE_2D, null);
+        uploadWebGl2NativeTexture(gl, texture, sampler?.desc, upload);
         record.invalidated = false;
     }
 
@@ -438,16 +398,16 @@ function createGpuResourceService(config: GpuResourceConfig): GpuResourceService
         lastWebGl2Context = gl;
         const record = textures.get(handle);
         if (!record) return undefined;
-        if (!record.webgl2Texture) {
-            const texture = gl.createTexture();
+        if (!record.native.webgl2?.texture) {
+            const texture = createWebGl2Texture(gl);
             if (!texture) return undefined;
-            record.webgl2Texture = texture;
+            record.native.webgl2 = { texture };
             record.invalidated = true;
         }
         if (record.retainedUpload && record.invalidated) {
             uploadWebGl2Texture(gl, handle, record.retainedUpload);
         }
-        return record.webgl2Texture;
+        return record.native.webgl2.texture;
     }
 
     function createFallbackTexture(): GpuTextureHandle {
@@ -499,24 +459,6 @@ function createGpuResourceService(config: GpuResourceConfig): GpuResourceService
         };
     }
 
-    function bufferKindToWebGlTarget(
-        gl: WebGL2RenderingContext,
-        handle: GpuBufferHandle,
-    ): number | undefined {
-        const record = buffers.get(handle);
-        if (!record) return undefined;
-        return record.desc.kind === "index" ? gl.ELEMENT_ARRAY_BUFFER : gl.ARRAY_BUFFER;
-    }
-
-    function uploadUsageToWebGlUsage(
-        gl: WebGL2RenderingContext,
-        usage: GpuBufferUploadRequest["usage"],
-    ): number {
-        if (usage === "static-draw") return gl.STATIC_DRAW;
-        if (usage === "dynamic-draw") return gl.DYNAMIC_DRAW;
-        return gl.STREAM_DRAW;
-    }
-
     function flushWebGl2Uploads(gl: WebGL2RenderingContext): void {
         lifecycle.assertNotDisposed();
         if (!assertRunning("flushWebGl2Uploads") || pendingUploads.length === 0) {
@@ -545,9 +487,10 @@ function createGpuResourceService(config: GpuResourceConfig): GpuResourceService
                 continue;
             }
 
-            const target = bufferKindToWebGlTarget(gl, upload.target);
-            const buffer = getWebGl2Buffer(upload.target, gl);
             const record = buffers.get(upload.target);
+            if (!record) continue;
+            const target = bufferKindToWebGlTarget(gl, record.desc.kind);
+            const buffer = getWebGl2Buffer(upload.target, gl);
             if (!target || !buffer || !record) continue;
             gl.bindBuffer(target, buffer);
             gl.bufferData(target, upload.data, uploadUsageToWebGlUsage(gl, upload.usage));

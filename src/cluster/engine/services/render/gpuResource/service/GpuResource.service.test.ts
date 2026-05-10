@@ -99,4 +99,105 @@ describe("GpuResourceService", () => {
 
         await gpuResource.dispose();
     });
+
+    it("releases transient buffers on beginFrame", async () => {
+        const gl = createFakeWebGl2();
+        const gpuResource = createGpuResource({});
+        await gpuResource.start();
+
+        const handle = gpuResource.createBuffer({
+            label: "frame.vertices",
+            size: 16,
+            kind: "vertex",
+        });
+        gpuResource.stageUpload({
+            target: handle,
+            byteLength: 16,
+            data: new Float32Array([0, 1, 2, 3]),
+            usage: "stream-draw",
+        });
+        gpuResource.flushWebGl2Uploads(gl);
+        gpuResource.beginFrame();
+
+        expect(gl.deleteBuffer).toHaveBeenCalledTimes(1);
+        expect(gpuResource.getWebGl2Buffer(handle, gl)).toBeUndefined();
+
+        await gpuResource.dispose();
+    });
+
+    it("releases backend-native texture, sampler, and buffer objects", async () => {
+        const gl = createFakeWebGl2();
+        const gpuResource = createGpuResource({});
+        await gpuResource.start();
+
+        const texture = gpuResource.registerTextureResource({
+            id: "sprite.player",
+            width: 1,
+            height: 1,
+            data: new Uint8Array([255, 255, 255, 255]),
+        });
+        gpuResource.flushWebGl2Uploads(gl);
+        gpuResource.resolveWebGl2Texture("sprite.player", gl);
+        const buffer = gpuResource.createBuffer({
+            label: "frame.vertices",
+            size: 16,
+            kind: "vertex",
+        });
+        gpuResource.getWebGl2Buffer(buffer, gl);
+
+        expect(gpuResource.release(texture)).toBe(true);
+        expect(gpuResource.release(buffer)).toBe(true);
+
+        expect(gl.deleteTexture).toHaveBeenCalledTimes(1);
+        expect(gl.deleteSampler).toHaveBeenCalledTimes(1);
+        expect(gl.deleteBuffer).toHaveBeenCalledTimes(1);
+        expect(gpuResource.resolveWebGl2Texture("sprite.player", gl)?.fallback).toBe(
+            true,
+        );
+
+        await gpuResource.dispose();
+    });
+
+    it("represents uniform and storage buffer descriptors without breaking WebGL2 uploads", async () => {
+        const gl = createFakeWebGl2();
+        const gpuResource = createGpuResource({});
+        await gpuResource.start();
+
+        const uniform = gpuResource.createBuffer({
+            label: "frame.uniforms",
+            size: 16,
+            kind: "uniform",
+        });
+        const storage = gpuResource.createBuffer({
+            label: "frame.storage",
+            size: 16,
+            kind: "storage",
+        });
+        gpuResource.stageUpload({
+            target: uniform,
+            byteLength: 16,
+            data: new Float32Array([1, 2, 3, 4]),
+            usage: "dynamic-draw",
+        });
+        gpuResource.stageUpload({
+            target: storage,
+            byteLength: 16,
+            data: new Float32Array([5, 6, 7, 8]),
+            usage: "static-draw",
+        });
+        gpuResource.flushWebGl2Uploads(gl);
+
+        expect(gl.bufferData).toHaveBeenCalledWith(
+            gl.ARRAY_BUFFER,
+            expect.any(Float32Array),
+            gl.DYNAMIC_DRAW,
+        );
+        expect(gl.bufferData).toHaveBeenCalledWith(
+            gl.ARRAY_BUFFER,
+            expect.any(Float32Array),
+            gl.STATIC_DRAW,
+        );
+
+        await gpuResource.dispose();
+    });
 });
