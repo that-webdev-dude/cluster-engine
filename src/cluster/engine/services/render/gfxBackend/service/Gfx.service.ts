@@ -429,7 +429,9 @@ function createGfxService(config: GfxConfig): GfxService {
         previousLostBackend: GfxBackend | undefined,
     ): Promise<void> {
         try {
-            const detectedBackends = detectWebGpuBackend() ? ["webgpu"] : [];
+            const detectedBackends: readonly GfxBackend[] = detectWebGpuBackend()
+                ? ["webgpu"]
+                : [];
             const webGpuRuntime = await tryAcquireWebGpu();
             if (
                 recoveryGeneration !== generation ||

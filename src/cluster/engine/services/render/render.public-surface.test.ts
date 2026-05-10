@@ -1,7 +1,7 @@
 import { describe, expect, expectTypeOf, it } from "vitest";
-import { readFileSync } from "node:fs";
 import * as renderPackage from "./index";
 import { createRender } from "./index";
+import renderTypesSource from "./service/Render.types.ts?raw";
 import type {
     RenderBackend,
     RenderBlendMode,
@@ -69,12 +69,7 @@ describe("render public surface", () => {
     });
 
     it("keeps public render types decoupled from engine state packages", () => {
-        const source = readFileSync(
-            "src/cluster/engine/services/render/service/Render.types.ts",
-            "utf8",
-        );
-
-        expect(source).not.toMatch(
+        expect(renderTypesSource).not.toMatch(
             /from\s+["'][^"']*(game|managers|scenes|world|entity|query|_legacy_\/render)/,
         );
     });
