@@ -5,6 +5,10 @@ import {
 } from "../../../../controllers/Lifecycle.controller";
 import type { GfxBackend } from "../../gfxBackend";
 import { resolveWebGl2ShaderSource } from "../modules/WebGl2PipelineCompiler.module";
+import {
+    createWebGpuRenderPipelineDescriptor,
+    resolveWebGpuShaderSource,
+} from "../modules/WebGpuPipelineCompiler.module";
 import type {
     PipelineDescriptor,
     PipelineHandle,
@@ -13,6 +17,8 @@ import type {
     PipelineLibrarySyncArgs,
     PipelineRecordView,
     WebGl2Pipeline,
+    WebGpuDeviceLike,
+    WebGpuPipeline,
 } from "./PipelineLibrary.types";
 
 export type PipelineLibraryService = Readonly<{
@@ -23,6 +29,11 @@ export type PipelineLibraryService = Readonly<{
         desc: PipelineDescriptor;
         gl: WebGL2RenderingContext;
     }): WebGl2Pipeline | undefined;
+    getWebGpuPipeline(args: {
+        desc: PipelineDescriptor;
+        device: WebGpuDeviceLike;
+        format: string;
+    }): WebGpuPipeline | undefined;
     peekPipeline(key: PipelineLibraryKey): PipelineRecordView | undefined;
     release(handle: PipelineHandle): boolean;
     dispose(): Promise<boolean>;
@@ -34,10 +45,15 @@ type PipelineRecord = {
     backend: GfxBackend;
     desc: PipelineDescriptor;
     invalidated: boolean;
-    compiled?: {
-        backend: "webgl2";
-        program: WebGLProgram;
-    };
+    compiled?:
+        | {
+              backend: "webgl2";
+              program: WebGLProgram;
+          }
+        | {
+              backend: "webgpu";
+              pipeline: WebGpuPipeline["pipeline"];
+          };
 };
 
 function createPipelineLibraryService(
@@ -293,6 +309,101 @@ function createPipelineLibraryService(
         };
     }
 
+    function compileWebGpuPipeline(args: {
+        desc: PipelineDescriptor;
+        device: WebGpuDeviceLike;
+        format: string;
+    }): WebGpuPipeline["pipeline"] | undefined {
+        const shaderSource = resolveWebGpuShaderSource(args.desc);
+        if (!shaderSource) {
+            if (debug) {
+                throw new Error(
+                    `PipelineLibraryService: unsupported WebGPU pipeline descriptor - shaderFamily=${args.desc.shaderFamily}, vertexLayoutKey=${args.desc.vertexLayoutKey}`,
+                );
+            }
+            return undefined;
+        }
+
+        try {
+            const vertexModule = args.device.createShaderModule({
+                label: `render.${args.desc.shaderFamily}.vertex`,
+                code: shaderSource.vertex,
+            });
+            const fragmentModule = args.device.createShaderModule({
+                label: `render.${args.desc.shaderFamily}.fragment`,
+                code: shaderSource.fragment,
+            });
+            return args.device.createRenderPipeline(
+                createWebGpuRenderPipelineDescriptor({
+                    desc: args.desc,
+                    format: args.format,
+                    vertexModule,
+                    fragmentModule,
+                    shaderSource,
+                }),
+            );
+        } catch (error) {
+            if (debug) {
+                const message =
+                    error instanceof Error ? error.message : "unknown pipeline error";
+                throw new Error(
+                    `PipelineLibraryService: WebGPU pipeline creation failed - ${message}`,
+                );
+            }
+            return undefined;
+        }
+    }
+
+    function getWebGpuPipeline(args: {
+        desc: PipelineDescriptor;
+        device: WebGpuDeviceLike;
+        format: string;
+    }): WebGpuPipeline | undefined {
+        lifecycle.assertNotDisposed();
+        if (!assertRunning("getWebGpuPipeline")) return undefined;
+        const normalized = normalizeDescriptor(args.desc);
+        const key = createPipelineKey(normalized);
+        const existing = pipelinesByKey.get(key);
+        const record =
+            existing ??
+            ({
+                key,
+                handle: createPipelineHandle(),
+                backend: currentBackend,
+                desc: normalized,
+                invalidated: currentStatus !== "ok",
+            } satisfies PipelineRecord);
+
+        if (!existing) {
+            pipelinesByKey.set(key, record);
+            pipelineKeyByHandle.set(record.handle, key);
+        }
+
+        if (
+            !record.compiled ||
+            record.compiled.backend !== "webgpu" ||
+            record.invalidated ||
+            record.backend !== "webgpu"
+        ) {
+            destroyCompiledPipeline(record);
+            const pipeline = compileWebGpuPipeline({
+                desc: normalized,
+                device: args.device,
+                format: args.format,
+            });
+            if (!pipeline) return undefined;
+            record.backend = "webgpu";
+            record.desc = normalized;
+            record.invalidated = false;
+            record.compiled = { backend: "webgpu", pipeline };
+        }
+
+        return {
+            handle: record.handle,
+            pipeline: record.compiled.pipeline,
+        };
+    }
+
     function peekPipeline(
         key: PipelineLibraryKey,
     ): PipelineRecordView | undefined {
@@ -322,6 +433,7 @@ function createPipelineLibraryService(
         stop: lifecycle.stop,
         sync,
         getWebGl2Pipeline,
+        getWebGpuPipeline,
         peekPipeline,
         release,
         dispose: lifecycle.dispose,

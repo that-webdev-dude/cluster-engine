@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { createFakeWebGl2 } from "../../testing/FakeWebGl2.test-utils";
+import {
+    createFakeWebGl2,
+    createFakeWebGpu,
+} from "../../testing/FakeWebGl2.test-utils";
 import { createPipelineLibrary } from "./PipelineLibrary.service";
 import type { PipelineDescriptor } from "./PipelineLibrary.types";
 
@@ -67,6 +70,64 @@ describe("PipelineLibraryService", () => {
 
         expect(firstGl.deleteProgram).toHaveBeenCalledTimes(1);
         expect(restoredGl.createProgram).toHaveBeenCalledTimes(1);
+
+        await pipelines.dispose();
+    });
+
+    it("compiles and caches WebGPU pipelines by descriptor key", async () => {
+        const webGpu = createFakeWebGpu();
+        const pipelines = createPipelineLibrary({});
+        await pipelines.start();
+        pipelines.sync({ gfxBackend: "webgpu", gfxStatus: "ok" });
+
+        const first = pipelines.getWebGpuPipeline({
+            desc: DESC,
+            device: webGpu.device,
+            format: "bgra8unorm",
+        });
+        const second = pipelines.getWebGpuPipeline({
+            desc: DESC,
+            device: webGpu.device,
+            format: "bgra8unorm",
+        });
+        const record = pipelines.peekPipeline(DESC_KEY);
+
+        expect(first).toEqual(second);
+        expect(record).toMatchObject({
+            key: DESC_KEY,
+            backend: "webgpu",
+            invalidated: false,
+        });
+        expect(webGpu.device.createShaderModule).toHaveBeenCalledWith(
+            expect.objectContaining({
+                code: expect.stringContaining("@vertex"),
+            }),
+        );
+        expect(webGpu.device.createRenderPipeline).toHaveBeenCalledTimes(1);
+
+        await pipelines.dispose();
+    });
+
+    it("invalidates cached WebGPU pipelines after backend loss", async () => {
+        const webGpu = createFakeWebGpu();
+        const pipelines = createPipelineLibrary({});
+        await pipelines.start();
+        pipelines.sync({ gfxBackend: "webgpu", gfxStatus: "ok" });
+
+        pipelines.getWebGpuPipeline({
+            desc: DESC,
+            device: webGpu.device,
+            format: "bgra8unorm",
+        });
+        pipelines.sync({ gfxBackend: "webgpu", gfxStatus: "lost" });
+        pipelines.sync({ gfxBackend: "webgpu", gfxStatus: "ok" });
+        pipelines.getWebGpuPipeline({
+            desc: DESC,
+            device: webGpu.device,
+            format: "bgra8unorm",
+        });
+
+        expect(webGpu.device.createRenderPipeline).toHaveBeenCalledTimes(2);
 
         await pipelines.dispose();
     });

@@ -19,6 +19,9 @@ export type GpuSamplerFilter = "nearest" | "linear";
 export type GpuSamplerAddressMode = "clamp-to-edge" | "repeat" | "mirror-repeat";
 export type GpuBufferUploadUsage = "static-draw" | "dynamic-draw" | "stream-draw";
 export type GpuTextureUsage = "sampled" | "copy-dst" | "render-target";
+export type GpuFrameVertexLayoutKey =
+    | "position-color-2d"
+    | "position-uv-tint-2d";
 
 export type GpuTextureDesc = Readonly<{
     label?: string;
@@ -58,8 +61,9 @@ export type GpuTextureBackendState = {
         texture?: WebGLTexture;
     };
     webgpu?: {
-        texture?: unknown;
-        view?: unknown;
+        texture?: WebGpuTextureLike;
+        view?: WebGpuTextureViewLike;
+        bindGroup?: WebGpuBindGroupLike;
     };
 };
 
@@ -68,7 +72,8 @@ export type GpuBufferBackendState = {
         buffer?: WebGLBuffer;
     };
     webgpu?: {
-        buffer?: unknown;
+        buffer?: WebGpuBufferLike;
+        capacityBytes?: number;
     };
 };
 
@@ -77,7 +82,7 @@ export type GpuSamplerBackendState = {
         sampler?: WebGLSampler;
     };
     webgpu?: {
-        sampler?: unknown;
+        sampler?: WebGpuSamplerLike;
     };
 };
 
@@ -107,6 +112,99 @@ export type WebGl2TextureBinding = Readonly<{
     texture: WebGLTexture;
     sampler?: WebGLSampler;
     fallback: boolean;
+}>;
+
+export type WebGpuDeviceLike = Readonly<{
+    createBuffer(desc: WebGpuBufferDescriptor): WebGpuBufferLike;
+    createTexture(desc: WebGpuTextureDescriptor): WebGpuTextureLike;
+    createSampler(desc: WebGpuSamplerDescriptor): WebGpuSamplerLike;
+    createBindGroup(desc: WebGpuBindGroupDescriptor): WebGpuBindGroupLike;
+    queue: WebGpuQueueLike;
+}>;
+
+export type WebGpuQueueLike = Readonly<{
+    writeBuffer(
+        buffer: WebGpuBufferLike,
+        bufferOffset: number,
+        data: ArrayBufferView,
+    ): void;
+    writeTexture(
+        destination: WebGpuImageCopyTexture,
+        data: ArrayBufferView,
+        dataLayout: WebGpuImageDataLayout,
+        size: WebGpuExtent3D,
+    ): void;
+}>;
+
+export type WebGpuBufferLike = Readonly<{
+    destroy?(): void;
+}>;
+
+export type WebGpuTextureLike = Readonly<{
+    createView(): WebGpuTextureViewLike;
+    destroy?(): void;
+}>;
+
+export type WebGpuTextureViewLike = object;
+export type WebGpuSamplerLike = object;
+export type WebGpuBindGroupLike = object;
+
+export type WebGpuBufferDescriptor = Readonly<{
+    label?: string;
+    size: number;
+    usage: number;
+}>;
+
+export type WebGpuTextureDescriptor = Readonly<{
+    label?: string;
+    size: WebGpuExtent3D;
+    format: string;
+    usage: number;
+}>;
+
+export type WebGpuSamplerDescriptor = Readonly<{
+    label?: string;
+    minFilter: "nearest" | "linear";
+    magFilter: "nearest" | "linear";
+    addressModeU: "clamp-to-edge" | "repeat" | "mirror-repeat";
+    addressModeV: "clamp-to-edge" | "repeat" | "mirror-repeat";
+}>;
+
+export type WebGpuBindGroupDescriptor = Readonly<{
+    label?: string;
+    layout: object;
+    entries: readonly {
+        binding: number;
+        resource: object;
+    }[];
+}>;
+
+export type WebGpuImageCopyTexture = Readonly<{
+    texture: WebGpuTextureLike;
+}>;
+
+export type WebGpuImageDataLayout = Readonly<{
+    bytesPerRow: number;
+    rowsPerImage: number;
+}>;
+
+export type WebGpuExtent3D = Readonly<{
+    width: number;
+    height: number;
+    depthOrArrayLayers?: number;
+}>;
+
+export type WebGpuTextureBinding = Readonly<{
+    texture: WebGpuTextureLike;
+    view: WebGpuTextureViewLike;
+    sampler: WebGpuSamplerLike;
+    bindGroup?: WebGpuBindGroupLike;
+    fallback: boolean;
+}>;
+
+export type WebGpuFrameVertexBuffer = Readonly<{
+    buffer: WebGpuBufferLike;
+    capacityBytes: number;
 }>;
 
 export type GpuResourceSyncArgs = Readonly<{

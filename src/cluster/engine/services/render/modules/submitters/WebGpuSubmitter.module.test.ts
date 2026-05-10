@@ -1,9 +1,11 @@
 import { describe, expect, it } from "vitest";
+import { createGpuResource } from "../../gpuResource";
+import { createPipelineLibrary } from "../../pipelineLibrary";
+import { createFakeWebGpu } from "../../testing/FakeWebGl2.test-utils";
 import { createRender2DPrepare } from "../Render2DPrepare.module";
 import { createWebGpuSubmitter } from "./WebGpuSubmitter.module";
 import type { GfxRuntime } from "../../gfxBackend";
 import type { RenderFrameInput } from "../../service/Render.types";
-import { createFakeWebGpu } from "../../testing/FakeWebGl2.test-utils";
 
 function createInput(layers: RenderFrameInput["layers"]): RenderFrameInput {
     return {
@@ -13,8 +15,9 @@ function createInput(layers: RenderFrameInput["layers"]): RenderFrameInput {
     };
 }
 
-function createWebGpuRuntime(): Extract<GfxRuntime, { backend: "webgpu" }> {
-    const webGpu = createFakeWebGpu();
+function createWebGpuRuntime(
+    webGpu = createFakeWebGpu(),
+): Extract<GfxRuntime, { backend: "webgpu" }> {
     return {
         backend: "webgpu",
         caps: {},
@@ -25,12 +28,208 @@ function createWebGpuRuntime(): Extract<GfxRuntime, { backend: "webgpu" }> {
     };
 }
 
-describe("createWebGpuSubmitter", () => {
-    it("returns unsupported submit semantics without backend work", () => {
-        const frame = createRender2DPrepare().prepare(createInput([]));
-        const submitter = createWebGpuSubmitter();
+async function createStartedSubmitter() {
+    const gpuResource = createGpuResource({});
+    const pipelineLibrary = createPipelineLibrary({});
+    await gpuResource.start();
+    await pipelineLibrary.start();
+    return {
+        gpuResource,
+        pipelineLibrary,
+        submitter: createWebGpuSubmitter({ gpuResource, pipelineLibrary }),
+    };
+}
 
-        expect(submitter.submit(frame, createWebGpuRuntime())).toEqual({
+describe("createWebGpuSubmitter", () => {
+    it("clears and submits an empty prepared frame", async () => {
+        const webGpu = createFakeWebGpu();
+        const { gpuResource, pipelineLibrary, submitter } =
+            await createStartedSubmitter();
+        const frame = createRender2DPrepare().prepare(createInput([]));
+
+        expect(submitter.submit(frame, createWebGpuRuntime(webGpu))).toEqual({
+            result: { status: "submitted" },
+            metrics: {
+                drawCallCount: 0,
+                vertexCount: 0,
+                skippedResourceCount: 0,
+                fallbackResourceCount: 0,
+            },
+        });
+        expect(webGpu.commandEncoder.beginRenderPass).toHaveBeenCalledWith(
+            expect.objectContaining({
+                colorAttachments: [
+                    expect.objectContaining({
+                        loadOp: "clear",
+                        storeOp: "store",
+                    }),
+                ],
+            }),
+        );
+        expect(webGpu.device.queue.submit).toHaveBeenCalledWith([
+            expect.any(Object),
+        ]);
+
+        await pipelineLibrary.dispose();
+        await gpuResource.dispose();
+    });
+
+    it("uploads packed solid vertices and draws one rect batch", async () => {
+        const webGpu = createFakeWebGpu();
+        const { gpuResource, pipelineLibrary, submitter } =
+            await createStartedSubmitter();
+        const frame = createRender2DPrepare().prepare(
+            createInput([
+                {
+                    id: "main",
+                    order: 0,
+                    items: [
+                        {
+                            kind: "rect",
+                            sortKey: 0,
+                            x: 0,
+                            y: 0,
+                            w: 10,
+                            h: 10,
+                        },
+                    ],
+                },
+            ]),
+        );
+
+        const report = submitter.submit(frame, createWebGpuRuntime(webGpu));
+
+        expect(report).toMatchObject({
+            result: { status: "submitted" },
+            metrics: {
+                drawCallCount: 1,
+                vertexCount: 6,
+                skippedResourceCount: 0,
+                fallbackResourceCount: 0,
+            },
+        });
+        expect(webGpu.device.createBuffer).toHaveBeenCalledTimes(1);
+        expect(webGpu.device.queue.writeBuffer).toHaveBeenCalledWith(
+            expect.any(Object),
+            0,
+            expect.any(Float32Array),
+        );
+        expect(webGpu.renderPass.draw).toHaveBeenCalledWith(6);
+
+        await pipelineLibrary.dispose();
+        await gpuResource.dispose();
+    });
+
+    it("uses fallback texture and records fallback metrics for missing sprites", async () => {
+        const webGpu = createFakeWebGpu();
+        const { gpuResource, pipelineLibrary, submitter } =
+            await createStartedSubmitter();
+        const frame = createRender2DPrepare().prepare(
+            createInput([
+                {
+                    id: "main",
+                    order: 0,
+                    items: [
+                        {
+                            kind: "sprite",
+                            sortKey: 0,
+                            x: 0,
+                            y: 0,
+                            w: 10,
+                            h: 10,
+                            resourceId: "missing.sprite",
+                        },
+                    ],
+                },
+            ]),
+        );
+
+        const report = submitter.submit(frame, createWebGpuRuntime(webGpu));
+
+        expect(report).toMatchObject({
+            result: { status: "submitted" },
+            metrics: {
+                drawCallCount: 1,
+                vertexCount: 6,
+                fallbackResourceCount: 1,
+            },
+        });
+        expect(webGpu.device.createTexture).toHaveBeenCalledWith(
+            expect.objectContaining({
+                label: "render.fallbackTexture",
+                format: "rgba8unorm",
+            }),
+        );
+        expect(webGpu.renderPass.setBindGroup).toHaveBeenCalledWith(
+            0,
+            expect.any(Object),
+        );
+
+        await pipelineLibrary.dispose();
+        await gpuResource.dispose();
+    });
+
+    it("reuses WebGPU frame vertex buffers for unchanged demand", async () => {
+        const webGpu = createFakeWebGpu();
+        const { gpuResource, pipelineLibrary, submitter } =
+            await createStartedSubmitter();
+        const frame = createRender2DPrepare().prepare(
+            createInput([
+                {
+                    id: "main",
+                    order: 0,
+                    items: [
+                        {
+                            kind: "rect",
+                            sortKey: 0,
+                            x: 0,
+                            y: 0,
+                            w: 10,
+                            h: 10,
+                        },
+                    ],
+                },
+            ]),
+        );
+        const runtime = createWebGpuRuntime(webGpu);
+
+        submitter.submit(frame, runtime);
+        submitter.submit(frame, runtime);
+
+        expect(webGpu.device.createBuffer).toHaveBeenCalledTimes(1);
+        expect(webGpu.device.queue.writeBuffer).toHaveBeenCalledTimes(2);
+
+        await pipelineLibrary.dispose();
+        await gpuResource.dispose();
+    });
+
+    it("skips when a WebGPU pipeline cannot be created", async () => {
+        const webGpu = createFakeWebGpu();
+        webGpu.device.createRenderPipeline.mockImplementationOnce(() => {
+            throw new Error("pipeline failed");
+        });
+        const { gpuResource, pipelineLibrary, submitter } =
+            await createStartedSubmitter();
+        const frame = createRender2DPrepare().prepare(
+            createInput([
+                {
+                    id: "main",
+                    order: 0,
+                    items: [
+                        {
+                            kind: "rect",
+                            sortKey: 0,
+                            x: 0,
+                            y: 0,
+                            w: 10,
+                            h: 10,
+                        },
+                    ],
+                },
+            ]),
+        );
+
+        expect(submitter.submit(frame, createWebGpuRuntime(webGpu))).toEqual({
             result: { status: "skipped", reason: "no-submitter" },
             metrics: {
                 drawCallCount: 0,
@@ -39,5 +238,9 @@ describe("createWebGpuSubmitter", () => {
                 fallbackResourceCount: 0,
             },
         });
+        expect(webGpu.renderPass.draw).not.toHaveBeenCalled();
+
+        await pipelineLibrary.dispose();
+        await gpuResource.dispose();
     });
 });

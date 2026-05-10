@@ -63,11 +63,40 @@ type WebGpuAdapterLike = Readonly<{
 type WebGpuDeviceLike = Readonly<{
     limits?: WebGpuLimitsLike;
     lost: Promise<unknown>;
+    queue: {
+        submit(commandBuffers: readonly object[]): void;
+        writeBuffer(
+            buffer: object,
+            bufferOffset: number,
+            data: ArrayBufferView,
+        ): void;
+        writeTexture(
+            destination: object,
+            data: ArrayBufferView,
+            dataLayout: object,
+            size: object,
+        ): void;
+    };
+    createBuffer(desc: object): object;
+    createTexture(desc: object): { createView(): object; destroy?(): void };
+    createSampler(desc: object): object;
+    createShaderModule(desc: object): object;
+    createRenderPipeline(desc: object): {
+        getBindGroupLayout(index: number): object;
+    };
+    createBindGroup(desc: object): object;
+    createCommandEncoder(desc?: object): WebGpuCommandEncoderLike;
 }>;
 
 type WebGpuCanvasContextLike = Readonly<{
     configure(config: WebGpuCanvasConfigurationLike): void;
     unconfigure?(): void;
+    getCurrentTexture(): { createView(): object };
+}>;
+
+type WebGpuCommandEncoderLike = Readonly<{
+    beginRenderPass(desc: object): object;
+    finish(): object;
 }>;
 
 type WebGpuCanvasConfigurationLike = Readonly<{
@@ -131,7 +160,10 @@ function isWebGpuCanvasContextLike(
         typeof context === "object" &&
         context !== null &&
         "configure" in context &&
-        typeof (context as { configure?: unknown }).configure === "function"
+        typeof (context as { configure?: unknown }).configure === "function" &&
+        "getCurrentTexture" in context &&
+        typeof (context as { getCurrentTexture?: unknown }).getCurrentTexture ===
+            "function"
     );
 }
 

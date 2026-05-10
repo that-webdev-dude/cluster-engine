@@ -7,4 +7,5 @@ export type {
     PipelineHandle,
     PipelineLibrarySyncArgs,
     WebGl2Pipeline,
+    WebGpuPipeline,
 } from "./service/PipelineLibrary.types";

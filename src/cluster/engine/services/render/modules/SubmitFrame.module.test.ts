@@ -104,7 +104,7 @@ describe("createSubmitFrame", () => {
         await gpuResource.dispose();
     });
 
-    it("skips non-WebGL2 runtimes without touching WebGL2 submit APIs", async () => {
+    it("submits WebGPU runtimes without touching WebGL2 submit APIs", async () => {
         const gl = createFakeWebGl2();
         const gpuResource = createGpuResource({});
         const pipelineLibrary = createPipelineLibrary({});
@@ -134,11 +134,11 @@ describe("createSubmitFrame", () => {
             pipelineLibrary,
         });
 
-        expect(submitFrame.submit(frame)).toEqual({
-            result: { status: "skipped", reason: "no-submitter" },
+        expect(submitFrame.submit(frame)).toMatchObject({
+            result: { status: "submitted" },
             metrics: {
-                drawCallCount: 0,
-                vertexCount: 0,
+                drawCallCount: 1,
+                vertexCount: 6,
                 skippedResourceCount: 0,
                 fallbackResourceCount: 0,
             },

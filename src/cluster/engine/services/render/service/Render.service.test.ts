@@ -324,8 +324,7 @@ describe("createRender", () => {
 
         expect(webGpu.context.configure).not.toHaveBeenCalled();
         expect(render.execute()).toEqual({
-            status: "skipped",
-            reason: "no-submitter",
+            status: "submitted",
         });
 
         expect(render.view.backend).toBe("webgpu");
@@ -337,6 +336,46 @@ describe("createRender", () => {
             device: webGpu.device,
             format: "bgra8unorm",
             alphaMode: "premultiplied",
+        });
+
+        await render.dispose();
+    });
+
+    it("submits WebGPU prepared frames and publishes metrics", async () => {
+        const webGpu = createFakeWebGpu();
+        vi.stubGlobal("navigator", { gpu: webGpu });
+        const render = createRender({ canvas: createFakeWebGpuCanvas(webGpu) });
+
+        await render.start();
+        render.prepare({
+            target: { w: 100, h: 100, dpr: 1 },
+            alpha: 1,
+            layers: [
+                {
+                    id: "main",
+                    order: 0,
+                    items: [
+                        {
+                            kind: "rect",
+                            sortKey: 0,
+                            x: 0,
+                            y: 0,
+                            w: 10,
+                            h: 10,
+                        },
+                    ],
+                },
+            ],
+        });
+
+        expect(render.execute()).toEqual({ status: "submitted" });
+        expect(render.view.backend).toBe("webgpu");
+        expect(render.view.gfxState).toBe("ok");
+        expect(render.view.stats).toMatchObject({
+            drawCallCount: 1,
+            vertexCount: 6,
+            skippedResourceCount: 0,
+            fallbackResourceCount: 0,
         });
 
         await render.dispose();

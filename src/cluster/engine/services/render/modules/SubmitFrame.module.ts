@@ -41,7 +41,10 @@ export function createSubmitFrame(config: SubmitFrameConfig): SubmitFrameModule 
         gpuResource: config.gpuResource,
         pipelineLibrary: config.pipelineLibrary,
     });
-    const webGpuSubmitter = createWebGpuSubmitter();
+    const webGpuSubmitter = createWebGpuSubmitter({
+        gpuResource: config.gpuResource,
+        pipelineLibrary: config.pipelineLibrary,
+    });
 
     return Object.freeze({
         submit(frame: Render2DPreparedFrame | undefined): SubmitFrameReport {

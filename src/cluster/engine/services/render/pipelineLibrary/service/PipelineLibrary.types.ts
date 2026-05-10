@@ -38,3 +38,64 @@ export type WebGl2Pipeline = Readonly<{
     handle: PipelineHandle;
     program: WebGLProgram;
 }>;
+
+export type WebGpuDeviceLike = Readonly<{
+    createShaderModule(desc: WebGpuShaderModuleDescriptor): WebGpuShaderModuleLike;
+    createRenderPipeline(desc: WebGpuRenderPipelineDescriptor): WebGpuRenderPipelineLike;
+}>;
+
+export type WebGpuShaderModuleLike = object;
+export type WebGpuRenderPipelineLike = Readonly<{
+    getBindGroupLayout(index: number): object;
+}>;
+
+export type WebGpuShaderModuleDescriptor = Readonly<{
+    label?: string;
+    code: string;
+}>;
+
+export type WebGpuVertexAttribute = Readonly<{
+    shaderLocation: number;
+    offset: number;
+    format: string;
+}>;
+
+export type WebGpuVertexBufferLayout = Readonly<{
+    arrayStride: number;
+    attributes: readonly WebGpuVertexAttribute[];
+}>;
+
+export type WebGpuRenderPipelineDescriptor = Readonly<{
+    label?: string;
+    layout: "auto";
+    vertex: {
+        module: WebGpuShaderModuleLike;
+        entryPoint: string;
+        buffers: readonly WebGpuVertexBufferLayout[];
+    };
+    fragment: {
+        module: WebGpuShaderModuleLike;
+        entryPoint: string;
+        targets: readonly {
+            format: string;
+            blend?: {
+                color: WebGpuBlendComponent;
+                alpha: WebGpuBlendComponent;
+            };
+        }[];
+    };
+    primitive: {
+        topology: "triangle-list";
+    };
+}>;
+
+export type WebGpuBlendComponent = Readonly<{
+    srcFactor: string;
+    dstFactor: string;
+    operation: "add";
+}>;
+
+export type WebGpuPipeline = Readonly<{
+    handle: PipelineHandle;
+    pipeline: WebGpuRenderPipelineLike;
+}>;

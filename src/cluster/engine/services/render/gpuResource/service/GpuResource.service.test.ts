@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { createFakeWebGl2 } from "../../testing/FakeWebGl2.test-utils";
+import {
+    createFakeWebGl2,
+    createFakeWebGpu,
+} from "../../testing/FakeWebGl2.test-utils";
 import { createGpuResource } from "./GpuResource.service";
 
 describe("GpuResourceService", () => {
@@ -100,6 +103,72 @@ describe("GpuResourceService", () => {
         await gpuResource.dispose();
     });
 
+    it("registers texture resources and flushes WebGPU texture uploads", async () => {
+        const webGpu = createFakeWebGpu();
+        const gpuResource = createGpuResource({});
+        await gpuResource.start();
+
+        gpuResource.registerTextureResource({
+            id: "sprite.player",
+            width: 2,
+            height: 1,
+            data: new Uint8Array([255, 0, 0, 255, 0, 255, 0, 255]),
+            minFilter: "nearest",
+            magFilter: "nearest",
+        });
+        gpuResource.flushWebGpuUploads(webGpu.device);
+        const binding = gpuResource.resolveWebGpuTexture({
+            resourceId: "sprite.player",
+            device: webGpu.device,
+            bindGroupLayout: { kind: "layout" },
+        });
+
+        expect(binding?.fallback).toBe(false);
+        expect(webGpu.device.createTexture).toHaveBeenCalledWith(
+            expect.objectContaining({
+                format: "rgba8unorm",
+                size: { width: 2, height: 1, depthOrArrayLayers: 1 },
+            }),
+        );
+        expect(webGpu.device.queue.writeTexture).toHaveBeenCalledWith(
+            { texture: expect.any(Object) },
+            expect.any(Uint8Array),
+            { bytesPerRow: 8, rowsPerImage: 1 },
+            { width: 2, height: 1, depthOrArrayLayers: 1 },
+        );
+        expect(webGpu.device.createBindGroup).toHaveBeenCalledTimes(1);
+
+        await gpuResource.dispose();
+    });
+
+    it("resolves missing WebGPU texture resources to an explicit fallback texture", async () => {
+        const webGpu = createFakeWebGpu();
+        const gpuResource = createGpuResource({});
+        await gpuResource.start();
+
+        const binding = gpuResource.resolveWebGpuTexture({
+            resourceId: "missing.sprite",
+            device: webGpu.device,
+            bindGroupLayout: { kind: "layout" },
+        });
+
+        expect(binding?.fallback).toBe(true);
+        expect(webGpu.device.createTexture).toHaveBeenCalledWith(
+            expect.objectContaining({
+                label: "render.fallbackTexture",
+                size: { width: 1, height: 1, depthOrArrayLayers: 1 },
+            }),
+        );
+        expect(webGpu.device.queue.writeTexture).toHaveBeenCalledWith(
+            { texture: expect.any(Object) },
+            expect.any(Uint8Array),
+            { bytesPerRow: 4, rowsPerImage: 1 },
+            { width: 1, height: 1, depthOrArrayLayers: 1 },
+        );
+
+        await gpuResource.dispose();
+    });
+
     it("releases transient buffers on beginFrame", async () => {
         const gl = createFakeWebGl2();
         const gpuResource = createGpuResource({});
@@ -121,6 +190,34 @@ describe("GpuResourceService", () => {
 
         expect(gl.deleteBuffer).toHaveBeenCalledTimes(1);
         expect(gpuResource.getWebGl2Buffer(handle, gl)).toBeUndefined();
+
+        await gpuResource.dispose();
+    });
+
+    it("grows and reuses WebGPU frame vertex buffers by layout", async () => {
+        const webGpu = createFakeWebGpu();
+        const gpuResource = createGpuResource({});
+        await gpuResource.start();
+
+        const first = gpuResource.getWebGpuFrameVertexBuffer({
+            layout: "position-color-2d",
+            device: webGpu.device,
+            byteLength: 64,
+        });
+        const second = gpuResource.getWebGpuFrameVertexBuffer({
+            layout: "position-color-2d",
+            device: webGpu.device,
+            byteLength: 32,
+        });
+        const grown = gpuResource.getWebGpuFrameVertexBuffer({
+            layout: "position-color-2d",
+            device: webGpu.device,
+            byteLength: 1024,
+        });
+
+        expect(first?.buffer).toBe(second?.buffer);
+        expect(grown?.buffer).not.toBe(first?.buffer);
+        expect(webGpu.device.createBuffer).toHaveBeenCalledTimes(2);
 
         await gpuResource.dispose();
     });

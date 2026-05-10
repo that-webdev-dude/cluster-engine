@@ -17,6 +17,7 @@ import {
 import type {
     GpuBufferBackendState,
     GpuBufferDesc,
+    GpuFrameVertexLayoutKey,
     GpuBufferHandle,
     GpuResourceConfig,
     GpuResourceContextState,
@@ -32,6 +33,10 @@ import type {
     GpuTextureResourceConfig,
     GpuUploadRequest,
     WebGl2TextureBinding,
+    WebGpuBindGroupLike,
+    WebGpuDeviceLike,
+    WebGpuFrameVertexBuffer,
+    WebGpuTextureBinding,
 } from "./GpuResource.types";
 
 export type GpuResourceService = Readonly<{
@@ -43,14 +48,25 @@ export type GpuResourceService = Readonly<{
     createBuffer(desc: GpuBufferDesc): GpuBufferHandle;
     stageUpload(request: GpuUploadRequest): void;
     flushWebGl2Uploads(gl: WebGL2RenderingContext): void;
+    flushWebGpuUploads(device: WebGpuDeviceLike): void;
     getWebGl2Buffer(
         handle: GpuBufferHandle,
         gl: WebGL2RenderingContext,
     ): WebGLBuffer | undefined;
+    getWebGpuFrameVertexBuffer(args: {
+        layout: GpuFrameVertexLayoutKey;
+        device: WebGpuDeviceLike;
+        byteLength: number;
+    }): WebGpuFrameVertexBuffer | undefined;
     resolveWebGl2Texture(
         resourceId: string | undefined,
         gl: WebGL2RenderingContext,
     ): WebGl2TextureBinding | undefined;
+    resolveWebGpuTexture(args: {
+        resourceId: string | undefined;
+        device: WebGpuDeviceLike;
+        bindGroupLayout?: object;
+    }): WebGpuTextureBinding | undefined;
     release(handle: GpuResourceHandle): boolean;
     dispose(): Promise<boolean>;
 }>;
@@ -85,6 +101,8 @@ type RetainedTextureUpload = {
 
 const FALLBACK_TEXTURE_RESOURCE_ID = "cluster.render.fallbackTexture";
 const FALLBACK_TEXTURE_DATA = new Uint8Array([255, 0, 255, 255]);
+const WEBGPU_BUFFER_USAGE_VERTEX_COPY_DST = 0x20 | 0x8;
+const WEBGPU_TEXTURE_USAGE_TEXTURE_BINDING_COPY_DST = 0x4 | 0x2;
 
 function createGpuResourceService(config: GpuResourceConfig): GpuResourceService {
     const debug = config.debug ?? false;
@@ -100,6 +118,7 @@ function createGpuResourceService(config: GpuResourceConfig): GpuResourceService
     const samplers = new Map<GpuSamplerHandle, SamplerRecord>();
     const textureResources = new Map<string, GpuTextureHandle>();
     const transientBuffers = new Set<GpuBufferHandle>();
+    const webGpuFrameVertexBuffers = new Map<GpuFrameVertexLayoutKey, BufferRecord>();
     const pendingUploads: GpuUploadRequest[] = [];
 
     function normalizePositiveInteger(value: number, label: string): number {
@@ -179,9 +198,39 @@ function createGpuResourceService(config: GpuResourceConfig): GpuResourceService
         for (const record of samplers.values()) deleteWebGl2Sampler(record, gl);
     }
 
+    function deleteWebGpuBuffer(record: BufferRecord | undefined): void {
+        record?.native.webgpu?.buffer?.destroy?.();
+        if (record?.native.webgpu) {
+            record.native.webgpu.buffer = undefined;
+            record.native.webgpu.capacityBytes = undefined;
+        }
+    }
+
+    function deleteWebGpuTexture(record: TextureRecord | undefined): void {
+        record?.native.webgpu?.texture?.destroy?.();
+        if (record?.native.webgpu) {
+            record.native.webgpu.texture = undefined;
+            record.native.webgpu.view = undefined;
+            record.native.webgpu.bindGroup = undefined;
+        }
+    }
+
+    function deleteWebGpuObjects(): void {
+        for (const record of buffers.values()) deleteWebGpuBuffer(record);
+        for (const record of textures.values()) deleteWebGpuTexture(record);
+        for (const record of samplers.values()) {
+            if (record.native.webgpu) record.native.webgpu.sampler = undefined;
+        }
+        for (const record of webGpuFrameVertexBuffers.values()) {
+            deleteWebGpuBuffer(record);
+        }
+        webGpuFrameVertexBuffers.clear();
+    }
+
     function releaseTransientBuffers(): void {
         for (const handle of transientBuffers) {
             deleteWebGl2Buffer(buffers.get(handle));
+            deleteWebGpuBuffer(buffers.get(handle));
             buffers.delete(handle);
         }
         transientBuffers.clear();
@@ -223,6 +272,7 @@ function createGpuResourceService(config: GpuResourceConfig): GpuResourceService
             clearPendingUploads();
             releaseTransientBuffers();
             deleteWebGl2Objects();
+            deleteWebGpuObjects();
             markAllInvalidated();
         },
         onStop: (_from: LifecycleActivePhase) => {
@@ -230,6 +280,7 @@ function createGpuResourceService(config: GpuResourceConfig): GpuResourceService
             clearPendingUploads();
             releaseTransientBuffers();
             deleteWebGl2Objects();
+            deleteWebGpuObjects();
             markAllInvalidated();
         },
         onDispose: (_from: LifecycleLivePhase) => {
@@ -237,6 +288,7 @@ function createGpuResourceService(config: GpuResourceConfig): GpuResourceService
             clearPendingUploads();
             releaseTransientBuffers();
             deleteWebGl2Objects();
+            deleteWebGpuObjects();
             textures.clear();
             buffers.clear();
             samplers.clear();
@@ -253,6 +305,7 @@ function createGpuResourceService(config: GpuResourceConfig): GpuResourceService
             clearPendingUploads();
             releaseTransientBuffers();
             deleteWebGl2Objects();
+            deleteWebGpuObjects();
             markAllInvalidated();
             return;
         }
@@ -361,6 +414,74 @@ function createGpuResourceService(config: GpuResourceConfig): GpuResourceService
         return buffer;
     }
 
+    function createWebGpuBuffer(
+        device: WebGpuDeviceLike,
+        label: string | undefined,
+        byteLength: number,
+    ) {
+        try {
+            return device.createBuffer({
+                label,
+                size: normalizePositiveInteger(byteLength, "WebGPU buffer size"),
+                usage: WEBGPU_BUFFER_USAGE_VERTEX_COPY_DST,
+            });
+        } catch (error) {
+            if (debug) {
+                const message =
+                    error instanceof Error ? error.message : "unknown buffer error";
+                throw new Error(
+                    `GpuResourceService: failed to create WebGPU buffer - ${message}`,
+                );
+            }
+            return undefined;
+        }
+    }
+
+    function getWebGpuFrameVertexBuffer(args: {
+        layout: GpuFrameVertexLayoutKey;
+        device: WebGpuDeviceLike;
+        byteLength: number;
+    }): WebGpuFrameVertexBuffer | undefined {
+        lifecycle.assertNotDisposed();
+        if (!assertRunning("getWebGpuFrameVertexBuffer")) return undefined;
+        let record = webGpuFrameVertexBuffers.get(args.layout);
+        if (!record) {
+            record = {
+                desc: {
+                    label: `render.2d.${args.layout}.webgpu.frameVertices`,
+                    size: normalizePositiveInteger(args.byteLength, "buffer size"),
+                    kind: "vertex",
+                },
+                invalidated: contextState !== "ok",
+                native: {},
+            };
+            webGpuFrameVertexBuffers.set(args.layout, record);
+        }
+
+        const currentCapacity = record.native.webgpu?.capacityBytes ?? 0;
+        if (record.native.webgpu?.buffer && currentCapacity >= args.byteLength) {
+            return {
+                buffer: record.native.webgpu.buffer,
+                capacityBytes: currentCapacity,
+            };
+        }
+
+        deleteWebGpuBuffer(record);
+        let nextCapacity = Math.max(256, currentCapacity || record.desc.size);
+        while (nextCapacity < args.byteLength) nextCapacity *= 2;
+        const buffer = createWebGpuBuffer(
+            args.device,
+            record.desc.label,
+            nextCapacity,
+        );
+        if (!buffer) return undefined;
+        record.desc = { ...record.desc, size: nextCapacity };
+        record.native.webgpu = { buffer, capacityBytes: nextCapacity };
+        record.invalidated = false;
+
+        return { buffer, capacityBytes: nextCapacity };
+    }
+
     function getWebGl2Sampler(
         handle: GpuSamplerHandle | undefined,
         gl: WebGL2RenderingContext,
@@ -376,6 +497,37 @@ function createGpuResourceService(config: GpuResourceConfig): GpuResourceService
         return sampler;
     }
 
+    function getWebGpuSampler(
+        handle: GpuSamplerHandle | undefined,
+        device: WebGpuDeviceLike,
+    ) {
+        if (!handle) return undefined;
+        const record = samplers.get(handle);
+        if (!record) return undefined;
+        if (record.native.webgpu?.sampler) return record.native.webgpu.sampler;
+        try {
+            const sampler = device.createSampler({
+                label: record.desc.label,
+                minFilter: record.desc.minFilter ?? "linear",
+                magFilter: record.desc.magFilter ?? "linear",
+                addressModeU: record.desc.addressModeU ?? "clamp-to-edge",
+                addressModeV: record.desc.addressModeV ?? "clamp-to-edge",
+            });
+            record.native.webgpu = { sampler };
+            record.invalidated = false;
+            return sampler;
+        } catch (error) {
+            if (debug) {
+                const message =
+                    error instanceof Error ? error.message : "unknown sampler error";
+                throw new Error(
+                    `GpuResourceService: failed to create WebGPU sampler - ${message}`,
+                );
+            }
+            return undefined;
+        }
+    }
+
     function uploadWebGl2Texture(
         gl: WebGL2RenderingContext,
         handle: GpuTextureHandle,
@@ -386,6 +538,39 @@ function createGpuResourceService(config: GpuResourceConfig): GpuResourceService
         if (!record || !texture) return;
         const sampler = record.sampler ? samplers.get(record.sampler) : undefined;
         uploadWebGl2NativeTexture(gl, texture, sampler?.desc, upload);
+        record.invalidated = false;
+    }
+
+    function textureFormatToWebGpu(format: GpuTextureFormat): string {
+        switch (format) {
+            case "rgba8":
+                return "rgba8unorm";
+        }
+    }
+
+    function uploadWebGpuTexture(
+        device: WebGpuDeviceLike,
+        handle: GpuTextureHandle,
+        upload: RetainedTextureUpload,
+    ): void {
+        const record = textures.get(handle);
+        const texture =
+            record?.native.webgpu?.texture ?? getWebGpuTexture(handle, device);
+        if (!record || !texture) return;
+
+        device.queue.writeTexture(
+            { texture },
+            upload.data,
+            {
+                bytesPerRow: upload.width * 4,
+                rowsPerImage: upload.height,
+            },
+            {
+                width: upload.width,
+                height: upload.height,
+                depthOrArrayLayers: 1,
+            },
+        );
         record.invalidated = false;
     }
 
@@ -408,6 +593,52 @@ function createGpuResourceService(config: GpuResourceConfig): GpuResourceService
             uploadWebGl2Texture(gl, handle, record.retainedUpload);
         }
         return record.native.webgl2.texture;
+    }
+
+    function getWebGpuTexture(
+        handle: GpuTextureHandle,
+        device: WebGpuDeviceLike,
+    ) {
+        lifecycle.assertNotDisposed();
+        if (!assertRunning("getWebGpuTexture")) return undefined;
+        const record = textures.get(handle);
+        if (!record) return undefined;
+        if (!record.native.webgpu?.texture) {
+            try {
+                const texture = device.createTexture({
+                    label: record.desc.label,
+                    size: {
+                        width: record.desc.width,
+                        height: record.desc.height,
+                        depthOrArrayLayers: 1,
+                    },
+                    format: textureFormatToWebGpu(record.desc.format),
+                    usage: WEBGPU_TEXTURE_USAGE_TEXTURE_BINDING_COPY_DST,
+                });
+                record.native.webgpu = {
+                    ...record.native.webgpu,
+                    texture,
+                    view: texture.createView(),
+                    bindGroup: undefined,
+                };
+                record.invalidated = true;
+            } catch (error) {
+                if (debug) {
+                    const message =
+                        error instanceof Error
+                            ? error.message
+                            : "unknown texture error";
+                    throw new Error(
+                        `GpuResourceService: failed to create WebGPU texture - ${message}`,
+                    );
+                }
+                return undefined;
+            }
+        }
+        if (record.retainedUpload && record.invalidated) {
+            uploadWebGpuTexture(device, handle, record.retainedUpload);
+        }
+        return record.native.webgpu.texture;
     }
 
     function createFallbackTexture(): GpuTextureHandle {
@@ -459,6 +690,61 @@ function createGpuResourceService(config: GpuResourceConfig): GpuResourceService
         };
     }
 
+    function resolveWebGpuTexture(args: {
+        resourceId: string | undefined;
+        device: WebGpuDeviceLike;
+        bindGroupLayout?: object;
+    }): WebGpuTextureBinding | undefined {
+        lifecycle.assertNotDisposed();
+        if (!assertRunning("resolveWebGpuTexture")) return undefined;
+        const handle =
+            args.resourceId === undefined
+                ? undefined
+                : textureResources.get(args.resourceId);
+        const resolvedHandle = handle ?? fallbackTexture ?? createFallbackTexture();
+        const texture = getWebGpuTexture(resolvedHandle, args.device);
+        const record = textures.get(resolvedHandle);
+        const view = record?.native.webgpu?.view;
+        const sampler = getWebGpuSampler(record?.sampler, args.device);
+        if (!texture || !record || !view || !sampler) return undefined;
+
+        let bindGroup: WebGpuBindGroupLike | undefined = record.native.webgpu?.bindGroup;
+        if (args.bindGroupLayout && !bindGroup) {
+            try {
+                bindGroup = args.device.createBindGroup({
+                    label: record.desc.label
+                        ? `${record.desc.label}.bindGroup`
+                        : undefined,
+                    layout: args.bindGroupLayout,
+                    entries: [
+                        { binding: 0, resource: view },
+                        { binding: 1, resource: sampler },
+                    ],
+                });
+                record.native.webgpu = { ...record.native.webgpu, bindGroup };
+            } catch (error) {
+                if (debug) {
+                    const message =
+                        error instanceof Error
+                            ? error.message
+                            : "unknown bind group error";
+                    throw new Error(
+                        `GpuResourceService: failed to create WebGPU bind group - ${message}`,
+                    );
+                }
+                return undefined;
+            }
+        }
+
+        return {
+            texture,
+            view,
+            sampler,
+            bindGroup,
+            fallback: handle === undefined,
+        };
+    }
+
     function flushWebGl2Uploads(gl: WebGL2RenderingContext): void {
         lifecycle.assertNotDisposed();
         if (!assertRunning("flushWebGl2Uploads") || pendingUploads.length === 0) {
@@ -502,6 +788,42 @@ function createGpuResourceService(config: GpuResourceConfig): GpuResourceService
         gl.bindTexture(gl.TEXTURE_2D, null);
     }
 
+    function flushWebGpuUploads(device: WebGpuDeviceLike): void {
+        lifecycle.assertNotDisposed();
+        if (!assertRunning("flushWebGpuUploads") || pendingUploads.length === 0) {
+            return;
+        }
+
+        const uploads = pendingUploads.splice(0);
+        for (const upload of uploads) {
+            if (upload.kind === "texture") {
+                const record = textures.get(upload.target);
+                if (!record) continue;
+                if (upload.retain) {
+                    record.retainedUpload = {
+                        width: upload.width ?? record.desc.width,
+                        height: upload.height ?? record.desc.height,
+                        format: upload.format ?? record.desc.format,
+                        data: upload.data,
+                    };
+                }
+                uploadWebGpuTexture(device, upload.target, {
+                    width: upload.width ?? record.desc.width,
+                    height: upload.height ?? record.desc.height,
+                    format: upload.format ?? record.desc.format,
+                    data: upload.data,
+                });
+                continue;
+            }
+
+            const record = buffers.get(upload.target);
+            const buffer = record?.native.webgpu?.buffer;
+            if (!record || !buffer) continue;
+            device.queue.writeBuffer(buffer, 0, upload.data);
+            record.invalidated = false;
+        }
+    }
+
     function release(handle: GpuResourceHandle): boolean {
         lifecycle.assertNotDisposed();
         if (handle.startsWith("gpu-texture:")) {
@@ -512,6 +834,7 @@ function createGpuResourceService(config: GpuResourceConfig): GpuResourceService
             if (fallbackTexture === textureHandle) fallbackTexture = undefined;
             const record = textures.get(textureHandle);
             deleteWebGl2Texture(record);
+            deleteWebGpuTexture(record);
             if (record?.sampler) release(record.sampler);
             return textures.delete(textureHandle);
         }
@@ -519,11 +842,14 @@ function createGpuResourceService(config: GpuResourceConfig): GpuResourceService
             const bufferHandle = handle as GpuBufferHandle;
             transientBuffers.delete(bufferHandle);
             deleteWebGl2Buffer(buffers.get(bufferHandle));
+            deleteWebGpuBuffer(buffers.get(bufferHandle));
             return buffers.delete(bufferHandle);
         }
         if (handle.startsWith("gpu-sampler:")) {
             const samplerHandle = handle as GpuSamplerHandle;
             deleteWebGl2Sampler(samplers.get(samplerHandle));
+            const record = samplers.get(samplerHandle);
+            if (record?.native.webgpu) record.native.webgpu.sampler = undefined;
             return samplers.delete(samplerHandle);
         }
         return false;
@@ -538,8 +864,11 @@ function createGpuResourceService(config: GpuResourceConfig): GpuResourceService
         createBuffer,
         stageUpload,
         flushWebGl2Uploads,
+        flushWebGpuUploads,
         getWebGl2Buffer,
+        getWebGpuFrameVertexBuffer,
         resolveWebGl2Texture,
+        resolveWebGpuTexture,
         release,
         dispose: lifecycle.dispose,
     });

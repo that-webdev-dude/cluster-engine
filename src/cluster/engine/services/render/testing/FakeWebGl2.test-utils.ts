@@ -58,8 +58,20 @@ export type FakeWebGpuDevice = {
         maxUniformBufferBindingSize: number;
         maxBufferSize: number;
     };
+    queue: {
+        submit: MockFn;
+        writeBuffer: MockFn;
+        writeTexture: MockFn;
+    };
     lost: Promise<unknown>;
     lose(): Promise<void>;
+    createBindGroup: MockFn;
+    createBuffer: MockFn;
+    createCommandEncoder: MockFn;
+    createRenderPipeline: MockFn;
+    createSampler: MockFn;
+    createShaderModule: MockFn;
+    createTexture: MockFn;
 };
 
 export type FakeWebGpuAdapter = {
@@ -69,15 +81,31 @@ export type FakeWebGpuAdapter = {
 
 export type FakeWebGpuCanvasContext = {
     configure: MockFn;
+    getCurrentTexture: MockFn;
     unconfigure: MockFn;
+};
+
+export type FakeWebGpuCommandEncoder = {
+    beginRenderPass: MockFn;
+    finish: MockFn;
+};
+
+export type FakeWebGpuRenderPass = {
+    draw: MockFn;
+    end: MockFn;
+    setBindGroup: MockFn;
+    setPipeline: MockFn;
+    setVertexBuffer: MockFn;
 };
 
 export type FakeWebGpu = {
     requestAdapter: MockFn;
     getPreferredCanvasFormat: MockFn;
     adapter: FakeWebGpuAdapter;
+    commandEncoder: FakeWebGpuCommandEncoder;
     device: FakeWebGpuDevice;
     context: FakeWebGpuCanvasContext;
+    renderPass: FakeWebGpuRenderPass;
 };
 
 export function createFakeWebGl2(): FakeWebGl2 {
@@ -195,13 +223,46 @@ export function createFakeWebGpu(): FakeWebGpu {
         maxUniformBufferBindingSize: 65536,
         maxBufferSize: 1048576,
     };
+    const renderPass: FakeWebGpuRenderPass = {
+        draw: vi.fn(),
+        end: vi.fn(),
+        setBindGroup: vi.fn(),
+        setPipeline: vi.fn(),
+        setVertexBuffer: vi.fn(),
+    };
+    const commandEncoder: FakeWebGpuCommandEncoder = {
+        beginRenderPass: vi.fn(() => renderPass),
+        finish: vi.fn(() => ({ kind: "command-buffer" })),
+    };
     const device: FakeWebGpuDevice = {
         limits,
+        queue: {
+            submit: vi.fn(),
+            writeBuffer: vi.fn(),
+            writeTexture: vi.fn(),
+        },
         lost,
         async lose() {
             resolveLost({ reason: "destroyed" });
             await Promise.resolve();
         },
+        createBindGroup: vi.fn(() => ({ kind: "bind-group" })),
+        createBuffer: vi.fn(() => ({ kind: "webgpu-buffer", destroy: vi.fn() })),
+        createCommandEncoder: vi.fn(() => commandEncoder),
+        createRenderPipeline: vi.fn(() => ({
+            kind: "render-pipeline",
+            getBindGroupLayout: vi.fn((index: number) => ({
+                kind: "bind-group-layout",
+                index,
+            })),
+        })),
+        createSampler: vi.fn(() => ({ kind: "webgpu-sampler" })),
+        createShaderModule: vi.fn(() => ({ kind: "shader-module" })),
+        createTexture: vi.fn(() => ({
+            kind: "webgpu-texture",
+            createView: vi.fn(() => ({ kind: "webgpu-texture-view" })),
+            destroy: vi.fn(),
+        })),
     };
     const adapter: FakeWebGpuAdapter = {
         limits,
@@ -209,6 +270,10 @@ export function createFakeWebGpu(): FakeWebGpu {
     };
     const context: FakeWebGpuCanvasContext = {
         configure: vi.fn(),
+        getCurrentTexture: vi.fn(() => ({
+            kind: "current-texture",
+            createView: vi.fn(() => ({ kind: "current-texture-view" })),
+        })),
         unconfigure: vi.fn(),
     };
 
@@ -216,8 +281,10 @@ export function createFakeWebGpu(): FakeWebGpu {
         requestAdapter: vi.fn(async () => adapter),
         getPreferredCanvasFormat: vi.fn(() => "bgra8unorm"),
         adapter,
+        commandEncoder,
         device,
         context,
+        renderPass,
     };
 }
 
