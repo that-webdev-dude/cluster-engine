@@ -1,66 +1,63 @@
 import { describe, expect, it } from "vitest";
 import { createGameFramePipeline } from "./GameFramePipeline.module";
-import type { GameCtx, GamePrepareRenderCtx } from "../service/Game.types";
-import type { DisplayView } from "../../services/display";
-import type { InputView } from "../../services/input";
+import type { GameCtx } from "../service/Game.types";
 import type { SceneManagerService } from "../../managers/scene";
 import type { WorldManagerService } from "../../managers/world";
+import type {
+    RenderFrameInput,
+    RenderService,
+    RenderSubmitResult,
+    RenderView,
+} from "../../services/render";
 
-function createTestDisplay(): DisplayView {
-    return {
-        rev: 0,
-        w: 320,
-        h: 240,
-        dpr: 1,
-        changed: false,
-        cssToSurface(x, y, out) {
-            const result = out ?? { x: 0, y: 0 };
-            result.x = x;
-            result.y = y;
-            return result;
-        },
-        surfaceToCss(x, y, out) {
-            const result = out ?? { x: 0, y: 0 };
-            result.x = x;
-            result.y = y;
-            return result;
-        },
-        surfaceToClient(x, y, out) {
-            const result = out ?? { x: 0, y: 0 };
-            result.x = x;
-            result.y = y;
-            return result;
-        },
-        clientToSurface(clientX, clientY, out) {
-            const result = out ?? { x: 0, y: 0 };
-            result.x = clientX;
-            result.y = clientY;
-            return result;
-        },
-    };
-}
+type WorldQueryRow = ReturnType<WorldManagerService["query"]>[number];
 
-function createTestInput(): InputView {
+const ZERO_STATS = {
+    passCount: 0,
+    commandCount: 0,
+    batchCount: 0,
+    drawCallCount: 0,
+    vertexCount: 0,
+    skippedResourceCount: 0,
+    fallbackResourceCount: 0,
+    textureResourceCount: 0,
+};
+
+function createTestCtx(_scopeId: string = "test.scope"): GameCtx {
     return {
-        keyboard: {
-            down() {
-                return false;
+        display: {
+            rev: 0,
+            w: 320,
+            h: 240,
+            dpr: 1,
+            changed: false,
+            cssToSurface(x, y, out) {
+                const result = out ?? { x: 0, y: 0 };
+                result.x = x;
+                result.y = y;
+                return result;
             },
-            pressed() {
-                return false;
+            surfaceToCss(x, y, out) {
+                const result = out ?? { x: 0, y: 0 };
+                result.x = x;
+                result.y = y;
+                return result;
             },
-            released() {
-                return false;
+            surfaceToClient(x, y, out) {
+                const result = out ?? { x: 0, y: 0 };
+                result.x = x;
+                result.y = y;
+                return result;
+            },
+            clientToSurface(clientX, clientY, out) {
+                const result = out ?? { x: 0, y: 0 };
+                result.x = clientX;
+                result.y = clientY;
+                return result;
             },
         },
-        pointer: {
-            x: 0,
-            y: 0,
-            dx: 0,
-            dy: 0,
-            wheelX: 0,
-            wheelY: 0,
-            buttons: {
+        input: {
+            keyboard: {
                 down() {
                     return false;
                 },
@@ -71,24 +68,36 @@ function createTestInput(): InputView {
                     return false;
                 },
             },
-            pointers: {
-                count: 0,
-                has() {
-                    return false;
+            pointer: {
+                x: 0,
+                y: 0,
+                dx: 0,
+                dy: 0,
+                wheelX: 0,
+                wheelY: 0,
+                buttons: {
+                    down() {
+                        return false;
+                    },
+                    pressed() {
+                        return false;
+                    },
+                    released() {
+                        return false;
+                    },
                 },
-                get() {
-                    return false;
+                pointers: {
+                    count: 0,
+                    has() {
+                        return false;
+                    },
+                    get() {
+                        return false;
+                    },
+                    forEach() {},
                 },
-                forEach() {},
             },
         },
-    };
-}
-
-function createTestCtx(_scopeId: string = "test.scope"): GameCtx {
-    return {
-        display: createTestDisplay(),
-        input: createTestInput(),
         scene: {
             request: {
                 set() {},
@@ -111,22 +120,9 @@ function createTestCtx(_scopeId: string = "test.scope"): GameCtx {
     };
 }
 
-function createTestPrepareRenderCtx(alpha: number): GamePrepareRenderCtx {
-    return {
-        alpha,
-        display: createTestDisplay(),
-        input: createTestInput(),
-        sceneStack: { instanceIds: [] },
-        world: {
-            storeCount: 0,
-            entityCount: 0,
-            stores: [],
-        },
-    };
-}
-
 function createFakeSceneManager(
     log: string[],
+    instanceIds: readonly string[] = [],
 ): SceneManagerService<GameCtx, number> {
     return {
         start: async () => true,
@@ -145,9 +141,9 @@ function createFakeSceneManager(
         view: {
             rev: 0,
             changed: false,
-            stack: { instanceIds: [] },
-            input: { order: "topToBottom", instanceIds: [] },
-            update: { order: "bottomToTop", instanceIds: [] },
+            stack: { instanceIds },
+            input: { order: "topToBottom", instanceIds },
+            update: { order: "bottomToTop", instanceIds },
         },
         commands: {
             request: {
@@ -159,7 +155,45 @@ function createFakeSceneManager(
     };
 }
 
-function createFakeWorldManager(log: string[]): WorldManagerService {
+function createQueryRow(
+    entityId: string,
+    components: Record<string, Record<string, number>>,
+): WorldQueryRow {
+    const boundComponents: Record<
+        string,
+        Record<string, { read(): number; write(value: number): void }>
+    > = Object.create(null);
+
+    for (const [componentName, fields] of Object.entries(components)) {
+        const boundFields: Record<
+            string,
+            { read(): number; write(value: number): void }
+        > = Object.create(null);
+
+        for (const [fieldName, value] of Object.entries(fields)) {
+            boundFields[fieldName] = {
+                read() {
+                    return value;
+                },
+                write() {},
+            };
+        }
+
+        boundComponents[componentName] = boundFields;
+    }
+
+    return {
+        entityId,
+        storeId: "store.test",
+        archetypeId: "position|size",
+        components: boundComponents,
+    };
+}
+
+function createFakeWorldManager(
+    log: string[],
+    rowsByStoreId: ReadonlyMap<string, readonly WorldQueryRow[]> = new Map(),
+): WorldManagerService {
     return {
         start: async () => true,
         stop: async () => true,
@@ -170,8 +204,14 @@ function createFakeWorldManager(log: string[]): WorldManagerService {
         publish() {
             log.push("world.publish");
         },
-        query() {
-            return [];
+        query(storeId, componentNames) {
+            const rows = rowsByStoreId.get(storeId) ?? [];
+
+            return rows.filter((row) =>
+                componentNames.every(
+                    (componentName) => row.components[componentName],
+                ),
+            );
         },
         view: {
             rev: 0,
@@ -195,14 +235,56 @@ function createFakeWorldManager(log: string[]): WorldManagerService {
     };
 }
 
+function createFakeRender(log: string[]): RenderService & {
+    readonly preparedInputs: readonly RenderFrameInput[];
+    readonly executeCount: number;
+} {
+    const preparedInputs: RenderFrameInput[] = [];
+    let executeCount = 0;
+    const view: RenderView = {
+        backend: "none",
+        gfxState: "unavailable",
+        frameSeq: 0,
+        target: { w: 0, h: 0, dpr: 1 },
+        lastSubmitResult: { status: "no-frame" },
+        stats: ZERO_STATS,
+    };
+
+    return {
+        view,
+        get preparedInputs() {
+            return preparedInputs;
+        },
+        get executeCount() {
+            return executeCount;
+        },
+        start: async () => true,
+        stop: async () => true,
+        dispose: async () => true,
+        register: {
+            textures() {},
+        },
+        prepare(input) {
+            log.push("render.prepare");
+            preparedInputs.push(input);
+        },
+        execute(): RenderSubmitResult {
+            executeCount++;
+            log.push("render.execute");
+            return { status: "submitted" };
+        },
+    };
+}
+
 describe("createGameFramePipeline", () => {
-    it("flushes scene changes and publishes world before creating frame context", () => {
+    it("flushes scene changes and publishes world before update phases", () => {
         const log: string[] = [];
         const pipeline = createGameFramePipeline({
             sceneManager: createFakeSceneManager(log),
             worldManager: createFakeWorldManager(log),
+            render: createFakeRender(log),
             createGameCtx: createTestCtx,
-            createPrepareRenderCtx: createTestPrepareRenderCtx,
+            createRenderTarget: () => ({ w: 320, h: 240, dpr: 1 }),
         });
 
         const result = pipeline.beginUpdate();
@@ -216,8 +298,9 @@ describe("createGameFramePipeline", () => {
         const pipeline = createGameFramePipeline({
             sceneManager: createFakeSceneManager(log),
             worldManager: createFakeWorldManager(log),
+            render: createFakeRender(log),
             createGameCtx: createTestCtx,
-            createPrepareRenderCtx: createTestPrepareRenderCtx,
+            createRenderTarget: () => ({ w: 320, h: 240, dpr: 1 }),
         });
 
         pipeline.input();
@@ -230,8 +313,9 @@ describe("createGameFramePipeline", () => {
         const pipeline = createGameFramePipeline({
             sceneManager: createFakeSceneManager(log),
             worldManager: createFakeWorldManager(log),
+            render: createFakeRender(log),
             createGameCtx: createTestCtx,
-            createPrepareRenderCtx: createTestPrepareRenderCtx,
+            createRenderTarget: () => ({ w: 320, h: 240, dpr: 1 }),
         });
 
         pipeline.update(16);
@@ -239,22 +323,37 @@ describe("createGameFramePipeline", () => {
         expect(log).toEqual(["scene.scopedExecute:update:16"]);
     });
 
-    it("flushes, publishes, and invokes prepareRender with read-only context", () => {
+    it("flushes, publishes, extracts frame input, and prepares render", () => {
         const log: string[] = [];
+        const render = createFakeRender(log);
         const pipeline = createGameFramePipeline({
-            sceneManager: createFakeSceneManager(log),
-            worldManager: createFakeWorldManager(log),
+            sceneManager: createFakeSceneManager(log, ["store.b", "store.a"]),
+            worldManager: createFakeWorldManager(
+                log,
+                new Map([
+                    [
+                        "store.a",
+                        [
+                            createQueryRow("entity.a", {
+                                position: { x: 10, y: 20 },
+                                size: { w: 30, h: 40 },
+                            }),
+                        ],
+                    ],
+                    [
+                        "store.b",
+                        [
+                            createQueryRow("entity.b", {
+                                position: { x: 50, y: 60 },
+                                size: { w: 70, h: 80 },
+                            }),
+                        ],
+                    ],
+                ]),
+            ),
+            render,
             createGameCtx: createTestCtx,
-            createPrepareRenderCtx: (alpha) => {
-                log.push(`createPrepareRenderCtx:${alpha}`);
-                return createTestPrepareRenderCtx(alpha);
-            },
-            prepareRender(ctx) {
-                log.push(`prepareRender:${ctx.alpha}`);
-                expect("scene" in ctx).toBe(false);
-                expect("commands" in ctx.world).toBe(false);
-                expect("query" in ctx.world).toBe(false);
-            },
+            createRenderTarget: () => ({ w: 640, h: 480, dpr: 2 }),
         });
 
         pipeline.prepareRender(0.5);
@@ -262,22 +361,49 @@ describe("createGameFramePipeline", () => {
         expect(log).toEqual([
             "world.flush",
             "world.publish",
-            "createPrepareRenderCtx:0.5",
-            "prepareRender:0.5",
+            "render.prepare",
         ]);
+        expect(render.preparedInputs).toHaveLength(1);
+        expect(render.preparedInputs[0]).toMatchObject({
+            alpha: 0.5,
+            target: { w: 640, h: 480, dpr: 2 },
+            layers: [
+                {
+                    id: "game.layer.0",
+                    order: 0,
+                    items: [expect.objectContaining({ kind: "rect", x: 50 })],
+                },
+                {
+                    id: "game.layer.1",
+                    order: 1,
+                    items: [expect.objectContaining({ kind: "rect", x: 10 })],
+                },
+            ],
+        });
     });
 
-    it("keeps render as a placeholder boundary without executing systems", () => {
+    it("executes render only after a prepared frame and consumes that frame", () => {
         const log: string[] = [];
+        const render = createFakeRender(log);
         const pipeline = createGameFramePipeline({
             sceneManager: createFakeSceneManager(log),
             worldManager: createFakeWorldManager(log),
+            render,
             createGameCtx: createTestCtx,
-            createPrepareRenderCtx: createTestPrepareRenderCtx,
+            createRenderTarget: () => ({ w: 320, h: 240, dpr: 1 }),
         });
 
         pipeline.render(0.25);
+        pipeline.prepareRender(0.5);
+        pipeline.render(0.5);
+        pipeline.render(0.75);
 
-        expect(log).toEqual([]);
+        expect(render.executeCount).toBe(1);
+        expect(log).toEqual([
+            "world.flush",
+            "world.publish",
+            "render.prepare",
+            "render.execute",
+        ]);
     });
 });

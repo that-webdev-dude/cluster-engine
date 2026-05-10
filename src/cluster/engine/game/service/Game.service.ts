@@ -2,8 +2,6 @@ import type {
     GameAuthoredScene,
     GameCtx,
     GameDebugView,
-    GamePrepareRender,
-    GamePrepareRenderCtx,
     GameRun,
     GamePlatform,
     GameSceneCommands,
@@ -18,6 +16,7 @@ import { createSceneManager } from "../../managers/scene";
 import { createWorldManager, type Entity } from "../../managers/world";
 import { createDisplay, type DisplayOptions } from "../../services/display";
 import { createInput, type InputOptions } from "../../services/input";
+import { createRender } from "../../services/render";
 import {
     createLoop,
     LoopFrameRender,
@@ -31,7 +30,6 @@ export type GameConfig = {
     display?: DisplayOptions;
     input?: InputOptions;
     initialScene: GameAuthoredScene;
-    prepareRender?: GamePrepareRender;
     platform?: GamePlatform;
     debug?: boolean;
 };
@@ -58,6 +56,7 @@ export function createGame(config: GameConfig): Game {
         debug,
         options: config.input,
     });
+    const render = createRender({ canvas, debug });
     const sceneManager = createSceneManager<GameCtx, GameRun>({ debug });
     const worldManager = createWorldManager({ debug });
 
@@ -76,6 +75,9 @@ export function createGame(config: GameConfig): Game {
         },
         get world() {
             return worldManager.view.debug;
+        },
+        get render() {
+            return render.view;
         },
     });
 
@@ -133,22 +135,19 @@ export function createGame(config: GameConfig): Game {
         };
     };
 
-    const createPrepareRenderCtx = (alpha: number): GamePrepareRenderCtx => {
-        return {
-            alpha,
-            display: display.view,
-            input: input.view,
-            sceneStack: sceneManager.view.stack,
-            world: worldManager.view.debug,
-        };
-    };
-
     const framePipeline = createGameFramePipeline({
         sceneManager,
         worldManager,
+        render,
         createGameCtx,
-        createPrepareRenderCtx,
-        prepareRender: config.prepareRender,
+        createRenderTarget() {
+            return {
+                w: display.view.w,
+                h: display.view.h,
+                dpr: display.view.dpr,
+            };
+        },
+        debug,
     });
     function runBeginUpdate() {
         display.latch();
@@ -188,6 +187,7 @@ export function createGame(config: GameConfig): Game {
     async function handleStart() {
         await display.start();
         await input.start();
+        await render.start();
         await worldManager.start();
         await sceneManager.start();
         await loop.start();
@@ -196,6 +196,7 @@ export function createGame(config: GameConfig): Game {
         await loop.stop();
         await sceneManager.stop();
         await worldManager.stop();
+        await render.stop();
         await input.stop();
         await display.stop();
     }
@@ -203,6 +204,7 @@ export function createGame(config: GameConfig): Game {
         await loop.dispose();
         await sceneManager.dispose();
         await worldManager.dispose();
+        await render.dispose();
         await input.dispose();
         await display.dispose();
     }

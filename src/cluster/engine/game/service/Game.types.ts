@@ -7,6 +7,7 @@ import {
 } from "../../managers/world";
 import type { DisplayView } from "../../services/display";
 import type { InputView } from "../../services/input";
+import type { RenderView } from "../../services/render";
 import { System } from "../../systems";
 
 export type GameSceneCommands = {
@@ -41,16 +42,6 @@ export type GameCtx = {
 
 export type GameRun = number;
 
-export type GamePrepareRenderCtx = Readonly<{
-    alpha: number;
-    display: DisplayView;
-    input: InputView;
-    sceneStack: SceneManagerView["stack"];
-    world: WorldManagerView["debug"];
-}>;
-
-export type GamePrepareRender = (ctx: GamePrepareRenderCtx) => void;
-
 export type GameEntity = Entity;
 
 export type GameSystem = System<GameCtx, GameRun>;
@@ -73,4 +64,5 @@ export type GamePlatform = EnginePlatform;
 export type GameDebugView = Readonly<{
     sceneStack: SceneManagerView["stack"];
     world: WorldManagerView["debug"];
+    render: RenderView;
 }>;

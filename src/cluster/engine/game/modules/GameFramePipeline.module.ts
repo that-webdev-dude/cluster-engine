@@ -1,18 +1,16 @@
 import type { SceneManagerService } from "../../managers/scene";
 import type { WorldManagerService } from "../../managers/world";
-import type {
-    GameCtx,
-    GamePrepareRender,
-    GamePrepareRenderCtx,
-    GameRun,
-} from "../service/Game.types";
+import type { RenderService, RenderTargetInfo } from "../../services/render";
+import type { GameCtx, GameRun } from "../service/Game.types";
+import { extractRenderFrameInput } from "./RenderExtraction.module";
 
 export type GameFramePipelineDeps = Readonly<{
     sceneManager: SceneManagerService<GameCtx, GameRun>;
     worldManager: WorldManagerService;
+    render: RenderService;
     createGameCtx(scopeId: string): GameCtx;
-    createPrepareRenderCtx(alpha: number): GamePrepareRenderCtx;
-    prepareRender?: GamePrepareRender;
+    createRenderTarget(): RenderTargetInfo;
+    debug?: boolean;
 }>;
 
 export type GameFramePipeline = Readonly<{
@@ -29,10 +27,12 @@ export function createGameFramePipeline(
     const {
         sceneManager,
         worldManager,
+        render: renderService,
         createGameCtx,
-        createPrepareRenderCtx,
-        prepareRender: runPrepareRender,
+        createRenderTarget,
+        debug,
     } = deps;
+    let hasPreparedRenderFrame = false;
 
     function beginUpdate() {
         sceneManager.flush();
@@ -59,11 +59,23 @@ export function createGameFramePipeline(
     function prepareRender(alpha: number): void {
         worldManager.flush();
         worldManager.publish();
-        runPrepareRender?.(createPrepareRenderCtx(alpha));
+        renderService.prepare(
+            extractRenderFrameInput({
+                alpha,
+                target: createRenderTarget(),
+                storeIds: sceneManager.view.stack.instanceIds,
+                world: worldManager,
+                debug,
+            }),
+        );
+        hasPreparedRenderFrame = true;
     }
 
     function render(_alpha: number): void {
-        // Placeholder boundary for the future renderer service.
+        if (!hasPreparedRenderFrame) return;
+
+        renderService.execute();
+        hasPreparedRenderFrame = false;
     }
 
     return Object.freeze({

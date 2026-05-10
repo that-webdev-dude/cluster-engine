@@ -1,9 +1,9 @@
 # Game Service
 
 The game service is the high-level orchestrator for authored game scenes. It
-creates the display service, input service, scene manager, world manager, and
-loop service, then coordinates their frame order through the game frame
-pipeline.
+creates the display service, input service, render service, scene manager,
+world manager, and loop service, then coordinates their frame order through the
+game frame pipeline.
 
 Use it when author code should define portable scenes, systems, and entities
 without constructing runtime managers directly.
@@ -13,16 +13,18 @@ without constructing runtime managers directly.
 - Adapts authored scenes into runtime scene-manager scenes.
 - Owns the core services and managers for the game.
 - Builds the `GameCtx` passed to scene-owned systems.
+- Extracts renderer-domain input from active world stores.
+- Drives render preparation and execution through the render service.
 - Queues scene requests through authored scene commands.
 - Queues world commands through scoped game world commands.
 - Binds world queries and commands to the current scene instance store.
 - Runs the frame pipeline from the loop callbacks.
-- Exposes a small debug view for the active scene stack and published world
-  snapshot.
+- Exposes a small debug view for the active scene stack, published world
+  snapshot, and renderer view.
 
-The game service does not own rendering yet, and it does not make the scene
-manager depend on the world manager. The authored scene adapter is the bridge
-between scene setup and world entity ownership.
+The game service owns render wiring, but authored systems do not run a render
+phase and do not receive renderer internals. The authored scene adapter is the
+bridge between scene setup and world entity ownership.
 
 ## Authoring Model
 
@@ -87,18 +89,18 @@ update, repeated updateSteps times:
 prepareRender:
   worldManager.flush()
   worldManager.publish()
-  config.prepareRender(readOnlyCtx)
+  extract renderer-domain input
+  render.prepare(input)
 
 render:
-  future renderer boundary
+  render.execute()
 ```
 
 Scene requests made by systems are queued and applied at the next
 `sceneManager.flush()`. World commands are queued and applied at the next
 `worldManager.flush()`. The prepare-render world flush and publish make world
-commands requested by scene systems visible to downstream read-only consumers
-before the frame ends. `prepareRender` is a temporary read-only bridge until a
-renderer service owns extraction and draw preparation.
+commands requested by scene systems visible to renderer extraction before the
+frame ends.
 
 ## Usage
 
@@ -109,9 +111,6 @@ import { level } from "./level";
 const game = createGame({
     canvas,
     initialScene: level,
-    prepareRender(ctx) {
-        console.log(ctx.alpha, ctx.world.stores);
-    },
     debug: true,
 });
 
@@ -119,6 +118,7 @@ await game.start();
 
 console.log(game.debug.sceneStack.instanceIds);
 console.log(game.debug.world.stores);
+console.log(game.debug.render.stats);
 
 await game.dispose();
 ```
@@ -146,10 +146,12 @@ store ids.
 
 ## Lifecycle
 
-- `start()` starts display, input, world manager, scene manager, and loop.
-- `stop()` stops loop, scene manager, world manager, input, and display while
-  preserving manager state.
-- `dispose()` disposes loop, scene manager, world manager, input, and display.
+- `start()` starts display, input, render, world manager, scene manager, and
+  loop.
+- `stop()` stops loop, scene manager, world manager, render, input, and display
+  while preserving manager state.
+- `dispose()` disposes loop, scene manager, world manager, render, input, and
+  display.
 
 In debug mode, disposed services reject later calls through the shared lifecycle
 guard.
