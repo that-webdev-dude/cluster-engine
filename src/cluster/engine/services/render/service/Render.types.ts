@@ -1,6 +1,6 @@
-export type RenderBackend = "none";
+export type RenderBackend = "none" | "webgl2";
 
-export type RenderGraphicsState = "unavailable";
+export type RenderGraphicsState = "unavailable" | "ok" | "lost";
 
 export type RenderTargetInfo = Readonly<{
     w: number;
@@ -174,7 +174,7 @@ export type RenderFrameInput = Readonly<{
     layers: readonly RenderLayerInput[];
 }>;
 
-export type RenderSkipReason = "not-running" | "no-submitter";
+export type RenderSkipReason = "not-running" | "no-submitter" | "gfx-lost";
 
 export type RenderSubmitResult =
     | { readonly status: "submitted" }

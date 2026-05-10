@@ -22,6 +22,7 @@ the shader and pipeline implementation exists. Previous/current value capture
 belongs to the later extraction or frame-boundary owner, not to ordinary user
 code and not to render mutating world state.
 
-Full WebGL2 resource, pipeline, shader, texture upload, context-loss, and draw
-submission behavior is deferred to Phase 4 after the renderer-domain input
-contract and preparation path are defined.
+WebGL2 is the first backend path. Resource registration, texture upload,
+fallback textures, pipeline compilation, context-loss state, and draw
+submission stay private to the render service. WebGPU parity, richer resource
+lifetimes, and GPU-side interpolation remain later renderer work.

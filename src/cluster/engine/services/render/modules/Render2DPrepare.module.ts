@@ -1,6 +1,8 @@
 import { resolveRenderTransform2D } from "./Interpolation.module";
+import type { RenderResolvedTransform2D } from "./Interpolation.module";
 import type {
     RenderBlendMode,
+    RenderColorInput,
     RenderFrameInput,
     RenderFrameStats,
     RenderItem2D,
@@ -26,6 +28,9 @@ export type Render2DPreparedItem = Readonly<{
     vertexCount: number;
     x?: number;
     y?: number;
+    transform?: RenderResolvedTransform2D;
+    color: RenderPreparedColor;
+    item: RenderItem2D;
 }>;
 
 export type Render2DPreparedBatch = Readonly<{
@@ -93,7 +98,17 @@ type MutablePreparedItem = {
     vertexCount: number;
     x?: number;
     y?: number;
+    transform?: RenderResolvedTransform2D;
+    color: RenderPreparedColor;
+    item: RenderItem2D;
 };
+
+export type RenderPreparedColor = Readonly<{
+    r: number;
+    g: number;
+    b: number;
+    a: number;
+}>;
 
 type MutablePreparedBatch = {
     layerId: RenderLayerId;
@@ -184,16 +199,29 @@ function getItemVertexCount(item: RenderItem2D): number {
 function getPreparedPosition(
     item: RenderItem2D,
     alpha: number,
-): Pick<Render2DPreparedItem, "x" | "y"> {
+): RenderResolvedTransform2D | undefined {
     if (item.kind === "line") {
-        return {};
+        return undefined;
     }
 
-    const transform = resolveRenderTransform2D(item, alpha);
+    return resolveRenderTransform2D(item, alpha);
+}
+
+function getColorValue(
+    color: RenderColorInput | undefined,
+    channel: keyof RenderColorInput,
+): number {
+    return color?.[channel] ?? 1;
+}
+
+function getPreparedColor(item: RenderItem2D): RenderPreparedColor {
+    const color = item.kind === "sprite" ? item.tint ?? item.color : item.color;
 
     return {
-        x: transform.x,
-        y: transform.y,
+        r: getColorValue(color, "r"),
+        g: getColorValue(color, "g"),
+        b: getColorValue(color, "b"),
+        a: item.opacity ?? 1,
     };
 }
 
@@ -290,8 +318,10 @@ export function createRender2DPrepare(
                 blendMode: getBlendMode(item),
                 resourceId: item.resourceId,
                 vertexCount,
+                color: getPreparedColor(item),
+                item,
             });
-        const position = getPreparedPosition(item, alpha);
+        const transform = getPreparedPosition(item, alpha);
 
         record.layerId = layer.layerId;
         record.layerOrder = layer.layerOrder;
@@ -303,8 +333,11 @@ export function createRender2DPrepare(
         record.blendMode = getBlendMode(item);
         record.resourceId = item.resourceId;
         record.vertexCount = vertexCount;
-        record.x = position.x;
-        record.y = position.y;
+        record.x = transform?.x;
+        record.y = transform?.y;
+        record.transform = transform;
+        record.color = getPreparedColor(item);
+        record.item = item;
         preparedItemCount++;
     }
 

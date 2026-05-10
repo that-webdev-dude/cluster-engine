@@ -1,4 +1,8 @@
 import { describe, expect, it } from "vitest";
+import {
+    createFakeCanvas,
+    createFakeWebGl2,
+} from "../testing/FakeWebGl2.test-utils";
 import { createRender } from "./Render.service";
 
 function createCanvas() {
@@ -225,5 +229,81 @@ describe("createRender", () => {
         expect(() => render.register.textures([])).toThrow(
             "RenderService.assertNotDisposed: called after dispose()",
         );
+    });
+
+    it("submits through WebGL2 and publishes backend metrics", async () => {
+        const gl = createFakeWebGl2();
+        const render = createRender({ canvas: createFakeCanvas(gl) });
+
+        await render.start();
+        render.prepare({
+            target: { w: 100, h: 100, dpr: 1 },
+            alpha: 1,
+            layers: [
+                {
+                    id: "main",
+                    order: 0,
+                    items: [
+                        {
+                            kind: "rect",
+                            sortKey: 0,
+                            x: 0,
+                            y: 0,
+                            w: 10,
+                            h: 10,
+                        },
+                    ],
+                },
+            ],
+        });
+
+        expect(render.execute()).toEqual({ status: "submitted" });
+        expect(render.view.backend).toBe("webgl2");
+        expect(render.view.gfxState).toBe("ok");
+        expect(render.view.stats).toMatchObject({
+            drawCallCount: 1,
+            vertexCount: 6,
+            skippedResourceCount: 0,
+            fallbackResourceCount: 0,
+        });
+
+        await render.dispose();
+    });
+
+    it("skips WebGL2 execution while context is lost", async () => {
+        const gl = createFakeWebGl2();
+        const canvas = createFakeCanvas(gl);
+        const render = createRender({ canvas });
+
+        await render.start();
+        render.prepare({
+            target: { w: 100, h: 100, dpr: 1 },
+            alpha: 1,
+            layers: [
+                {
+                    id: "main",
+                    order: 0,
+                    items: [
+                        {
+                            kind: "rect",
+                            sortKey: 0,
+                            x: 0,
+                            y: 0,
+                            w: 10,
+                            h: 10,
+                        },
+                    ],
+                },
+            ],
+        });
+        canvas.dispatchContextLost();
+
+        expect(render.execute()).toEqual({
+            status: "skipped",
+            reason: "gfx-lost",
+        });
+        expect(gl.drawArrays).not.toHaveBeenCalled();
+
+        await render.dispose();
     });
 });
