@@ -1,4 +1,4 @@
 import "./style.css";
-import demoSceneFlow from "./demoSceneFlow";
+import demoRenderGame from "./demoRenderGame";
 
-demoSceneFlow();
+demoRenderGame();
