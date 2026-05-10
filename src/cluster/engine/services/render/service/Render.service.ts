@@ -45,7 +45,7 @@ function createRenderService(config: RenderConfig): RenderService {
     const debug = config.debug ?? false;
     const textureResources = new Map<string, RenderTextureResourceConfig>();
     const frameBuilder = createRenderFrameBuilder();
-    const render2DPrepare = createRender2DPrepare();
+    const render2DPrepare = createRender2DPrepare({ debug });
     const submitFrame = createSubmitFrame();
     let hasPreparedFrame = false;
     const snapshot: RenderSnapshot = {
@@ -108,13 +108,14 @@ function createRenderService(config: RenderConfig): RenderService {
         lifecycle.assertNotDisposed();
         if (!assertRunning("prepare")) return;
 
-        render2DPrepare.prepare(input);
+        const preparedFrame = render2DPrepare.prepare(input);
         hasPreparedFrame = true;
         snapshot.frameSeq++;
         snapshot.target = input.target;
         snapshot.lastSubmitResult = { status: "no-frame" };
         snapshot.stats = {
             ...frameBuilder.begin(input.target),
+            ...preparedFrame.stats,
             textureResourceCount: textureResources.size,
         };
     }

@@ -1,14 +1,22 @@
 import { describe, expect, expectTypeOf, it } from "vitest";
+import { readFileSync } from "node:fs";
 import * as renderPackage from "./index";
 import { createRender } from "./index";
 import type {
+    RenderBlendMode,
+    RenderCameraInput,
     RenderConfig,
     RenderFrameInput,
     RenderFrameStats,
+    RenderItem2D,
+    RenderLayerId,
+    RenderLayerInput,
+    RenderResourceId,
     RenderResourceConfig,
     RenderSubmitResult,
     RenderTargetInfo,
     RenderTextureResourceConfig,
+    RenderTransform2DInput,
     RenderView,
 } from "./index";
 
@@ -22,8 +30,15 @@ describe("render public surface", () => {
             Readonly<{
                 target: RenderTargetInfo;
                 alpha: number;
+                camera?: RenderCameraInput;
+                layers: readonly RenderLayerInput[];
             }>
         >();
+        expectTypeOf<RenderLayerId>().toEqualTypeOf<string>();
+        expectTypeOf<RenderResourceId>().toEqualTypeOf<string>();
+        expectTypeOf<RenderBlendMode>().toEqualTypeOf<"opaque" | "alpha">();
+        expectTypeOf<RenderItem2D>().toHaveProperty("kind");
+        expectTypeOf<RenderTransform2DInput>().toHaveProperty("prevX");
         expectTypeOf<RenderFrameStats>().toHaveProperty("drawCallCount");
         expectTypeOf<RenderResourceConfig>().toHaveProperty("textures");
         expectTypeOf<RenderSubmitResult>().toMatchTypeOf<
@@ -40,5 +55,17 @@ describe("render public surface", () => {
         expect("createRenderFrameBuilder" in renderPackage).toBe(false);
         expect("createRender2DPrepare" in renderPackage).toBe(false);
         expect("createSubmitFrame" in renderPackage).toBe(false);
+        expect("resolveRenderTransform2D" in renderPackage).toBe(false);
+    });
+
+    it("keeps public render types decoupled from engine state packages", () => {
+        const source = readFileSync(
+            "src/cluster/engine/services/render/service/Render.types.ts",
+            "utf8",
+        );
+
+        expect(source).not.toMatch(
+            /from\s+["'][^"']*(game|managers|scenes|world|entity|query|_legacy_\/render)/,
+        );
     });
 });

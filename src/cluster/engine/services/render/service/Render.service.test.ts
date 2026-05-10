@@ -9,6 +9,7 @@ function createInput() {
     return {
         target: { w: 320, h: 240, dpr: 2 },
         alpha: 0.5,
+        layers: [],
     };
 }
 
@@ -51,6 +52,42 @@ describe("createRender", () => {
         expect(render.view.target).toEqual({ w: 320, h: 240, dpr: 2 });
         expect(render.view.lastSubmitResult).toEqual({ status: "no-frame" });
         expect(render.view.stats).toEqual(ZERO_STATS);
+
+        await render.dispose();
+    });
+
+    it("records prepared renderer-domain item stats while running", async () => {
+        const render = createRender({ canvas: createCanvas() });
+
+        await render.start();
+        render.prepare({
+            target: { w: 320, h: 240, dpr: 2 },
+            alpha: 0.5,
+            layers: [
+                {
+                    id: "main",
+                    order: 0,
+                    items: [
+                        {
+                            kind: "rect",
+                            sortKey: 0,
+                            x: 0,
+                            y: 0,
+                            w: 10,
+                            h: 20,
+                        },
+                    ],
+                },
+            ],
+        });
+
+        expect(render.view.stats).toEqual({
+            ...ZERO_STATS,
+            passCount: 1,
+            commandCount: 1,
+            batchCount: 1,
+            vertexCount: 6,
+        });
 
         await render.dispose();
     });
@@ -144,6 +181,27 @@ describe("createRender", () => {
         );
         expect(() => render.execute()).toThrow(
             "RenderService.execute: service is not running",
+        );
+
+        await render.dispose();
+    });
+
+    it("throws for invalid render alpha in debug mode", async () => {
+        const render = createRender({
+            canvas: createCanvas(),
+            debug: true,
+        });
+
+        await render.start();
+
+        expect(() =>
+            render.prepare({
+                target: { w: 320, h: 240, dpr: 2 },
+                alpha: 1.25,
+                layers: [],
+            }),
+        ).toThrow(
+            "Render2DPrepare.prepare: alpha must be a finite number between 0 and 1",
         );
 
         await render.dispose();
