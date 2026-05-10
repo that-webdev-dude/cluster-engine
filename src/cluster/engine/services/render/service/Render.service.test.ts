@@ -19,6 +19,39 @@ function createInput() {
     };
 }
 
+function createTexturedInput() {
+    return {
+        target: { w: 100, h: 100, dpr: 1 },
+        alpha: 1,
+        layers: [
+            {
+                id: "main",
+                order: 0,
+                items: [
+                    {
+                        kind: "sprite",
+                        sortKey: 0,
+                        x: 0,
+                        y: 0,
+                        w: 10,
+                        h: 10,
+                        resourceId: "sprite.player",
+                    },
+                    {
+                        kind: "sprite",
+                        sortKey: 1,
+                        x: 20,
+                        y: 0,
+                        w: 10,
+                        h: 10,
+                        resourceId: "missing.sprite",
+                    },
+                ],
+            },
+        ],
+    } as const;
+}
+
 const ZERO_STATS = {
     passCount: 0,
     commandCount: 0,
@@ -341,6 +374,61 @@ describe("createRender", () => {
         await render.dispose();
     });
 
+    it("recovers WebGL2 submission parity after context restore", async () => {
+        vi.stubGlobal("navigator", undefined);
+        const firstGl = createFakeWebGl2();
+        const restoredGl = createFakeWebGl2();
+        const canvas = createFakeCanvas(firstGl);
+        const render = createRender({
+            canvas,
+            resources: {
+                textures: [
+                    {
+                        id: "sprite.player",
+                        width: 1,
+                        height: 1,
+                        data: new Uint8Array([255, 255, 255, 255]),
+                    },
+                ],
+            },
+        });
+
+        await render.start();
+        render.prepare(createTexturedInput());
+        expect(render.execute()).toEqual({ status: "submitted" });
+        expect(render.view.stats).toMatchObject({
+            drawCallCount: 2,
+            vertexCount: 12,
+            fallbackResourceCount: 1,
+        });
+
+        render.prepare(createTexturedInput());
+        canvas.dispatchContextLost();
+        expect(render.execute()).toEqual({
+            status: "skipped",
+            reason: "gfx-lost",
+        });
+
+        canvas.getContext.mockImplementation((kind: string) =>
+            kind === "webgl2" ? restoredGl : null,
+        );
+        canvas.dispatchContextRestored();
+        render.prepare(createTexturedInput());
+        expect(render.execute()).toEqual({ status: "submitted" });
+        expect(render.view.backend).toBe("webgl2");
+        expect(render.view.gfxState).toBe("ok");
+        expect(render.view.stats).toMatchObject({
+            drawCallCount: 2,
+            vertexCount: 12,
+            fallbackResourceCount: 1,
+            textureResourceCount: 1,
+        });
+        expect(restoredGl.texImage2D).toHaveBeenCalled();
+        expect(restoredGl.drawArrays).toHaveBeenCalledTimes(2);
+
+        await render.dispose();
+    });
+
     it("submits WebGPU prepared frames and publishes metrics", async () => {
         const webGpu = createFakeWebGpu();
         vi.stubGlobal("navigator", { gpu: webGpu });
@@ -432,6 +520,66 @@ describe("createRender", () => {
         expect(render.view.backend).toBe("webgpu");
         expect(render.view.gfxState).toBe("lost");
         expect(webGpu.context.configure).not.toHaveBeenCalled();
+
+        await render.dispose();
+    });
+
+    it("recovers WebGPU submission parity with a replacement device", async () => {
+        const firstWebGpu = createFakeWebGpu();
+        const recoveredWebGpu = createFakeWebGpu();
+        vi.stubGlobal("navigator", { gpu: firstWebGpu });
+        const canvas = createFakeWebGpuCanvas(firstWebGpu);
+        const render = createRender({
+            canvas,
+            resources: {
+                textures: [
+                    {
+                        id: "sprite.player",
+                        width: 1,
+                        height: 1,
+                        data: new Uint8Array([255, 255, 255, 255]),
+                    },
+                ],
+            },
+        });
+
+        await render.start();
+        render.prepare(createTexturedInput());
+        expect(render.execute()).toEqual({ status: "submitted" });
+        expect(render.view.stats).toMatchObject({
+            drawCallCount: 2,
+            vertexCount: 12,
+            fallbackResourceCount: 1,
+        });
+
+        render.prepare(createTexturedInput());
+        await firstWebGpu.device.lose();
+        vi.stubGlobal("navigator", { gpu: recoveredWebGpu });
+        canvas.getContext.mockImplementation((kind: string) => {
+            if (kind === "webgpu") return recoveredWebGpu.context;
+            return null;
+        });
+        expect(render.execute()).toEqual({
+            status: "skipped",
+            reason: "gfx-lost",
+        });
+        await vi.waitFor(() =>
+            expect(recoveredWebGpu.adapter.requestDevice).toHaveBeenCalledTimes(1),
+        );
+
+        render.prepare(createTexturedInput());
+        expect(render.execute()).toEqual({ status: "submitted" });
+        expect(render.view.backend).toBe("webgpu");
+        expect(render.view.gfxState).toBe("ok");
+        expect(render.view.stats).toMatchObject({
+            drawCallCount: 2,
+            vertexCount: 12,
+            fallbackResourceCount: 1,
+            textureResourceCount: 1,
+        });
+        expect(recoveredWebGpu.device.queue.writeTexture).toHaveBeenCalled();
+        expect(recoveredWebGpu.device.createBindGroup).toHaveBeenCalled();
+        expect(recoveredWebGpu.renderPass.draw).toHaveBeenCalledTimes(2);
 
         await render.dispose();
     });

@@ -151,6 +151,12 @@ function createRenderService(config: RenderConfig): RenderService {
         }
     }
 
+    function recoverBackendIfLost(): void {
+        if (gfx.view.state !== "lost") return;
+        if (!gfx.recoverIfLost()) return;
+        syncBackendState();
+    }
+
     function prepare(input: RenderFrameInput): void {
         lifecycle.assertNotDisposed();
         if (!assertRunning("prepare")) return;
@@ -179,6 +185,7 @@ function createRenderService(config: RenderConfig): RenderService {
         }
 
         syncBackendState();
+        recoverBackendIfLost();
         if (hasPreparedTarget) {
             gfx.configureSurface(snapshot.target);
         }

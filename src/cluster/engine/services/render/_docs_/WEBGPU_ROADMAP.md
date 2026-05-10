@@ -83,7 +83,7 @@ Acquire and manage the WebGPU device and canvas context without drawing first.
 - Keep all WebGPU handles private to `gfxBackend`, resource, pipeline, and
   submitter internals.
 
-## Phase 7: First WebGPU 2D Submission
+## Phase 7 ✅: First WebGPU 2D Submission
 
 Implement the first real WebGPU submit path for existing prepared 2D batches.
 

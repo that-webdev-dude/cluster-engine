@@ -31,6 +31,7 @@ export type GfxService = Readonly<{
     start(): Promise<boolean>;
     stop(): Promise<boolean>;
     latch(): void;
+    recoverIfLost(): boolean;
     configureSurface(target: RenderTargetInfo): void;
     getRuntime(): GfxRuntime | undefined;
     dispose(): Promise<boolean>;
@@ -212,24 +213,41 @@ function createGfxService(config: GfxConfig): GfxService {
     let pendingState: GfxSnapshot["state"] | undefined;
     let pendingLostBackend: GfxBackend | undefined;
     let onContextLost: EventListener | undefined;
+    let onContextRestored: EventListener | undefined;
+    let webGl2ContextRestored = false;
     let webGpuGeneration = 0;
+    let recoveryGeneration = 0;
+    let recoveryInFlight = false;
     let configuredWebGpuSurface: ConfiguredWebGpuSurface | undefined;
 
-    function detachWebGl2LossListener(): void {
-        if (!onContextLost || !isHtmlCanvasLike(canvas)) return;
-        canvas.removeEventListener("webglcontextlost", onContextLost);
+    function detachWebGl2LossListeners(): void {
+        if (!isHtmlCanvasLike(canvas)) return;
+        if (onContextLost) {
+            canvas.removeEventListener("webglcontextlost", onContextLost);
+        }
+        if (onContextRestored) {
+            canvas.removeEventListener("webglcontextrestored", onContextRestored);
+        }
         onContextLost = undefined;
+        onContextRestored = undefined;
+        webGl2ContextRestored = false;
     }
 
-    function attachWebGl2LossListener(): void {
+    function attachWebGl2LossListeners(): void {
         if (!isHtmlCanvasLike(canvas)) return;
-        detachWebGl2LossListener();
+        detachWebGl2LossListeners();
         onContextLost = (event: Event) => {
             event.preventDefault?.();
             pendingState = "lost";
             pendingLostBackend = "webgl2";
+            webGl2ContextRestored = false;
+            clearConfiguredSurface();
+        };
+        onContextRestored = () => {
+            webGl2ContextRestored = true;
         };
         canvas.addEventListener("webglcontextlost", onContextLost);
+        canvas.addEventListener("webglcontextrestored", onContextRestored);
     }
 
     function resetSnapshot(): void {
@@ -246,6 +264,15 @@ function createGfxService(config: GfxConfig): GfxService {
 
     function clearConfiguredSurface(): void {
         configuredWebGpuSurface = undefined;
+    }
+
+    function releaseRuntime(): void {
+        detachWebGl2LossListeners();
+        if (runtime?.backend === "webgpu") {
+            runtime.context.unconfigure?.();
+        }
+        runtime = undefined;
+        clearConfiguredSurface();
     }
 
     function tryAcquireWebGl2(): GfxWebGl2Runtime | undefined {
@@ -319,10 +346,12 @@ function createGfxService(config: GfxConfig): GfxService {
         snapshot.selectedBackend = nextRuntime.backend;
         snapshot.state = "ok";
         snapshot.caps = nextRuntime.caps;
+        snapshot.lostBackend = undefined;
         pendingState = undefined;
         pendingLostBackend = undefined;
+        clearConfiguredSurface();
         if (nextRuntime.backend === "webgl2") {
-            attachWebGl2LossListener();
+            attachWebGl2LossListeners();
         }
     }
 
@@ -356,24 +385,18 @@ function createGfxService(config: GfxConfig): GfxService {
         },
         onStop: () => {
             webGpuGeneration++;
-            detachWebGl2LossListener();
-            if (runtime?.backend === "webgpu") {
-                runtime.context.unconfigure?.();
-            }
-            clearConfiguredSurface();
-            runtime = undefined;
+            recoveryGeneration++;
+            recoveryInFlight = false;
+            releaseRuntime();
             pendingState = undefined;
             pendingLostBackend = undefined;
             resetSnapshot();
         },
         onDispose: () => {
             webGpuGeneration++;
-            detachWebGl2LossListener();
-            if (runtime?.backend === "webgpu") {
-                runtime.context.unconfigure?.();
-            }
-            clearConfiguredSurface();
-            runtime = undefined;
+            recoveryGeneration++;
+            recoveryInFlight = false;
+            releaseRuntime();
             pendingState = undefined;
             pendingLostBackend = undefined;
             resetSnapshot();
@@ -386,8 +409,88 @@ function createGfxService(config: GfxConfig): GfxService {
         if (!pendingState) return;
         snapshot.state = pendingState;
         snapshot.lostBackend = pendingLostBackend;
+        clearConfiguredSurface();
         pendingState = undefined;
         pendingLostBackend = undefined;
+    }
+
+    function selectRecoveredWebGl2Runtime(): boolean {
+        const webGl2Runtime = tryAcquireWebGl2();
+        if (!webGl2Runtime) return false;
+        releaseRuntime();
+        snapshot.unavailableBackend = undefined;
+        snapshot.fallbackBackend = undefined;
+        selectRuntime(webGl2Runtime);
+        return true;
+    }
+
+    async function recoverAuto(
+        generation: number,
+        previousLostBackend: GfxBackend | undefined,
+    ): Promise<void> {
+        try {
+            const detectedBackends = detectWebGpuBackend() ? ["webgpu"] : [];
+            const webGpuRuntime = await tryAcquireWebGpu();
+            if (
+                recoveryGeneration !== generation ||
+                !lifecycle.isRunning() ||
+                snapshot.state !== "lost"
+            ) {
+                return;
+            }
+
+            if (webGpuRuntime) {
+                releaseRuntime();
+                snapshot.detectedBackends = detectedBackends;
+                snapshot.unavailableBackend = undefined;
+                snapshot.fallbackBackend = undefined;
+                selectRuntime(webGpuRuntime);
+                return;
+            }
+
+            const webGl2Runtime = tryAcquireWebGl2();
+            if (
+                recoveryGeneration !== generation ||
+                !lifecycle.isRunning() ||
+                snapshot.state !== "lost" ||
+                !webGl2Runtime
+            ) {
+                return;
+            }
+
+            releaseRuntime();
+            snapshot.detectedBackends = detectedBackends;
+            snapshot.unavailableBackend = detectedBackends.includes("webgpu")
+                ? "webgpu"
+                : undefined;
+            snapshot.fallbackBackend =
+                previousLostBackend === "webgpu" ||
+                snapshot.unavailableBackend === "webgpu"
+                    ? "webgl2"
+                    : undefined;
+            selectRuntime(webGl2Runtime);
+        } finally {
+            if (recoveryGeneration === generation) {
+                recoveryInFlight = false;
+            }
+        }
+    }
+
+    function recoverIfLost(): boolean {
+        lifecycle.assertNotDisposed();
+        if (!lifecycle.isRunning() || snapshot.state !== "lost") return false;
+        if (
+            snapshot.lostBackend === "webgl2" &&
+            !detectWebGpuBackend() &&
+            (webGl2ContextRestored || !isHtmlCanvasLike(canvas))
+        ) {
+            return selectRecoveredWebGl2Runtime();
+        }
+        if (recoveryInFlight) return false;
+        recoveryInFlight = true;
+        const generation = ++recoveryGeneration;
+        void recoverAuto(generation, snapshot.lostBackend);
+        return false;
     }
 
     function configureSurface(target: RenderTargetInfo): void {
@@ -439,6 +542,7 @@ function createGfxService(config: GfxConfig): GfxService {
         start: lifecycle.start,
         stop: lifecycle.stop,
         latch,
+        recoverIfLost,
         configureSurface,
         getRuntime,
         dispose: lifecycle.dispose,

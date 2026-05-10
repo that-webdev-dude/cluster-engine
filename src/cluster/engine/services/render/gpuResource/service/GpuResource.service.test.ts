@@ -141,6 +141,40 @@ describe("GpuResourceService", () => {
         await gpuResource.dispose();
     });
 
+    it("invalidates and reuploads retained WebGPU textures after recovery", async () => {
+        const firstWebGpu = createFakeWebGpu();
+        const recoveredWebGpu = createFakeWebGpu();
+        const gpuResource = createGpuResource({});
+        await gpuResource.start();
+
+        gpuResource.registerTextureResource({
+            id: "sprite.player",
+            width: 1,
+            height: 1,
+            data: new Uint8Array([10, 20, 30, 255]),
+        });
+        gpuResource.flushWebGpuUploads(firstWebGpu.device);
+
+        gpuResource.sync({ gfxStatus: "lost" });
+        gpuResource.sync({ gfxStatus: "ok" });
+        const binding = gpuResource.resolveWebGpuTexture({
+            resourceId: "sprite.player",
+            device: recoveredWebGpu.device,
+            bindGroupLayout: { kind: "layout" },
+        });
+
+        expect(binding?.fallback).toBe(false);
+        expect(recoveredWebGpu.device.createTexture).toHaveBeenCalledTimes(1);
+        expect(recoveredWebGpu.device.queue.writeTexture).toHaveBeenCalledWith(
+            { texture: expect.any(Object) },
+            expect.any(Uint8Array),
+            { bytesPerRow: 4, rowsPerImage: 1 },
+            { width: 1, height: 1, depthOrArrayLayers: 1 },
+        );
+
+        await gpuResource.dispose();
+    });
+
     it("resolves missing WebGPU texture resources to an explicit fallback texture", async () => {
         const webGpu = createFakeWebGpu();
         const gpuResource = createGpuResource({});
@@ -218,6 +252,44 @@ describe("GpuResourceService", () => {
         expect(first?.buffer).toBe(second?.buffer);
         expect(grown?.buffer).not.toBe(first?.buffer);
         expect(webGpu.device.createBuffer).toHaveBeenCalledTimes(2);
+
+        await gpuResource.dispose();
+    });
+
+    it("recreates WebGPU fallback bind groups and frame buffers after recovery", async () => {
+        const firstWebGpu = createFakeWebGpu();
+        const recoveredWebGpu = createFakeWebGpu();
+        const gpuResource = createGpuResource({});
+        await gpuResource.start();
+
+        gpuResource.resolveWebGpuTexture({
+            resourceId: "missing.sprite",
+            device: firstWebGpu.device,
+            bindGroupLayout: { kind: "layout" },
+        });
+        gpuResource.getWebGpuFrameVertexBuffer({
+            layout: "position-color-2d",
+            device: firstWebGpu.device,
+            byteLength: 64,
+        });
+
+        gpuResource.sync({ gfxStatus: "lost" });
+        gpuResource.sync({ gfxStatus: "ok" });
+        gpuResource.resolveWebGpuTexture({
+            resourceId: "missing.sprite",
+            device: recoveredWebGpu.device,
+            bindGroupLayout: { kind: "layout" },
+        });
+        gpuResource.getWebGpuFrameVertexBuffer({
+            layout: "position-color-2d",
+            device: recoveredWebGpu.device,
+            byteLength: 64,
+        });
+
+        expect(firstWebGpu.device.createBindGroup).toHaveBeenCalledTimes(1);
+        expect(recoveredWebGpu.device.createBindGroup).toHaveBeenCalledTimes(1);
+        expect(firstWebGpu.device.createBuffer).toHaveBeenCalledTimes(1);
+        expect(recoveredWebGpu.device.createBuffer).toHaveBeenCalledTimes(1);
 
         await gpuResource.dispose();
     });

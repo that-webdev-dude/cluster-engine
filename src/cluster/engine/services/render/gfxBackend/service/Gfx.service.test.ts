@@ -148,6 +148,34 @@ describe("GfxService", () => {
         await gfx.dispose();
     });
 
+    it("recovers WebGL2 after context restore", async () => {
+        const firstGl = createFakeWebGl2();
+        const restoredGl = createFakeWebGl2();
+        const canvas = createFakeCanvas(firstGl);
+        const gfx = createGfx({ canvas });
+
+        await gfx.start();
+        canvas.dispatchContextLost();
+        gfx.latch();
+        canvas.getContext.mockImplementation((kind: string) =>
+            kind === "webgl2" ? restoredGl : null,
+        );
+        canvas.dispatchContextRestored();
+
+        expect(gfx.recoverIfLost()).toBe(true);
+        expect(gfx.view.state).toBe("ok");
+        expect(gfx.view.backend).toBe("webgl2");
+        expect(gfx.view.lostBackend).toBeUndefined();
+        const runtime = gfx.getRuntime();
+        expect(runtime?.backend).toBe("webgl2");
+        if (runtime?.backend !== "webgl2") {
+            throw new Error("expected WebGL2 runtime");
+        }
+        expect(runtime.handle).toBe(restoredGl);
+
+        await gfx.dispose();
+    });
+
     it("configures the WebGPU surface from target size and DPR", async () => {
         const webGpu = createFakeWebGpu();
         vi.stubGlobal("navigator", { gpu: webGpu });
@@ -194,6 +222,70 @@ describe("GfxService", () => {
         expect(gfx.view.state).toBe("lost");
         expect(gfx.view.lostBackend).toBe("webgpu");
         expect(gfx.getRuntime()).toBeUndefined();
+
+        await gfx.dispose();
+    });
+
+    it("recovers WebGPU with a fresh device generation", async () => {
+        const firstWebGpu = createFakeWebGpu();
+        const recoveredWebGpu = createFakeWebGpu();
+        vi.stubGlobal("navigator", { gpu: firstWebGpu });
+        const canvas = createFakeWebGpuCanvas(firstWebGpu);
+        const gfx = createGfx({ canvas });
+
+        await gfx.start();
+        await firstWebGpu.device.lose();
+        gfx.latch();
+        vi.stubGlobal("navigator", { gpu: recoveredWebGpu });
+        canvas.getContext.mockImplementation((kind: string) => {
+            if (kind === "webgpu") return recoveredWebGpu.context;
+            return null;
+        });
+
+        expect(gfx.recoverIfLost()).toBe(false);
+        await vi.waitFor(() => expect(gfx.view.state).toBe("ok"));
+        expect(gfx.view.backend).toBe("webgpu");
+        expect(gfx.view.lostBackend).toBeUndefined();
+        const runtime = gfx.getRuntime();
+        expect(runtime?.backend).toBe("webgpu");
+        if (runtime?.backend !== "webgpu") {
+            throw new Error("expected WebGPU runtime");
+        }
+        expect(runtime.device).toBe(recoveredWebGpu.device);
+
+        await firstWebGpu.device.lose();
+        gfx.latch();
+        expect(gfx.view.state).toBe("ok");
+
+        await gfx.dispose();
+    });
+
+    it("falls back to WebGL2 while recovering from lost WebGPU", async () => {
+        const firstWebGpu = createFakeWebGpu();
+        const unavailableWebGpu = createFakeWebGpu();
+        unavailableWebGpu.requestAdapter.mockResolvedValueOnce(null);
+        const gl = createFakeWebGl2();
+        vi.stubGlobal("navigator", { gpu: firstWebGpu });
+        const canvas = createFakeWebGpuCanvas(firstWebGpu);
+        const gfx = createGfx({ canvas });
+
+        await gfx.start();
+        await firstWebGpu.device.lose();
+        gfx.latch();
+        vi.stubGlobal("navigator", { gpu: unavailableWebGpu });
+        canvas.getContext.mockImplementation((kind: string) => {
+            if (kind === "webgpu") return unavailableWebGpu.context;
+            if (kind === "webgl2") return gl;
+            return null;
+        });
+
+        gfx.recoverIfLost();
+        await vi.waitFor(() => expect(gfx.view.state).toBe("ok"));
+        expect(gfx.view.backend).toBe("webgl2");
+        expect(gfx.view.selectedBackend).toBe("webgl2");
+        expect(gfx.view.unavailableBackend).toBe("webgpu");
+        expect(gfx.view.fallbackBackend).toBe("webgl2");
+        expect(gfx.view.lostBackend).toBeUndefined();
 
         await gfx.dispose();
     });

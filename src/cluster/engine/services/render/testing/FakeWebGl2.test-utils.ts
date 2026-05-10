@@ -50,6 +50,7 @@ export type FakeWebGl2 = WebGL2RenderingContext & {
 export type FakeCanvas = HTMLCanvasElement & {
     getContext: MockFn;
     dispatchContextLost(): void;
+    dispatchContextRestored(): void;
 };
 
 export type FakeWebGpuDevice = {
@@ -205,6 +206,12 @@ export function createFakeCanvas(gl: WebGL2RenderingContext | null): FakeCanvas 
         dispatchContextLost() {
             const event = { preventDefault: vi.fn() } as unknown as Event;
             for (const listener of listeners.get("webglcontextlost") ?? []) {
+                listener(event);
+            }
+        },
+        dispatchContextRestored() {
+            const event = {} as Event;
+            for (const listener of listeners.get("webglcontextrestored") ?? []) {
                 listener(event);
             }
         },
