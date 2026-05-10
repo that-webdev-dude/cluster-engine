@@ -9,6 +9,7 @@ export type GfxState = Extract<RenderGraphicsState, "ok" | "lost">;
 export type GfxCaps = Readonly<{
     maxTextureSize?: number;
     maxUniformBufferSize?: number;
+    maxBufferSize?: number;
 }>;
 
 export type GfxSnapshot = {

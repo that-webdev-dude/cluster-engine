@@ -59,6 +59,7 @@ function createRenderService(config: RenderConfig): RenderService {
         pipelineLibrary,
     });
     let preparedFrame: Render2DPreparedFrame | undefined;
+    let hasPreparedTarget = false;
     const snapshot: RenderSnapshot = {
         backend: "none",
         gfxState: "unavailable",
@@ -80,6 +81,7 @@ function createRenderService(config: RenderConfig): RenderService {
         },
         onStop: async () => {
             preparedFrame = undefined;
+            hasPreparedTarget = false;
             snapshot.lastSubmitResult = { status: "no-frame" };
             snapshot.stats = frameBuilder.clear();
             snapshot.stats = {
@@ -95,6 +97,7 @@ function createRenderService(config: RenderConfig): RenderService {
         onDispose: async () => {
             textureResources.clear();
             preparedFrame = undefined;
+            hasPreparedTarget = false;
             snapshot.stats = createDefaultStats();
             await pipelineLibrary.dispose();
             await gpuResource.dispose();
@@ -140,9 +143,9 @@ function createRenderService(config: RenderConfig): RenderService {
 
         const gfxStatus = gfx.view.state === "ok" ? "ok" : "lost";
         gpuResource.sync({ gfxStatus });
-        if (gfx.view.backend === "webgl2") {
+        if (gfx.view.backend === "webgl2" || gfx.view.backend === "webgpu") {
             pipelineLibrary.sync({
-                gfxBackend: "webgl2",
+                gfxBackend: gfx.view.backend,
                 gfxStatus,
             });
         }
@@ -153,6 +156,7 @@ function createRenderService(config: RenderConfig): RenderService {
         if (!assertRunning("prepare")) return;
 
         preparedFrame = render2DPrepare.prepare(input);
+        hasPreparedTarget = true;
         snapshot.frameSeq++;
         snapshot.target = input.target;
         snapshot.lastSubmitResult = { status: "no-frame" };
@@ -175,6 +179,9 @@ function createRenderService(config: RenderConfig): RenderService {
         }
 
         syncBackendState();
+        if (hasPreparedTarget) {
+            gfx.configureSurface(snapshot.target);
+        }
         if (!preparedFrame) {
             const report = submitFrame.submit(undefined);
             snapshot.lastSubmitResult = report.result;

@@ -52,6 +52,34 @@ export type FakeCanvas = HTMLCanvasElement & {
     dispatchContextLost(): void;
 };
 
+export type FakeWebGpuDevice = {
+    limits: {
+        maxTextureDimension2D: number;
+        maxUniformBufferBindingSize: number;
+        maxBufferSize: number;
+    };
+    lost: Promise<unknown>;
+    lose(): Promise<void>;
+};
+
+export type FakeWebGpuAdapter = {
+    limits: FakeWebGpuDevice["limits"];
+    requestDevice: MockFn;
+};
+
+export type FakeWebGpuCanvasContext = {
+    configure: MockFn;
+    unconfigure: MockFn;
+};
+
+export type FakeWebGpu = {
+    requestAdapter: MockFn;
+    getPreferredCanvasFormat: MockFn;
+    adapter: FakeWebGpuAdapter;
+    device: FakeWebGpuDevice;
+    context: FakeWebGpuCanvasContext;
+};
+
 export function createFakeWebGl2(): FakeWebGl2 {
     return {
         ARRAY_BUFFER: 34962,
@@ -134,6 +162,8 @@ export function createFakeWebGl2(): FakeWebGl2 {
 export function createFakeCanvas(gl: WebGL2RenderingContext | null): FakeCanvas {
     const listeners = new Map<string, EventListener[]>();
     const canvas = {
+        width: 0,
+        height: 0,
         getContext: vi.fn((kind: string) => (kind === "webgl2" ? gl : null)),
         addEventListener: vi.fn((type: string, listener: EventListener) => {
             listeners.set(type, [...(listeners.get(type) ?? []), listener]);
@@ -153,4 +183,53 @@ export function createFakeCanvas(gl: WebGL2RenderingContext | null): FakeCanvas 
     };
 
     return canvas as unknown as FakeCanvas;
+}
+
+export function createFakeWebGpu(): FakeWebGpu {
+    let resolveLost: (value: unknown) => void = () => undefined;
+    const lost = new Promise<unknown>((resolve) => {
+        resolveLost = resolve;
+    });
+    const limits = {
+        maxTextureDimension2D: 8192,
+        maxUniformBufferBindingSize: 65536,
+        maxBufferSize: 1048576,
+    };
+    const device: FakeWebGpuDevice = {
+        limits,
+        lost,
+        async lose() {
+            resolveLost({ reason: "destroyed" });
+            await Promise.resolve();
+        },
+    };
+    const adapter: FakeWebGpuAdapter = {
+        limits,
+        requestDevice: vi.fn(async () => device),
+    };
+    const context: FakeWebGpuCanvasContext = {
+        configure: vi.fn(),
+        unconfigure: vi.fn(),
+    };
+
+    return {
+        requestAdapter: vi.fn(async () => adapter),
+        getPreferredCanvasFormat: vi.fn(() => "bgra8unorm"),
+        adapter,
+        device,
+        context,
+    };
+}
+
+export function createFakeWebGpuCanvas(
+    webGpu: FakeWebGpu | null,
+    gl: WebGL2RenderingContext | null = null,
+): FakeCanvas {
+    const canvas = createFakeCanvas(gl);
+    canvas.getContext.mockImplementation((kind: string) => {
+        if (kind === "webgpu") return webGpu?.context ?? null;
+        if (kind === "webgl2") return gl;
+        return null;
+    });
+    return canvas;
 }

@@ -1,7 +1,9 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import {
     createFakeCanvas,
     createFakeWebGl2,
+    createFakeWebGpu,
+    createFakeWebGpuCanvas,
 } from "../testing/FakeWebGl2.test-utils";
 import { createRender } from "./Render.service";
 
@@ -29,6 +31,10 @@ const ZERO_STATS = {
 };
 
 describe("createRender", () => {
+    afterEach(() => {
+        vi.unstubAllGlobals();
+    });
+
     it("publishes a sealed default view", () => {
         const render = createRender({ canvas: createCanvas() });
 
@@ -303,6 +309,90 @@ describe("createRender", () => {
             reason: "gfx-lost",
         });
         expect(gl.drawArrays).not.toHaveBeenCalled();
+
+        await render.dispose();
+    });
+
+    it("configures WebGPU surface during execute from the last prepared target", async () => {
+        const webGpu = createFakeWebGpu();
+        vi.stubGlobal("navigator", { gpu: webGpu });
+        const canvas = createFakeWebGpuCanvas(webGpu);
+        const render = createRender({ canvas });
+
+        await render.start();
+        render.prepare(createInput());
+
+        expect(webGpu.context.configure).not.toHaveBeenCalled();
+        expect(render.execute()).toEqual({
+            status: "skipped",
+            reason: "no-submitter",
+        });
+
+        expect(render.view.backend).toBe("webgpu");
+        expect(render.view.gfxState).toBe("ok");
+        expect(canvas.width).toBe(640);
+        expect(canvas.height).toBe(480);
+        expect(webGpu.context.configure).toHaveBeenCalledTimes(1);
+        expect(webGpu.context.configure).toHaveBeenCalledWith({
+            device: webGpu.device,
+            format: "bgra8unorm",
+            alphaMode: "premultiplied",
+        });
+
+        await render.dispose();
+    });
+
+    it("does not reconfigure an unchanged WebGPU target on later executes", async () => {
+        const webGpu = createFakeWebGpu();
+        vi.stubGlobal("navigator", { gpu: webGpu });
+        const render = createRender({ canvas: createFakeWebGpuCanvas(webGpu) });
+
+        await render.start();
+        render.prepare(createInput());
+        render.execute();
+        render.prepare(createInput());
+        render.execute();
+
+        expect(webGpu.context.configure).toHaveBeenCalledTimes(1);
+
+        await render.dispose();
+    });
+
+    it("skips WebGPU execution while device is lost", async () => {
+        const webGpu = createFakeWebGpu();
+        vi.stubGlobal("navigator", { gpu: webGpu });
+        const render = createRender({ canvas: createFakeWebGpuCanvas(webGpu) });
+
+        await render.start();
+        render.prepare({
+            target: { w: 100, h: 100, dpr: 1 },
+            alpha: 1,
+            layers: [
+                {
+                    id: "main",
+                    order: 0,
+                    items: [
+                        {
+                            kind: "rect",
+                            sortKey: 0,
+                            x: 0,
+                            y: 0,
+                            w: 10,
+                            h: 10,
+                        },
+                    ],
+                },
+            ],
+        });
+        await webGpu.device.lose();
+
+        expect(render.execute()).toEqual({
+            status: "skipped",
+            reason: "gfx-lost",
+        });
+        expect(render.view.backend).toBe("webgpu");
+        expect(render.view.gfxState).toBe("lost");
+        expect(webGpu.context.configure).not.toHaveBeenCalled();
 
         await render.dispose();
     });

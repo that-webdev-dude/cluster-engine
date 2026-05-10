@@ -1,5 +1,10 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { createFakeCanvas, createFakeWebGl2 } from "../../testing/FakeWebGl2.test-utils";
+import {
+    createFakeCanvas,
+    createFakeWebGl2,
+    createFakeWebGpu,
+    createFakeWebGpuCanvas,
+} from "../../testing/FakeWebGl2.test-utils";
 import { createGfx } from "./Gfx.service";
 
 describe("GfxService", () => {
@@ -32,17 +37,50 @@ describe("GfxService", () => {
         await gfx.dispose();
     });
 
-    it("detects WebGPU without selecting it before WebGPU acquisition exists", async () => {
-        vi.stubGlobal("navigator", { gpu: {} });
+    it("selects WebGPU and publishes ok state when acquisition succeeds", async () => {
+        const webGpu = createFakeWebGpu();
+        vi.stubGlobal("navigator", { gpu: webGpu });
+        const gfx = createGfx({ canvas: createFakeWebGpuCanvas(webGpu) });
+
+        await gfx.start();
+
+        expect(gfx.view.backend).toBe("webgpu");
+        expect(gfx.view.state).toBe("ok");
+        expect(gfx.view.detectedBackends).toEqual(["webgpu"]);
+        expect(gfx.view.selectedBackend).toBe("webgpu");
+        expect(gfx.view.fallbackBackend).toBeUndefined();
+        expect(gfx.view.unavailableBackend).toBeUndefined();
+        expect(gfx.view.caps).toEqual({
+            maxTextureSize: 8192,
+            maxUniformBufferSize: 65536,
+            maxBufferSize: 1048576,
+        });
+        const runtime = gfx.getRuntime();
+        expect(runtime?.backend).toBe("webgpu");
+        if (runtime?.backend !== "webgpu") {
+            throw new Error("expected WebGPU runtime");
+        }
+        expect(runtime.device).toBe(webGpu.device);
+        expect(runtime.context).toBe(webGpu.context);
+        expect(runtime.format).toBe("bgra8unorm");
+
+        await gfx.dispose();
+    });
+
+    it("falls back to WebGL2 when WebGPU acquisition fails", async () => {
+        const webGpu = createFakeWebGpu();
+        webGpu.requestAdapter.mockResolvedValueOnce(null);
+        vi.stubGlobal("navigator", { gpu: webGpu });
         const gl = createFakeWebGl2();
-        const gfx = createGfx({ canvas: createFakeCanvas(gl) });
+        const gfx = createGfx({ canvas: createFakeWebGpuCanvas(webGpu, gl) });
 
         await gfx.start();
 
         expect(gfx.view.detectedBackends).toEqual(["webgpu"]);
+        expect(gfx.view.unavailableBackend).toBe("webgpu");
+        expect(gfx.view.fallbackBackend).toBe("webgl2");
         expect(gfx.view.selectedBackend).toBe("webgl2");
         expect(gfx.view.backend).toBe("webgl2");
-        expect(gfx.view.fallbackBackend).toBeUndefined();
         expect(gfx.getRuntime()?.backend).toBe("webgl2");
 
         await gfx.dispose();
@@ -66,9 +104,11 @@ describe("GfxService", () => {
         await gfx.dispose();
     });
 
-    it("records detected WebGPU without treating WebGL2 fallback as selected fallback", async () => {
-        vi.stubGlobal("navigator", { gpu: {} });
-        const gfx = createGfx({ canvas: createFakeCanvas(null) });
+    it("selects none when WebGPU and WebGL2 are unavailable", async () => {
+        const webGpu = createFakeWebGpu();
+        webGpu.requestAdapter.mockResolvedValueOnce(null);
+        vi.stubGlobal("navigator", { gpu: webGpu });
+        const gfx = createGfx({ canvas: createFakeWebGpuCanvas(webGpu, null) });
 
         await gfx.start();
 
@@ -104,6 +144,81 @@ describe("GfxService", () => {
         expect(gfx.view.state).toBe("lost");
         expect(gfx.view.lostBackend).toBe("webgl2");
         expect(gfx.getRuntime()).toBeUndefined();
+
+        await gfx.dispose();
+    });
+
+    it("configures the WebGPU surface from target size and DPR", async () => {
+        const webGpu = createFakeWebGpu();
+        vi.stubGlobal("navigator", { gpu: webGpu });
+        const canvas = createFakeWebGpuCanvas(webGpu);
+        const gfx = createGfx({ canvas });
+
+        await gfx.start();
+        gfx.configureSurface({ w: 320, h: 240, dpr: 2 });
+
+        expect(canvas.width).toBe(640);
+        expect(canvas.height).toBe(480);
+        expect(webGpu.context.configure).toHaveBeenCalledWith({
+            device: webGpu.device,
+            format: "bgra8unorm",
+            alphaMode: "premultiplied",
+        });
+
+        await gfx.dispose();
+    });
+
+    it("does not reconfigure an unchanged WebGPU surface", async () => {
+        const webGpu = createFakeWebGpu();
+        vi.stubGlobal("navigator", { gpu: webGpu });
+        const gfx = createGfx({ canvas: createFakeWebGpuCanvas(webGpu) });
+
+        await gfx.start();
+        gfx.configureSurface({ w: 320, h: 240, dpr: 2 });
+        gfx.configureSurface({ w: 320, h: 240, dpr: 2 });
+
+        expect(webGpu.context.configure).toHaveBeenCalledTimes(1);
+
+        await gfx.dispose();
+    });
+
+    it("latches WebGPU device loss inside the renderer backend", async () => {
+        const webGpu = createFakeWebGpu();
+        vi.stubGlobal("navigator", { gpu: webGpu });
+        const gfx = createGfx({ canvas: createFakeWebGpuCanvas(webGpu) });
+
+        await gfx.start();
+        await webGpu.device.lose();
+        gfx.latch();
+
+        expect(gfx.view.state).toBe("lost");
+        expect(gfx.view.lostBackend).toBe("webgpu");
+        expect(gfx.getRuntime()).toBeUndefined();
+
+        await gfx.dispose();
+    });
+
+    it("ignores stale WebGPU loss after stop and restart", async () => {
+        const staleWebGpu = createFakeWebGpu();
+        const nextWebGpu = createFakeWebGpu();
+        vi.stubGlobal("navigator", { gpu: staleWebGpu });
+        const canvas = createFakeWebGpuCanvas(staleWebGpu);
+        const gfx = createGfx({ canvas });
+
+        await gfx.start();
+        await gfx.stop();
+        vi.stubGlobal("navigator", { gpu: nextWebGpu });
+        canvas.getContext.mockImplementation((kind: string) => {
+            if (kind === "webgpu") return nextWebGpu.context;
+            return null;
+        });
+        await gfx.start();
+        await staleWebGpu.device.lose();
+        gfx.latch();
+
+        expect(gfx.view.state).toBe("ok");
+        expect(gfx.view.lostBackend).toBeUndefined();
+        expect(gfx.getRuntime()?.backend).toBe("webgpu");
 
         await gfx.dispose();
     });

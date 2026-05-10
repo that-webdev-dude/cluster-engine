@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { createGpuResource } from "../gpuResource";
 import { createPipelineLibrary } from "../pipelineLibrary";
-import { createFakeWebGl2 } from "../testing/FakeWebGl2.test-utils";
+import { createFakeWebGl2, createFakeWebGpu } from "../testing/FakeWebGl2.test-utils";
 import { createRender2DPrepare } from "./Render2DPrepare.module";
 import { createSubmitFrame } from "./SubmitFrame.module";
 import type { GfxRuntime } from "../gfxBackend";
@@ -16,9 +16,14 @@ function createRuntime(gl = createFakeWebGl2()): GfxRuntime {
 }
 
 function createWebGpuRuntime(): GfxRuntime {
+    const webGpu = createFakeWebGpu();
     return {
         backend: "webgpu",
         caps: {},
+        adapter: webGpu.adapter,
+        device: webGpu.device,
+        context: webGpu.context,
+        format: "bgra8unorm",
     };
 }
 

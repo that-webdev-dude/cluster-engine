@@ -3,6 +3,7 @@ import { createRender2DPrepare } from "../Render2DPrepare.module";
 import { createWebGpuSubmitter } from "./WebGpuSubmitter.module";
 import type { GfxRuntime } from "../../gfxBackend";
 import type { RenderFrameInput } from "../../service/Render.types";
+import { createFakeWebGpu } from "../../testing/FakeWebGl2.test-utils";
 
 function createInput(layers: RenderFrameInput["layers"]): RenderFrameInput {
     return {
@@ -13,9 +14,14 @@ function createInput(layers: RenderFrameInput["layers"]): RenderFrameInput {
 }
 
 function createWebGpuRuntime(): Extract<GfxRuntime, { backend: "webgpu" }> {
+    const webGpu = createFakeWebGpu();
     return {
         backend: "webgpu",
         caps: {},
+        adapter: webGpu.adapter,
+        device: webGpu.device,
+        context: webGpu.context,
+        format: "bgra8unorm",
     };
 }
 
