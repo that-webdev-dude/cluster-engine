@@ -72,7 +72,7 @@ objects.
 - Test retained upload replay, fallback texture behavior, transient cleanup,
   and invalidation across backend loss.
 
-## Phase 6: WebGPU Device And Surface Foundation
+## Phase 6 ✅: WebGPU Device And Surface Foundation
 
 Acquire and manage the WebGPU device and canvas context without drawing first.
 
