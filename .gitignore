@@ -4,8 +4,5 @@ dist
 coverage
 *.log
 .vscode
-.agents
 .artifacts
 .backup
-.plans
-AGENTS.md
