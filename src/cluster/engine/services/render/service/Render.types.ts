@@ -157,6 +157,24 @@ export type RenderPolygon2D = Readonly<
         }
 >;
 
+/** Renderer-domain text intent lowered privately into glyph geometry. */
+export type RenderText2D = Readonly<
+    Omit<RenderItem2DBase, "bounds" | "resourceId"> &
+        RenderTransform2DInput & {
+            kind: "text";
+            text: string;
+            fontId: RenderFontId;
+            fontSize?: number;
+            lineHeight?: number;
+            letterSpacing?: number;
+            align?: "left" | "center" | "right";
+            baseline?: "top" | "alphabetic";
+            maxWidth?: number;
+            wrap?: "none";
+            overflow?: "visible";
+        }
+>;
+
 /** Renderer-domain 2D item kinds supported by the first input contract. */
 export type RenderItem2D =
     | RenderRect2D
@@ -164,7 +182,8 @@ export type RenderItem2D =
     | RenderCircle2D
     | RenderEllipse2D
     | RenderLine2D
-    | RenderPolygon2D;
+    | RenderPolygon2D
+    | RenderText2D;
 
 /** Ordered renderer-domain layer containing items to prepare together. */
 export type RenderLayerInput = Readonly<{
@@ -202,6 +221,10 @@ export type RenderFrameStats = Readonly<{
     invalidFontRegistrationCount: number;
     missingFontCount: number;
     missingGlyphCount: number;
+    textItemCount: number;
+    preparedGlyphCount: number;
+    glyphVertexCount: number;
+    textBatchCount: number;
 }>;
 
 export type RenderSnapshot = {

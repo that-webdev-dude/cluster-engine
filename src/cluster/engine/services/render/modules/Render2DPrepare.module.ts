@@ -1,5 +1,8 @@
 import { resolveRenderTransform2D } from "./Interpolation.module";
 import type { RenderResolvedTransform2D } from "./Interpolation.module";
+import { createTextLayout } from "./TextLayout.module";
+import type { FontRegistry } from "./FontRegistry.module";
+import type { TextLayoutModule } from "./TextLayout.module";
 import type {
     RenderBlendMode,
     RenderColorInput,
@@ -7,20 +10,74 @@ import type {
     RenderFrameStats,
     RenderItem2D,
     RenderLayerId,
+    RenderLine2D,
+    RenderPoint2DInput,
     RenderResourceId,
     RenderTargetInfo,
+    RenderText2D,
+    RenderUvRectInput,
 } from "../service/Render.types";
 
 type Render2DPipelineFamily = "solid-2d" | "textured-2d";
 
 type Render2DVertexLayout = "position-color-2d" | "position-uv-tint-2d";
 
+type Render2DPreparedSourceKind = RenderItem2D["kind"];
+
+type PreparedRectQuad2D = Readonly<{
+    kind: "rect-quad";
+    w: number;
+    h: number;
+    uv?: RenderUvRectInput;
+}>;
+
+type PreparedCircleLike2D = Readonly<{
+    kind: "circle-like";
+    radiusX: number;
+    radiusY: number;
+    segments: number;
+}>;
+
+type PreparedLine2D = Readonly<
+    {
+        kind: "line";
+    } & Pick<RenderLine2D, "startX" | "startY" | "endX" | "endY"> & {
+            strokeWidth: number;
+        }
+>;
+
+type PreparedPolygon2D = Readonly<{
+    kind: "polygon";
+    vertices: readonly RenderPoint2DInput[];
+}>;
+
+export type PreparedGlyphQuad2D = Readonly<{
+    kind: "glyph-quad";
+    sourceKind: "text";
+    sourceIndex: number;
+    glyphIndex: number;
+    resourceId: RenderResourceId;
+    x: number;
+    y: number;
+    w: number;
+    h: number;
+    uv: RenderUvRectInput;
+}>;
+
+export type Render2DPreparedGeometry =
+    | PreparedRectQuad2D
+    | PreparedCircleLike2D
+    | PreparedLine2D
+    | PreparedPolygon2D
+    | PreparedGlyphQuad2D;
+
 export type Render2DPreparedItem = Readonly<{
     layerId: RenderLayerId;
     layerOrder: number;
     sourceIndex: number;
     sortKey: number;
-    kind: RenderItem2D["kind"];
+    sourceKind: Render2DPreparedSourceKind;
+    kind: Render2DPreparedGeometry["kind"];
     pipelineFamily: Render2DPipelineFamily;
     vertexLayout: Render2DVertexLayout;
     blendMode: RenderBlendMode;
@@ -30,7 +87,7 @@ export type Render2DPreparedItem = Readonly<{
     y?: number;
     transform?: RenderResolvedTransform2D;
     color: RenderPreparedColor;
-    item: RenderItem2D;
+    geometry: Render2DPreparedGeometry;
 }>;
 
 export type Render2DPreparedBatch = Readonly<{
@@ -39,6 +96,7 @@ export type Render2DPreparedBatch = Readonly<{
     vertexLayout: Render2DVertexLayout;
     blendMode: RenderBlendMode;
     resourceId?: RenderResourceId;
+    containsText: boolean;
     itemStart: number;
     itemCount: number;
     vertexCount: number;
@@ -55,6 +113,8 @@ export type Render2DPreparedFrame = Readonly<{
 
 export type Render2DPrepareConfig = Readonly<{
     debug?: boolean;
+    fontRegistry?: Pick<FontRegistry, "get">;
+    textLayout?: TextLayoutModule;
 }>;
 
 export type Render2DPrepareModule = Readonly<{
@@ -90,7 +150,8 @@ type MutablePreparedItem = {
     layerOrder: number;
     sourceIndex: number;
     sortKey: number;
-    kind: RenderItem2D["kind"];
+    sourceKind: Render2DPreparedSourceKind;
+    kind: Render2DPreparedGeometry["kind"];
     pipelineFamily: Render2DPipelineFamily;
     vertexLayout: Render2DVertexLayout;
     blendMode: RenderBlendMode;
@@ -100,7 +161,7 @@ type MutablePreparedItem = {
     y?: number;
     transform?: RenderResolvedTransform2D;
     color: RenderPreparedColor;
-    item: RenderItem2D;
+    geometry: Render2DPreparedGeometry;
 };
 
 export type RenderPreparedColor = Readonly<{
@@ -116,14 +177,24 @@ type MutablePreparedBatch = {
     vertexLayout: Render2DVertexLayout;
     blendMode: RenderBlendMode;
     resourceId?: RenderResourceId;
+    containsText: boolean;
     itemStart: number;
     itemCount: number;
     vertexCount: number;
 };
 
+type MutableTextStats = {
+    textItemCount: number;
+    preparedGlyphCount: number;
+    glyphVertexCount: number;
+    missingFontCount: number;
+    missingGlyphCount: number;
+};
+
 const DEFAULT_CIRCLE_SEGMENTS = 24;
 const DEFAULT_ELLIPSE_SEGMENTS = 24;
 const MAX_POLYGON_VERTICES = 64;
+const GLYPH_QUAD_VERTEX_COUNT = 6;
 
 function createEmptyStats(): RenderFrameStats {
     return {
@@ -141,6 +212,10 @@ function createEmptyStats(): RenderFrameStats {
         invalidFontRegistrationCount: 0,
         missingFontCount: 0,
         missingGlyphCount: 0,
+        textItemCount: 0,
+        preparedGlyphCount: 0,
+        glyphVertexCount: 0,
+        textBatchCount: 0,
     };
 }
 
@@ -161,17 +236,19 @@ function compareItems(a: IndexedRenderItem, b: IndexedRenderItem): number {
 }
 
 function getPipelineFamily(item: RenderItem2D): Render2DPipelineFamily {
-    return item.kind === "sprite" ? "textured-2d" : "solid-2d";
+    return item.kind === "sprite" || item.kind === "text"
+        ? "textured-2d"
+        : "solid-2d";
 }
 
 function getVertexLayout(item: RenderItem2D): Render2DVertexLayout {
-    return item.kind === "sprite"
+    return item.kind === "sprite" || item.kind === "text"
         ? "position-uv-tint-2d"
         : "position-color-2d";
 }
 
 function getBlendMode(item: RenderItem2D): RenderBlendMode {
-    return item.blend ?? "opaque";
+    return item.blend ?? (item.kind === "text" ? "alpha" : "opaque");
 }
 
 function getItemVertexCount(item: RenderItem2D): number {
@@ -199,6 +276,8 @@ function getItemVertexCount(item: RenderItem2D): number {
                 item.vertices.length <= MAX_POLYGON_VERTICES
                 ? (item.vertices.length - 2) * 3
                 : 0;
+        case "text":
+            return 0;
     }
 }
 
@@ -221,7 +300,10 @@ function getColorValue(
 }
 
 function getPreparedColor(item: RenderItem2D): RenderPreparedColor {
-    const color = item.kind === "sprite" ? item.tint ?? item.color : item.color;
+    const color =
+        item.kind === "sprite" || item.kind === "text"
+            ? item.tint ?? item.color
+            : item.color;
 
     return {
         r: getColorValue(color, "r"),
@@ -229,6 +311,54 @@ function getPreparedColor(item: RenderItem2D): RenderPreparedColor {
         b: getColorValue(color, "b"),
         a: item.opacity ?? 1,
     };
+}
+
+function createPrimitiveGeometry(
+    item: Exclude<RenderItem2D, RenderText2D>,
+): Render2DPreparedGeometry {
+    switch (item.kind) {
+        case "rect":
+            return {
+                kind: "rect-quad",
+                w: item.w,
+                h: item.h,
+            };
+        case "sprite":
+            return {
+                kind: "rect-quad",
+                w: item.w,
+                h: item.h,
+                uv: item.uv,
+            };
+        case "circle":
+            return {
+                kind: "circle-like",
+                radiusX: item.radius,
+                radiusY: item.radius,
+                segments: DEFAULT_CIRCLE_SEGMENTS,
+            };
+        case "ellipse":
+            return {
+                kind: "circle-like",
+                radiusX: item.radiusX,
+                radiusY: item.radiusY,
+                segments: DEFAULT_ELLIPSE_SEGMENTS,
+            };
+        case "line":
+            return {
+                kind: "line",
+                startX: item.startX,
+                startY: item.startY,
+                endX: item.endX,
+                endY: item.endY,
+                strokeWidth: item.strokeWidth ?? 1,
+            };
+        case "polygon":
+            return {
+                kind: "polygon",
+                vertices: item.vertices,
+            };
+    }
 }
 
 function assertValidAlpha(input: RenderFrameInput, debug: boolean): void {
@@ -246,10 +376,19 @@ export function createRender2DPrepare(
     config: Render2DPrepareConfig = {},
 ): Render2DPrepareModule {
     const debug = config.debug ?? false;
+    const fontRegistry = config.fontRegistry;
+    const textLayout = config.textLayout ?? createTextLayout();
     const layerRecords: MutableLayerRecord[] = [];
     const itemSortRecords: MutableItemSortRecord[] = [];
     const preparedItems: MutablePreparedItem[] = [];
     const preparedBatches: MutablePreparedBatch[] = [];
+    const textStats: MutableTextStats = {
+        textItemCount: 0,
+        preparedGlyphCount: 0,
+        glyphVertexCount: 0,
+        missingFontCount: 0,
+        missingGlyphCount: 0,
+    };
     let layerRecordCount = 0;
     let itemSortRecordCount = 0;
     let preparedItemCount = 0;
@@ -260,6 +399,11 @@ export function createRender2DPrepare(
         itemSortRecordCount = 0;
         preparedItemCount = 0;
         preparedBatchCount = 0;
+        textStats.textItemCount = 0;
+        textStats.preparedGlyphCount = 0;
+        textStats.glyphVertexCount = 0;
+        textStats.missingFontCount = 0;
+        textStats.missingGlyphCount = 0;
     }
 
     function writeLayerRecord(
@@ -303,48 +447,132 @@ export function createRender2DPrepare(
         return record;
     }
 
-    function appendPreparedItem(
-        layer: IndexedRenderLayer,
-        sourceIndex: number,
-        item: RenderItem2D,
-        vertexCount: number,
-        alpha: number,
-    ): void {
+    function appendPreparedGeometry(args: {
+        layer: IndexedRenderLayer;
+        sourceIndex: number;
+        sourceKind: Render2DPreparedSourceKind;
+        sortKey: number;
+        pipelineFamily: Render2DPipelineFamily;
+        vertexLayout: Render2DVertexLayout;
+        blendMode: RenderBlendMode;
+        resourceId?: RenderResourceId;
+        vertexCount: number;
+        transform?: RenderResolvedTransform2D;
+        color: RenderPreparedColor;
+        geometry: Render2DPreparedGeometry;
+    }): void {
         const index = preparedItemCount;
         const record =
             preparedItems[index] ??
             (preparedItems[index] = {
-                layerId: layer.layerId,
-                layerOrder: layer.layerOrder,
-                sourceIndex,
-                sortKey: item.sortKey,
-                kind: item.kind,
-                pipelineFamily: getPipelineFamily(item),
-                vertexLayout: getVertexLayout(item),
-                blendMode: getBlendMode(item),
-                resourceId: item.resourceId,
-                vertexCount,
-                color: getPreparedColor(item),
-                item,
+                layerId: args.layer.layerId,
+                layerOrder: args.layer.layerOrder,
+                sourceIndex: args.sourceIndex,
+                sortKey: args.sortKey,
+                sourceKind: args.sourceKind,
+                kind: args.geometry.kind,
+                pipelineFamily: args.pipelineFamily,
+                vertexLayout: args.vertexLayout,
+                blendMode: args.blendMode,
+                resourceId: args.resourceId,
+                vertexCount: args.vertexCount,
+                color: args.color,
+                geometry: args.geometry,
             });
-        const transform = getPreparedPosition(item, alpha);
 
-        record.layerId = layer.layerId;
-        record.layerOrder = layer.layerOrder;
-        record.sourceIndex = sourceIndex;
-        record.sortKey = item.sortKey;
-        record.kind = item.kind;
-        record.pipelineFamily = getPipelineFamily(item);
-        record.vertexLayout = getVertexLayout(item);
-        record.blendMode = getBlendMode(item);
-        record.resourceId = item.resourceId;
-        record.vertexCount = vertexCount;
-        record.x = transform?.x;
-        record.y = transform?.y;
-        record.transform = transform;
-        record.color = getPreparedColor(item);
-        record.item = item;
+        record.layerId = args.layer.layerId;
+        record.layerOrder = args.layer.layerOrder;
+        record.sourceIndex = args.sourceIndex;
+        record.sortKey = args.sortKey;
+        record.sourceKind = args.sourceKind;
+        record.kind = args.geometry.kind;
+        record.pipelineFamily = args.pipelineFamily;
+        record.vertexLayout = args.vertexLayout;
+        record.blendMode = args.blendMode;
+        record.resourceId = args.resourceId;
+        record.vertexCount = args.vertexCount;
+        record.x = args.transform?.x;
+        record.y = args.transform?.y;
+        record.transform = args.transform;
+        record.color = args.color;
+        record.geometry = args.geometry;
         preparedItemCount++;
+    }
+
+    function appendPrimitivePreparedItem(
+        layer: IndexedRenderLayer,
+        sourceIndex: number,
+        item: Exclude<RenderItem2D, RenderText2D>,
+        vertexCount: number,
+        alpha: number,
+    ): void {
+        appendPreparedGeometry({
+            layer,
+            sourceIndex,
+            sourceKind: item.kind,
+            sortKey: item.sortKey,
+            pipelineFamily: getPipelineFamily(item),
+            vertexLayout: getVertexLayout(item),
+            blendMode: getBlendMode(item),
+            resourceId: item.resourceId,
+            vertexCount,
+            transform: getPreparedPosition(item, alpha),
+            color: getPreparedColor(item),
+            geometry: createPrimitiveGeometry(item),
+        });
+    }
+
+    function appendTextPreparedItems(
+        layer: IndexedRenderLayer,
+        sourceIndex: number,
+        item: RenderText2D,
+        alpha: number,
+    ): void {
+        textStats.textItemCount++;
+        const font = fontRegistry?.get(item.fontId);
+        const result = textLayout.layout(item, font);
+        textStats.missingFontCount += result.missingFontCount;
+        textStats.missingGlyphCount += result.missingGlyphCount;
+        if (result.glyphs.length === 0) return;
+
+        const transform = getPreparedPosition(item, alpha);
+        const color = getPreparedColor(item);
+        const blendMode = getBlendMode(item);
+
+        for (let glyphIndex = 0; glyphIndex < result.glyphs.length; glyphIndex++) {
+            const glyph = result.glyphs[glyphIndex];
+            if (glyph.w <= 0 || glyph.h <= 0) continue;
+
+            const geometry: PreparedGlyphQuad2D = {
+                kind: "glyph-quad",
+                sourceKind: "text",
+                sourceIndex,
+                glyphIndex,
+                resourceId: glyph.resourceId,
+                x: glyph.x,
+                y: glyph.y,
+                w: glyph.w,
+                h: glyph.h,
+                uv: glyph.uv,
+            };
+
+            appendPreparedGeometry({
+                layer,
+                sourceIndex,
+                sourceKind: "text",
+                sortKey: item.sortKey,
+                pipelineFamily: "textured-2d",
+                vertexLayout: "position-uv-tint-2d",
+                blendMode,
+                resourceId: glyph.resourceId,
+                vertexCount: GLYPH_QUAD_VERTEX_COUNT,
+                transform,
+                color,
+                geometry,
+            });
+            textStats.preparedGlyphCount++;
+            textStats.glyphVertexCount += GLYPH_QUAD_VERTEX_COUNT;
+        }
     }
 
     function areBatchCompatible(
@@ -358,6 +586,13 @@ export function createRender2DPrepare(
             batchStartItem.blendMode === item.blendMode &&
             batchStartItem.resourceId === item.resourceId
         );
+    }
+
+    function batchContainsText(itemStart: number, itemCount: number): boolean {
+        for (let i = 0; i < itemCount; i++) {
+            if (preparedItems[itemStart + i].sourceKind === "text") return true;
+        }
+        return false;
     }
 
     function appendPreparedBatch(
@@ -377,6 +612,7 @@ export function createRender2DPrepare(
                 vertexLayout: item.vertexLayout,
                 blendMode: item.blendMode,
                 resourceId: item.resourceId,
+                containsText: false,
                 itemStart,
                 itemCount,
                 vertexCount,
@@ -387,6 +623,7 @@ export function createRender2DPrepare(
         batch.vertexLayout = item.vertexLayout;
         batch.blendMode = item.blendMode;
         batch.resourceId = item.resourceId;
+        batch.containsText = batchContainsText(itemStart, itemCount);
         batch.itemStart = itemStart;
         batch.itemCount = itemCount;
         batch.vertexCount = vertexCount;
@@ -476,13 +713,23 @@ export function createRender2DPrepare(
                     itemIndex++
                 ) {
                     const indexedItem = itemSortRecords[itemIndex];
+                    if (indexedItem.item.kind === "text") {
+                        appendTextPreparedItems(
+                            layer,
+                            indexedItem.sourceIndex,
+                            indexedItem.item,
+                            input.alpha,
+                        );
+                        continue;
+                    }
+
                     const vertexCount = getItemVertexCount(indexedItem.item);
 
                     if (vertexCount === 0) {
                         continue;
                     }
 
-                    appendPreparedItem(
+                    appendPrimitivePreparedItem(
                         layer,
                         indexedItem.sourceIndex,
                         indexedItem.item,
@@ -495,8 +742,12 @@ export function createRender2DPrepare(
             buildBatches();
 
             let vertexCount = 0;
+            let textBatchCount = 0;
             for (let i = 0; i < preparedItemCount; i++) {
                 vertexCount += preparedItems[i].vertexCount;
+            }
+            for (let i = 0; i < preparedBatchCount; i++) {
+                if (preparedBatches[i].containsText) textBatchCount++;
             }
 
             const stats = {
@@ -505,6 +756,12 @@ export function createRender2DPrepare(
                 commandCount: preparedItemCount,
                 batchCount: preparedBatchCount,
                 vertexCount,
+                missingFontCount: textStats.missingFontCount,
+                missingGlyphCount: textStats.missingGlyphCount,
+                textItemCount: textStats.textItemCount,
+                preparedGlyphCount: textStats.preparedGlyphCount,
+                glyphVertexCount: textStats.glyphVertexCount,
+                textBatchCount,
             };
 
             return {

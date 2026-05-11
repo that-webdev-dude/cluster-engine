@@ -3,7 +3,13 @@ import {
     createRender2DPrepare,
     type Render2DPreparedFrame,
 } from "./Render2DPrepare.module";
-import type { RenderFrameInput, RenderItem2D } from "../service/Render.types";
+import { createFontRegistry } from "./FontRegistry.module";
+import { createTextLayout } from "./TextLayout.module";
+import type {
+    RenderBitmapFontConfig,
+    RenderFrameInput,
+    RenderItem2D,
+} from "../service/Render.types";
 
 function createInput(
     layers: RenderFrameInput["layers"],
@@ -26,6 +32,77 @@ function createRect(overrides: Partial<Extract<RenderItem2D, { kind: "rect" }>> 
         h: 1,
         ...overrides,
     };
+}
+
+function createFont(
+    overrides: Partial<RenderBitmapFontConfig> = {},
+): RenderBitmapFontConfig {
+    return {
+        id: "font.ui",
+        kind: "bitmap",
+        baseSize: 10,
+        lineHeight: 12,
+        baseline: 9,
+        pages: [
+            {
+                id: "main",
+                resourceId: "font.ui.page.main",
+                width: 100,
+                height: 50,
+            },
+            {
+                id: "accent",
+                resourceId: "font.ui.page.accent",
+                width: 100,
+                height: 50,
+            },
+        ],
+        glyphs: [
+            {
+                codepoint: 65,
+                pageId: "main",
+                x: 0,
+                y: 0,
+                w: 10,
+                h: 8,
+                xOffset: 0,
+                yOffset: 0,
+                xAdvance: 10,
+            },
+            {
+                codepoint: 66,
+                pageId: "main",
+                x: 10,
+                y: 0,
+                w: 8,
+                h: 8,
+                xOffset: 1,
+                yOffset: 0,
+                xAdvance: 8,
+            },
+            {
+                codepoint: 67,
+                pageId: "accent",
+                x: 0,
+                y: 0,
+                w: 6,
+                h: 8,
+                xOffset: 0,
+                yOffset: 1,
+                xAdvance: 6,
+            },
+        ],
+        ...overrides,
+    };
+}
+
+function createTextPrepare(font: RenderBitmapFontConfig = createFont()) {
+    const registry = createFontRegistry({ debug: true });
+    registry.register([font]);
+    return createRender2DPrepare({
+        fontRegistry: registry,
+        textLayout: createTextLayout(),
+    });
 }
 
 function activeItems(frame: Render2DPreparedFrame) {
@@ -305,6 +382,309 @@ describe("createRender2DPrepare", () => {
             },
         ]);
         expect(frame.stats.batchCount).toBe(5);
+    });
+
+    it("lowers public text intent into private glyph quads", () => {
+        const prepare = createTextPrepare();
+        const frame = prepare.prepare(
+            createInput([
+                {
+                    id: "main",
+                    order: 0,
+                    items: [
+                        {
+                            kind: "text",
+                            sortKey: 0,
+                            x: 5,
+                            y: 7,
+                            text: "AB",
+                            fontId: "font.ui",
+                        },
+                    ],
+                },
+            ]),
+        );
+
+        expect(frame.itemCount).toBe(2);
+        expect(activeItems(frame).map((item) => item.sourceKind)).toEqual([
+            "text",
+            "text",
+        ]);
+        expect(activeItems(frame).map((item) => item.kind)).toEqual([
+            "glyph-quad",
+            "glyph-quad",
+        ]);
+        expect(activeItems(frame).map((item) => item.resourceId)).toEqual([
+            "font.ui.page.main",
+            "font.ui.page.main",
+        ]);
+        expect(activeItems(frame).map((item) => item.geometry)).toEqual([
+            expect.objectContaining({
+                kind: "glyph-quad",
+                glyphIndex: 0,
+                x: 0,
+                y: 0,
+                w: 10,
+                h: 8,
+            }),
+            expect.objectContaining({
+                kind: "glyph-quad",
+                glyphIndex: 1,
+                x: 11,
+                y: 0,
+                w: 8,
+                h: 8,
+            }),
+        ]);
+        expect(activeItems(frame)[0]).not.toHaveProperty("item");
+        expect(frame.stats).toMatchObject({
+            commandCount: 2,
+            vertexCount: 12,
+            textItemCount: 1,
+            preparedGlyphCount: 2,
+            glyphVertexCount: 12,
+            missingFontCount: 0,
+            missingGlyphCount: 0,
+        });
+    });
+
+    it("propagates text style, opacity, transform, and alpha blend default", () => {
+        const prepare = createTextPrepare();
+        const frame = prepare.prepare(
+            createInput([
+                {
+                    id: "main",
+                    order: 0,
+                    items: [
+                        {
+                            kind: "text",
+                            sortKey: 0,
+                            x: 20,
+                            y: 40,
+                            prevX: 10,
+                            prevY: 20,
+                            text: "A",
+                            fontId: "font.ui",
+                            color: { r: 0.1, g: 0.2, b: 0.3 },
+                            tint: { r: 0.4, g: 0.5, b: 0.6 },
+                            opacity: 0.25,
+                        },
+                    ],
+                },
+            ]),
+        );
+
+        expect(activeItems(frame)[0]).toMatchObject({
+            x: 15,
+            y: 30,
+            blendMode: "alpha",
+            color: { r: 0.4, g: 0.5, b: 0.6, a: 0.25 },
+        });
+    });
+
+    it("keeps text source order, sort order, and glyph order stable", () => {
+        const prepare = createTextPrepare();
+        const frame = prepare.prepare(
+            createInput([
+                {
+                    id: "main",
+                    order: 0,
+                    items: [
+                        {
+                            kind: "text",
+                            sortKey: 2,
+                            x: 0,
+                            y: 0,
+                            text: "A",
+                            fontId: "font.ui",
+                        },
+                        createRect({ sortKey: 1 }),
+                        {
+                            kind: "text",
+                            sortKey: 1,
+                            x: 0,
+                            y: 0,
+                            text: "AB",
+                            fontId: "font.ui",
+                        },
+                    ],
+                },
+            ]),
+        );
+
+        expect(
+            activeItems(frame).map((item) => ({
+                sourceKind: item.sourceKind,
+                sourceIndex: item.sourceIndex,
+                sortKey: item.sortKey,
+                glyphIndex:
+                    item.geometry.kind === "glyph-quad"
+                        ? item.geometry.glyphIndex
+                        : undefined,
+            })),
+        ).toEqual([
+            {
+                sourceKind: "rect",
+                sourceIndex: 1,
+                sortKey: 1,
+                glyphIndex: undefined,
+            },
+            { sourceKind: "text", sourceIndex: 2, sortKey: 1, glyphIndex: 0 },
+            { sourceKind: "text", sourceIndex: 2, sortKey: 1, glyphIndex: 1 },
+            { sourceKind: "text", sourceIndex: 0, sortKey: 2, glyphIndex: 0 },
+        ]);
+    });
+
+    it("batches same-page glyphs and splits multi-page glyph runs", () => {
+        const prepare = createTextPrepare();
+        const frame = prepare.prepare(
+            createInput([
+                {
+                    id: "main",
+                    order: 0,
+                    items: [
+                        {
+                            kind: "text",
+                            sortKey: 0,
+                            x: 0,
+                            y: 0,
+                            text: "ABC",
+                            fontId: "font.ui",
+                        },
+                    ],
+                },
+            ]),
+        );
+
+        expect(activeBatches(frame)).toEqual([
+            expect.objectContaining({
+                pipelineFamily: "textured-2d",
+                vertexLayout: "position-uv-tint-2d",
+                blendMode: "alpha",
+                resourceId: "font.ui.page.main",
+                containsText: true,
+                itemStart: 0,
+                itemCount: 2,
+                vertexCount: 12,
+            }),
+            expect.objectContaining({
+                pipelineFamily: "textured-2d",
+                vertexLayout: "position-uv-tint-2d",
+                blendMode: "alpha",
+                resourceId: "font.ui.page.accent",
+                containsText: true,
+                itemStart: 2,
+                itemCount: 1,
+                vertexCount: 6,
+            }),
+        ]);
+        expect(frame.stats).toMatchObject({
+            batchCount: 2,
+            textBatchCount: 2,
+            preparedGlyphCount: 3,
+        });
+    });
+
+    it("keeps text mixed with rects and sprites on the prepared geometry path", () => {
+        const prepare = createTextPrepare();
+        const frame = prepare.prepare(
+            createInput([
+                {
+                    id: "main",
+                    order: 0,
+                    items: [
+                        createRect({ sortKey: 0 }),
+                        {
+                            kind: "text",
+                            sortKey: 1,
+                            x: 0,
+                            y: 0,
+                            text: "A",
+                            fontId: "font.ui",
+                        },
+                        {
+                            kind: "sprite",
+                            sortKey: 2,
+                            x: 0,
+                            y: 0,
+                            w: 1,
+                            h: 1,
+                            resourceId: "sprite.a",
+                        },
+                    ],
+                },
+            ]),
+        );
+
+        expect(activeItems(frame).map((item) => item.kind)).toEqual([
+            "rect-quad",
+            "glyph-quad",
+            "rect-quad",
+        ]);
+        expect(activeItems(frame).map((item) => item.sourceKind)).toEqual([
+            "rect",
+            "text",
+            "sprite",
+        ]);
+        expect(frame.stats).toMatchObject({
+            commandCount: 3,
+            batchCount: 3,
+            vertexCount: 18,
+            textBatchCount: 1,
+        });
+    });
+
+    it("records missing fonts and missing glyphs during text lowering", () => {
+        const prepare = createTextPrepare(
+            createFont({
+                glyphs: [
+                    {
+                        codepoint: 65,
+                        pageId: "main",
+                        x: 0,
+                        y: 0,
+                        w: 10,
+                        h: 8,
+                        xOffset: 0,
+                        yOffset: 0,
+                        xAdvance: 10,
+                    },
+                ],
+            }),
+        );
+        const frame = prepare.prepare(
+            createInput([
+                {
+                    id: "main",
+                    order: 0,
+                    items: [
+                        {
+                            kind: "text",
+                            sortKey: 0,
+                            x: 0,
+                            y: 0,
+                            text: "AZ",
+                            fontId: "font.ui",
+                        },
+                        {
+                            kind: "text",
+                            sortKey: 1,
+                            x: 0,
+                            y: 0,
+                            text: "A",
+                            fontId: "font.missing",
+                        },
+                    ],
+                },
+            ]),
+        );
+
+        expect(frame.stats).toMatchObject({
+            textItemCount: 2,
+            preparedGlyphCount: 1,
+            missingFontCount: 1,
+            missingGlyphCount: 1,
+        });
     });
 
     it("keeps scale preparation deterministic for thousands of simple rects", () => {

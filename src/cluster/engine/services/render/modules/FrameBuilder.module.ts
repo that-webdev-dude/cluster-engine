@@ -21,6 +21,10 @@ export function createRenderFrameBuilder(): RenderFrameBuilder {
         invalidFontRegistrationCount: 0,
         missingFontCount: 0,
         missingGlyphCount: 0,
+        textItemCount: 0,
+        preparedGlyphCount: 0,
+        glyphVertexCount: 0,
+        textBatchCount: 0,
     });
 
     return Object.freeze({

@@ -67,6 +67,10 @@ const ZERO_STATS = {
     invalidFontRegistrationCount: 0,
     missingFontCount: 0,
     missingGlyphCount: 0,
+    textItemCount: 0,
+    preparedGlyphCount: 0,
+    glyphVertexCount: 0,
+    textBatchCount: 0,
 };
 
 function createFont() {
@@ -167,6 +171,46 @@ describe("createRender", () => {
             commandCount: 1,
             batchCount: 1,
             vertexCount: 6,
+        });
+
+        await render.dispose();
+    });
+
+    it("publishes prepared text lowering stats while running", async () => {
+        const render = createRender({ canvas: createCanvas() });
+
+        await render.start();
+        render.register.fonts([createFont()]);
+        render.prepare({
+            target: { w: 320, h: 240, dpr: 2 },
+            alpha: 1,
+            layers: [
+                {
+                    id: "main",
+                    order: 0,
+                    items: [
+                        {
+                            kind: "text",
+                            sortKey: 0,
+                            x: 0,
+                            y: 0,
+                            text: "A",
+                            fontId: "font.ui",
+                        },
+                    ],
+                },
+            ],
+        });
+
+        expect(render.view.stats).toMatchObject({
+            commandCount: 1,
+            batchCount: 1,
+            vertexCount: 6,
+            textItemCount: 1,
+            preparedGlyphCount: 1,
+            glyphVertexCount: 6,
+            textBatchCount: 1,
+            fontResourceCount: 1,
         });
 
         await render.dispose();

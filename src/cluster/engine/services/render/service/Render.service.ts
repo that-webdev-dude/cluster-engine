@@ -6,11 +6,13 @@ import { createFontRegistry } from "../modules/FontRegistry.module";
 import { createRender2DPrepare } from "../modules/Render2DPrepare.module";
 import type { Render2DPreparedFrame } from "../modules/Render2DPrepare.module";
 import { createSubmitFrame } from "../modules/SubmitFrame.module";
+import { createTextLayout } from "../modules/TextLayout.module";
 import { createPipelineLibrary } from "../backend/pipelineLibrary";
 import { createRenderView } from "./Render.view";
 import type {
     RenderConfig,
     RenderFrameInput,
+    RenderFrameStats,
     RenderSnapshot,
     RenderSubmitResult,
     RenderBitmapFontConfig,
@@ -47,6 +49,10 @@ function createDefaultStats(textureResourceCount = 0) {
         invalidFontRegistrationCount: 0,
         missingFontCount: 0,
         missingGlyphCount: 0,
+        textItemCount: 0,
+        preparedGlyphCount: 0,
+        glyphVertexCount: 0,
+        textBatchCount: 0,
     };
 }
 
@@ -62,7 +68,12 @@ function createRenderService(config: RenderConfig): RenderService {
     const pipelineLibrary = createPipelineLibrary({ debug });
     const frameBuilder = createRenderFrameBuilder();
     const fontRegistry = createFontRegistry({ debug });
-    const render2DPrepare = createRender2DPrepare({ debug });
+    const textLayout = createTextLayout();
+    const render2DPrepare = createRender2DPrepare({
+        debug,
+        fontRegistry,
+        textLayout,
+    });
     const submitFrame = createSubmitFrame({
         getRuntime: gfx.getRuntime,
         gpuResource,
@@ -95,11 +106,7 @@ function createRenderService(config: RenderConfig): RenderService {
             hasPreparedTarget = false;
             snapshot.lastSubmitResult = { status: "no-frame" };
             snapshot.stats = frameBuilder.clear();
-            snapshot.stats = {
-                ...snapshot.stats,
-                textureResourceCount: textureResources.size,
-                ...fontRegistry.getStats(),
-            };
+            snapshot.stats = withResourceStats(snapshot.stats);
             await pipelineLibrary.stop();
             await gpuResource.stop();
             await gfx.stop();
@@ -109,6 +116,7 @@ function createRenderService(config: RenderConfig): RenderService {
         onDispose: async () => {
             textureResources.clear();
             fontRegistry.clear();
+            textLayout.clearCache();
             preparedFrame = undefined;
             hasPreparedTarget = false;
             snapshot.stats = createDefaultStats();
@@ -140,8 +148,7 @@ function createRenderService(config: RenderConfig): RenderService {
         }
         snapshot.stats = {
             ...snapshot.stats,
-            textureResourceCount: textureResources.size,
-            ...fontRegistry.getStats(),
+            ...withResourceStats(snapshot.stats),
         };
     }
 
@@ -151,7 +158,23 @@ function createRenderService(config: RenderConfig): RenderService {
         fontRegistry.register(fonts);
         snapshot.stats = {
             ...snapshot.stats,
-            ...fontRegistry.getStats(),
+            ...withResourceStats(snapshot.stats),
+        };
+    }
+
+    function withResourceStats(stats: RenderFrameStats): RenderFrameStats {
+        const fontStats = fontRegistry.getStats();
+        return {
+            ...stats,
+            textureResourceCount: textureResources.size,
+            fontResourceCount: fontStats.fontResourceCount,
+            fontPageResourceCount: fontStats.fontPageResourceCount,
+            fontReplacementRegistrationCount:
+                fontStats.fontReplacementRegistrationCount,
+            invalidFontRegistrationCount: fontStats.invalidFontRegistrationCount,
+            missingFontCount: stats.missingFontCount + fontStats.missingFontCount,
+            missingGlyphCount:
+                stats.missingGlyphCount + fontStats.missingGlyphCount,
         };
     }
 
@@ -195,12 +218,10 @@ function createRenderService(config: RenderConfig): RenderService {
         snapshot.frameSeq++;
         snapshot.target = input.target;
         snapshot.lastSubmitResult = { status: "no-frame" };
-        snapshot.stats = {
+        snapshot.stats = withResourceStats({
             ...frameBuilder.begin(input.target),
             ...preparedFrame.stats,
-            textureResourceCount: textureResources.size,
-            ...fontRegistry.getStats(),
-        };
+        });
     }
 
     function execute(): RenderSubmitResult {
@@ -222,12 +243,10 @@ function createRenderService(config: RenderConfig): RenderService {
         if (!preparedFrame) {
             const report = submitFrame.submit(undefined);
             snapshot.lastSubmitResult = report.result;
-            snapshot.stats = {
+            snapshot.stats = withResourceStats({
                 ...snapshot.stats,
                 ...report.metrics,
-                textureResourceCount: textureResources.size,
-                ...fontRegistry.getStats(),
-            };
+            });
             return report.result;
         }
 
@@ -244,12 +263,10 @@ function createRenderService(config: RenderConfig): RenderService {
         const report = submitFrame.submit(preparedFrame);
         const result = report.result;
         snapshot.lastSubmitResult = result;
-        snapshot.stats = {
+        snapshot.stats = withResourceStats({
             ...snapshot.stats,
             ...report.metrics,
-            textureResourceCount: textureResources.size,
-            ...fontRegistry.getStats(),
-        };
+        });
         preparedFrame = undefined;
 
         return result;

@@ -27,6 +27,10 @@ const ZERO_STATS = {
     invalidFontRegistrationCount: 0,
     missingFontCount: 0,
     missingGlyphCount: 0,
+    textItemCount: 0,
+    preparedGlyphCount: 0,
+    glyphVertexCount: 0,
+    textBatchCount: 0,
 };
 
 function createTestCtx(_scopeId: string = "test.scope"): GameCtx {

@@ -32,6 +32,7 @@ export type {
     RenderStyle2DInput,
     RenderSubmitResult,
     RenderTargetInfo,
+    RenderText2D,
     RenderTextureResourceConfig,
     RenderTransform2DInput,
     RenderUvRectInput,

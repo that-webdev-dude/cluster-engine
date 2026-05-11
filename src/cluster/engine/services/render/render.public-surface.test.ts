@@ -22,6 +22,7 @@ import type {
     RenderResourceConfig,
     RenderSubmitResult,
     RenderTargetInfo,
+    RenderText2D,
     RenderTextureResourceConfig,
     RenderTransform2DInput,
     RenderView,
@@ -53,8 +54,21 @@ describe("render public surface", () => {
         expectTypeOf<RenderTransform2DInput>().toHaveProperty("prevX");
         expectTypeOf<RenderFrameStats>().toHaveProperty("drawCallCount");
         expectTypeOf<RenderFrameStats>().toHaveProperty("fontResourceCount");
+        expectTypeOf<RenderFrameStats>().toHaveProperty("preparedGlyphCount");
         expectTypeOf<RenderResourceConfig>().toHaveProperty("textures");
         expectTypeOf<RenderResourceConfig>().toHaveProperty("fonts");
+        expectTypeOf<RenderText2D>().toMatchTypeOf<
+            Readonly<{
+                kind: "text";
+                text: string;
+                fontId: RenderFontId;
+                sortKey: number;
+                x: number;
+                y: number;
+                blend?: "alpha" | "opaque";
+            }>
+        >();
+        expectTypeOf<RenderText2D>().not.toHaveProperty("resourceId");
         expectTypeOf<RenderSubmitResult>().toMatchTypeOf<
             | { readonly status: "submitted" }
             | { readonly status: "skipped"; readonly reason: string }

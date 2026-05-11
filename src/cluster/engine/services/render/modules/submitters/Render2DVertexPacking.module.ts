@@ -5,7 +5,7 @@ import type {
     Render2DPreparedItem,
     RenderPreparedColor,
 } from "../Render2DPrepare.module";
-import type { RenderItem2D, RenderTargetInfo } from "../../service/Render.types";
+import type { RenderTargetInfo, RenderUvRectInput } from "../../service/Render.types";
 
 export type Render2DVertexLayoutInfo = Readonly<{
     strideFloats: number;
@@ -165,18 +165,15 @@ function writeRectVertices(
     offset: number,
     frame: Render2DPreparedFrame,
     item: Render2DPreparedItem,
-    rect: Extract<RenderItem2D, { kind: "rect" | "sprite" }>,
+    rect: { x: number; y: number; w: number; h: number; uv?: RenderUvRectInput },
 ): number {
-    const a = transformPoint(item, 0, 0);
-    const b = transformPoint(item, rect.w, 0);
-    const c = transformPoint(item, 0, rect.h);
-    const d = transformPoint(item, rect.w, rect.h);
+    const a = transformPoint(item, rect.x, rect.y);
+    const b = transformPoint(item, rect.x + rect.w, rect.y);
+    const c = transformPoint(item, rect.x, rect.y + rect.h);
+    const d = transformPoint(item, rect.x + rect.w, rect.y + rect.h);
 
     if (item.vertexLayout === "position-uv-tint-2d") {
-        const uv =
-            rect.kind === "sprite" && rect.uv
-                ? rect.uv
-                : { u: 0, v: 0, w: 1, h: 1 };
+        const uv = rect.uv ?? { u: 0, v: 0, w: 1, h: 1 };
         offset = writeTexturedVertex(
             data,
             offset,
@@ -274,9 +271,9 @@ function writeLineVertices(
     offset: number,
     frame: Render2DPreparedFrame,
     item: Render2DPreparedItem,
-    line: Extract<RenderItem2D, { kind: "line" }>,
+    line: Extract<Render2DPreparedItem["geometry"], { kind: "line" }>,
 ): number {
-    const width = line.strokeWidth ?? 1;
+    const width = line.strokeWidth;
     const dx = line.endX - line.startX;
     const dy = line.endY - line.startY;
     const length = Math.hypot(dx, dy);
@@ -298,7 +295,7 @@ function writePolygonVertices(
     offset: number,
     frame: Render2DPreparedFrame,
     item: Render2DPreparedItem,
-    polygon: Extract<RenderItem2D, { kind: "polygon" }>,
+    polygon: Extract<Render2DPreparedItem["geometry"], { kind: "polygon" }>,
 ): number {
     const origin = transformPoint(item, polygon.vertices[0].x, polygon.vertices[0].y);
     for (let i = 1; i < polygon.vertices.length - 1; i++) {
@@ -325,34 +322,37 @@ function writeItemVertices(
     frame: Render2DPreparedFrame,
     item: Render2DPreparedItem,
 ): number {
-    switch (item.item.kind) {
-        case "rect":
-        case "sprite":
-            return writeRectVertices(data, offset, frame, item, item.item);
-        case "circle":
+    switch (item.geometry.kind) {
+        case "rect-quad":
+            return writeRectVertices(data, offset, frame, item, {
+                x: 0,
+                y: 0,
+                w: item.geometry.w,
+                h: item.geometry.h,
+                uv: item.geometry.uv,
+            });
+        case "glyph-quad":
+            return writeRectVertices(data, offset, frame, item, {
+                x: item.geometry.x,
+                y: item.geometry.y,
+                w: item.geometry.w,
+                h: item.geometry.h,
+                uv: item.geometry.uv,
+            });
+        case "circle-like":
             return writeCircleLikeVertices(
                 data,
                 offset,
                 frame,
                 item,
-                item.item.radius,
-                item.item.radius,
-                24,
-            );
-        case "ellipse":
-            return writeCircleLikeVertices(
-                data,
-                offset,
-                frame,
-                item,
-                item.item.radiusX,
-                item.item.radiusY,
-                24,
+                item.geometry.radiusX,
+                item.geometry.radiusY,
+                item.geometry.segments,
             );
         case "line":
-            return writeLineVertices(data, offset, frame, item, item.item);
+            return writeLineVertices(data, offset, frame, item, item.geometry);
         case "polygon":
-            return writePolygonVertices(data, offset, frame, item, item.item);
+            return writePolygonVertices(data, offset, frame, item, item.geometry);
     }
 }
 
