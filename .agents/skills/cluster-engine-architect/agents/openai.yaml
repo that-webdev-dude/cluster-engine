@@ -1,3 +1,0 @@
-display_name: Cluster Engine Architect
-short_description: Architecture partner for Cluster Engine design, runtime, world, renderer, and authoring decisions.
-default_prompt: Use cluster-engine-architect to plan or review this Cluster Engine architecture change. Load only the relevant docs and memory decisions, inspect the source, separate current implementation from stable constraints, and ask before recording any major decision.

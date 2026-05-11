@@ -8,6 +8,5 @@ coverage
 .artifacts
 .plans
 
-# AI stuff
-# AGENTS.md
-# .agents
+AGENTS.md
+.agents
