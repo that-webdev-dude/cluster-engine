@@ -1,6 +1,9 @@
 export { createRender, type RenderService } from "./service/Render.service";
 export type {
     RenderBackend,
+    RenderBitmapFontConfig,
+    RenderBitmapFontPageConfig,
+    RenderBitmapGlyphConfig,
     RenderBlendMode,
     RenderBounds2DInput,
     RenderCameraInput,
@@ -10,7 +13,10 @@ export type {
     RenderEllipse2D,
     RenderFrameInput,
     RenderFrameStats,
+    RenderFontId,
+    RenderFontPageId,
     RenderGraphicsState,
+    RenderGlyphKerningConfig,
     RenderItem2D,
     RenderItem2DBase,
     RenderLayerId,

@@ -14,6 +14,12 @@ export type RenderLayerId = string;
 /** Renderer-owned resource identifier. */
 export type RenderResourceId = string;
 
+/** Renderer-owned bitmap font identifier. */
+export type RenderFontId = string;
+
+/** Font-config-local atlas page identifier. */
+export type RenderFontPageId = string;
+
 /** Camera state supplied as renderer-domain frame input. */
 export type RenderCameraInput = Readonly<{
     x: number;
@@ -190,6 +196,12 @@ export type RenderFrameStats = Readonly<{
     skippedResourceCount: number;
     fallbackResourceCount: number;
     textureResourceCount: number;
+    fontResourceCount: number;
+    fontPageResourceCount: number;
+    fontReplacementRegistrationCount: number;
+    invalidFontRegistrationCount: number;
+    missingFontCount: number;
+    missingGlyphCount: number;
 }>;
 
 export type RenderSnapshot = {
@@ -218,8 +230,51 @@ export type RenderTextureResourceConfig = Readonly<{
     data: ArrayBufferView;
 }>;
 
+/** Atlas page metadata for a registered bitmap font. */
+export type RenderBitmapFontPageConfig = Readonly<{
+    id: RenderFontPageId;
+    resourceId: RenderResourceId;
+    width: number;
+    height: number;
+}>;
+
+/** Glyph metrics and atlas rectangle for a registered bitmap font. */
+export type RenderBitmapGlyphConfig = Readonly<{
+    codepoint: number;
+    pageId: RenderFontPageId;
+    x: number;
+    y: number;
+    w: number;
+    h: number;
+    xOffset: number;
+    yOffset: number;
+    xAdvance: number;
+}>;
+
+/** Kerning adjustment between two bitmap font codepoints. */
+export type RenderGlyphKerningConfig = Readonly<{
+    left: number;
+    right: number;
+    amount: number;
+}>;
+
+/** Renderer-domain config for a pre-baked bitmap font atlas. */
+export type RenderBitmapFontConfig = Readonly<{
+    id: RenderFontId;
+    label?: string;
+    kind: "bitmap";
+    baseSize: number;
+    lineHeight: number;
+    baseline: number;
+    pages: readonly RenderBitmapFontPageConfig[];
+    glyphs: readonly RenderBitmapGlyphConfig[];
+    kernings?: readonly RenderGlyphKerningConfig[];
+    replacementCodepoint?: number;
+}>;
+
 export type RenderResourceConfig = Readonly<{
     textures?: readonly RenderTextureResourceConfig[];
+    fonts?: readonly RenderBitmapFontConfig[];
 }>;
 
 export type RenderConfig = Readonly<{

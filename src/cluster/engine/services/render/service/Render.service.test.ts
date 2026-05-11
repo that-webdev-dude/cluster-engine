@@ -61,7 +61,44 @@ const ZERO_STATS = {
     skippedResourceCount: 0,
     fallbackResourceCount: 0,
     textureResourceCount: 0,
+    fontResourceCount: 0,
+    fontPageResourceCount: 0,
+    fontReplacementRegistrationCount: 0,
+    invalidFontRegistrationCount: 0,
+    missingFontCount: 0,
+    missingGlyphCount: 0,
 };
+
+function createFont() {
+    return {
+        id: "font.ui",
+        kind: "bitmap",
+        baseSize: 16,
+        lineHeight: 20,
+        baseline: 14,
+        pages: [
+            {
+                id: "main",
+                resourceId: "font.ui.page.main",
+                width: 64,
+                height: 32,
+            },
+        ],
+        glyphs: [
+            {
+                codepoint: 65,
+                pageId: "main",
+                x: 0,
+                y: 0,
+                w: 8,
+                h: 10,
+                xOffset: 0,
+                yOffset: 0,
+                xAdvance: 8,
+            },
+        ],
+    } as const;
+}
 
 describe("createRender", () => {
     afterEach(() => {
@@ -193,6 +230,100 @@ describe("createRender", () => {
         await render.dispose();
     });
 
+    it("registers startup font resources after texture resources", async () => {
+        const render = createRender({
+            canvas: createCanvas(),
+            resources: {
+                textures: [
+                    {
+                        id: "font.ui.page.main",
+                        width: 1,
+                        height: 1,
+                        data: new Uint8Array([255, 255, 255, 255]),
+                    },
+                ],
+                fonts: [createFont()],
+            },
+        });
+
+        await render.start();
+
+        expect(render.view.stats).toMatchObject({
+            textureResourceCount: 1,
+            fontResourceCount: 1,
+            fontPageResourceCount: 1,
+            invalidFontRegistrationCount: 0,
+        });
+
+        await render.dispose();
+    });
+
+    it("registers dynamic font resources and records replacement counters", async () => {
+        const render = createRender({ canvas: createCanvas() });
+
+        await render.start();
+        render.register.fonts([createFont()]);
+        render.register.fonts([
+            {
+                ...createFont(),
+                lineHeight: 24,
+            },
+        ]);
+
+        expect(render.view.stats).toMatchObject({
+            fontResourceCount: 1,
+            fontPageResourceCount: 1,
+            fontReplacementRegistrationCount: 1,
+        });
+        expect("registerFontResources" in render).toBe(false);
+
+        await render.dispose();
+    });
+
+    it("records invalid dynamic font registration without changing textures", async () => {
+        const render = createRender({
+            canvas: createCanvas(),
+            resources: {
+                textures: [
+                    {
+                        id: "texture.initial",
+                        width: 1,
+                        height: 1,
+                        data: new Uint8Array([255, 255, 255, 255]),
+                    },
+                ],
+            },
+        });
+
+        await render.start();
+        render.register.fonts([
+            {
+                ...createFont(),
+                baseSize: 0,
+            },
+        ]);
+
+        expect(render.view.stats).toMatchObject({
+            textureResourceCount: 1,
+            fontResourceCount: 0,
+            invalidFontRegistrationCount: 1,
+        });
+
+        await render.dispose();
+    });
+
+    it("clears font metadata and counters on dispose", async () => {
+        const render = createRender({ canvas: createCanvas() });
+
+        await render.start();
+        render.register.fonts([createFont()]);
+        expect(render.view.stats.fontResourceCount).toBe(1);
+
+        await render.dispose();
+
+        expect(render.view.stats).toEqual(ZERO_STATS);
+    });
+
     it("does not prepare while stopped and publishes not-running on execute", () => {
         const render = createRender({ canvas: createCanvas() });
 
@@ -266,6 +397,9 @@ describe("createRender", () => {
             "RenderService.assertNotDisposed: called after dispose()",
         );
         expect(() => render.register.textures([])).toThrow(
+            "RenderService.assertNotDisposed: called after dispose()",
+        );
+        expect(() => render.register.fonts([])).toThrow(
             "RenderService.assertNotDisposed: called after dispose()",
         );
     });

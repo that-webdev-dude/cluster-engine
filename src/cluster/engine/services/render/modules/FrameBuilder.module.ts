@@ -15,6 +15,12 @@ export function createRenderFrameBuilder(): RenderFrameBuilder {
         skippedResourceCount: 0,
         fallbackResourceCount: 0,
         textureResourceCount: 0,
+        fontResourceCount: 0,
+        fontPageResourceCount: 0,
+        fontReplacementRegistrationCount: 0,
+        invalidFontRegistrationCount: 0,
+        missingFontCount: 0,
+        missingGlyphCount: 0,
     });
 
     return Object.freeze({

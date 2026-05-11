@@ -21,6 +21,12 @@ const ZERO_STATS = {
     skippedResourceCount: 0,
     fallbackResourceCount: 0,
     textureResourceCount: 0,
+    fontResourceCount: 0,
+    fontPageResourceCount: 0,
+    fontReplacementRegistrationCount: 0,
+    invalidFontRegistrationCount: 0,
+    missingFontCount: 0,
+    missingGlyphCount: 0,
 };
 
 function createTestCtx(_scopeId: string = "test.scope"): GameCtx {
@@ -263,6 +269,7 @@ function createFakeRender(log: string[]): RenderService & {
         dispose: async () => true,
         register: {
             textures() {},
+            fonts() {},
         },
         prepare(input) {
             log.push("render.prepare");

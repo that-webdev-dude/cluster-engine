@@ -2,6 +2,7 @@ import { createLifecycle } from "../../../controllers/Lifecycle.controller";
 import { createGfx } from "../backend/gfxBackend";
 import { createGpuResource } from "../backend/gpuResource";
 import { createRenderFrameBuilder } from "../modules/FrameBuilder.module";
+import { createFontRegistry } from "../modules/FontRegistry.module";
 import { createRender2DPrepare } from "../modules/Render2DPrepare.module";
 import type { Render2DPreparedFrame } from "../modules/Render2DPrepare.module";
 import { createSubmitFrame } from "../modules/SubmitFrame.module";
@@ -12,6 +13,7 @@ import type {
     RenderFrameInput,
     RenderSnapshot,
     RenderSubmitResult,
+    RenderBitmapFontConfig,
     RenderTextureResourceConfig,
     RenderView,
 } from "./Render.types";
@@ -22,6 +24,7 @@ export type RenderService = Readonly<{
     stop(): Promise<boolean>;
     register: {
         textures(textures: readonly RenderTextureResourceConfig[]): void;
+        fonts(fonts: readonly RenderBitmapFontConfig[]): void;
     };
     prepare(input: RenderFrameInput): void;
     execute(): RenderSubmitResult;
@@ -38,6 +41,12 @@ function createDefaultStats(textureResourceCount = 0) {
         skippedResourceCount: 0,
         fallbackResourceCount: 0,
         textureResourceCount,
+        fontResourceCount: 0,
+        fontPageResourceCount: 0,
+        fontReplacementRegistrationCount: 0,
+        invalidFontRegistrationCount: 0,
+        missingFontCount: 0,
+        missingGlyphCount: 0,
     };
 }
 
@@ -52,6 +61,7 @@ function createRenderService(config: RenderConfig): RenderService {
     const gpuResource = createGpuResource({ debug });
     const pipelineLibrary = createPipelineLibrary({ debug });
     const frameBuilder = createRenderFrameBuilder();
+    const fontRegistry = createFontRegistry({ debug });
     const render2DPrepare = createRender2DPrepare({ debug });
     const submitFrame = createSubmitFrame({
         getRuntime: gfx.getRuntime,
@@ -77,6 +87,7 @@ function createRenderService(config: RenderConfig): RenderService {
             await gpuResource.start();
             await pipelineLibrary.start();
             registerTextureResources(config.resources?.textures ?? [], true);
+            registerFontResources(config.resources?.fonts ?? []);
             syncBackendState();
         },
         onStop: async () => {
@@ -87,6 +98,7 @@ function createRenderService(config: RenderConfig): RenderService {
             snapshot.stats = {
                 ...snapshot.stats,
                 textureResourceCount: textureResources.size,
+                ...fontRegistry.getStats(),
             };
             await pipelineLibrary.stop();
             await gpuResource.stop();
@@ -96,6 +108,7 @@ function createRenderService(config: RenderConfig): RenderService {
         },
         onDispose: async () => {
             textureResources.clear();
+            fontRegistry.clear();
             preparedFrame = undefined;
             hasPreparedTarget = false;
             snapshot.stats = createDefaultStats();
@@ -128,12 +141,28 @@ function createRenderService(config: RenderConfig): RenderService {
         snapshot.stats = {
             ...snapshot.stats,
             textureResourceCount: textureResources.size,
+            ...fontRegistry.getStats(),
+        };
+    }
+
+    function registerFontResources(
+        fonts: readonly RenderBitmapFontConfig[],
+    ): void {
+        fontRegistry.register(fonts);
+        snapshot.stats = {
+            ...snapshot.stats,
+            ...fontRegistry.getStats(),
         };
     }
 
     function textures(textures: readonly RenderTextureResourceConfig[]): void {
         lifecycle.assertNotDisposed();
         registerTextureResources(textures);
+    }
+
+    function fonts(fonts: readonly RenderBitmapFontConfig[]): void {
+        lifecycle.assertNotDisposed();
+        registerFontResources(fonts);
     }
 
     function syncBackendState(): void {
@@ -170,6 +199,7 @@ function createRenderService(config: RenderConfig): RenderService {
             ...frameBuilder.begin(input.target),
             ...preparedFrame.stats,
             textureResourceCount: textureResources.size,
+            ...fontRegistry.getStats(),
         };
     }
 
@@ -196,6 +226,7 @@ function createRenderService(config: RenderConfig): RenderService {
                 ...snapshot.stats,
                 ...report.metrics,
                 textureResourceCount: textureResources.size,
+                ...fontRegistry.getStats(),
             };
             return report.result;
         }
@@ -217,6 +248,7 @@ function createRenderService(config: RenderConfig): RenderService {
             ...snapshot.stats,
             ...report.metrics,
             textureResourceCount: textureResources.size,
+            ...fontRegistry.getStats(),
         };
         preparedFrame = undefined;
 
@@ -229,6 +261,7 @@ function createRenderService(config: RenderConfig): RenderService {
         stop: lifecycle.stop,
         register: Object.freeze({
             textures,
+            fonts,
         }),
         prepare,
         execute,
