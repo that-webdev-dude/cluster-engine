@@ -2,7 +2,7 @@ import {
     createLifecycle,
     type LifecycleActivePhase,
     type LifecycleLivePhase,
-} from "../../../../controllers/Lifecycle.controller";
+} from "../../../../../controllers/Lifecycle.controller";
 import type { GfxBackend } from "../../gfxBackend";
 import { resolveWebGl2ShaderSource } from "../modules/WebGl2PipelineCompiler.module";
 import {

@@ -1,5 +1,5 @@
 import type { GfxBackend, GfxState } from "../../gfxBackend";
-import type { RenderBlendMode, RenderLayerId } from "../../service/Render.types";
+import type { RenderBlendMode, RenderLayerId } from "../../../service/Render.types";
 
 export type PipelineLibraryConfig = Readonly<{
     debug?: boolean;

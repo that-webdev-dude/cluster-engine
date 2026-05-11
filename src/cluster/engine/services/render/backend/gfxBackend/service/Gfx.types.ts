@@ -1,4 +1,4 @@
-import type { RenderBackend, RenderGraphicsState } from "../../service/Render.types";
+import type { RenderBackend, RenderGraphicsState } from "../../../service/Render.types";
 
 export type GfxBackend = Extract<RenderBackend, "webgl2" | "webgpu">;
 

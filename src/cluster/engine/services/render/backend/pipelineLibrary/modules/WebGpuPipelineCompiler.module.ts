@@ -4,7 +4,7 @@ import type {
     WebGpuRenderPipelineDescriptor,
     WebGpuVertexBufferLayout,
 } from "../service/PipelineLibrary.types";
-import { BYTES_PER_FLOAT, RENDER_2D_VERTEX_LAYOUTS } from "../../modules/submitters/Render2DVertexPacking.module";
+import { BYTES_PER_FLOAT, RENDER_2D_VERTEX_LAYOUTS } from "../../../modules/submitters/Render2DVertexPacking.module";
 
 export type WebGpuShaderSource = Readonly<{
     vertex: string;

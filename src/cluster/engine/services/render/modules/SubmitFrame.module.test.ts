@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { createGpuResource } from "../gpuResource";
-import { createPipelineLibrary } from "../pipelineLibrary";
+import { createGpuResource } from "../backend/gpuResource";
+import { createPipelineLibrary } from "../backend/pipelineLibrary";
 import { createFakeWebGl2, createFakeWebGpu } from "../testing/FakeWebGl2.test-utils";
 import { createRender2DPrepare } from "./Render2DPrepare.module";
 import { createSubmitFrame } from "./SubmitFrame.module";
-import type { GfxRuntime } from "../gfxBackend";
+import type { GfxRuntime } from "../backend/gfxBackend";
 import type { RenderFrameInput } from "../service/Render.types";
 
 function createRuntime(gl = createFakeWebGl2()): GfxRuntime {

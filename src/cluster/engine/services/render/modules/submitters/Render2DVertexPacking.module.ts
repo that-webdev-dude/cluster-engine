@@ -1,4 +1,4 @@
-import type { PipelineDescriptor } from "../../pipelineLibrary";
+import type { PipelineDescriptor } from "../../backend/pipelineLibrary";
 import type {
     Render2DPreparedBatch,
     Render2DPreparedFrame,

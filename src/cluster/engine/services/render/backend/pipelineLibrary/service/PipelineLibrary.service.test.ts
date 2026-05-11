@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
     createFakeWebGl2,
     createFakeWebGpu,
-} from "../../testing/FakeWebGl2.test-utils";
+} from "../../../testing/FakeWebGl2.test-utils";
 import { createPipelineLibrary } from "./PipelineLibrary.service";
 import type { PipelineDescriptor } from "./PipelineLibrary.types";
 

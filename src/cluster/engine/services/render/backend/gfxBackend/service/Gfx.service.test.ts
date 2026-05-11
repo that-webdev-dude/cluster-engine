@@ -4,7 +4,7 @@ import {
     createFakeWebGl2,
     createFakeWebGpu,
     createFakeWebGpuCanvas,
-} from "../../testing/FakeWebGl2.test-utils";
+} from "../../../testing/FakeWebGl2.test-utils";
 import { createGfx } from "./Gfx.service";
 
 describe("GfxService", () => {

@@ -1,5 +1,5 @@
-import { createLifecycle } from "../../../../controllers/Lifecycle.controller";
-import type { RenderTargetInfo } from "../../service/Render.types";
+import { createLifecycle } from "../../../../../controllers/Lifecycle.controller";
+import type { RenderTargetInfo } from "../../../service/Render.types";
 import { createGfxView } from "./Gfx.view";
 import type {
     GfxBackend,

@@ -1,11 +1,11 @@
 import { createLifecycle } from "../../../controllers/Lifecycle.controller";
-import { createGfx } from "../gfxBackend";
-import { createGpuResource } from "../gpuResource";
+import { createGfx } from "../backend/gfxBackend";
+import { createGpuResource } from "../backend/gpuResource";
 import { createRenderFrameBuilder } from "../modules/FrameBuilder.module";
 import { createRender2DPrepare } from "../modules/Render2DPrepare.module";
 import type { Render2DPreparedFrame } from "../modules/Render2DPrepare.module";
 import { createSubmitFrame } from "../modules/SubmitFrame.module";
-import { createPipelineLibrary } from "../pipelineLibrary";
+import { createPipelineLibrary } from "../backend/pipelineLibrary";
 import { createRenderView } from "./Render.view";
 import type {
     RenderConfig,

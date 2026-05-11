@@ -1,6 +1,6 @@
-import type { GfxRuntime } from "../../gfxBackend";
-import type { GpuResourceService } from "../../gpuResource";
-import type { PipelineLibraryService } from "../../pipelineLibrary";
+import type { GfxRuntime } from "../../backend/gfxBackend";
+import type { GpuResourceService } from "../../backend/gpuResource";
+import type { PipelineLibraryService } from "../../backend/pipelineLibrary";
 import type {
     Render2DPreparedBatch,
     Render2DPreparedFrame,

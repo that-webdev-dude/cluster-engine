@@ -2,7 +2,7 @@ import {
     createLifecycle,
     type LifecycleActivePhase,
     type LifecycleLivePhase,
-} from "../../../../controllers/Lifecycle.controller";
+} from "../../../../../controllers/Lifecycle.controller";
 import {
     bufferKindToWebGlTarget,
     createWebGl2Buffer,

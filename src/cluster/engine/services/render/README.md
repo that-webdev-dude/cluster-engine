@@ -112,9 +112,10 @@ internals.
 
 ## Backend Path
 
-WebGL2 is the first active backend path. `gfxBackend` acquires and tracks the
-context, `gpuResource` owns GPU-side resources and uploads, `pipelineLibrary`
-compiles/caches shader programs, and `SubmitFrame` submits prepared batches.
+WebGL2 is the first active backend path. The private `backend/` subfolder groups
+backend ownership: `gfxBackend` acquires and tracks the context, `gpuResource`
+owns GPU-side resources and uploads, `pipelineLibrary` compiles/caches shader
+programs, and `SubmitFrame` submits prepared batches.
 
 WebGPU parity, richer resource lifetimes, asset integration, GPU-side
 interpolation, text rendering, and long-term ECS extraction remain provisional
