@@ -52,6 +52,31 @@ function createTexturedInput() {
     } as const;
 }
 
+function createTextInput() {
+    return {
+        target: { w: 100, h: 100, dpr: 1 },
+        alpha: 1,
+        layers: [
+            {
+                id: "main",
+                order: 0,
+                items: [
+                    {
+                        kind: "text",
+                        sortKey: 0,
+                        x: 0,
+                        y: 0,
+                        text: "A",
+                        fontId: "font.ui",
+                        tint: { r: 0.25, g: 0.5, b: 0.75 },
+                        opacity: 0.8,
+                    },
+                ],
+            },
+        ],
+    } as const;
+}
+
 const ZERO_STATS = {
     passCount: 0,
     commandCount: 0,
@@ -102,6 +127,15 @@ function createFont() {
             },
         ],
     } as const;
+}
+
+function createFontTexture() {
+    return {
+        id: "font.ui.page.main",
+        width: 1,
+        height: 1,
+        data: new Uint8Array([255, 255, 255, 255]),
+    };
 }
 
 describe("createRender", () => {
@@ -607,6 +641,61 @@ describe("createRender", () => {
         await render.dispose();
     });
 
+    it("recovers WebGL2 text submission without re-registering font metadata", async () => {
+        vi.stubGlobal("navigator", undefined);
+        const firstGl = createFakeWebGl2();
+        const restoredGl = createFakeWebGl2();
+        const canvas = createFakeCanvas(firstGl);
+        const render = createRender({
+            canvas,
+            resources: {
+                textures: [createFontTexture()],
+                fonts: [createFont()],
+            },
+        });
+
+        await render.start();
+        render.prepare(createTextInput());
+        expect(render.execute()).toEqual({ status: "submitted" });
+        expect(render.view.stats).toMatchObject({
+            drawCallCount: 1,
+            vertexCount: 6,
+            textItemCount: 1,
+            preparedGlyphCount: 1,
+            fontResourceCount: 1,
+            fontPageResourceCount: 1,
+            textureResourceCount: 1,
+        });
+
+        render.prepare(createTextInput());
+        canvas.dispatchContextLost();
+        expect(render.execute()).toEqual({
+            status: "skipped",
+            reason: "gfx-lost",
+        });
+
+        canvas.getContext.mockImplementation((kind: string) =>
+            kind === "webgl2" ? restoredGl : null,
+        );
+        canvas.dispatchContextRestored();
+        render.prepare(createTextInput());
+        expect(render.execute()).toEqual({ status: "submitted" });
+        expect(render.view.stats).toMatchObject({
+            drawCallCount: 1,
+            vertexCount: 6,
+            textItemCount: 1,
+            preparedGlyphCount: 1,
+            textBatchCount: 1,
+            fontResourceCount: 1,
+            fontPageResourceCount: 1,
+            textureResourceCount: 1,
+        });
+        expect(restoredGl.texImage2D).toHaveBeenCalled();
+        expect(restoredGl.drawArrays).toHaveBeenCalledWith(restoredGl.TRIANGLES, 0, 6);
+
+        await render.dispose();
+    });
+
     it("submits WebGPU prepared frames and publishes metrics", async () => {
         const webGpu = createFakeWebGpu();
         vi.stubGlobal("navigator", { gpu: webGpu });
@@ -758,6 +847,69 @@ describe("createRender", () => {
         expect(recoveredWebGpu.device.queue.writeTexture).toHaveBeenCalled();
         expect(recoveredWebGpu.device.createBindGroup).toHaveBeenCalled();
         expect(recoveredWebGpu.renderPass.draw).toHaveBeenCalledTimes(2);
+
+        await render.dispose();
+    });
+
+    it("recovers WebGPU text submission without re-registering font metadata", async () => {
+        const firstWebGpu = createFakeWebGpu();
+        const recoveredWebGpu = createFakeWebGpu();
+        vi.stubGlobal("navigator", { gpu: firstWebGpu });
+        const canvas = createFakeWebGpuCanvas(firstWebGpu);
+        const render = createRender({
+            canvas,
+            resources: {
+                textures: [createFontTexture()],
+                fonts: [createFont()],
+            },
+        });
+
+        await render.start();
+        render.prepare(createTextInput());
+        expect(render.execute()).toEqual({ status: "submitted" });
+        expect(render.view.stats).toMatchObject({
+            drawCallCount: 1,
+            vertexCount: 6,
+            textItemCount: 1,
+            preparedGlyphCount: 1,
+            fontResourceCount: 1,
+            fontPageResourceCount: 1,
+            textureResourceCount: 1,
+        });
+
+        render.prepare(createTextInput());
+        await firstWebGpu.device.lose();
+        vi.stubGlobal("navigator", { gpu: recoveredWebGpu });
+        canvas.getContext.mockImplementation((kind: string) => {
+            if (kind === "webgpu") return recoveredWebGpu.context;
+            return null;
+        });
+        expect(render.execute()).toEqual({
+            status: "skipped",
+            reason: "gfx-lost",
+        });
+        await vi.waitFor(() =>
+            expect(recoveredWebGpu.adapter.requestDevice).toHaveBeenCalledTimes(1),
+        );
+
+        render.prepare(createTextInput());
+        expect(render.execute()).toEqual({ status: "submitted" });
+        expect(render.view.stats).toMatchObject({
+            drawCallCount: 1,
+            vertexCount: 6,
+            textItemCount: 1,
+            preparedGlyphCount: 1,
+            textBatchCount: 1,
+            fontResourceCount: 1,
+            fontPageResourceCount: 1,
+            textureResourceCount: 1,
+        });
+        expect(recoveredWebGpu.device.queue.writeTexture).toHaveBeenCalled();
+        expect(recoveredWebGpu.renderPass.setBindGroup).toHaveBeenCalledWith(
+            0,
+            expect.any(Object),
+        );
+        expect(recoveredWebGpu.renderPass.draw).toHaveBeenCalledWith(6);
 
         await render.dispose();
     });

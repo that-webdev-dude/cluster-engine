@@ -148,6 +148,48 @@ describe("createFontRegistry", () => {
         ).toThrow('FontRegistry.register: font "font.ui" page id is required');
     });
 
+    it("rejects duplicate page ids and missing page resource ids", () => {
+        const registry = createFontRegistry({ debug: true });
+
+        expect(() =>
+            registry.register([
+                createFont({
+                    pages: [
+                        {
+                            id: "main",
+                            resourceId: "font.ui.page.main",
+                            width: 64,
+                            height: 32,
+                        },
+                        {
+                            id: "main",
+                            resourceId: "font.ui.page.alt",
+                            width: 64,
+                            height: 32,
+                        },
+                    ],
+                }),
+            ]),
+        ).toThrow('FontRegistry.register: font "font.ui" page "main" is duplicated');
+
+        expect(() =>
+            registry.register([
+                createFont({
+                    pages: [
+                        {
+                            id: "main",
+                            resourceId: " ",
+                            width: 64,
+                            height: 32,
+                        },
+                    ],
+                }),
+            ]),
+        ).toThrow(
+            'FontRegistry.register: font "font.ui" page "main" resourceId is required',
+        );
+    });
+
     it("skips invalid font configs outside debug mode and records counters", () => {
         const registry = createFontRegistry();
 
@@ -195,6 +237,54 @@ describe("createFontRegistry", () => {
             ]),
         ).toThrow(
             'FontRegistry.register: font "font.ui" glyph 65 references unknown page "missing"',
+        );
+    });
+
+    it("rejects invalid glyph dimensions and atlas rectangles", () => {
+        const registry = createFontRegistry({ debug: true });
+
+        expect(() =>
+            registry.register([
+                createFont({
+                    glyphs: [
+                        {
+                            codepoint: 65,
+                            pageId: "main",
+                            x: 0,
+                            y: 0,
+                            w: 0,
+                            h: 10,
+                            xOffset: 0,
+                            yOffset: 0,
+                            xAdvance: 8,
+                        },
+                    ],
+                }),
+            ]),
+        ).toThrow(
+            'FontRegistry.register: font "font.ui" glyph 65 size must be finite and positive',
+        );
+
+        expect(() =>
+            registry.register([
+                createFont({
+                    glyphs: [
+                        {
+                            codepoint: 65,
+                            pageId: "main",
+                            x: 60,
+                            y: 0,
+                            w: 8,
+                            h: 10,
+                            xOffset: 0,
+                            yOffset: 0,
+                            xAdvance: 8,
+                        },
+                    ],
+                }),
+            ]),
+        ).toThrow(
+            'FontRegistry.register: font "font.ui" glyph 65 atlas rectangle exceeds page "main"',
         );
     });
 
