@@ -6,3 +6,5 @@ coverage
 .vscode
 .artifacts
 .backup
+.agents
+AGENTS.md
