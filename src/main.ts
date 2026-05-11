@@ -1,4 +1,4 @@
 import "./style.css";
-import demoRenderGame from "./demos/demoRenderGame";
+import demoTextRender from "./demos/demoTextRender";
 
-demoRenderGame();
+demoTextRender();
