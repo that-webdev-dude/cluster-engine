@@ -104,7 +104,9 @@ const FALLBACK_TEXTURE_DATA = new Uint8Array([255, 0, 255, 255]);
 const WEBGPU_BUFFER_USAGE_VERTEX_COPY_DST = 0x20 | 0x8;
 const WEBGPU_TEXTURE_USAGE_TEXTURE_BINDING_COPY_DST = 0x4 | 0x2;
 
-function createGpuResourceService(config: GpuResourceConfig): GpuResourceService {
+function createGpuResourceService(
+    config: GpuResourceConfig,
+): GpuResourceService {
     const debug = config.debug ?? false;
     let contextState: GpuResourceContextState = "lost";
     let nextTextureId = 0;
@@ -118,7 +120,10 @@ function createGpuResourceService(config: GpuResourceConfig): GpuResourceService
     const samplers = new Map<GpuSamplerHandle, SamplerRecord>();
     const textureResources = new Map<string, GpuTextureHandle>();
     const transientBuffers = new Set<GpuBufferHandle>();
-    const webGpuFrameVertexBuffers = new Map<GpuFrameVertexLayoutKey, BufferRecord>();
+    const webGpuFrameVertexBuffers = new Map<
+        GpuFrameVertexLayoutKey,
+        BufferRecord
+    >();
     const pendingUploads: GpuUploadRequest[] = [];
 
     function normalizePositiveInteger(value: number, label: string): number {
@@ -324,7 +329,9 @@ function createGpuResourceService(config: GpuResourceConfig): GpuResourceService
         lifecycle.assertNotDisposed();
         const id = config.id.trim();
         if (!id && debug) {
-            throw new Error("GpuResourceService: texture resource id is required");
+            throw new Error(
+                "GpuResourceService: texture resource id is required",
+            );
         }
 
         const existing = id ? textureResources.get(id) : undefined;
@@ -406,7 +413,9 @@ function createGpuResourceService(config: GpuResourceConfig): GpuResourceService
         const buffer = createWebGl2Buffer(gl);
         if (!buffer) {
             if (debug) {
-                throw new Error("GpuResourceService: failed to create WebGL buffer");
+                throw new Error(
+                    "GpuResourceService: failed to create WebGL buffer",
+                );
             }
             return undefined;
         }
@@ -422,13 +431,18 @@ function createGpuResourceService(config: GpuResourceConfig): GpuResourceService
         try {
             return device.createBuffer({
                 label,
-                size: normalizePositiveInteger(byteLength, "WebGPU buffer size"),
+                size: normalizePositiveInteger(
+                    byteLength,
+                    "WebGPU buffer size",
+                ),
                 usage: WEBGPU_BUFFER_USAGE_VERTEX_COPY_DST,
             });
         } catch (error) {
             if (debug) {
                 const message =
-                    error instanceof Error ? error.message : "unknown buffer error";
+                    error instanceof Error
+                        ? error.message
+                        : "unknown buffer error";
                 throw new Error(
                     `GpuResourceService: failed to create WebGPU buffer - ${message}`,
                 );
@@ -449,7 +463,10 @@ function createGpuResourceService(config: GpuResourceConfig): GpuResourceService
             record = {
                 desc: {
                     label: `render.2d.${args.layout}.webgpu.frameVertices`,
-                    size: normalizePositiveInteger(args.byteLength, "buffer size"),
+                    size: normalizePositiveInteger(
+                        args.byteLength,
+                        "buffer size",
+                    ),
                     kind: "vertex",
                 },
                 invalidated: contextState !== "ok",
@@ -459,7 +476,10 @@ function createGpuResourceService(config: GpuResourceConfig): GpuResourceService
         }
 
         const currentCapacity = record.native.webgpu?.capacityBytes ?? 0;
-        if (record.native.webgpu?.buffer && currentCapacity >= args.byteLength) {
+        if (
+            record.native.webgpu?.buffer &&
+            currentCapacity >= args.byteLength
+        ) {
             return {
                 buffer: record.native.webgpu.buffer,
                 capacityBytes: currentCapacity,
@@ -519,7 +539,9 @@ function createGpuResourceService(config: GpuResourceConfig): GpuResourceService
         } catch (error) {
             if (debug) {
                 const message =
-                    error instanceof Error ? error.message : "unknown sampler error";
+                    error instanceof Error
+                        ? error.message
+                        : "unknown sampler error";
                 throw new Error(
                     `GpuResourceService: failed to create WebGPU sampler - ${message}`,
                 );
@@ -534,9 +556,12 @@ function createGpuResourceService(config: GpuResourceConfig): GpuResourceService
         upload: RetainedTextureUpload,
     ): void {
         const record = textures.get(handle);
-        const texture = record?.native.webgl2?.texture ?? getWebGl2Texture(handle, gl);
+        const texture =
+            record?.native.webgl2?.texture ?? getWebGl2Texture(handle, gl);
         if (!record || !texture) return;
-        const sampler = record.sampler ? samplers.get(record.sampler) : undefined;
+        const sampler = record.sampler
+            ? samplers.get(record.sampler)
+            : undefined;
         uploadWebGl2NativeTexture(gl, texture, sampler?.desc, upload);
         record.invalidated = false;
     }
@@ -678,8 +703,11 @@ function createGpuResourceService(config: GpuResourceConfig): GpuResourceService
         lifecycle.assertNotDisposed();
         if (!assertRunning("resolveWebGl2Texture")) return undefined;
         const handle =
-            resourceId === undefined ? undefined : textureResources.get(resourceId);
-        const resolvedHandle = handle ?? fallbackTexture ?? createFallbackTexture();
+            resourceId === undefined
+                ? undefined
+                : textureResources.get(resourceId);
+        const resolvedHandle =
+            handle ?? fallbackTexture ?? createFallbackTexture();
         const texture = getWebGl2Texture(resolvedHandle, gl);
         const record = textures.get(resolvedHandle);
         if (!texture || !record) return undefined;
@@ -701,14 +729,16 @@ function createGpuResourceService(config: GpuResourceConfig): GpuResourceService
             args.resourceId === undefined
                 ? undefined
                 : textureResources.get(args.resourceId);
-        const resolvedHandle = handle ?? fallbackTexture ?? createFallbackTexture();
+        const resolvedHandle =
+            handle ?? fallbackTexture ?? createFallbackTexture();
         const texture = getWebGpuTexture(resolvedHandle, args.device);
         const record = textures.get(resolvedHandle);
         const view = record?.native.webgpu?.view;
         const sampler = getWebGpuSampler(record?.sampler, args.device);
         if (!texture || !record || !view || !sampler) return undefined;
 
-        let bindGroup: WebGpuBindGroupLike | undefined = record.native.webgpu?.bindGroup;
+        let bindGroup: WebGpuBindGroupLike | undefined =
+            record.native.webgpu?.bindGroup;
         if (args.bindGroupLayout && !bindGroup) {
             try {
                 bindGroup = args.device.createBindGroup({
@@ -747,7 +777,10 @@ function createGpuResourceService(config: GpuResourceConfig): GpuResourceService
 
     function flushWebGl2Uploads(gl: WebGL2RenderingContext): void {
         lifecycle.assertNotDisposed();
-        if (!assertRunning("flushWebGl2Uploads") || pendingUploads.length === 0) {
+        if (
+            !assertRunning("flushWebGl2Uploads") ||
+            pendingUploads.length === 0
+        ) {
             return;
         }
 
@@ -779,7 +812,11 @@ function createGpuResourceService(config: GpuResourceConfig): GpuResourceService
             const buffer = getWebGl2Buffer(upload.target, gl);
             if (!target || !buffer || !record) continue;
             gl.bindBuffer(target, buffer);
-            gl.bufferData(target, upload.data, uploadUsageToWebGlUsage(gl, upload.usage));
+            gl.bufferData(
+                target,
+                upload.data,
+                uploadUsageToWebGlUsage(gl, upload.usage),
+            );
             record.invalidated = false;
         }
 
@@ -790,7 +827,10 @@ function createGpuResourceService(config: GpuResourceConfig): GpuResourceService
 
     function flushWebGpuUploads(device: WebGpuDeviceLike): void {
         lifecycle.assertNotDisposed();
-        if (!assertRunning("flushWebGpuUploads") || pendingUploads.length === 0) {
+        if (
+            !assertRunning("flushWebGpuUploads") ||
+            pendingUploads.length === 0
+        ) {
             return;
         }
 
