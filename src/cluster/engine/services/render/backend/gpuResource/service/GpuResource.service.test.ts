@@ -228,6 +228,63 @@ describe("GpuResourceService", () => {
         await gpuResource.dispose();
     });
 
+    it("grows and reuses WebGL2 frame vertex buffers by layout", async () => {
+        const gl = createFakeWebGl2();
+        const gpuResource = createGpuResource({});
+        await gpuResource.start();
+
+        const first = gpuResource.getWebGl2FrameVertexBuffer({
+            layout: "position-color-2d",
+            gl,
+            byteLength: 64,
+        });
+        const second = gpuResource.getWebGl2FrameVertexBuffer({
+            layout: "position-color-2d",
+            gl,
+            byteLength: 32,
+        });
+        const grown = gpuResource.getWebGl2FrameVertexBuffer({
+            layout: "position-color-2d",
+            gl,
+            byteLength: 1024,
+        });
+
+        expect(first?.buffer).toBe(second?.buffer);
+        expect(grown?.buffer).not.toBe(first?.buffer);
+        expect(gl.createBuffer).toHaveBeenCalledTimes(2);
+        expect(gl.deleteBuffer).toHaveBeenCalledTimes(1);
+        expect(gl.bufferData).toHaveBeenCalledWith(
+            gl.ARRAY_BUFFER,
+            expect.any(Number),
+            gl.STREAM_DRAW,
+        );
+
+        await gpuResource.dispose();
+    });
+
+    it("keeps WebGL2 frame vertex buffers across beginFrame", async () => {
+        const gl = createFakeWebGl2();
+        const gpuResource = createGpuResource({});
+        await gpuResource.start();
+
+        const first = gpuResource.getWebGl2FrameVertexBuffer({
+            layout: "position-color-2d",
+            gl,
+            byteLength: 64,
+        });
+        gpuResource.beginFrame();
+        const second = gpuResource.getWebGl2FrameVertexBuffer({
+            layout: "position-color-2d",
+            gl,
+            byteLength: 64,
+        });
+
+        expect(second?.buffer).toBe(first?.buffer);
+        expect(gl.deleteBuffer).not.toHaveBeenCalled();
+
+        await gpuResource.dispose();
+    });
+
     it("grows and reuses WebGPU frame vertex buffers by layout", async () => {
         const webGpu = createFakeWebGpu();
         const gpuResource = createGpuResource({});

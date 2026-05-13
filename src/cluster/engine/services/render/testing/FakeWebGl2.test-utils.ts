@@ -10,6 +10,7 @@ export type FakeWebGl2 = WebGL2RenderingContext & {
     bindTexture: MockFn;
     blendFunc: MockFn;
     bufferData: MockFn;
+    bufferSubData: MockFn;
     clear: MockFn;
     clearColor: MockFn;
     compileShader: MockFn;
@@ -150,6 +151,7 @@ export function createFakeWebGl2(): FakeWebGl2 {
         bindTexture: vi.fn(),
         blendFunc: vi.fn(),
         bufferData: vi.fn(),
+        bufferSubData: vi.fn(),
         clear: vi.fn(),
         clearColor: vi.fn(),
         compileShader: vi.fn(),

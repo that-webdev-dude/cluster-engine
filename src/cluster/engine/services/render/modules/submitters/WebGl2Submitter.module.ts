@@ -6,7 +6,10 @@ import type {
     Render2DPreparedFrame,
 } from "../Render2DPrepare.module";
 import type { RenderBlendMode } from "../../service/Render.types";
-import type { SubmitFrameMetrics, SubmitFrameReport } from "../SubmitFrame.module";
+import type {
+    SubmitFrameMetrics,
+    SubmitFrameReport,
+} from "../SubmitFrame.module";
 import {
     BYTES_PER_FLOAT,
     RENDER_2D_VERTEX_LAYOUTS,
@@ -173,24 +176,14 @@ export function createWebGl2Submitter(
         }
 
         const upload = vertexArena.subarray(0, written.length);
-        const vertexBufferHandle = config.gpuResource.createBuffer({
-            label: `render.2d.${batch.vertexLayout}.vertices`,
-            size: upload.byteLength,
-            kind: "vertex",
-        });
-        config.gpuResource.stageUpload({
-            target: vertexBufferHandle,
-            byteLength: upload.byteLength,
-            data: upload,
-            usage: "stream-draw",
-        });
-        config.gpuResource.flushWebGl2Uploads(gl);
-
-        const vertexBuffer = config.gpuResource.getWebGl2Buffer(
-            vertexBufferHandle,
-            gl,
+        const frameVertexBuffer = config.gpuResource.getWebGl2FrameVertexBuffer(
+            {
+                layout: batch.vertexLayout,
+                gl,
+                byteLength: upload.byteLength,
+            },
         );
-        if (!vertexBuffer) {
+        if (!frameVertexBuffer) {
             return { result: "no-submitter", metrics: EMPTY_SUBMIT_METRICS };
         }
 
@@ -216,10 +209,15 @@ export function createWebGl2Submitter(
                 };
             }
 
-            gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+            gl.bindBuffer(gl.ARRAY_BUFFER, frameVertexBuffer.buffer);
+            gl.bufferSubData(gl.ARRAY_BUFFER, 0, upload);
             configureVertexLayout(gl, layout);
             vertexLayoutConfigured = true;
-            gl.drawArrays(gl.TRIANGLES, 0, written.length / layout.strideFloats);
+            gl.drawArrays(
+                gl.TRIANGLES,
+                0,
+                written.length / layout.strideFloats,
+            );
             metrics.drawCallCount += 1;
             metrics.vertexCount += written.length / layout.strideFloats;
         } finally {
@@ -256,7 +254,11 @@ export function createWebGl2Submitter(
                 };
             }
 
-            for (let batchIndex = 0; batchIndex < frame.batchCount; batchIndex++) {
+            for (
+                let batchIndex = 0;
+                batchIndex < frame.batchCount;
+                batchIndex++
+            ) {
                 const batch = frame.batches[batchIndex];
                 const report = submitWebGl2Batch(runtime, frame, batch);
                 mergeSubmitMetrics(metrics, report.metrics);

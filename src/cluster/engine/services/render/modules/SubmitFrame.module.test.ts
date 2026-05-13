@@ -324,8 +324,13 @@ describe("createSubmitFrame", () => {
         });
         expect(gl.bufferData).toHaveBeenCalledWith(
             gl.ARRAY_BUFFER,
-            expect.any(Float32Array),
+            expect.any(Number),
             gl.STREAM_DRAW,
+        );
+        expect(gl.bufferSubData).toHaveBeenCalledWith(
+            gl.ARRAY_BUFFER,
+            0,
+            expect.any(Float32Array),
         );
         expect(gl.drawArrays).toHaveBeenCalledWith(gl.TRIANGLES, 0, 6);
 

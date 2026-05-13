@@ -16,8 +16,14 @@ export type GpuResourceHandle =
 export type GpuTextureFormat = "rgba8";
 export type GpuBufferKind = "vertex" | "index" | "uniform" | "storage";
 export type GpuSamplerFilter = "nearest" | "linear";
-export type GpuSamplerAddressMode = "clamp-to-edge" | "repeat" | "mirror-repeat";
-export type GpuBufferUploadUsage = "static-draw" | "dynamic-draw" | "stream-draw";
+export type GpuSamplerAddressMode =
+    | "clamp-to-edge"
+    | "repeat"
+    | "mirror-repeat";
+export type GpuBufferUploadUsage =
+    | "static-draw"
+    | "dynamic-draw"
+    | "stream-draw";
 export type GpuTextureUsage = "sampled" | "copy-dst" | "render-target";
 export type GpuFrameVertexLayoutKey =
     | "position-color-2d"
@@ -70,6 +76,7 @@ export type GpuTextureBackendState = {
 export type GpuBufferBackendState = {
     webgl2?: {
         buffer?: WebGLBuffer;
+        capacityBytes?: number;
     };
     webgpu?: {
         buffer?: WebGpuBufferLike;
@@ -104,9 +111,7 @@ export type GpuTextureUploadRequest = Readonly<{
     retain?: boolean;
 }>;
 
-export type GpuUploadRequest =
-    | GpuBufferUploadRequest
-    | GpuTextureUploadRequest;
+export type GpuUploadRequest = GpuBufferUploadRequest | GpuTextureUploadRequest;
 
 export type WebGl2TextureBinding = Readonly<{
     texture: WebGLTexture;
@@ -204,6 +209,11 @@ export type WebGpuTextureBinding = Readonly<{
 
 export type WebGpuFrameVertexBuffer = Readonly<{
     buffer: WebGpuBufferLike;
+    capacityBytes: number;
+}>;
+
+export type WebGl2FrameVertexBuffer = Readonly<{
+    buffer: WebGLBuffer;
     capacityBytes: number;
 }>;
 

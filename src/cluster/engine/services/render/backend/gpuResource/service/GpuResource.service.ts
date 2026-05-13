@@ -37,6 +37,7 @@ import type {
     WebGpuDeviceLike,
     WebGpuFrameVertexBuffer,
     WebGpuTextureBinding,
+    WebGl2FrameVertexBuffer,
 } from "./GpuResource.types";
 
 export type GpuResourceService = Readonly<{
@@ -58,6 +59,11 @@ export type GpuResourceService = Readonly<{
         device: WebGpuDeviceLike;
         byteLength: number;
     }): WebGpuFrameVertexBuffer | undefined;
+    getWebGl2FrameVertexBuffer(args: {
+        layout: GpuFrameVertexLayoutKey;
+        gl: WebGL2RenderingContext;
+        byteLength: number;
+    }): WebGl2FrameVertexBuffer | undefined;
     resolveWebGl2Texture(
         resourceId: string | undefined,
         gl: WebGL2RenderingContext,
@@ -120,10 +126,8 @@ function createGpuResourceService(
     const samplers = new Map<GpuSamplerHandle, SamplerRecord>();
     const textureResources = new Map<string, GpuTextureHandle>();
     const transientBuffers = new Set<GpuBufferHandle>();
-    const webGpuFrameVertexBuffers = new Map<
-        GpuFrameVertexLayoutKey,
-        BufferRecord
-    >();
+    const frameVertexBuffers = new Map<GpuFrameVertexLayoutKey, BufferRecord>();
+
     const pendingUploads: GpuUploadRequest[] = [];
 
     function normalizePositiveInteger(value: number, label: string): number {
@@ -176,7 +180,10 @@ function createGpuResourceService(
     ): void {
         const buffer = record?.native.webgl2?.buffer;
         deleteWebGl2NativeBuffer(gl, buffer);
-        if (record?.native.webgl2) record.native.webgl2.buffer = undefined;
+        if (record?.native.webgl2) {
+            record.native.webgl2.buffer = undefined;
+            record.native.webgl2.capacityBytes = undefined;
+        }
     }
 
     function deleteWebGl2Texture(
@@ -226,10 +233,14 @@ function createGpuResourceService(
         for (const record of samplers.values()) {
             if (record.native.webgpu) record.native.webgpu.sampler = undefined;
         }
-        for (const record of webGpuFrameVertexBuffers.values()) {
+    }
+
+    function deleteFrameVertexBuffers(gl = lastWebGl2Context): void {
+        for (const record of frameVertexBuffers.values()) {
+            deleteWebGl2Buffer(record, gl);
             deleteWebGpuBuffer(record);
         }
-        webGpuFrameVertexBuffers.clear();
+        frameVertexBuffers.clear();
     }
 
     function releaseTransientBuffers(): void {
@@ -278,6 +289,7 @@ function createGpuResourceService(
             releaseTransientBuffers();
             deleteWebGl2Objects();
             deleteWebGpuObjects();
+            deleteFrameVertexBuffers();
             markAllInvalidated();
         },
         onStop: (_from: LifecycleActivePhase) => {
@@ -286,6 +298,7 @@ function createGpuResourceService(
             releaseTransientBuffers();
             deleteWebGl2Objects();
             deleteWebGpuObjects();
+            deleteFrameVertexBuffers();
             markAllInvalidated();
         },
         onDispose: (_from: LifecycleLivePhase) => {
@@ -294,6 +307,7 @@ function createGpuResourceService(
             releaseTransientBuffers();
             deleteWebGl2Objects();
             deleteWebGpuObjects();
+            deleteFrameVertexBuffers();
             textures.clear();
             buffers.clear();
             samplers.clear();
@@ -311,6 +325,7 @@ function createGpuResourceService(
             releaseTransientBuffers();
             deleteWebGl2Objects();
             deleteWebGpuObjects();
+            deleteFrameVertexBuffers();
             markAllInvalidated();
             return;
         }
@@ -451,18 +466,19 @@ function createGpuResourceService(
         }
     }
 
-    function getWebGpuFrameVertexBuffer(args: {
+    function getWebGl2FrameVertexBuffer(args: {
         layout: GpuFrameVertexLayoutKey;
-        device: WebGpuDeviceLike;
+        gl: WebGL2RenderingContext;
         byteLength: number;
-    }): WebGpuFrameVertexBuffer | undefined {
+    }): WebGl2FrameVertexBuffer | undefined {
         lifecycle.assertNotDisposed();
-        if (!assertRunning("getWebGpuFrameVertexBuffer")) return undefined;
-        let record = webGpuFrameVertexBuffers.get(args.layout);
+        if (!assertRunning("getWebGl2FrameVertexBuffer")) return undefined;
+
+        let record = frameVertexBuffers.get(args.layout);
         if (!record) {
             record = {
                 desc: {
-                    label: `render.2d.${args.layout}.webgpu.frameVertices`,
+                    label: `render.2d.${args.layout}.frameVertices`,
                     size: normalizePositiveInteger(
                         args.byteLength,
                         "buffer size",
@@ -472,7 +488,67 @@ function createGpuResourceService(
                 invalidated: contextState !== "ok",
                 native: {},
             };
-            webGpuFrameVertexBuffers.set(args.layout, record);
+            frameVertexBuffers.set(args.layout, record);
+        }
+
+        const currentCapacity = record.native.webgl2?.capacityBytes ?? 0;
+        if (
+            record.native.webgl2?.buffer &&
+            currentCapacity >= args.byteLength
+        ) {
+            lastWebGl2Context = args.gl;
+            return {
+                buffer: record.native.webgl2.buffer,
+                capacityBytes: currentCapacity,
+            };
+        }
+
+        deleteWebGl2Buffer(record, args.gl);
+        let nextCapacity = Math.max(256, currentCapacity || record.desc.size);
+
+        while (nextCapacity < args.byteLength) nextCapacity *= 2;
+        const buffer = createWebGl2Buffer(args.gl);
+
+        if (!buffer) return undefined;
+        args.gl.bindBuffer(args.gl.ARRAY_BUFFER, buffer);
+        args.gl.bufferData(
+            args.gl.ARRAY_BUFFER,
+            nextCapacity,
+            args.gl.STREAM_DRAW,
+        );
+        args.gl.bindBuffer(args.gl.ARRAY_BUFFER, null);
+
+        record.desc = { ...record.desc, size: nextCapacity };
+        record.native.webgl2 = { buffer, capacityBytes: nextCapacity };
+        record.invalidated = false;
+
+        lastWebGl2Context = args.gl;
+
+        return { buffer, capacityBytes: nextCapacity };
+    }
+
+    function getWebGpuFrameVertexBuffer(args: {
+        layout: GpuFrameVertexLayoutKey;
+        device: WebGpuDeviceLike;
+        byteLength: number;
+    }): WebGpuFrameVertexBuffer | undefined {
+        lifecycle.assertNotDisposed();
+        if (!assertRunning("getWebGpuFrameVertexBuffer")) return undefined;
+        let record = frameVertexBuffers.get(args.layout);
+        if (!record) {
+            record = {
+                desc: {
+                    label: `render.2d.${args.layout}.frameVertices`,
+                    size: normalizePositiveInteger(
+                        args.byteLength,
+                        "buffer size",
+                    ),
+                    kind: "vertex",
+                },
+                invalidated: contextState !== "ok",
+                native: {},
+            };
+            frameVertexBuffers.set(args.layout, record);
         }
 
         const currentCapacity = record.native.webgpu?.capacityBytes ?? 0;
@@ -907,6 +983,7 @@ function createGpuResourceService(
         flushWebGpuUploads,
         getWebGl2Buffer,
         getWebGpuFrameVertexBuffer,
+        getWebGl2FrameVertexBuffer,
         resolveWebGl2Texture,
         resolveWebGpuTexture,
         release,
