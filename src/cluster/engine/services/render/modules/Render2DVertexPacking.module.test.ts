@@ -1,11 +1,17 @@
 import { describe, expect, it } from "vitest";
-import { createFontRegistry } from "../FontRegistry.module";
-import { createRender2DPrepare } from "../Render2DPrepare.module";
-import { createTextLayout } from "../TextLayout.module";
+import { createFontRegistry } from "./FontRegistry.module";
+import { createRender2DPrepare } from "./Render2DPrepare.module";
+import { createTextLayout } from "./TextLayout.module";
 import { writeRender2DBatchVertexData } from "./Render2DVertexPacking.module";
-import type { RenderBitmapFontConfig, RenderFrameInput } from "../../service/Render.types";
+import type {
+    RenderBitmapFontConfig,
+    RenderFrameInput,
+} from "../service/Render.types";
 
-function expectFloatsClose(actual: readonly number[], expected: readonly number[]): void {
+function expectFloatsClose(
+    actual: readonly number[],
+    expected: readonly number[],
+): void {
     expect(actual).toHaveLength(expected.length);
     for (let i = 0; i < expected.length; i++) {
         expect(actual[i]).toBeCloseTo(expected[i], 5);
@@ -97,11 +103,13 @@ describe("writeRender2DBatchVertexData", () => {
         );
 
         expect(packed.length).toBe(48);
-        expectFloatsClose(Array.from(packed.data.slice(0, 8)), [
-            -0.8, 0.6, 0, 0, 0.25, 0.5, 0.75, 0.8,
-        ]);
-        expectFloatsClose(Array.from(packed.data.slice(40, 48)), [
-            -0.6, 0.44, 0.1, 0.16, 0.25, 0.5, 0.75, 0.8,
-        ]);
+        expectFloatsClose(
+            Array.from(packed.data.slice(0, 8)),
+            [-0.8, 0.6, 0, 0, 0.25, 0.5, 0.75, 0.8],
+        );
+        expectFloatsClose(
+            Array.from(packed.data.slice(40, 48)),
+            [-0.6, 0.44, 0.1, 0.16, 0.25, 0.5, 0.75, 0.8],
+        );
     });
 });

@@ -16,7 +16,7 @@ import {
     getRender2DPipelineDescriptor,
     writeRender2DBatchVertexData,
     type Render2DVertexLayoutInfo,
-} from "./Render2DVertexPacking.module";
+} from "../Render2DVertexPacking.module";
 
 export type WebGl2Submitter = Readonly<{
     submit(

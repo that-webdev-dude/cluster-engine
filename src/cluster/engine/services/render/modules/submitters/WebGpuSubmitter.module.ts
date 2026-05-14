@@ -5,12 +5,15 @@ import type {
     Render2DPreparedBatch,
     Render2DPreparedFrame,
 } from "../Render2DPrepare.module";
-import type { SubmitFrameReport, SubmitFrameMetrics } from "../SubmitFrame.module";
+import type {
+    SubmitFrameReport,
+    SubmitFrameMetrics,
+} from "../SubmitFrame.module";
 import {
     RENDER_2D_VERTEX_LAYOUTS,
     getRender2DPipelineDescriptor,
     writeRender2DBatchVertexData,
-} from "./Render2DVertexPacking.module";
+} from "../Render2DVertexPacking.module";
 
 export type WebGpuSubmitter = Readonly<{
     submit(
@@ -72,7 +75,10 @@ function snapshotSubmitMetrics(
 }
 
 function getOrCreateArena(
-    arenas: Map<Render2DPreparedBatch["vertexLayout"], Float32Array<ArrayBufferLike>>,
+    arenas: Map<
+        Render2DPreparedBatch["vertexLayout"],
+        Float32Array<ArrayBufferLike>
+    >,
     layout: Render2DPreparedBatch["vertexLayout"],
 ): Float32Array<ArrayBufferLike> {
     const arena = arenas.get(layout);
@@ -82,12 +88,12 @@ function getOrCreateArena(
     return next;
 }
 
-function createRenderPass(
-    runtime: Extract<GfxRuntime, { backend: "webgpu" }>,
-): {
-    encoder: WebGpuCommandEncoderLike;
-    pass: WebGpuRenderPassEncoderLike;
-} | undefined {
+function createRenderPass(runtime: Extract<GfxRuntime, { backend: "webgpu" }>):
+    | {
+          encoder: WebGpuCommandEncoderLike;
+          pass: WebGpuRenderPassEncoderLike;
+      }
+    | undefined {
     try {
         const currentTexture = runtime.context.getCurrentTexture();
         const encoder = runtime.device.createCommandEncoder({
@@ -194,7 +200,11 @@ export function createWebGpuSubmitter(
             config.gpuResource.flushWebGpuUploads(runtime.device);
 
             try {
-                for (let batchIndex = 0; batchIndex < frame.batchCount; batchIndex++) {
+                for (
+                    let batchIndex = 0;
+                    batchIndex < frame.batchCount;
+                    batchIndex++
+                ) {
                     const batch = frame.batches[batchIndex];
                     if (
                         !submitWebGpuBatch(
@@ -207,7 +217,10 @@ export function createWebGpuSubmitter(
                     ) {
                         renderPass.pass.end();
                         return {
-                            result: { status: "skipped", reason: "no-submitter" },
+                            result: {
+                                status: "skipped",
+                                reason: "no-submitter",
+                            },
                             metrics: snapshotSubmitMetrics(metrics),
                         };
                     }

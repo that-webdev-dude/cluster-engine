@@ -4,7 +4,10 @@ import type {
     WebGpuRenderPipelineDescriptor,
     WebGpuVertexBufferLayout,
 } from "../service/PipelineLibrary.types";
-import { BYTES_PER_FLOAT, RENDER_2D_VERTEX_LAYOUTS } from "../../../modules/submitters/Render2DVertexPacking.module";
+import {
+    BYTES_PER_FLOAT,
+    RENDER_2D_VERTEX_LAYOUTS,
+} from "../../../modules/Render2DVertexPacking.module";
 
 export type WebGpuShaderSource = Readonly<{
     vertex: string;
@@ -149,7 +152,9 @@ export function createWebGpuRenderPipelineDescriptor(args: {
                 {
                     format: args.format,
                     blend:
-                        args.desc.blend === "alpha" ? getAlphaBlend() : undefined,
+                        args.desc.blend === "alpha"
+                            ? getAlphaBlend()
+                            : undefined,
                 },
             ],
         },

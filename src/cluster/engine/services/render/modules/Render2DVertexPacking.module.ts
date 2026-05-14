@@ -1,11 +1,14 @@
-import type { PipelineDescriptor } from "../../backend/pipelineLibrary";
+import type { PipelineDescriptor } from "../backend/pipelineLibrary";
 import type {
     Render2DPreparedBatch,
     Render2DPreparedFrame,
     Render2DPreparedItem,
     RenderPreparedColor,
-} from "../Render2DPrepare.module";
-import type { RenderTargetInfo, RenderUvRectInput } from "../../service/Render.types";
+} from "./Render2DPrepare.module";
+import type {
+    RenderTargetInfo,
+    RenderUvRectInput,
+} from "../service/Render.types";
 
 export type Render2DVertexLayoutInfo = Readonly<{
     strideFloats: number;
@@ -19,6 +22,13 @@ export type Render2DVertexLayoutInfo = Readonly<{
 export type PackedRender2DVertexData = Readonly<{
     data: Float32Array<ArrayBufferLike>;
     length: number;
+}>;
+
+export type PackedRender2DVertexRange = Readonly<{
+    data: Float32Array<ArrayBufferLike>;
+    offset: number;
+    length: number;
+    nextOffset: number;
 }>;
 
 export const BYTES_PER_FLOAT = Float32Array.BYTES_PER_ELEMENT;
@@ -165,7 +175,13 @@ function writeRectVertices(
     offset: number,
     frame: Render2DPreparedFrame,
     item: Render2DPreparedItem,
-    rect: { x: number; y: number; w: number; h: number; uv?: RenderUvRectInput },
+    rect: {
+        x: number;
+        y: number;
+        w: number;
+        h: number;
+        uv?: RenderUvRectInput;
+    },
 ): number {
     const a = transformPoint(item, rect.x, rect.y);
     const b = transformPoint(item, rect.x + rect.w, rect.y);
@@ -259,8 +275,16 @@ function writeCircleLikeVertices(
             frame,
             item,
             center,
-            transformPoint(item, Math.cos(start) * radiusX, Math.sin(start) * radiusY),
-            transformPoint(item, Math.cos(end) * radiusX, Math.sin(end) * radiusY),
+            transformPoint(
+                item,
+                Math.cos(start) * radiusX,
+                Math.sin(start) * radiusY,
+            ),
+            transformPoint(
+                item,
+                Math.cos(end) * radiusX,
+                Math.sin(end) * radiusY,
+            ),
         );
     }
     return offset;
@@ -297,7 +321,11 @@ function writePolygonVertices(
     item: Render2DPreparedItem,
     polygon: Extract<Render2DPreparedItem["geometry"], { kind: "polygon" }>,
 ): number {
-    const origin = transformPoint(item, polygon.vertices[0].x, polygon.vertices[0].y);
+    const origin = transformPoint(
+        item,
+        polygon.vertices[0].x,
+        polygon.vertices[0].y,
+    );
     for (let i = 1; i < polygon.vertices.length - 1; i++) {
         offset = writeSolidTriangle(
             data,
@@ -352,7 +380,13 @@ function writeItemVertices(
         case "line":
             return writeLineVertices(data, offset, frame, item, item.geometry);
         case "polygon":
-            return writePolygonVertices(data, offset, frame, item, item.geometry);
+            return writePolygonVertices(
+                data,
+                offset,
+                frame,
+                item,
+                item.geometry,
+            );
     }
 }
 
@@ -371,15 +405,36 @@ export function writeRender2DBatchVertexData(
     frame: Render2DPreparedFrame,
     batch: Render2DPreparedBatch,
 ): PackedRender2DVertexData {
+    const written = writeRender2DBatchVertexDataAtOffset(
+        arena,
+        frame,
+        batch,
+        0,
+    );
+
+    return { data: written.data, length: written.length };
+}
+
+export function writeRender2DBatchVertexDataAtOffset(
+    arena: Float32Array<ArrayBufferLike>,
+    frame: Render2DPreparedFrame,
+    batch: Render2DPreparedBatch,
+    offset: number,
+): PackedRender2DVertexRange {
     const layout = RENDER_2D_VERTEX_LAYOUTS[batch.vertexLayout];
-    const neededFloats = batch.vertexCount * layout.strideFloats;
+    const neededFloats = offset + batch.vertexCount * layout.strideFloats;
     const data = ensureRender2DVertexArenaCapacity(arena, neededFloats);
-    let offset = 0;
+    const startOffset = offset;
 
     for (let i = 0; i < batch.itemCount; i++) {
         const item = frame.items[batch.itemStart + i];
         offset = writeItemVertices(data, offset, frame, item);
     }
 
-    return { data, length: offset };
+    return {
+        data,
+        offset: startOffset,
+        length: offset - startOffset,
+        nextOffset: offset,
+    };
 }
