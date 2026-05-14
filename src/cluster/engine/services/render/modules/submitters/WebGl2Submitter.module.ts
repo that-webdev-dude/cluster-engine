@@ -5,6 +5,13 @@ import type {
     Render2DPreparedBatch,
     Render2DPreparedFrame,
 } from "../Render2DPrepare.module";
+import type {
+    Render2DLayoutUpload,
+    Render2DUpload,
+    Render2DUploadFrame,
+    Render2DUploadLayoutKey,
+    Render2DUploadRange,
+} from "../Render2DUpload.module";
 import type { RenderBlendMode } from "../../service/Render.types";
 import type {
     SubmitFrameMetrics,
@@ -12,9 +19,7 @@ import type {
 } from "../SubmitFrame.module";
 import {
     BYTES_PER_FLOAT,
-    RENDER_2D_VERTEX_LAYOUTS,
     getRender2DPipelineDescriptor,
-    writeRender2DBatchVertexData,
     type Render2DVertexLayoutInfo,
 } from "../Render2DVertexPacking.module";
 
@@ -28,6 +33,7 @@ export type WebGl2Submitter = Readonly<{
 export type WebGl2SubmitterConfig = Readonly<{
     gpuResource: GpuResourceService;
     pipelineLibrary: PipelineLibraryService;
+    render2DUpload: Render2DUpload;
 }>;
 
 type MutableSubmitMetrics = {
@@ -96,6 +102,7 @@ function applyBlendMode(
 function configureVertexLayout(
     gl: WebGL2RenderingContext,
     layout: Render2DVertexLayoutInfo,
+    baseByteOffset: number,
 ): void {
     const strideBytes = layout.strideFloats * BYTES_PER_FLOAT;
 
@@ -107,7 +114,7 @@ function configureVertexLayout(
             gl.FLOAT,
             false,
             strideBytes,
-            attr.offsetFloats * BYTES_PER_FLOAT,
+            baseByteOffset + attr.offsetFloats * BYTES_PER_FLOAT,
         );
     }
 }
@@ -152,42 +159,63 @@ function bindTexturedBatch(
 export function createWebGl2Submitter(
     config: WebGl2SubmitterConfig,
 ): WebGl2Submitter {
-    let vertexArena: Float32Array<ArrayBufferLike> = new Float32Array(0);
+    const buffersByLayout = new Map<Render2DUploadLayoutKey, WebGLBuffer>();
+
+    function uploadLayout(
+        gl: WebGL2RenderingContext,
+        upload: Render2DLayoutUpload,
+    ): boolean {
+        const frameVertexBuffer = config.gpuResource.getWebGl2FrameVertexBuffer({
+            layout: upload.layout,
+            gl,
+            byteLength: upload.byteLength,
+        });
+        if (!frameVertexBuffer) return false;
+
+        const data = upload.data.subarray(0, upload.floatLength);
+        gl.bindBuffer(gl.ARRAY_BUFFER, frameVertexBuffer.buffer);
+        gl.bufferSubData(gl.ARRAY_BUFFER, 0, data);
+        buffersByLayout.set(upload.layout, frameVertexBuffer.buffer);
+
+        return true;
+    }
+
+    function uploadLayouts(
+        gl: WebGL2RenderingContext,
+        uploadFrame: Render2DUploadFrame,
+    ): boolean {
+        buffersByLayout.clear();
+        for (const layoutUpload of uploadFrame.layouts) {
+            if (!uploadLayout(gl, layoutUpload)) {
+                gl.bindBuffer(gl.ARRAY_BUFFER, null);
+                return false;
+            }
+        }
+        gl.bindBuffer(gl.ARRAY_BUFFER, null);
+        return true;
+    }
 
     function submitWebGl2Batch(
-        runtime: Extract<GfxRuntime, { backend: "webgl2" }>,
-        frame: Render2DPreparedFrame,
+        gl: WebGL2RenderingContext,
         batch: Render2DPreparedBatch,
+        range: Render2DUploadRange,
+        uploadFrame: Render2DUploadFrame,
     ): BatchSubmitReport {
-        const gl = runtime.handle;
         const metrics = createMutableSubmitMetrics();
-        const written = writeRender2DBatchVertexData(vertexArena, frame, batch);
-        vertexArena = written.data;
-        if (written.length === 0) {
-            return { result: "submitted", metrics: EMPTY_SUBMIT_METRICS };
-        }
-
         const pipeline = config.pipelineLibrary.getWebGl2Pipeline({
             desc: getRender2DPipelineDescriptor(batch),
             gl,
         });
-        if (!pipeline) {
-            return { result: "no-submitter", metrics: EMPTY_SUBMIT_METRICS };
-        }
+        if (!pipeline) return { result: "no-submitter", metrics: EMPTY_SUBMIT_METRICS };
 
-        const upload = vertexArena.subarray(0, written.length);
-        const frameVertexBuffer = config.gpuResource.getWebGl2FrameVertexBuffer(
-            {
-                layout: batch.vertexLayout,
-                gl,
-                byteLength: upload.byteLength,
-            },
-        );
-        if (!frameVertexBuffer) {
-            return { result: "no-submitter", metrics: EMPTY_SUBMIT_METRICS };
-        }
+        const buffer = buffersByLayout.get(range.layout);
+        if (!buffer) return { result: "no-submitter", metrics: EMPTY_SUBMIT_METRICS };
 
-        const layout = RENDER_2D_VERTEX_LAYOUTS[batch.vertexLayout];
+        const layout = uploadFrame.layouts.find(
+            (layoutUpload) => layoutUpload.layout === range.layout,
+        )?.layoutInfo;
+        if (!layout) return { result: "no-submitter", metrics: EMPTY_SUBMIT_METRICS };
+
         let vertexLayoutConfigured = false;
 
         applyBlendMode(gl, batch.blendMode);
@@ -209,17 +237,12 @@ export function createWebGl2Submitter(
                 };
             }
 
-            gl.bindBuffer(gl.ARRAY_BUFFER, frameVertexBuffer.buffer);
-            gl.bufferSubData(gl.ARRAY_BUFFER, 0, upload);
-            configureVertexLayout(gl, layout);
+            gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+            configureVertexLayout(gl, layout, range.byteOffset);
             vertexLayoutConfigured = true;
-            gl.drawArrays(
-                gl.TRIANGLES,
-                0,
-                written.length / layout.strideFloats,
-            );
+            gl.drawArrays(gl.TRIANGLES, 0, range.vertexCount);
             metrics.drawCallCount += 1;
-            metrics.vertexCount += written.length / layout.strideFloats;
+            metrics.vertexCount += range.vertexCount;
         } finally {
             if (vertexLayoutConfigured) {
                 disableVertexLayout(gl, layout);
@@ -254,13 +277,23 @@ export function createWebGl2Submitter(
                 };
             }
 
+            const uploadFrame = config.render2DUpload.build(frame);
+            if (!uploadLayouts(gl, uploadFrame)) {
+                return {
+                    result: { status: "skipped", reason: "no-submitter" },
+                    metrics: EMPTY_SUBMIT_METRICS,
+                };
+            }
+
             for (
                 let batchIndex = 0;
                 batchIndex < frame.batchCount;
                 batchIndex++
             ) {
                 const batch = frame.batches[batchIndex];
-                const report = submitWebGl2Batch(runtime, frame, batch);
+                const range = uploadFrame.rangesByBatchIndex[batchIndex];
+                if (!range) continue;
+                const report = submitWebGl2Batch(gl, batch, range, uploadFrame);
                 mergeSubmitMetrics(metrics, report.metrics);
                 if (report.result === "no-submitter") {
                     return {

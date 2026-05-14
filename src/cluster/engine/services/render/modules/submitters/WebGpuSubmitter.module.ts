@@ -6,14 +6,17 @@ import type {
     Render2DPreparedFrame,
 } from "../Render2DPrepare.module";
 import type {
+    Render2DLayoutUpload,
+    Render2DUpload,
+    Render2DUploadFrame,
+    Render2DUploadLayoutKey,
+    Render2DUploadRange,
+} from "../Render2DUpload.module";
+import type {
     SubmitFrameReport,
     SubmitFrameMetrics,
 } from "../SubmitFrame.module";
-import {
-    RENDER_2D_VERTEX_LAYOUTS,
-    getRender2DPipelineDescriptor,
-    writeRender2DBatchVertexData,
-} from "../Render2DVertexPacking.module";
+import { getRender2DPipelineDescriptor } from "../Render2DVertexPacking.module";
 
 export type WebGpuSubmitter = Readonly<{
     submit(
@@ -25,6 +28,7 @@ export type WebGpuSubmitter = Readonly<{
 export type WebGpuSubmitterConfig = Readonly<{
     gpuResource: GpuResourceService;
     pipelineLibrary: PipelineLibraryService;
+    render2DUpload: Render2DUpload;
 }>;
 
 type MutableSubmitMetrics = {
@@ -36,7 +40,7 @@ type MutableSubmitMetrics = {
 
 type WebGpuRenderPassEncoderLike = Readonly<{
     setPipeline(pipeline: object): void;
-    setVertexBuffer(slot: number, buffer: object): void;
+    setVertexBuffer(slot: number, buffer: object, offset?: number): void;
     setBindGroup(index: number, bindGroup: object): void;
     draw(vertexCount: number): void;
     end(): void;
@@ -74,20 +78,6 @@ function snapshotSubmitMetrics(
     };
 }
 
-function getOrCreateArena(
-    arenas: Map<
-        Render2DPreparedBatch["vertexLayout"],
-        Float32Array<ArrayBufferLike>
-    >,
-    layout: Render2DPreparedBatch["vertexLayout"],
-): Float32Array<ArrayBufferLike> {
-    const arena = arenas.get(layout);
-    if (arena) return arena;
-    const next = new Float32Array(0);
-    arenas.set(layout, next);
-    return next;
-}
-
 function createRenderPass(runtime: Extract<GfxRuntime, { backend: "webgpu" }>):
     | {
           encoder: WebGpuCommandEncoderLike;
@@ -119,23 +109,48 @@ function createRenderPass(runtime: Extract<GfxRuntime, { backend: "webgpu" }>):
 export function createWebGpuSubmitter(
     config: WebGpuSubmitterConfig,
 ): WebGpuSubmitter {
-    const vertexArenas = new Map<
-        Render2DPreparedBatch["vertexLayout"],
-        Float32Array<ArrayBufferLike>
-    >();
+    const buffersByLayout = new Map<Render2DUploadLayoutKey, object>();
+
+    function uploadLayout(
+        runtime: Extract<GfxRuntime, { backend: "webgpu" }>,
+        upload: Render2DLayoutUpload,
+    ): boolean {
+        const vertexBuffer = config.gpuResource.getWebGpuFrameVertexBuffer({
+            layout: upload.layout,
+            device: runtime.device,
+            byteLength: upload.byteLength,
+        });
+        if (!vertexBuffer) return false;
+
+        const data = upload.data.subarray(0, upload.floatLength);
+        try {
+            runtime.device.queue.writeBuffer(vertexBuffer.buffer, 0, data);
+        } catch {
+            return false;
+        }
+
+        buffersByLayout.set(upload.layout, vertexBuffer.buffer);
+        return true;
+    }
+
+    function uploadLayouts(
+        runtime: Extract<GfxRuntime, { backend: "webgpu" }>,
+        uploadFrame: Render2DUploadFrame,
+    ): boolean {
+        buffersByLayout.clear();
+        for (const layoutUpload of uploadFrame.layouts) {
+            if (!uploadLayout(runtime, layoutUpload)) return false;
+        }
+        return true;
+    }
 
     function submitWebGpuBatch(
         runtime: Extract<GfxRuntime, { backend: "webgpu" }>,
-        frame: Render2DPreparedFrame,
         batch: Render2DPreparedBatch,
+        range: Render2DUploadRange,
         pass: WebGpuRenderPassEncoderLike,
         metrics: MutableSubmitMetrics,
     ): boolean {
-        const arena = getOrCreateArena(vertexArenas, batch.vertexLayout);
-        const written = writeRender2DBatchVertexData(arena, frame, batch);
-        vertexArenas.set(batch.vertexLayout, written.data);
-        if (written.length === 0) return true;
-
         const pipeline = config.pipelineLibrary.getWebGpuPipeline({
             desc: getRender2DPipelineDescriptor(batch),
             device: runtime.device,
@@ -143,13 +158,7 @@ export function createWebGpuSubmitter(
         });
         if (!pipeline) return false;
 
-        const layout = RENDER_2D_VERTEX_LAYOUTS[batch.vertexLayout];
-        const upload = written.data.subarray(0, written.length);
-        const vertexBuffer = config.gpuResource.getWebGpuFrameVertexBuffer({
-            layout: batch.vertexLayout,
-            device: runtime.device,
-            byteLength: upload.byteLength,
-        });
+        const vertexBuffer = buffersByLayout.get(range.layout);
         if (!vertexBuffer) return false;
 
         let bindGroup: object | undefined;
@@ -168,17 +177,16 @@ export function createWebGpuSubmitter(
         }
 
         try {
-            runtime.device.queue.writeBuffer(vertexBuffer.buffer, 0, upload);
             pass.setPipeline(pipeline.pipeline);
-            pass.setVertexBuffer(0, vertexBuffer.buffer);
+            pass.setVertexBuffer(0, vertexBuffer, range.byteOffset);
             if (bindGroup) pass.setBindGroup(0, bindGroup);
-            pass.draw(written.length / layout.strideFloats);
+            pass.draw(range.vertexCount);
         } catch {
             return false;
         }
 
         metrics.drawCallCount += 1;
-        metrics.vertexCount += written.length / layout.strideFloats;
+        metrics.vertexCount += range.vertexCount;
         return true;
     }
 
@@ -200,17 +208,28 @@ export function createWebGpuSubmitter(
             config.gpuResource.flushWebGpuUploads(runtime.device);
 
             try {
+                const uploadFrame = config.render2DUpload.build(frame);
+                if (!uploadLayouts(runtime, uploadFrame)) {
+                    renderPass.pass.end();
+                    return {
+                        result: { status: "skipped", reason: "no-submitter" },
+                        metrics: EMPTY_SUBMIT_METRICS,
+                    };
+                }
+
                 for (
                     let batchIndex = 0;
                     batchIndex < frame.batchCount;
                     batchIndex++
                 ) {
                     const batch = frame.batches[batchIndex];
+                    const range = uploadFrame.rangesByBatchIndex[batchIndex];
+                    if (!range) continue;
                     if (
                         !submitWebGpuBatch(
                             runtime,
-                            frame,
                             batch,
+                            range,
                             renderPass.pass,
                             metrics,
                         )

@@ -605,6 +605,23 @@ describe("createSubmitFrame", () => {
             },
         });
         expect(gl.drawArrays).toHaveBeenCalledTimes(3);
+        expect(gl.bufferSubData).toHaveBeenCalledTimes(2);
+        expect(gl.vertexAttribPointer).toHaveBeenCalledWith(
+            0,
+            2,
+            gl.FLOAT,
+            false,
+            24,
+            144,
+        );
+        expect(gl.vertexAttribPointer).toHaveBeenCalledWith(
+            1,
+            4,
+            gl.FLOAT,
+            false,
+            24,
+            152,
+        );
 
         await pipelineLibrary.dispose();
         await gpuResource.dispose();

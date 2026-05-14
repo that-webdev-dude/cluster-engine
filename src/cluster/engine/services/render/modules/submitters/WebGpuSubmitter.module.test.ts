@@ -3,6 +3,7 @@ import { createGpuResource } from "../../backend/gpuResource";
 import { createPipelineLibrary } from "../../backend/pipelineLibrary";
 import { createFakeWebGpu } from "../../testing/FakeWebGl2.test-utils";
 import { createRender2DPrepare } from "../Render2DPrepare.module";
+import { createRender2DUpload } from "../Render2DUpload.module";
 import { createWebGpuSubmitter } from "./WebGpuSubmitter.module";
 import type { GfxRuntime } from "../../backend/gfxBackend";
 import type { RenderFrameInput } from "../../service/Render.types";
@@ -36,7 +37,11 @@ async function createStartedSubmitter() {
     return {
         gpuResource,
         pipelineLibrary,
-        submitter: createWebGpuSubmitter({ gpuResource, pipelineLibrary }),
+        submitter: createWebGpuSubmitter({
+            gpuResource,
+            pipelineLibrary,
+            render2DUpload: createRender2DUpload(),
+        }),
     };
 }
 
@@ -198,6 +203,81 @@ describe("createWebGpuSubmitter", () => {
 
         expect(webGpu.device.createBuffer).toHaveBeenCalledTimes(1);
         expect(webGpu.device.queue.writeBuffer).toHaveBeenCalledTimes(2);
+
+        await pipelineLibrary.dispose();
+        await gpuResource.dispose();
+    });
+
+    it("uploads shared layout buffers and draws batches from byte offsets", async () => {
+        const webGpu = createFakeWebGpu();
+        const { gpuResource, pipelineLibrary, submitter } =
+            await createStartedSubmitter();
+        const frame = createRender2DPrepare().prepare(
+            createInput([
+                {
+                    id: "main",
+                    order: 0,
+                    items: [
+                        {
+                            kind: "rect",
+                            sortKey: 0,
+                            x: 0,
+                            y: 0,
+                            w: 10,
+                            h: 10,
+                        },
+                        {
+                            kind: "sprite",
+                            sortKey: 1,
+                            x: 0,
+                            y: 0,
+                            w: 10,
+                            h: 10,
+                            resourceId: "missing.sprite",
+                        },
+                        {
+                            kind: "rect",
+                            sortKey: 2,
+                            x: 20,
+                            y: 20,
+                            w: 10,
+                            h: 10,
+                            blend: "alpha",
+                        },
+                    ],
+                },
+            ]),
+        );
+
+        const report = submitter.submit(frame, createWebGpuRuntime(webGpu));
+
+        expect(report).toMatchObject({
+            result: { status: "submitted" },
+            metrics: {
+                drawCallCount: 3,
+                vertexCount: 18,
+                fallbackResourceCount: 1,
+            },
+        });
+        expect(webGpu.device.queue.writeBuffer).toHaveBeenCalledTimes(2);
+        expect(webGpu.renderPass.setVertexBuffer).toHaveBeenNthCalledWith(
+            1,
+            0,
+            expect.any(Object),
+            0,
+        );
+        expect(webGpu.renderPass.setVertexBuffer).toHaveBeenNthCalledWith(
+            2,
+            0,
+            expect.any(Object),
+            0,
+        );
+        expect(webGpu.renderPass.setVertexBuffer).toHaveBeenNthCalledWith(
+            3,
+            0,
+            expect.any(Object),
+            144,
+        );
 
         await pipelineLibrary.dispose();
         await gpuResource.dispose();
