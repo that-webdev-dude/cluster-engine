@@ -1,18 +1,33 @@
 {
-  "compilerOptions": {
-    "target": "ESNext",
-    "useDefineForClassFields": true,
-    "lib": ["ESNext", "DOM", "DOM.Iterable"],
-    "module": "ESNext",
-    "moduleResolution": "Bundler",
-    "allowImportingTsExtensions": true,
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "strict": true,
-    "noEmit": true,
-    "skipLibCheck": true,
-    "types": ["vitest/globals", "vite/client"]
-  },
-  "include": ["src/**/*"],
-  "references": [{ "path": "./tsconfig.node.json" }]
+    "compilerOptions": {
+        "target": "ESNext",
+        "useDefineForClassFields": true,
+        "lib": [
+            "ESNext",
+            "DOM",
+            "DOM.Iterable"
+        ],
+        "module": "ESNext",
+        "moduleResolution": "Bundler",
+        "allowImportingTsExtensions": true,
+        "resolveJsonModule": true,
+        "isolatedModules": true,
+        "strict": true,
+        "noEmit": true,
+        "skipLibCheck": true,
+        "types": [
+            "vitest/globals",
+            "vite/client"
+        ],
+        "noUnusedLocals": true,
+        "noUnusedParameters": true,
+    },
+    "include": [
+        "src/**/*"
+    ],
+    "references": [
+        {
+            "path": "./tsconfig.node.json"
+        }
+    ]
 }
