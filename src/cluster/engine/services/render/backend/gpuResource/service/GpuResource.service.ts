@@ -500,10 +500,12 @@ function createGpuResourceService(
             return {
                 buffer: record.native.webgl2.buffer,
                 capacityBytes: currentCapacity,
+                status: "reused",
             };
         }
 
         deleteWebGl2Buffer(record, args.gl);
+        const status = currentCapacity > 0 ? "grown" : "created";
         let nextCapacity = Math.max(256, currentCapacity || record.desc.size);
 
         while (nextCapacity < args.byteLength) nextCapacity *= 2;
@@ -524,7 +526,7 @@ function createGpuResourceService(
 
         lastWebGl2Context = args.gl;
 
-        return { buffer, capacityBytes: nextCapacity };
+        return { buffer, capacityBytes: nextCapacity, status };
     }
 
     function getWebGpuFrameVertexBuffer(args: {
@@ -559,10 +561,12 @@ function createGpuResourceService(
             return {
                 buffer: record.native.webgpu.buffer,
                 capacityBytes: currentCapacity,
+                status: "reused",
             };
         }
 
         deleteWebGpuBuffer(record);
+        const status = currentCapacity > 0 ? "grown" : "created";
         let nextCapacity = Math.max(256, currentCapacity || record.desc.size);
         while (nextCapacity < args.byteLength) nextCapacity *= 2;
         const buffer = createWebGpuBuffer(
@@ -575,7 +579,7 @@ function createGpuResourceService(
         record.native.webgpu = { buffer, capacityBytes: nextCapacity };
         record.invalidated = false;
 
-        return { buffer, capacityBytes: nextCapacity };
+        return { buffer, capacityBytes: nextCapacity, status };
     }
 
     function getWebGl2Sampler(

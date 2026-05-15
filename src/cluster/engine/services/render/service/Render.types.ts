@@ -212,6 +212,14 @@ export type RenderFrameStats = Readonly<{
     batchCount: number;
     drawCallCount: number;
     vertexCount: number;
+    uploadCallCount: number;
+    uploadByteCount: number;
+    uploadRangeCount: number;
+    uploadLayoutCount: number;
+    frameVertexBufferCreateCount: number;
+    frameVertexBufferGrowCount: number;
+    frameVertexBufferReuseCount: number;
+    frameVertexBufferCapacityBytes: number;
     skippedResourceCount: number;
     fallbackResourceCount: number;
     textureResourceCount: number;

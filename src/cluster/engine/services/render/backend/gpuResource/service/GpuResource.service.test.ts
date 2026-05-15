@@ -251,6 +251,18 @@ describe("GpuResourceService", () => {
 
         expect(first?.buffer).toBe(second?.buffer);
         expect(grown?.buffer).not.toBe(first?.buffer);
+        expect(first).toMatchObject({
+            capacityBytes: 256,
+            status: "created",
+        });
+        expect(second).toMatchObject({
+            capacityBytes: 256,
+            status: "reused",
+        });
+        expect(grown).toMatchObject({
+            capacityBytes: 1024,
+            status: "grown",
+        });
         expect(gl.createBuffer).toHaveBeenCalledTimes(2);
         expect(gl.deleteBuffer).toHaveBeenCalledTimes(1);
         expect(gl.bufferData).toHaveBeenCalledWith(
@@ -308,6 +320,18 @@ describe("GpuResourceService", () => {
 
         expect(first?.buffer).toBe(second?.buffer);
         expect(grown?.buffer).not.toBe(first?.buffer);
+        expect(first).toMatchObject({
+            capacityBytes: 256,
+            status: "created",
+        });
+        expect(second).toMatchObject({
+            capacityBytes: 256,
+            status: "reused",
+        });
+        expect(grown).toMatchObject({
+            capacityBytes: 1024,
+            status: "grown",
+        });
         expect(webGpu.device.createBuffer).toHaveBeenCalledTimes(2);
 
         await gpuResource.dispose();

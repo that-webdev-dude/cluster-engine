@@ -39,6 +39,14 @@ export type WebGl2SubmitterConfig = Readonly<{
 type MutableSubmitMetrics = {
     drawCallCount: number;
     vertexCount: number;
+    uploadCallCount: number;
+    uploadByteCount: number;
+    uploadRangeCount: number;
+    uploadLayoutCount: number;
+    frameVertexBufferCreateCount: number;
+    frameVertexBufferGrowCount: number;
+    frameVertexBufferReuseCount: number;
+    frameVertexBufferCapacityBytes: number;
     skippedResourceCount: number;
     fallbackResourceCount: number;
 };
@@ -53,6 +61,14 @@ type BatchSubmitReport = Readonly<{
 const EMPTY_SUBMIT_METRICS: SubmitFrameMetrics = Object.freeze({
     drawCallCount: 0,
     vertexCount: 0,
+    uploadCallCount: 0,
+    uploadByteCount: 0,
+    uploadRangeCount: 0,
+    uploadLayoutCount: 0,
+    frameVertexBufferCreateCount: 0,
+    frameVertexBufferGrowCount: 0,
+    frameVertexBufferReuseCount: 0,
+    frameVertexBufferCapacityBytes: 0,
     skippedResourceCount: 0,
     fallbackResourceCount: 0,
 });
@@ -61,6 +77,14 @@ function createMutableSubmitMetrics(): MutableSubmitMetrics {
     return {
         drawCallCount: 0,
         vertexCount: 0,
+        uploadCallCount: 0,
+        uploadByteCount: 0,
+        uploadRangeCount: 0,
+        uploadLayoutCount: 0,
+        frameVertexBufferCreateCount: 0,
+        frameVertexBufferGrowCount: 0,
+        frameVertexBufferReuseCount: 0,
+        frameVertexBufferCapacityBytes: 0,
         skippedResourceCount: 0,
         fallbackResourceCount: 0,
     };
@@ -72,6 +96,14 @@ function snapshotSubmitMetrics(
     return {
         drawCallCount: metrics.drawCallCount,
         vertexCount: metrics.vertexCount,
+        uploadCallCount: metrics.uploadCallCount,
+        uploadByteCount: metrics.uploadByteCount,
+        uploadRangeCount: metrics.uploadRangeCount,
+        uploadLayoutCount: metrics.uploadLayoutCount,
+        frameVertexBufferCreateCount: metrics.frameVertexBufferCreateCount,
+        frameVertexBufferGrowCount: metrics.frameVertexBufferGrowCount,
+        frameVertexBufferReuseCount: metrics.frameVertexBufferReuseCount,
+        frameVertexBufferCapacityBytes: metrics.frameVertexBufferCapacityBytes,
         skippedResourceCount: metrics.skippedResourceCount,
         fallbackResourceCount: metrics.fallbackResourceCount,
     };
@@ -83,8 +115,41 @@ function mergeSubmitMetrics(
 ): void {
     target.drawCallCount += source.drawCallCount;
     target.vertexCount += source.vertexCount;
+    target.uploadCallCount += source.uploadCallCount;
+    target.uploadByteCount += source.uploadByteCount;
+    target.uploadRangeCount += source.uploadRangeCount;
+    target.uploadLayoutCount += source.uploadLayoutCount;
+    target.frameVertexBufferCreateCount += source.frameVertexBufferCreateCount;
+    target.frameVertexBufferGrowCount += source.frameVertexBufferGrowCount;
+    target.frameVertexBufferReuseCount += source.frameVertexBufferReuseCount;
+    target.frameVertexBufferCapacityBytes += source.frameVertexBufferCapacityBytes;
     target.skippedResourceCount += source.skippedResourceCount;
     target.fallbackResourceCount += source.fallbackResourceCount;
+}
+
+function addUploadPlannerMetrics(
+    metrics: MutableSubmitMetrics,
+    uploadFrame: Render2DUploadFrame,
+): void {
+    metrics.uploadByteCount += uploadFrame.stats.uploadByteLength;
+    metrics.uploadRangeCount += uploadFrame.stats.rangeCount;
+    metrics.uploadLayoutCount += uploadFrame.stats.layoutUploadCount;
+}
+
+function addFrameVertexBufferMetrics(
+    metrics: MutableSubmitMetrics,
+    buffer: { readonly capacityBytes: number; readonly status: string },
+): void {
+    metrics.frameVertexBufferCapacityBytes += buffer.capacityBytes;
+    if (buffer.status === "reused") {
+        metrics.frameVertexBufferReuseCount += 1;
+        return;
+    }
+    if (buffer.status === "grown") {
+        metrics.frameVertexBufferGrowCount += 1;
+        return;
+    }
+    metrics.frameVertexBufferCreateCount += 1;
 }
 
 function applyBlendMode(
@@ -164,6 +229,7 @@ export function createWebGl2Submitter(
     function uploadLayout(
         gl: WebGL2RenderingContext,
         upload: Render2DLayoutUpload,
+        metrics: MutableSubmitMetrics,
     ): boolean {
         const frameVertexBuffer = config.gpuResource.getWebGl2FrameVertexBuffer({
             layout: upload.layout,
@@ -171,10 +237,12 @@ export function createWebGl2Submitter(
             byteLength: upload.byteLength,
         });
         if (!frameVertexBuffer) return false;
+        addFrameVertexBufferMetrics(metrics, frameVertexBuffer);
 
         const data = upload.data.subarray(0, upload.floatLength);
         gl.bindBuffer(gl.ARRAY_BUFFER, frameVertexBuffer.buffer);
         gl.bufferSubData(gl.ARRAY_BUFFER, 0, data);
+        metrics.uploadCallCount += 1;
         buffersByLayout.set(upload.layout, frameVertexBuffer.buffer);
 
         return true;
@@ -183,10 +251,11 @@ export function createWebGl2Submitter(
     function uploadLayouts(
         gl: WebGL2RenderingContext,
         uploadFrame: Render2DUploadFrame,
+        metrics: MutableSubmitMetrics,
     ): boolean {
         buffersByLayout.clear();
         for (const layoutUpload of uploadFrame.layouts) {
-            if (!uploadLayout(gl, layoutUpload)) {
+            if (!uploadLayout(gl, layoutUpload, metrics)) {
                 gl.bindBuffer(gl.ARRAY_BUFFER, null);
                 return false;
             }
@@ -278,10 +347,11 @@ export function createWebGl2Submitter(
             }
 
             const uploadFrame = config.render2DUpload.build(frame);
-            if (!uploadLayouts(gl, uploadFrame)) {
+            addUploadPlannerMetrics(metrics, uploadFrame);
+            if (!uploadLayouts(gl, uploadFrame, metrics)) {
                 return {
                     result: { status: "skipped", reason: "no-submitter" },
-                    metrics: EMPTY_SUBMIT_METRICS,
+                    metrics: snapshotSubmitMetrics(metrics),
                 };
             }
 

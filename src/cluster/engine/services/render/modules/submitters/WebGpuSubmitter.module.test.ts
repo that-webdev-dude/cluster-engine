@@ -57,6 +57,14 @@ describe("createWebGpuSubmitter", () => {
             metrics: {
                 drawCallCount: 0,
                 vertexCount: 0,
+                uploadCallCount: 0,
+                uploadByteCount: 0,
+                uploadRangeCount: 0,
+                uploadLayoutCount: 0,
+                frameVertexBufferCreateCount: 0,
+                frameVertexBufferGrowCount: 0,
+                frameVertexBufferReuseCount: 0,
+                frameVertexBufferCapacityBytes: 0,
                 skippedResourceCount: 0,
                 fallbackResourceCount: 0,
             },
@@ -109,6 +117,14 @@ describe("createWebGpuSubmitter", () => {
             metrics: {
                 drawCallCount: 1,
                 vertexCount: 6,
+                uploadCallCount: 1,
+                uploadByteCount: 144,
+                uploadRangeCount: 1,
+                uploadLayoutCount: 1,
+                frameVertexBufferCreateCount: 1,
+                frameVertexBufferGrowCount: 0,
+                frameVertexBufferReuseCount: 0,
+                frameVertexBufferCapacityBytes: 256,
                 skippedResourceCount: 0,
                 fallbackResourceCount: 0,
             },
@@ -199,10 +215,82 @@ describe("createWebGpuSubmitter", () => {
         const runtime = createWebGpuRuntime(webGpu);
 
         submitter.submit(frame, runtime);
-        submitter.submit(frame, runtime);
+        const second = submitter.submit(frame, runtime);
 
         expect(webGpu.device.createBuffer).toHaveBeenCalledTimes(1);
         expect(webGpu.device.queue.writeBuffer).toHaveBeenCalledTimes(2);
+        expect(second.metrics).toMatchObject({
+            frameVertexBufferCreateCount: 0,
+            frameVertexBufferGrowCount: 0,
+            frameVertexBufferReuseCount: 1,
+            frameVertexBufferCapacityBytes: 256,
+        });
+
+        await pipelineLibrary.dispose();
+        await gpuResource.dispose();
+    });
+
+    it("reports frame vertex buffer growth when upload demand increases", async () => {
+        const webGpu = createFakeWebGpu();
+        const { gpuResource, pipelineLibrary, submitter } =
+            await createStartedSubmitter();
+        const runtime = createWebGpuRuntime(webGpu);
+        const smallFrame = createRender2DPrepare().prepare(
+            createInput([
+                {
+                    id: "main",
+                    order: 0,
+                    items: [
+                        {
+                            kind: "rect",
+                            sortKey: 0,
+                            x: 0,
+                            y: 0,
+                            w: 10,
+                            h: 10,
+                        },
+                    ],
+                },
+            ]),
+        );
+        const largerFrame = createRender2DPrepare().prepare(
+            createInput([
+                {
+                    id: "main",
+                    order: 0,
+                    items: [
+                        {
+                            kind: "rect",
+                            sortKey: 0,
+                            x: 0,
+                            y: 0,
+                            w: 10,
+                            h: 10,
+                        },
+                        {
+                            kind: "rect",
+                            sortKey: 1,
+                            x: 20,
+                            y: 20,
+                            w: 10,
+                            h: 10,
+                        },
+                    ],
+                },
+            ]),
+        );
+
+        submitter.submit(smallFrame, runtime);
+        const grown = submitter.submit(largerFrame, runtime);
+
+        expect(grown.metrics).toMatchObject({
+            uploadCallCount: 1,
+            uploadByteCount: 288,
+            frameVertexBufferCreateCount: 0,
+            frameVertexBufferGrowCount: 1,
+            frameVertexBufferReuseCount: 0,
+            frameVertexBufferCapacityBytes: 512,
+        });
 
         await pipelineLibrary.dispose();
         await gpuResource.dispose();
@@ -256,6 +344,14 @@ describe("createWebGpuSubmitter", () => {
             metrics: {
                 drawCallCount: 3,
                 vertexCount: 18,
+                uploadCallCount: 2,
+                uploadByteCount: 480,
+                uploadRangeCount: 3,
+                uploadLayoutCount: 2,
+                frameVertexBufferCreateCount: 2,
+                frameVertexBufferGrowCount: 0,
+                frameVertexBufferReuseCount: 0,
+                frameVertexBufferCapacityBytes: 544,
                 fallbackResourceCount: 1,
             },
         });
@@ -314,6 +410,14 @@ describe("createWebGpuSubmitter", () => {
             metrics: {
                 drawCallCount: 0,
                 vertexCount: 0,
+                uploadCallCount: 1,
+                uploadByteCount: 144,
+                uploadRangeCount: 1,
+                uploadLayoutCount: 1,
+                frameVertexBufferCreateCount: 1,
+                frameVertexBufferGrowCount: 0,
+                frameVertexBufferReuseCount: 0,
+                frameVertexBufferCapacityBytes: 256,
                 skippedResourceCount: 0,
                 fallbackResourceCount: 0,
             },

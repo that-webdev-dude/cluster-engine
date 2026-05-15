@@ -6,20 +6,10 @@ import {
     BYTES_PER_FLOAT,
     RENDER_2D_VERTEX_LAYOUTS,
     writeRender2DBatchVertexDataAtOffset,
+    type Render2DVertexLayoutInfo,
 } from "./Render2DVertexPacking.module";
 
 export type Render2DUploadLayoutKey = Render2DPreparedBatch["vertexLayout"];
-
-export type Render2DUploadVertexAttribute = Readonly<{
-    location: number;
-    size: number;
-    offsetFloats: number;
-}>;
-
-export type Render2DUploadLayoutInfo = Readonly<{
-    strideFloats: number;
-    attrs: readonly Render2DUploadVertexAttribute[];
-}>;
 
 export type Render2DUploadRange = Readonly<{
     batchIndex: number;
@@ -34,7 +24,7 @@ export type Render2DUploadRange = Readonly<{
 
 export type Render2DLayoutUpload = Readonly<{
     layout: Render2DUploadLayoutKey;
-    layoutInfo: Render2DUploadLayoutInfo;
+    layoutInfo: Render2DVertexLayoutInfo;
     data: Float32Array<ArrayBufferLike>;
     floatLength: number;
     byteLength: number;
@@ -84,7 +74,7 @@ export type Render2DUpload = Readonly<{
 
 type MutableLayoutUpload = {
     layout: Render2DUploadLayoutKey;
-    layoutInfo: Render2DUploadLayoutInfo;
+    layoutInfo: Render2DVertexLayoutInfo;
     data: Float32Array<ArrayBufferLike>;
     floatLength: number;
     byteLength: number;

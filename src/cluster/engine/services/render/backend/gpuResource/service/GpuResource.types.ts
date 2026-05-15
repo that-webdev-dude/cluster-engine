@@ -207,14 +207,18 @@ export type WebGpuTextureBinding = Readonly<{
     fallback: boolean;
 }>;
 
+export type GpuFrameVertexBufferStatus = "created" | "grown" | "reused";
+
 export type WebGpuFrameVertexBuffer = Readonly<{
     buffer: WebGpuBufferLike;
     capacityBytes: number;
+    status: GpuFrameVertexBufferStatus;
 }>;
 
 export type WebGl2FrameVertexBuffer = Readonly<{
     buffer: WebGLBuffer;
     capacityBytes: number;
+    status: GpuFrameVertexBufferStatus;
 }>;
 
 export type GpuResourceSyncArgs = Readonly<{

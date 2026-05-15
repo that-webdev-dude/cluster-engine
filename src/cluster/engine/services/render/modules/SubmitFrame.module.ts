@@ -20,6 +20,14 @@ export type SubmitFrameMetrics = Pick<
     RenderFrameStats,
     | "drawCallCount"
     | "vertexCount"
+    | "uploadCallCount"
+    | "uploadByteCount"
+    | "uploadRangeCount"
+    | "uploadLayoutCount"
+    | "frameVertexBufferCreateCount"
+    | "frameVertexBufferGrowCount"
+    | "frameVertexBufferReuseCount"
+    | "frameVertexBufferCapacityBytes"
     | "skippedResourceCount"
     | "fallbackResourceCount"
 >;
@@ -33,6 +41,14 @@ export type SubmitFrameConfig = Readonly<{
 const EMPTY_SUBMIT_METRICS: SubmitFrameMetrics = Object.freeze({
     drawCallCount: 0,
     vertexCount: 0,
+    uploadCallCount: 0,
+    uploadByteCount: 0,
+    uploadRangeCount: 0,
+    uploadLayoutCount: 0,
+    frameVertexBufferCreateCount: 0,
+    frameVertexBufferGrowCount: 0,
+    frameVertexBufferReuseCount: 0,
+    frameVertexBufferCapacityBytes: 0,
     skippedResourceCount: 0,
     fallbackResourceCount: 0,
 });

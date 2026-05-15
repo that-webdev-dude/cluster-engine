@@ -53,6 +53,22 @@ describe("render public surface", () => {
         expectTypeOf<RenderItem2D>().toHaveProperty("kind");
         expectTypeOf<RenderTransform2DInput>().toHaveProperty("prevX");
         expectTypeOf<RenderFrameStats>().toHaveProperty("drawCallCount");
+        expectTypeOf<RenderFrameStats>().toHaveProperty("uploadCallCount");
+        expectTypeOf<RenderFrameStats>().toHaveProperty("uploadByteCount");
+        expectTypeOf<RenderFrameStats>().toHaveProperty("uploadRangeCount");
+        expectTypeOf<RenderFrameStats>().toHaveProperty("uploadLayoutCount");
+        expectTypeOf<RenderFrameStats>().toHaveProperty(
+            "frameVertexBufferCreateCount",
+        );
+        expectTypeOf<RenderFrameStats>().toHaveProperty(
+            "frameVertexBufferGrowCount",
+        );
+        expectTypeOf<RenderFrameStats>().toHaveProperty(
+            "frameVertexBufferReuseCount",
+        );
+        expectTypeOf<RenderFrameStats>().toHaveProperty(
+            "frameVertexBufferCapacityBytes",
+        );
         expectTypeOf<RenderFrameStats>().toHaveProperty("fontResourceCount");
         expectTypeOf<RenderFrameStats>().toHaveProperty("preparedGlyphCount");
         expectTypeOf<RenderResourceConfig>().toHaveProperty("textures");
