@@ -4,8 +4,6 @@ import type {
     GameDebugView,
     GameRun,
     GamePlatform,
-    GameSceneCommands,
-    GameWorldCommands,
 } from "./Game.types";
 import {
     createLifecycle,
