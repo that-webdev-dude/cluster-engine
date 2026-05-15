@@ -1,13 +1,13 @@
-import { createSceneManager } from "../cluster/engine/managers/scene/Scene.manager";
+import { createSceneManager } from "../cluster/engine/managers/scene";
 import type { Scene } from "../cluster/engine/managers/scene/Scene.types";
 import type { System } from "../cluster/engine/systems";
-import { createWorldManager } from "../cluster/engine/managers/world/World.manager";
-import type { WorldManager } from "../cluster/engine/managers/world/World.manager";
+import { createWorldManager } from "../cluster/engine/managers/world";
+import type { WorldManagerService } from "../cluster/engine/managers/world";
 
 type DemoAllCtx = {
     log: string[];
     storeId: string;
-    world: WorldManager;
+    world: WorldManagerService;
 };
 
 type DemoAllRun = {

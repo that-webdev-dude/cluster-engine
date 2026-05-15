@@ -1,4 +1,4 @@
-import { createSceneManager } from "../cluster/engine/managers/scene/Scene.manager";
+import { createSceneManager } from "../cluster/engine/managers/scene";
 import type { Scene } from "../cluster/engine/managers/scene/Scene.types";
 import type { SceneExecPass } from "../cluster/engine/managers/scene/service/SceneManager.types";
 import type { System } from "../cluster/engine/systems";
