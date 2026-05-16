@@ -44,6 +44,41 @@ void main() {
     outColor = texture(u_texture, v_uv) * v_tint;
 }`;
 
+const SOLID_QUAD_INSTANCE_VERTEX_SHADER = `#version 300 es
+layout(location = 0) in vec2 a_unit;
+layout(location = 1) in vec2 i_origin;
+layout(location = 2) in vec2 i_axisX;
+layout(location = 3) in vec2 i_axisY;
+layout(location = 4) in vec2 i_size;
+layout(location = 5) in vec4 i_color;
+layout(location = 6) in vec2 i_group;
+out vec4 v_color;
+void main() {
+    vec2 local = a_unit * i_size;
+    vec2 position = i_origin + i_axisX * local.x + i_axisY * local.y;
+    v_color = i_color;
+    gl_Position = vec4(position, 0.0, 1.0);
+}`;
+
+const TEXTURED_QUAD_INSTANCE_VERTEX_SHADER = `#version 300 es
+layout(location = 0) in vec2 a_unit;
+layout(location = 1) in vec2 i_origin;
+layout(location = 2) in vec2 i_axisX;
+layout(location = 3) in vec2 i_axisY;
+layout(location = 4) in vec2 i_size;
+layout(location = 5) in vec4 i_uvRect;
+layout(location = 6) in vec4 i_tint;
+layout(location = 7) in vec2 i_group;
+out vec2 v_uv;
+out vec4 v_tint;
+void main() {
+    vec2 local = a_unit * i_size;
+    vec2 position = i_origin + i_axisX * local.x + i_axisY * local.y;
+    v_uv = i_uvRect.xy + a_unit * i_uvRect.zw;
+    v_tint = i_tint;
+    gl_Position = vec4(position, 0.0, 1.0);
+}`;
+
 export function resolveWebGl2ShaderSource(
     desc: PipelineDescriptor,
 ): WebGl2ShaderSource | undefined {
@@ -63,6 +98,26 @@ export function resolveWebGl2ShaderSource(
     ) {
         return {
             vertex: TEXTURED_VERTEX_SHADER,
+            fragment: TEXTURED_FRAGMENT_SHADER,
+        };
+    }
+
+    if (
+        desc.shaderFamily === "solid-2d" &&
+        desc.vertexLayoutKey === "quad-solid-instance-2d"
+    ) {
+        return {
+            vertex: SOLID_QUAD_INSTANCE_VERTEX_SHADER,
+            fragment: SOLID_FRAGMENT_SHADER,
+        };
+    }
+
+    if (
+        desc.shaderFamily === "textured-2d" &&
+        desc.vertexLayoutKey === "quad-textured-instance-2d"
+    ) {
+        return {
+            vertex: TEXTURED_QUAD_INSTANCE_VERTEX_SHADER,
             fragment: TEXTURED_FRAGMENT_SHADER,
         };
     }

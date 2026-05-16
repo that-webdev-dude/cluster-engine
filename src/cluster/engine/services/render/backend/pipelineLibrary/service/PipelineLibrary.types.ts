@@ -11,7 +11,9 @@ export type PipelinePrimitive = "triangles" | "lines";
 export type PipelineShaderFamily = "solid-2d" | "textured-2d";
 export type PipelineVertexLayoutKey =
     | "position-color-2d"
-    | "position-uv-tint-2d";
+    | "position-uv-tint-2d"
+    | "quad-solid-instance-2d"
+    | "quad-textured-instance-2d";
 
 export type PipelineDescriptor = Readonly<{
     shaderFamily: PipelineShaderFamily;
@@ -62,6 +64,7 @@ export type WebGpuVertexAttribute = Readonly<{
 
 export type WebGpuVertexBufferLayout = Readonly<{
     arrayStride: number;
+    stepMode?: "vertex" | "instance";
     attributes: readonly WebGpuVertexAttribute[];
 }>;
 

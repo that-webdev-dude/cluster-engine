@@ -523,7 +523,7 @@ describe("createRender", () => {
             drawCallCount: 1,
             vertexCount: 6,
             uploadCallCount: 1,
-            uploadByteCount: 144,
+            uploadByteCount: 56,
             uploadRangeCount: 1,
             uploadLayoutCount: 1,
             frameVertexBufferCreateCount: 1,
@@ -652,7 +652,7 @@ describe("createRender", () => {
             textureResourceCount: 1,
         });
         expect(restoredGl.texImage2D).toHaveBeenCalled();
-        expect(restoredGl.drawArrays).toHaveBeenCalledTimes(2);
+        expect(restoredGl.drawArraysInstanced).toHaveBeenCalledTimes(2);
 
         await render.dispose();
     });

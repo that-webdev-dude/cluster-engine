@@ -8,23 +8,44 @@ import {
     writeRender2DBatchVertexDataAtOffset,
     type Render2DVertexLayoutInfo,
 } from "./Render2DVertexPacking.module";
+import {
+    getRender2DQuadInstanceLayout,
+    isRender2DQuadInstanceItem,
+    RENDER_2D_INSTANCE_LAYOUTS,
+    writeRender2DQuadInstanceDataAtOffset,
+    type Render2DInstanceLayoutInfo,
+    type Render2DInstanceLayoutKey,
+} from "./Render2DInstancePacking.module";
 
-export type Render2DUploadLayoutKey = Render2DPreparedBatch["vertexLayout"];
+export type Render2DUploadLayoutKey =
+    | Render2DPreparedBatch["vertexLayout"]
+    | Render2DInstanceLayoutKey;
+
+export type Render2DUploadRangeKind = "vertices" | "instances";
+
+export type Render2DUploadLayoutInfo =
+    | Render2DVertexLayoutInfo
+    | Render2DInstanceLayoutInfo;
 
 export type Render2DUploadRange = Readonly<{
+    kind: Render2DUploadRangeKind;
     batchIndex: number;
     layout: Render2DUploadLayoutKey;
+    itemStart: number;
+    itemCount: number;
     floatOffset: number;
     floatLength: number;
     byteOffset: number;
     byteLength: number;
     vertexOffset: number;
     vertexCount: number;
+    instanceOffset: number;
+    instanceCount: number;
 }>;
 
 export type Render2DLayoutUpload = Readonly<{
     layout: Render2DUploadLayoutKey;
-    layoutInfo: Render2DVertexLayoutInfo;
+    layoutInfo: Render2DUploadLayoutInfo;
     data: Float32Array<ArrayBufferLike>;
     floatLength: number;
     byteLength: number;
@@ -46,6 +67,7 @@ export type Render2DUploadFrameStats = Readonly<{
 export type Render2DUploadFrame = Readonly<{
     source: Render2DPreparedFrame;
     layouts: readonly Render2DLayoutUpload[];
+    ranges: readonly Render2DUploadRange[];
     rangesByBatchIndex: Render2DUploadRangeTable;
     stats: Render2DUploadFrameStats;
 }>;
@@ -74,7 +96,7 @@ export type Render2DUpload = Readonly<{
 
 type MutableLayoutUpload = {
     layout: Render2DUploadLayoutKey;
-    layoutInfo: Render2DVertexLayoutInfo;
+    layoutInfo: Render2DUploadLayoutInfo;
     data: Float32Array<ArrayBufferLike>;
     floatLength: number;
     byteLength: number;
@@ -117,10 +139,12 @@ export function createRender2DUpload(
     const batchWriter = config.batchWriter ?? defaultBatchWriter;
     const uploadsByLayout = new Map<Render2DUploadLayoutKey, MutableLayoutUpload>();
     const activeUploads: MutableLayoutUpload[] = [];
+    const orderedRanges: Render2DUploadRange[] = [];
     const rangesByBatchIndex: Array<Render2DUploadRange | undefined> = [];
 
     function resetFrameState(frame: Render2DPreparedFrame): void {
         activeUploads.length = 0;
+        orderedRanges.length = 0;
         rangesByBatchIndex.length = frame.batchCount;
         rangesByBatchIndex.fill(undefined);
 
@@ -140,7 +164,11 @@ export function createRender2DUpload(
 
         upload = {
             layout,
-            layoutInfo: RENDER_2D_VERTEX_LAYOUTS[layout],
+            layoutInfo:
+                layout === "quad-solid-instance-2d" ||
+                layout === "quad-textured-instance-2d"
+                    ? RENDER_2D_INSTANCE_LAYOUTS[layout]
+                    : RENDER_2D_VERTEX_LAYOUTS[layout],
             data: new Float32Array(0),
             floatLength: 0,
             byteLength: 0,
@@ -159,14 +187,23 @@ export function createRender2DUpload(
         activeUploads.push(upload);
     }
 
-    function appendBatchRange(
+    function appendVertexRange(
         upload: MutableLayoutUpload,
         frame: Render2DPreparedFrame,
         batchIndex: number,
         batch: Render2DPreparedBatch,
+        itemStart: number,
+        itemCount: number,
+        vertexCount: number,
     ): void {
         const floatOffset = upload.floatLength;
-        const written = batchWriter(upload.data, frame, batch, floatOffset);
+        const runBatch: Render2DPreparedBatch = {
+            ...batch,
+            itemStart,
+            itemCount,
+            vertexCount,
+        };
+        const written = batchWriter(upload.data, frame, runBatch, floatOffset);
         const vertexOffset = Math.floor(
             written.floatOffset / upload.layoutInfo.strideFloats,
         );
@@ -178,18 +215,133 @@ export function createRender2DUpload(
 
         const floatLength = written.floatLength;
         const range: Render2DUploadRange = {
+            kind: "vertices",
             batchIndex,
             layout: upload.layout,
+            itemStart,
+            itemCount,
             floatOffset: written.floatOffset,
             floatLength,
             byteOffset: written.floatOffset * BYTES_PER_FLOAT,
             byteLength: floatLength * BYTES_PER_FLOAT,
             vertexOffset,
-            vertexCount: batch.vertexCount,
+            vertexCount,
+            instanceOffset: 0,
+            instanceCount: 0,
         };
 
         upload.ranges.push(range);
-        rangesByBatchIndex[batchIndex] = range;
+        orderedRanges.push(range);
+        rangesByBatchIndex[batchIndex] ??= range;
+    }
+
+    function appendInstanceRange(
+        upload: MutableLayoutUpload,
+        frame: Render2DPreparedFrame,
+        batchIndex: number,
+        itemStart: number,
+        itemCount: number,
+        vertexCount: number,
+    ): void {
+        const floatOffset = upload.floatLength;
+        const written = writeRender2DQuadInstanceDataAtOffset(
+            upload.data,
+            frame,
+            itemStart,
+            itemCount,
+            upload.layout as Render2DInstanceLayoutKey,
+            floatOffset,
+        );
+        const instanceOffset = Math.floor(
+            written.floatOffset / upload.layoutInfo.strideFloats,
+        );
+
+        upload.data = written.data;
+        upload.floatLength = written.nextOffset;
+        upload.byteLength = upload.floatLength * BYTES_PER_FLOAT;
+        upload.capacityFloats = upload.data.length;
+
+        const floatLength = written.length;
+        const range: Render2DUploadRange = {
+            kind: "instances",
+            batchIndex,
+            layout: upload.layout,
+            itemStart,
+            itemCount,
+            floatOffset: written.offset,
+            floatLength,
+            byteOffset: written.offset * BYTES_PER_FLOAT,
+            byteLength: floatLength * BYTES_PER_FLOAT,
+            vertexOffset: 0,
+            vertexCount,
+            instanceOffset,
+            instanceCount: itemCount,
+        };
+
+        upload.ranges.push(range);
+        orderedRanges.push(range);
+        rangesByBatchIndex[batchIndex] ??= range;
+    }
+
+    function appendBatchRuns(
+        frame: Render2DPreparedFrame,
+        batchIndex: number,
+        batch: Render2DPreparedBatch,
+    ): void {
+        let runStart = batch.itemStart;
+        let runItemCount = 0;
+        let runVertexCount = 0;
+        let runInstances = false;
+        let runLayout: Render2DUploadLayoutKey = batch.vertexLayout;
+
+        function flushRun(): void {
+            if (runItemCount <= 0 || runVertexCount <= 0) return;
+            const upload = getLayoutUpload(runLayout);
+            activateUpload(upload);
+            if (runInstances) {
+                appendInstanceRange(
+                    upload,
+                    frame,
+                    batchIndex,
+                    runStart,
+                    runItemCount,
+                    runVertexCount,
+                );
+            } else {
+                appendVertexRange(
+                    upload,
+                    frame,
+                    batchIndex,
+                    batch,
+                    runStart,
+                    runItemCount,
+                    runVertexCount,
+                );
+            }
+        }
+
+        for (let i = 0; i < batch.itemCount; i++) {
+            const itemIndex = batch.itemStart + i;
+            const item = frame.items[itemIndex];
+            const itemInstances = isRender2DQuadInstanceItem(item);
+            const itemLayout = itemInstances
+                ? getRender2DQuadInstanceLayout(item)
+                : batch.vertexLayout;
+
+            if (runItemCount > 0 && (itemInstances !== runInstances || itemLayout !== runLayout)) {
+                flushRun();
+                runStart = itemIndex;
+                runItemCount = 0;
+                runVertexCount = 0;
+            }
+
+            runInstances = itemInstances;
+            runLayout = itemLayout;
+            runItemCount++;
+            runVertexCount += item.vertexCount;
+        }
+
+        flushRun();
     }
 
     function createStats(): Render2DUploadFrameStats {
@@ -221,14 +373,13 @@ export function createRender2DUpload(
                 const batch = frame.batches[batchIndex];
                 if (batch.vertexCount <= 0) continue;
 
-                const upload = getLayoutUpload(batch.vertexLayout);
-                activateUpload(upload);
-                appendBatchRange(upload, frame, batchIndex, batch);
+                appendBatchRuns(frame, batchIndex, batch);
             }
 
             return {
                 source: frame,
                 layouts: activeUploads,
+                ranges: orderedRanges,
                 rangesByBatchIndex,
                 stats: createStats(),
             };

@@ -87,7 +87,7 @@ describe("createWebGpuSubmitter", () => {
         await gpuResource.dispose();
     });
 
-    it("uploads packed solid vertices and draws one rect batch", async () => {
+    it("uploads a solid rect instance, binds static geometry, and draws one instance", async () => {
         const webGpu = createFakeWebGpu();
         const { gpuResource, pipelineLibrary, submitter } =
             await createStartedSubmitter();
@@ -118,7 +118,7 @@ describe("createWebGpuSubmitter", () => {
                 drawCallCount: 1,
                 vertexCount: 6,
                 uploadCallCount: 1,
-                uploadByteCount: 144,
+                uploadByteCount: 56,
                 uploadRangeCount: 1,
                 uploadLayoutCount: 1,
                 frameVertexBufferCreateCount: 1,
@@ -129,13 +129,25 @@ describe("createWebGpuSubmitter", () => {
                 fallbackResourceCount: 0,
             },
         });
-        expect(webGpu.device.createBuffer).toHaveBeenCalledTimes(1);
+        expect(webGpu.device.createBuffer).toHaveBeenCalledTimes(3);
         expect(webGpu.device.queue.writeBuffer).toHaveBeenCalledWith(
             expect.any(Object),
             0,
             expect.any(Float32Array),
         );
-        expect(webGpu.renderPass.draw).toHaveBeenCalledWith(6);
+        expect(webGpu.renderPass.setVertexBuffer).toHaveBeenNthCalledWith(
+            1,
+            0,
+            expect.any(Object),
+            0,
+        );
+        expect(webGpu.renderPass.setVertexBuffer).toHaveBeenNthCalledWith(
+            2,
+            1,
+            expect.any(Object),
+            0,
+        );
+        expect(webGpu.renderPass.draw).toHaveBeenCalledWith(6, 1);
 
         await pipelineLibrary.dispose();
         await gpuResource.dispose();
@@ -217,8 +229,8 @@ describe("createWebGpuSubmitter", () => {
         submitter.submit(frame, runtime);
         const second = submitter.submit(frame, runtime);
 
-        expect(webGpu.device.createBuffer).toHaveBeenCalledTimes(1);
-        expect(webGpu.device.queue.writeBuffer).toHaveBeenCalledTimes(2);
+        expect(webGpu.device.createBuffer).toHaveBeenCalledTimes(3);
+        expect(webGpu.device.queue.writeBuffer).toHaveBeenCalledTimes(4);
         expect(second.metrics).toMatchObject({
             frameVertexBufferCreateCount: 0,
             frameVertexBufferGrowCount: 0,
@@ -275,6 +287,30 @@ describe("createWebGpuSubmitter", () => {
                             w: 10,
                             h: 10,
                         },
+                        {
+                            kind: "rect",
+                            sortKey: 2,
+                            x: 40,
+                            y: 40,
+                            w: 10,
+                            h: 10,
+                        },
+                        {
+                            kind: "rect",
+                            sortKey: 3,
+                            x: 60,
+                            y: 60,
+                            w: 10,
+                            h: 10,
+                        },
+                        {
+                            kind: "rect",
+                            sortKey: 4,
+                            x: 80,
+                            y: 80,
+                            w: 10,
+                            h: 10,
+                        },
                     ],
                 },
             ]),
@@ -285,7 +321,7 @@ describe("createWebGpuSubmitter", () => {
 
         expect(grown.metrics).toMatchObject({
             uploadCallCount: 1,
-            uploadByteCount: 288,
+            uploadByteCount: 280,
             frameVertexBufferCreateCount: 0,
             frameVertexBufferGrowCount: 1,
             frameVertexBufferReuseCount: 0,
@@ -345,17 +381,17 @@ describe("createWebGpuSubmitter", () => {
                 drawCallCount: 3,
                 vertexCount: 18,
                 uploadCallCount: 2,
-                uploadByteCount: 480,
+                uploadByteCount: 184,
                 uploadRangeCount: 3,
                 uploadLayoutCount: 2,
                 frameVertexBufferCreateCount: 2,
                 frameVertexBufferGrowCount: 0,
                 frameVertexBufferReuseCount: 0,
-                frameVertexBufferCapacityBytes: 544,
+                frameVertexBufferCapacityBytes: 512,
                 fallbackResourceCount: 1,
             },
         });
-        expect(webGpu.device.queue.writeBuffer).toHaveBeenCalledTimes(2);
+        expect(webGpu.device.queue.writeBuffer).toHaveBeenCalledTimes(4);
         expect(webGpu.renderPass.setVertexBuffer).toHaveBeenNthCalledWith(
             1,
             0,
@@ -364,7 +400,7 @@ describe("createWebGpuSubmitter", () => {
         );
         expect(webGpu.renderPass.setVertexBuffer).toHaveBeenNthCalledWith(
             2,
-            0,
+            1,
             expect.any(Object),
             0,
         );
@@ -372,8 +408,29 @@ describe("createWebGpuSubmitter", () => {
             3,
             0,
             expect.any(Object),
-            144,
+            0,
         );
+        expect(webGpu.renderPass.setVertexBuffer).toHaveBeenNthCalledWith(
+            4,
+            1,
+            expect.any(Object),
+            0,
+        );
+        expect(webGpu.renderPass.setVertexBuffer).toHaveBeenNthCalledWith(
+            5,
+            0,
+            expect.any(Object),
+            0,
+        );
+        expect(webGpu.renderPass.setVertexBuffer).toHaveBeenNthCalledWith(
+            6,
+            1,
+            expect.any(Object),
+            56,
+        );
+        expect(webGpu.renderPass.draw).toHaveBeenNthCalledWith(1, 6, 1);
+        expect(webGpu.renderPass.draw).toHaveBeenNthCalledWith(2, 6, 1);
+        expect(webGpu.renderPass.draw).toHaveBeenNthCalledWith(3, 6, 1);
 
         await pipelineLibrary.dispose();
         await gpuResource.dispose();
@@ -411,7 +468,7 @@ describe("createWebGpuSubmitter", () => {
                 drawCallCount: 0,
                 vertexCount: 0,
                 uploadCallCount: 1,
-                uploadByteCount: 144,
+                uploadByteCount: 56,
                 uploadRangeCount: 1,
                 uploadLayoutCount: 1,
                 frameVertexBufferCreateCount: 1,

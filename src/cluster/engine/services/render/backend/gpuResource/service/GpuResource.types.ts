@@ -27,7 +27,9 @@ export type GpuBufferUploadUsage =
 export type GpuTextureUsage = "sampled" | "copy-dst" | "render-target";
 export type GpuFrameVertexLayoutKey =
     | "position-color-2d"
-    | "position-uv-tint-2d";
+    | "position-uv-tint-2d"
+    | "quad-solid-instance-2d"
+    | "quad-textured-instance-2d";
 
 export type GpuTextureDesc = Readonly<{
     label?: string;
@@ -219,6 +221,18 @@ export type WebGl2FrameVertexBuffer = Readonly<{
     buffer: WebGLBuffer;
     capacityBytes: number;
     status: GpuFrameVertexBufferStatus;
+}>;
+
+export type WebGl2UnitQuadGeometry = Readonly<{
+    vertexBuffer: WebGLBuffer;
+    indexBuffer: WebGLBuffer;
+    vertexCount: number;
+}>;
+
+export type WebGpuUnitQuadGeometry = Readonly<{
+    vertexBuffer: WebGpuBufferLike;
+    indexBuffer: WebGpuBufferLike;
+    vertexCount: number;
 }>;
 
 export type GpuResourceSyncArgs = Readonly<{

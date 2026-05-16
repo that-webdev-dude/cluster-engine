@@ -28,6 +28,7 @@ export type FakeWebGl2 = WebGL2RenderingContext & {
     disable: MockFn;
     disableVertexAttribArray: MockFn;
     drawArrays: MockFn;
+    drawArraysInstanced: MockFn;
     enable: MockFn;
     enableVertexAttribArray: MockFn;
     getParameter: MockFn;
@@ -44,6 +45,7 @@ export type FakeWebGl2 = WebGL2RenderingContext & {
     texParameteri: MockFn;
     uniform1i: MockFn;
     useProgram: MockFn;
+    vertexAttribDivisor: MockFn;
     vertexAttribPointer: MockFn;
     viewport: MockFn;
 };
@@ -169,6 +171,7 @@ export function createFakeWebGl2(): FakeWebGl2 {
         disable: vi.fn(),
         disableVertexAttribArray: vi.fn(),
         drawArrays: vi.fn(),
+        drawArraysInstanced: vi.fn(),
         enable: vi.fn(),
         enableVertexAttribArray: vi.fn(),
         getParameter: vi.fn(() => 4096),
@@ -185,6 +188,7 @@ export function createFakeWebGl2(): FakeWebGl2 {
         texParameteri: vi.fn(),
         uniform1i: vi.fn(),
         useProgram: vi.fn(),
+        vertexAttribDivisor: vi.fn(),
         vertexAttribPointer: vi.fn(),
         viewport: vi.fn(),
     } as unknown as FakeWebGl2;

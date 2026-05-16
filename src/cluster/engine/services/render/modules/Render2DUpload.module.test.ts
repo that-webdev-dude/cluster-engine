@@ -31,7 +31,7 @@ describe("createRender2DUpload", () => {
         });
     });
 
-    it("packs multiple same-layout batches into one layout upload", () => {
+    it("packs multiple same-layout quad instance batches into one layout upload", () => {
         const frame = createRender2DPrepare().prepare(
             createInput([
                 {
@@ -56,20 +56,26 @@ describe("createRender2DUpload", () => {
         const uploadFrame = createRender2DUpload().build(frame);
 
         expect(uploadFrame.layouts).toHaveLength(1);
+        expect(uploadFrame.layouts[0].layout).toBe("quad-solid-instance-2d");
+        expect(uploadFrame.ranges.map((range) => range.kind)).toEqual([
+            "instances",
+            "instances",
+        ]);
         expect(uploadFrame.stats).toEqual({
             layoutUploadCount: 1,
             rangeCount: 2,
-            uploadByteLength: 288,
-            uploadFloatLength: 72,
+            uploadByteLength: 112,
+            uploadFloatLength: 28,
         });
         expect(uploadFrame.rangesByBatchIndex[1]).toMatchObject({
-            byteOffset: 144,
-            byteLength: 144,
+            byteOffset: 56,
+            byteLength: 56,
             vertexCount: 6,
+            instanceCount: 1,
         });
     });
 
-    it("reports separate layout uploads for mixed solid and textured batches", () => {
+    it("reports separate instance layout uploads for mixed solid and textured batches", () => {
         const frame = createRender2DPrepare().prepare(
             createInput([
                 {
@@ -103,14 +109,74 @@ describe("createRender2DUpload", () => {
         const uploadFrame = createRender2DUpload().build(frame);
 
         expect(uploadFrame.layouts.map((upload) => upload.layout)).toEqual([
-            "position-color-2d",
-            "position-uv-tint-2d",
+            "quad-solid-instance-2d",
+            "quad-textured-instance-2d",
+        ]);
+        expect(uploadFrame.ranges.map((range) => range.kind)).toEqual([
+            "instances",
+            "instances",
+            "instances",
         ]);
         expect(uploadFrame.stats).toEqual({
             layoutUploadCount: 2,
             rangeCount: 3,
-            uploadByteLength: 480,
-            uploadFloatLength: 120,
+            uploadByteLength: 184,
+            uploadFloatLength: 46,
+        });
+    });
+
+    it("splits mixed quad and unsupported primitive batches into instance and legacy ranges", () => {
+        const frame = createRender2DPrepare().prepare(
+            createInput([
+                {
+                    kind: "rect",
+                    sortKey: 0,
+                    x: 0,
+                    y: 0,
+                    w: 10,
+                    h: 10,
+                },
+                {
+                    kind: "circle",
+                    sortKey: 1,
+                    x: 20,
+                    y: 20,
+                    radius: 5,
+                },
+            ]),
+        );
+        const uploadFrame = createRender2DUpload().build(frame);
+
+        expect(frame.batchCount).toBe(1);
+        expect(uploadFrame.layouts.map((upload) => upload.layout)).toEqual([
+            "quad-solid-instance-2d",
+            "position-color-2d",
+        ]);
+        expect(uploadFrame.ranges).toMatchObject([
+            {
+                kind: "instances",
+                batchIndex: 0,
+                itemStart: 0,
+                itemCount: 1,
+                byteLength: 56,
+                vertexCount: 6,
+                instanceCount: 1,
+            },
+            {
+                kind: "vertices",
+                batchIndex: 0,
+                itemStart: 1,
+                itemCount: 1,
+                byteLength: 1728,
+                vertexCount: 72,
+                instanceCount: 0,
+            },
+        ]);
+        expect(uploadFrame.stats).toEqual({
+            layoutUploadCount: 2,
+            rangeCount: 2,
+            uploadByteLength: 1784,
+            uploadFloatLength: 446,
         });
     });
 });

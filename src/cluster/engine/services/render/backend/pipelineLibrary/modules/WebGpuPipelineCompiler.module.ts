@@ -8,11 +8,12 @@ import {
     BYTES_PER_FLOAT,
     RENDER_2D_VERTEX_LAYOUTS,
 } from "../../../modules/Render2DVertexPacking.module";
+import { RENDER_2D_INSTANCE_LAYOUTS } from "../../../modules/Render2DInstancePacking.module";
 
 export type WebGpuShaderSource = Readonly<{
     vertex: string;
     fragment: string;
-    vertexBuffer: WebGpuVertexBufferLayout;
+    vertexBuffers: readonly WebGpuVertexBufferLayout[];
 }>;
 
 const SOLID_VERTEX_SHADER = `
@@ -70,9 +71,74 @@ fn main(
     return textureSample(u_texture, u_sampler, uv) * tint;
 }`;
 
+const SOLID_QUAD_INSTANCE_VERTEX_SHADER = `
+struct VertexOut {
+    @builtin(position) position: vec4f,
+    @location(0) color: vec4f,
+};
+
+@vertex
+fn main(
+    @location(0) unit: vec2f,
+    @location(1) origin: vec2f,
+    @location(2) axisX: vec2f,
+    @location(3) axisY: vec2f,
+    @location(4) size: vec2f,
+    @location(5) color: vec4f,
+    @location(6) group: vec2f,
+) -> VertexOut {
+    var out: VertexOut;
+    let local = unit * size;
+    out.position = vec4f(origin + axisX * local.x + axisY * local.y, 0.0, 1.0);
+    out.color = color;
+    return out;
+}`;
+
+const TEXTURED_QUAD_INSTANCE_VERTEX_SHADER = `
+struct VertexOut {
+    @builtin(position) position: vec4f,
+    @location(0) uv: vec2f,
+    @location(1) tint: vec4f,
+};
+
+@vertex
+fn main(
+    @location(0) unit: vec2f,
+    @location(1) origin: vec2f,
+    @location(2) axisX: vec2f,
+    @location(3) axisY: vec2f,
+    @location(4) size: vec2f,
+    @location(5) uvRect: vec4f,
+    @location(6) tint: vec4f,
+    @location(7) group: vec2f,
+) -> VertexOut {
+    var out: VertexOut;
+    let local = unit * size;
+    out.position = vec4f(origin + axisX * local.x + axisY * local.y, 0.0, 1.0);
+    out.uv = uvRect.xy + unit * uvRect.zw;
+    out.tint = tint;
+    return out;
+}`;
+
 function createVertexBufferLayout(
     key: PipelineDescriptor["vertexLayoutKey"],
 ): WebGpuVertexBufferLayout {
+    if (
+        key === "quad-solid-instance-2d" ||
+        key === "quad-textured-instance-2d"
+    ) {
+        const layout = RENDER_2D_INSTANCE_LAYOUTS[key];
+        return {
+            arrayStride: layout.strideFloats * BYTES_PER_FLOAT,
+            stepMode: "instance",
+            attributes: layout.attrs.map((attr) => ({
+                shaderLocation: attr.location,
+                offset: attr.offsetFloats * BYTES_PER_FLOAT,
+                format: attr.size === 4 ? "float32x4" : "float32x2",
+            })),
+        };
+    }
+
     const layout = RENDER_2D_VERTEX_LAYOUTS[key];
     return {
         arrayStride: layout.strideFloats * BYTES_PER_FLOAT,
@@ -81,6 +147,20 @@ function createVertexBufferLayout(
             offset: attr.offsetFloats * BYTES_PER_FLOAT,
             format: attr.size === 4 ? "float32x4" : "float32x2",
         })),
+    };
+}
+
+function createUnitQuadVertexBufferLayout(): WebGpuVertexBufferLayout {
+    return {
+        arrayStride: 2 * BYTES_PER_FLOAT,
+        stepMode: "vertex",
+        attributes: [
+            {
+                shaderLocation: 0,
+                offset: 0,
+                format: "float32x2",
+            },
+        ],
     };
 }
 
@@ -112,7 +192,7 @@ export function resolveWebGpuShaderSource(
         return {
             vertex: SOLID_VERTEX_SHADER,
             fragment: SOLID_FRAGMENT_SHADER,
-            vertexBuffer: createVertexBufferLayout(desc.vertexLayoutKey),
+            vertexBuffers: [createVertexBufferLayout(desc.vertexLayoutKey)],
         };
     }
 
@@ -123,7 +203,35 @@ export function resolveWebGpuShaderSource(
         return {
             vertex: TEXTURED_VERTEX_SHADER,
             fragment: TEXTURED_FRAGMENT_SHADER,
-            vertexBuffer: createVertexBufferLayout(desc.vertexLayoutKey),
+            vertexBuffers: [createVertexBufferLayout(desc.vertexLayoutKey)],
+        };
+    }
+
+    if (
+        desc.shaderFamily === "solid-2d" &&
+        desc.vertexLayoutKey === "quad-solid-instance-2d"
+    ) {
+        return {
+            vertex: SOLID_QUAD_INSTANCE_VERTEX_SHADER,
+            fragment: SOLID_FRAGMENT_SHADER,
+            vertexBuffers: [
+                createUnitQuadVertexBufferLayout(),
+                createVertexBufferLayout(desc.vertexLayoutKey),
+            ],
+        };
+    }
+
+    if (
+        desc.shaderFamily === "textured-2d" &&
+        desc.vertexLayoutKey === "quad-textured-instance-2d"
+    ) {
+        return {
+            vertex: TEXTURED_QUAD_INSTANCE_VERTEX_SHADER,
+            fragment: TEXTURED_FRAGMENT_SHADER,
+            vertexBuffers: [
+                createUnitQuadVertexBufferLayout(),
+                createVertexBufferLayout(desc.vertexLayoutKey),
+            ],
         };
     }
 
@@ -143,7 +251,7 @@ export function createWebGpuRenderPipelineDescriptor(args: {
         vertex: {
             module: args.vertexModule,
             entryPoint: "main",
-            buffers: [args.shaderSource.vertexBuffer],
+            buffers: args.shaderSource.vertexBuffers,
         },
         fragment: {
             module: args.fragmentModule,

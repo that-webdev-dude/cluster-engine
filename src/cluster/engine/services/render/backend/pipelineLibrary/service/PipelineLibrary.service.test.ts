@@ -16,6 +16,23 @@ const DESC: PipelineDescriptor = {
 };
 const DESC_KEY =
     "render.pipeline|pass=main|shader=solid-2d|material=solid|primitive=triangles|blend=opaque|layout=position-color-2d";
+const SOLID_INSTANCE_DESC: PipelineDescriptor = {
+    ...DESC,
+    materialKey: "solid:quad-instance",
+    vertexLayoutKey: "quad-solid-instance-2d",
+};
+const SOLID_INSTANCE_DESC_KEY =
+    "render.pipeline|pass=main|shader=solid-2d|material=solid%3Aquad-instance|primitive=triangles|blend=opaque|layout=quad-solid-instance-2d";
+const TEXTURED_INSTANCE_DESC: PipelineDescriptor = {
+    shaderFamily: "textured-2d",
+    passKey: "main",
+    materialKey: "textured:quad-instance",
+    primitive: "triangles",
+    blend: "alpha",
+    vertexLayoutKey: "quad-textured-instance-2d",
+};
+const TEXTURED_INSTANCE_DESC_KEY =
+    "render.pipeline|pass=main|shader=textured-2d|material=textured%3Aquad-instance|primitive=triangles|blend=alpha|layout=quad-textured-instance-2d";
 
 describe("PipelineLibraryService", () => {
     it("normalizes descriptor intent into a stable backend-neutral key", async () => {
@@ -104,6 +121,84 @@ describe("PipelineLibraryService", () => {
             }),
         );
         expect(webGpu.device.createRenderPipeline).toHaveBeenCalledTimes(1);
+
+        await pipelines.dispose();
+    });
+
+    it("uses distinct cache keys for WebGL2 quad instance descriptors", async () => {
+        const gl = createFakeWebGl2();
+        const pipelines = createPipelineLibrary({});
+        await pipelines.start();
+
+        const solid = pipelines.getWebGl2Pipeline({
+            desc: SOLID_INSTANCE_DESC,
+            gl,
+        });
+        const textured = pipelines.getWebGl2Pipeline({
+            desc: TEXTURED_INSTANCE_DESC,
+            gl,
+        });
+
+        expect(solid).toBeDefined();
+        expect(textured).toBeDefined();
+        expect(solid?.handle).not.toEqual(textured?.handle);
+        expect(pipelines.peekPipeline(SOLID_INSTANCE_DESC_KEY)).toMatchObject({
+            key: SOLID_INSTANCE_DESC_KEY,
+            backend: "webgl2",
+            invalidated: false,
+        });
+        expect(pipelines.peekPipeline(TEXTURED_INSTANCE_DESC_KEY)).toMatchObject({
+            key: TEXTURED_INSTANCE_DESC_KEY,
+            backend: "webgl2",
+            invalidated: false,
+        });
+        expect(gl.shaderSource).toHaveBeenCalledWith(
+            expect.any(Object),
+            expect.stringContaining("a_unit"),
+        );
+
+        await pipelines.dispose();
+    });
+
+    it("uses distinct cache keys for WebGPU quad instance descriptors", async () => {
+        const webGpu = createFakeWebGpu();
+        const pipelines = createPipelineLibrary({});
+        await pipelines.start();
+        pipelines.sync({ gfxBackend: "webgpu", gfxStatus: "ok" });
+
+        const solid = pipelines.getWebGpuPipeline({
+            desc: SOLID_INSTANCE_DESC,
+            device: webGpu.device,
+            format: "bgra8unorm",
+        });
+        const textured = pipelines.getWebGpuPipeline({
+            desc: TEXTURED_INSTANCE_DESC,
+            device: webGpu.device,
+            format: "bgra8unorm",
+        });
+
+        expect(solid).toBeDefined();
+        expect(textured).toBeDefined();
+        expect(solid?.handle).not.toEqual(textured?.handle);
+        expect(pipelines.peekPipeline(SOLID_INSTANCE_DESC_KEY)).toMatchObject({
+            key: SOLID_INSTANCE_DESC_KEY,
+            backend: "webgpu",
+            invalidated: false,
+        });
+        expect(pipelines.peekPipeline(TEXTURED_INSTANCE_DESC_KEY)).toMatchObject({
+            key: TEXTURED_INSTANCE_DESC_KEY,
+            backend: "webgpu",
+            invalidated: false,
+        });
+        expect(webGpu.device.createRenderPipeline).toHaveBeenCalledWith(
+            expect.objectContaining({
+                vertex: expect.objectContaining({
+                    buffers: expect.arrayContaining([
+                        expect.objectContaining({ stepMode: "instance" }),
+                    ]),
+                }),
+            }),
+        );
 
         await pipelines.dispose();
     });

@@ -263,7 +263,7 @@ describe("createSubmitFrame", () => {
                 drawCallCount: 1,
                 vertexCount: 6,
                 uploadCallCount: 1,
-                uploadByteCount: 144,
+                uploadByteCount: 56,
                 uploadRangeCount: 1,
                 uploadLayoutCount: 1,
                 frameVertexBufferCreateCount: 1,
@@ -303,7 +303,7 @@ describe("createSubmitFrame", () => {
         await gpuResource.dispose();
     });
 
-    it("uploads packed solid vertices and draws one rect batch", async () => {
+    it("uploads a solid rect instance and draws one instanced rect batch", async () => {
         const gl = createFakeWebGl2();
         const gpuResource = createGpuResource({});
         const pipelineLibrary = createPipelineLibrary({});
@@ -356,7 +356,13 @@ describe("createSubmitFrame", () => {
             0,
             expect.any(Float32Array),
         );
-        expect(gl.drawArrays).toHaveBeenCalledWith(gl.TRIANGLES, 0, 6);
+        expect(gl.drawArraysInstanced).toHaveBeenCalledWith(
+            gl.TRIANGLES,
+            0,
+            6,
+            1,
+        );
+        expect(gl.drawArrays).not.toHaveBeenCalled();
 
         await pipelineLibrary.dispose();
         await gpuResource.dispose();
@@ -626,33 +632,33 @@ describe("createSubmitFrame", () => {
                 drawCallCount: 3,
                 vertexCount: 18,
                 uploadCallCount: 2,
-                uploadByteCount: 480,
+                uploadByteCount: 184,
                 uploadRangeCount: 3,
                 uploadLayoutCount: 2,
                 frameVertexBufferCreateCount: 2,
                 frameVertexBufferGrowCount: 0,
                 frameVertexBufferReuseCount: 0,
-                frameVertexBufferCapacityBytes: 544,
+                frameVertexBufferCapacityBytes: 512,
                 fallbackResourceCount: 0,
             },
         });
-        expect(gl.drawArrays).toHaveBeenCalledTimes(3);
+        expect(gl.drawArraysInstanced).toHaveBeenCalledTimes(3);
         expect(gl.bufferSubData).toHaveBeenCalledTimes(2);
         expect(gl.vertexAttribPointer).toHaveBeenCalledWith(
-            0,
+            1,
             2,
             gl.FLOAT,
             false,
-            24,
-            144,
+            56,
+            56,
         );
         expect(gl.vertexAttribPointer).toHaveBeenCalledWith(
-            1,
+            5,
             4,
             gl.FLOAT,
             false,
-            24,
-            152,
+            56,
+            88,
         );
 
         await pipelineLibrary.dispose();
@@ -696,7 +702,7 @@ describe("createSubmitFrame", () => {
                 drawCallCount: 0,
                 vertexCount: 0,
                 uploadCallCount: 1,
-                uploadByteCount: 144,
+                uploadByteCount: 56,
                 uploadRangeCount: 1,
                 uploadLayoutCount: 1,
                 frameVertexBufferCreateCount: 1,
@@ -708,6 +714,7 @@ describe("createSubmitFrame", () => {
             },
         });
         expect(gl.drawArrays).not.toHaveBeenCalled();
+        expect(gl.drawArraysInstanced).not.toHaveBeenCalled();
 
         await pipelineLibrary.dispose();
         await gpuResource.dispose();

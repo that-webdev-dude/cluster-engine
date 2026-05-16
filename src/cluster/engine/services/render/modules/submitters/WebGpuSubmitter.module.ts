@@ -17,6 +17,7 @@ import type {
     SubmitFrameMetrics,
 } from "../SubmitFrame.module";
 import { getRender2DPipelineDescriptor } from "../Render2DVertexPacking.module";
+import { getRender2DQuadInstancePipelineDescriptor } from "../Render2DInstancePacking.module";
 
 export type WebGpuSubmitter = Readonly<{
     submit(
@@ -50,7 +51,7 @@ type WebGpuRenderPassEncoderLike = Readonly<{
     setPipeline(pipeline: object): void;
     setVertexBuffer(slot: number, buffer: object, offset?: number): void;
     setBindGroup(index: number, bindGroup: object): void;
-    draw(vertexCount: number): void;
+    draw(vertexCount: number, instanceCount?: number): void;
     end(): void;
 }>;
 
@@ -213,7 +214,10 @@ export function createWebGpuSubmitter(
         metrics: MutableSubmitMetrics,
     ): boolean {
         const pipeline = config.pipelineLibrary.getWebGpuPipeline({
-            desc: getRender2DPipelineDescriptor(batch),
+            desc:
+                range.kind === "instances"
+                    ? getRender2DQuadInstancePipelineDescriptor(batch)
+                    : getRender2DPipelineDescriptor(batch),
             device: runtime.device,
             format: runtime.format,
         });
@@ -239,9 +243,20 @@ export function createWebGpuSubmitter(
 
         try {
             pass.setPipeline(pipeline.pipeline);
-            pass.setVertexBuffer(0, vertexBuffer, range.byteOffset);
-            if (bindGroup) pass.setBindGroup(0, bindGroup);
-            pass.draw(range.vertexCount);
+            if (range.kind === "instances") {
+                const quad = config.gpuResource.getWebGpuUnitQuadGeometry(
+                    runtime.device,
+                );
+                if (!quad) return false;
+                pass.setVertexBuffer(0, quad.vertexBuffer, 0);
+                pass.setVertexBuffer(1, vertexBuffer, range.byteOffset);
+                if (bindGroup) pass.setBindGroup(0, bindGroup);
+                pass.draw(quad.vertexCount, range.instanceCount);
+            } else {
+                pass.setVertexBuffer(0, vertexBuffer, range.byteOffset);
+                if (bindGroup) pass.setBindGroup(0, bindGroup);
+                pass.draw(range.vertexCount);
+            }
         } catch {
             return false;
         }
@@ -279,14 +294,8 @@ export function createWebGpuSubmitter(
                     };
                 }
 
-                for (
-                    let batchIndex = 0;
-                    batchIndex < frame.batchCount;
-                    batchIndex++
-                ) {
-                    const batch = frame.batches[batchIndex];
-                    const range = uploadFrame.rangesByBatchIndex[batchIndex];
-                    if (!range) continue;
+                for (const range of uploadFrame.ranges) {
+                    const batch = frame.batches[range.batchIndex];
                     if (
                         !submitWebGpuBatch(
                             runtime,

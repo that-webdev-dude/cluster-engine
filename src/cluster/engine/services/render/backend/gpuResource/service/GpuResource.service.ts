@@ -33,12 +33,15 @@ import type {
     GpuTextureResourceConfig,
     GpuUploadRequest,
     WebGl2TextureBinding,
+    WebGl2UnitQuadGeometry,
     WebGpuBindGroupLike,
     WebGpuDeviceLike,
     WebGpuFrameVertexBuffer,
+    WebGpuUnitQuadGeometry,
     WebGpuTextureBinding,
     WebGl2FrameVertexBuffer,
 } from "./GpuResource.types";
+import { RENDER_2D_UNIT_QUAD_VERTEX_DATA } from "../../../modules/Render2DInstancePacking.module";
 
 export type GpuResourceService = Readonly<{
     start(): Promise<boolean>;
@@ -64,6 +67,12 @@ export type GpuResourceService = Readonly<{
         gl: WebGL2RenderingContext;
         byteLength: number;
     }): WebGl2FrameVertexBuffer | undefined;
+    getWebGl2UnitQuadGeometry(
+        gl: WebGL2RenderingContext,
+    ): WebGl2UnitQuadGeometry | undefined;
+    getWebGpuUnitQuadGeometry(
+        device: WebGpuDeviceLike,
+    ): WebGpuUnitQuadGeometry | undefined;
     resolveWebGl2Texture(
         resourceId: string | undefined,
         gl: WebGL2RenderingContext,
@@ -105,10 +114,17 @@ type RetainedTextureUpload = {
     data: ArrayBufferView;
 };
 
+type UnitQuadGeometryRecord = {
+    webgl2?: WebGl2UnitQuadGeometry;
+    webgpu?: WebGpuUnitQuadGeometry;
+};
+
 const FALLBACK_TEXTURE_RESOURCE_ID = "cluster.render.fallbackTexture";
 const FALLBACK_TEXTURE_DATA = new Uint8Array([255, 0, 255, 255]);
 const WEBGPU_BUFFER_USAGE_VERTEX_COPY_DST = 0x20 | 0x8;
+const WEBGPU_BUFFER_USAGE_INDEX_COPY_DST = 0x10 | 0x8;
 const WEBGPU_TEXTURE_USAGE_TEXTURE_BINDING_COPY_DST = 0x4 | 0x2;
+const UNIT_QUAD_INDEX_DATA = new Uint16Array([0, 1, 2, 2, 1, 3]);
 
 function createGpuResourceService(
     config: GpuResourceConfig,
@@ -127,6 +143,7 @@ function createGpuResourceService(
     const textureResources = new Map<string, GpuTextureHandle>();
     const transientBuffers = new Set<GpuBufferHandle>();
     const frameVertexBuffers = new Map<GpuFrameVertexLayoutKey, BufferRecord>();
+    const unitQuadGeometry: UnitQuadGeometryRecord = {};
 
     const pendingUploads: GpuUploadRequest[] = [];
 
@@ -243,6 +260,15 @@ function createGpuResourceService(
         frameVertexBuffers.clear();
     }
 
+    function deleteUnitQuadGeometry(gl = lastWebGl2Context): void {
+        deleteWebGl2NativeBuffer(gl, unitQuadGeometry.webgl2?.vertexBuffer);
+        deleteWebGl2NativeBuffer(gl, unitQuadGeometry.webgl2?.indexBuffer);
+        unitQuadGeometry.webgpu?.vertexBuffer.destroy?.();
+        unitQuadGeometry.webgpu?.indexBuffer.destroy?.();
+        unitQuadGeometry.webgl2 = undefined;
+        unitQuadGeometry.webgpu = undefined;
+    }
+
     function releaseTransientBuffers(): void {
         for (const handle of transientBuffers) {
             deleteWebGl2Buffer(buffers.get(handle));
@@ -290,6 +316,7 @@ function createGpuResourceService(
             deleteWebGl2Objects();
             deleteWebGpuObjects();
             deleteFrameVertexBuffers();
+            deleteUnitQuadGeometry();
             markAllInvalidated();
         },
         onStop: (_from: LifecycleActivePhase) => {
@@ -299,6 +326,7 @@ function createGpuResourceService(
             deleteWebGl2Objects();
             deleteWebGpuObjects();
             deleteFrameVertexBuffers();
+            deleteUnitQuadGeometry();
             markAllInvalidated();
         },
         onDispose: (_from: LifecycleLivePhase) => {
@@ -308,6 +336,7 @@ function createGpuResourceService(
             deleteWebGl2Objects();
             deleteWebGpuObjects();
             deleteFrameVertexBuffers();
+            deleteUnitQuadGeometry();
             textures.clear();
             buffers.clear();
             samplers.clear();
@@ -326,6 +355,7 @@ function createGpuResourceService(
             deleteWebGl2Objects();
             deleteWebGpuObjects();
             deleteFrameVertexBuffers();
+            deleteUnitQuadGeometry();
             markAllInvalidated();
             return;
         }
@@ -580,6 +610,100 @@ function createGpuResourceService(
         record.invalidated = false;
 
         return { buffer, capacityBytes: nextCapacity, status };
+    }
+
+    function getWebGl2UnitQuadGeometry(
+        gl: WebGL2RenderingContext,
+    ): WebGl2UnitQuadGeometry | undefined {
+        lifecycle.assertNotDisposed();
+        if (!assertRunning("getWebGl2UnitQuadGeometry")) return undefined;
+        lastWebGl2Context = gl;
+        if (unitQuadGeometry.webgl2) return unitQuadGeometry.webgl2;
+
+        const vertexBuffer = createWebGl2Buffer(gl);
+        const indexBuffer = createWebGl2Buffer(gl);
+        if (!vertexBuffer || !indexBuffer) return undefined;
+
+        gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+        gl.bufferData(
+            gl.ARRAY_BUFFER,
+            RENDER_2D_UNIT_QUAD_VERTEX_DATA,
+            gl.STATIC_DRAW,
+        );
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, indexBuffer);
+        gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, UNIT_QUAD_INDEX_DATA, gl.STATIC_DRAW);
+        gl.bindBuffer(gl.ARRAY_BUFFER, null);
+        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
+
+        unitQuadGeometry.webgl2 = {
+            vertexBuffer,
+            indexBuffer,
+            vertexCount: 6,
+        };
+        return unitQuadGeometry.webgl2;
+    }
+
+    function createStaticWebGpuBuffer(args: {
+        device: WebGpuDeviceLike;
+        label: string;
+        byteLength: number;
+        usage: number;
+        data: ArrayBufferView;
+    }): WebGpuUnitQuadGeometry["vertexBuffer"] | undefined {
+        try {
+            const buffer = args.device.createBuffer({
+                label: args.label,
+                size: normalizePositiveInteger(
+                    args.byteLength,
+                    "WebGPU buffer size",
+                ),
+                usage: args.usage,
+            });
+            args.device.queue.writeBuffer(buffer, 0, args.data);
+            return buffer;
+        } catch (error) {
+            if (debug) {
+                const message =
+                    error instanceof Error
+                        ? error.message
+                        : "unknown buffer error";
+                throw new Error(
+                    `GpuResourceService: failed to create WebGPU static buffer - ${message}`,
+                );
+            }
+            return undefined;
+        }
+    }
+
+    function getWebGpuUnitQuadGeometry(
+        device: WebGpuDeviceLike,
+    ): WebGpuUnitQuadGeometry | undefined {
+        lifecycle.assertNotDisposed();
+        if (!assertRunning("getWebGpuUnitQuadGeometry")) return undefined;
+        if (unitQuadGeometry.webgpu) return unitQuadGeometry.webgpu;
+
+        const vertexBuffer = createStaticWebGpuBuffer({
+            device,
+            label: "render.2d.unitQuad.vertices",
+            byteLength: RENDER_2D_UNIT_QUAD_VERTEX_DATA.byteLength,
+            usage: WEBGPU_BUFFER_USAGE_VERTEX_COPY_DST,
+            data: RENDER_2D_UNIT_QUAD_VERTEX_DATA,
+        });
+        const indexBuffer = createStaticWebGpuBuffer({
+            device,
+            label: "render.2d.unitQuad.indices",
+            byteLength: UNIT_QUAD_INDEX_DATA.byteLength,
+            usage: WEBGPU_BUFFER_USAGE_INDEX_COPY_DST,
+            data: UNIT_QUAD_INDEX_DATA,
+        });
+        if (!vertexBuffer || !indexBuffer) return undefined;
+
+        unitQuadGeometry.webgpu = {
+            vertexBuffer,
+            indexBuffer,
+            vertexCount: 6,
+        };
+        return unitQuadGeometry.webgpu;
     }
 
     function getWebGl2Sampler(
@@ -988,6 +1112,8 @@ function createGpuResourceService(
         getWebGl2Buffer,
         getWebGpuFrameVertexBuffer,
         getWebGl2FrameVertexBuffer,
+        getWebGl2UnitQuadGeometry,
+        getWebGpuUnitQuadGeometry,
         resolveWebGl2Texture,
         resolveWebGpuTexture,
         release,
