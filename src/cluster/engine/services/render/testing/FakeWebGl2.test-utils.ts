@@ -44,6 +44,7 @@ export type FakeWebGl2 = WebGL2RenderingContext & {
     texImage2D: MockFn;
     texParameteri: MockFn;
     uniform1i: MockFn;
+    uniform4f: MockFn;
     useProgram: MockFn;
     vertexAttribDivisor: MockFn;
     vertexAttribPointer: MockFn;
@@ -187,6 +188,7 @@ export function createFakeWebGl2(): FakeWebGl2 {
         texImage2D: vi.fn(),
         texParameteri: vi.fn(),
         uniform1i: vi.fn(),
+        uniform4f: vi.fn(),
         useProgram: vi.fn(),
         vertexAttribDivisor: vi.fn(),
         vertexAttribPointer: vi.fn(),

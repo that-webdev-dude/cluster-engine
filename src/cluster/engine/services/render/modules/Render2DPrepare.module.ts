@@ -14,6 +14,7 @@ import type {
     RenderPoint2DInput,
     RenderResourceId,
     RenderTargetInfo,
+    RenderTransform2DInput,
     RenderText2D,
     RenderUvRectInput,
 } from "../service/Render.types";
@@ -86,6 +87,7 @@ export type Render2DPreparedItem = Readonly<{
     x?: number;
     y?: number;
     transform?: RenderResolvedTransform2D;
+    instanceTransform?: RenderTransform2DInput;
     color: RenderPreparedColor;
     geometry: Render2DPreparedGeometry;
 }>;
@@ -104,6 +106,8 @@ export type Render2DPreparedBatch = Readonly<{
 
 export type Render2DPreparedFrame = Readonly<{
     target: RenderTargetInfo;
+    alpha: number;
+    camera?: RenderFrameInput["camera"];
     items: readonly Render2DPreparedItem[];
     itemCount: number;
     batches: readonly Render2DPreparedBatch[];
@@ -160,6 +164,7 @@ type MutablePreparedItem = {
     x?: number;
     y?: number;
     transform?: RenderResolvedTransform2D;
+    instanceTransform?: RenderTransform2DInput;
     color: RenderPreparedColor;
     geometry: Render2DPreparedGeometry;
 };
@@ -466,6 +471,7 @@ export function createRender2DPrepare(
         resourceId?: RenderResourceId;
         vertexCount: number;
         transform?: RenderResolvedTransform2D;
+        instanceTransform?: RenderTransform2DInput;
         color: RenderPreparedColor;
         geometry: Render2DPreparedGeometry;
     }): void {
@@ -502,6 +508,7 @@ export function createRender2DPrepare(
         record.x = args.transform?.x;
         record.y = args.transform?.y;
         record.transform = args.transform;
+        record.instanceTransform = args.instanceTransform;
         record.color = args.color;
         record.geometry = args.geometry;
         preparedItemCount++;
@@ -524,7 +531,14 @@ export function createRender2DPrepare(
             blendMode: getBlendMode(item),
             resourceId: item.resourceId,
             vertexCount,
-            transform: getPreparedPosition(item, alpha),
+            transform:
+                item.kind === "rect" || item.kind === "sprite"
+                    ? undefined
+                    : getPreparedPosition(item, alpha),
+            instanceTransform:
+                item.kind === "rect" || item.kind === "sprite"
+                    ? item
+                    : undefined,
             color: getPreparedColor(item),
             geometry: createPrimitiveGeometry(item),
         });
@@ -774,6 +788,8 @@ export function createRender2DPrepare(
 
             return {
                 target: input.target,
+                alpha: input.alpha,
+                camera: input.camera,
                 items: preparedItems,
                 itemCount: preparedItemCount,
                 batches: preparedBatches,

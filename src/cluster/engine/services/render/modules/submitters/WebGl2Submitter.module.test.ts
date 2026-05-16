@@ -8,10 +8,14 @@ import { createRender2DPrepare } from "../Render2DPrepare.module";
 import { createRender2DUpload } from "../Render2DUpload.module";
 import { createWebGl2Submitter } from "./WebGl2Submitter.module";
 
-function createInput(layers: RenderFrameInput["layers"]): RenderFrameInput {
+function createInput(
+    layers: RenderFrameInput["layers"],
+    input: Partial<Pick<RenderFrameInput, "alpha" | "camera">> = {},
+): RenderFrameInput {
     return {
         target: { w: 100, h: 100, dpr: 1 },
-        alpha: 1,
+        alpha: input.alpha ?? 1,
+        camera: input.camera,
         layers,
     };
 }
@@ -74,7 +78,7 @@ describe("createWebGl2Submitter", () => {
                 drawCallCount: 1,
                 vertexCount: 6,
                 uploadCallCount: 1,
-                uploadByteCount: 56,
+                uploadByteCount: 96,
                 uploadRangeCount: 1,
                 uploadLayoutCount: 1,
                 frameVertexBufferCreateCount: 1,
@@ -86,7 +90,22 @@ describe("createWebGl2Submitter", () => {
             },
         });
         expect(gl.vertexAttribDivisor).toHaveBeenCalledWith(1, 1);
-        expect(gl.vertexAttribDivisor).toHaveBeenCalledWith(6, 1);
+        expect(gl.vertexAttribDivisor).toHaveBeenCalledWith(7, 1);
+        expect(gl.uniform4f).toHaveBeenCalledWith(
+            expect.any(Object),
+            1,
+            100,
+            100,
+            1,
+        );
+        expect(gl.uniform4f).toHaveBeenCalledWith(
+            expect.any(Object),
+            0,
+            0,
+            1,
+            0,
+        );
+        expect(gl.uniform4f).toHaveBeenCalledWith(expect.any(Object), 0, 0, 0, 0);
         expect(gl.drawArraysInstanced).toHaveBeenCalledWith(
             gl.TRIANGLES,
             0,
@@ -131,7 +150,7 @@ describe("createWebGl2Submitter", () => {
                 drawCallCount: 1,
                 vertexCount: 6,
                 uploadCallCount: 1,
-                uploadByteCount: 72,
+                uploadByteCount: 112,
                 uploadRangeCount: 1,
                 uploadLayoutCount: 1,
                 fallbackResourceCount: 1,
@@ -148,6 +167,63 @@ describe("createWebGl2Submitter", () => {
             6,
             1,
         );
+
+        await pipelineLibrary.dispose();
+        await gpuResource.dispose();
+    });
+
+    it("supplies explicit alpha, target, and camera uniforms for instances", async () => {
+        const gl = createFakeWebGl2();
+        const { gpuResource, pipelineLibrary, submitter } =
+            await createStartedSubmitter();
+        const frame = createRender2DPrepare().prepare(
+            createInput(
+                [
+                    {
+                        id: "main",
+                        order: 0,
+                        items: [
+                            {
+                                kind: "rect",
+                                sortKey: 0,
+                                x: 5,
+                                y: 6,
+                                w: 10,
+                                h: 10,
+                            },
+                        ],
+                    },
+                ],
+                {
+                    alpha: 0.25,
+                    camera: {
+                        x: 10,
+                        y: 20,
+                        zoom: 2,
+                        shakeX: 3,
+                        shakeY: 4,
+                    },
+                },
+            ),
+        );
+
+        submitter.submit(frame, createWebGl2Runtime(gl));
+
+        expect(gl.uniform4f).toHaveBeenCalledWith(
+            expect.any(Object),
+            0.25,
+            100,
+            100,
+            1,
+        );
+        expect(gl.uniform4f).toHaveBeenCalledWith(
+            expect.any(Object),
+            10,
+            20,
+            2,
+            3,
+        );
+        expect(gl.uniform4f).toHaveBeenCalledWith(expect.any(Object), 4, 0, 0, 0);
 
         await pipelineLibrary.dispose();
         await gpuResource.dispose();

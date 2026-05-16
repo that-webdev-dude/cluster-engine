@@ -18,6 +18,11 @@ import type {
 } from "../SubmitFrame.module";
 import { getRender2DPipelineDescriptor } from "../Render2DVertexPacking.module";
 import { getRender2DQuadInstancePipelineDescriptor } from "../Render2DInstancePacking.module";
+import {
+    RENDER_2D_FRAME_UNIFORM_FLOAT_COUNT,
+    writeRender2DFrameUniformData,
+    getRender2DFrameUniformValues,
+} from "../Render2DFrameUniforms.module";
 
 export type WebGpuSubmitter = Readonly<{
     submit(
@@ -55,6 +60,11 @@ type WebGpuRenderPassEncoderLike = Readonly<{
     end(): void;
 }>;
 
+type WebGpuFrameUniformRecord = {
+    buffer: object;
+    bindGroupsByLayout: WeakMap<object, object>;
+};
+
 type WebGpuCommandEncoderLike = Readonly<{
     beginRenderPass(desc: object): WebGpuRenderPassEncoderLike;
     finish(): object;
@@ -74,6 +84,9 @@ const EMPTY_SUBMIT_METRICS: SubmitFrameMetrics = Object.freeze({
     skippedResourceCount: 0,
     fallbackResourceCount: 0,
 });
+
+const WEBGPU_BUFFER_USAGE_UNIFORM = 0x40;
+const WEBGPU_BUFFER_USAGE_COPY_DST = 0x08;
 
 function createMutableSubmitMetrics(): MutableSubmitMetrics {
     return {
@@ -168,6 +181,83 @@ export function createWebGpuSubmitter(
     config: WebGpuSubmitterConfig,
 ): WebGpuSubmitter {
     const buffersByLayout = new Map<Render2DUploadLayoutKey, object>();
+    const frameUniformsByDevice = new WeakMap<object, WebGpuFrameUniformRecord>();
+    let frameUniformData = new Float32Array(RENDER_2D_FRAME_UNIFORM_FLOAT_COUNT);
+
+    function getFrameUniformRecord(
+        runtime: Extract<GfxRuntime, { backend: "webgpu" }>,
+    ): WebGpuFrameUniformRecord | undefined {
+        let record = frameUniformsByDevice.get(runtime.device);
+        if (record) return record;
+
+        try {
+            record = {
+                buffer: runtime.device.createBuffer({
+                    label: "render.2d.frame.uniforms",
+                    size: RENDER_2D_FRAME_UNIFORM_FLOAT_COUNT * 4,
+                    usage:
+                        WEBGPU_BUFFER_USAGE_UNIFORM |
+                        WEBGPU_BUFFER_USAGE_COPY_DST,
+                }),
+                bindGroupsByLayout: new WeakMap<object, object>(),
+            };
+        } catch {
+            return undefined;
+        }
+        frameUniformsByDevice.set(runtime.device, record);
+
+        return record;
+    }
+
+    function uploadFrameUniforms(
+        runtime: Extract<GfxRuntime, { backend: "webgpu" }>,
+        frame: Render2DPreparedFrame,
+    ): WebGpuFrameUniformRecord | undefined {
+        const record = getFrameUniformRecord(runtime);
+        if (!record) return undefined;
+        frameUniformData = writeRender2DFrameUniformData(
+            frameUniformData,
+            getRender2DFrameUniformValues(frame),
+        );
+        try {
+            runtime.device.queue.writeBuffer(record.buffer, 0, frameUniformData.slice());
+        } catch {
+            return undefined;
+        }
+        return record;
+    }
+
+    function getFrameUniformBindGroup(
+        runtime: Extract<GfxRuntime, { backend: "webgpu" }>,
+        pipeline: object,
+        record: WebGpuFrameUniformRecord,
+    ): object | undefined {
+        let bindGroup = record.bindGroupsByLayout.get(pipeline);
+        if (bindGroup) return bindGroup;
+
+        try {
+            const layout = (
+                pipeline as {
+                    getBindGroupLayout(index: number): object;
+                }
+            ).getBindGroupLayout(1);
+            bindGroup = runtime.device.createBindGroup({
+                label: "render.2d.frame.uniforms.bindGroup",
+                layout,
+                entries: [
+                    {
+                        binding: 0,
+                        resource: { buffer: record.buffer },
+                    },
+                ],
+            });
+        } catch {
+            return undefined;
+        }
+        record.bindGroupsByLayout.set(pipeline, bindGroup);
+
+        return bindGroup;
+    }
 
     function uploadLayout(
         runtime: Extract<GfxRuntime, { backend: "webgpu" }>,
@@ -211,6 +301,7 @@ export function createWebGpuSubmitter(
         batch: Render2DPreparedBatch,
         range: Render2DUploadRange,
         pass: WebGpuRenderPassEncoderLike,
+        frameUniformRecord: WebGpuFrameUniformRecord,
         metrics: MutableSubmitMetrics,
     ): boolean {
         const pipeline = config.pipelineLibrary.getWebGpuPipeline({
@@ -251,6 +342,13 @@ export function createWebGpuSubmitter(
                 pass.setVertexBuffer(0, quad.vertexBuffer, 0);
                 pass.setVertexBuffer(1, vertexBuffer, range.byteOffset);
                 if (bindGroup) pass.setBindGroup(0, bindGroup);
+                const frameBindGroup = getFrameUniformBindGroup(
+                    runtime,
+                    pipeline.pipeline,
+                    frameUniformRecord,
+                );
+                if (!frameBindGroup) return false;
+                pass.setBindGroup(1, frameBindGroup);
                 pass.draw(quad.vertexCount, range.instanceCount);
             } else {
                 pass.setVertexBuffer(0, vertexBuffer, range.byteOffset);
@@ -284,6 +382,14 @@ export function createWebGpuSubmitter(
             config.gpuResource.flushWebGpuUploads(runtime.device);
 
             try {
+                const frameUniformRecord = uploadFrameUniforms(runtime, frame);
+                if (!frameUniformRecord) {
+                    renderPass.pass.end();
+                    return {
+                        result: { status: "skipped", reason: "no-submitter" },
+                        metrics: snapshotSubmitMetrics(metrics),
+                    };
+                }
                 const uploadFrame = config.render2DUpload.build(frame);
                 addUploadPlannerMetrics(metrics, uploadFrame);
                 if (!uploadLayouts(runtime, uploadFrame, metrics)) {
@@ -302,6 +408,7 @@ export function createWebGpuSubmitter(
                             batch,
                             range,
                             renderPass.pass,
+                            frameUniformRecord,
                             metrics,
                         )
                     ) {

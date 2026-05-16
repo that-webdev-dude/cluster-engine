@@ -26,6 +26,7 @@ import {
     getRender2DQuadInstancePipelineDescriptor,
     type Render2DInstanceLayoutInfo,
 } from "../Render2DInstancePacking.module";
+import { getRender2DFrameUniformValues } from "../Render2DFrameUniforms.module";
 
 export type WebGl2Submitter = Readonly<{
     submit(
@@ -266,6 +267,40 @@ function bindTexturedBatch(
     return true;
 }
 
+function bindFrameUniforms(
+    gl: WebGL2RenderingContext,
+    program: WebGLProgram,
+    frame: Render2DPreparedFrame,
+): void {
+    const uniforms = getRender2DFrameUniformValues(frame);
+    const frameUniform = gl.getUniformLocation(program, "u_frame");
+    if (frameUniform) {
+        gl.uniform4f(
+            frameUniform,
+            uniforms.alpha,
+            uniforms.targetWidth,
+            uniforms.targetHeight,
+            uniforms.targetDpr,
+        );
+    }
+
+    const cameraUniform = gl.getUniformLocation(program, "u_camera");
+    if (cameraUniform) {
+        gl.uniform4f(
+            cameraUniform,
+            uniforms.cameraX,
+            uniforms.cameraY,
+            uniforms.cameraZoom,
+            uniforms.cameraShakeX,
+        );
+    }
+
+    const cameraExtraUniform = gl.getUniformLocation(program, "u_cameraExtra");
+    if (cameraExtraUniform) {
+        gl.uniform4f(cameraExtraUniform, uniforms.cameraShakeY, 0, 0, 0);
+    }
+}
+
 export function createWebGl2Submitter(
     config: WebGl2SubmitterConfig,
 ): WebGl2Submitter {
@@ -364,6 +399,7 @@ export function createWebGl2Submitter(
                         metrics: snapshotSubmitMetrics(metrics),
                     };
                 }
+                bindFrameUniforms(gl, pipeline.program, uploadFrame.source);
                 configureUnitQuadLayout(gl, quad.vertexBuffer);
                 unitQuadLayoutConfigured = true;
                 gl.bindBuffer(gl.ARRAY_BUFFER, buffer);

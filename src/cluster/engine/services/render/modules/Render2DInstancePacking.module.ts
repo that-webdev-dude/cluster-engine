@@ -33,26 +33,28 @@ export const RENDER_2D_INSTANCE_LAYOUTS: Record<
     Render2DInstanceLayoutInfo
 > = {
     "quad-solid-instance-2d": {
-        strideFloats: 14,
+        strideFloats: 24,
         attrs: [
-            { location: 1, size: 2, offsetFloats: 0 },
-            { location: 2, size: 2, offsetFloats: 2 },
-            { location: 3, size: 2, offsetFloats: 4 },
-            { location: 4, size: 2, offsetFloats: 6 },
-            { location: 5, size: 4, offsetFloats: 8 },
-            { location: 6, size: 2, offsetFloats: 12 },
+            { location: 1, size: 4, offsetFloats: 0 },
+            { location: 2, size: 4, offsetFloats: 4 },
+            { location: 3, size: 4, offsetFloats: 8 },
+            { location: 4, size: 2, offsetFloats: 12 },
+            { location: 5, size: 4, offsetFloats: 14 },
+            { location: 6, size: 4, offsetFloats: 18 },
+            { location: 7, size: 2, offsetFloats: 22 },
         ],
     },
     "quad-textured-instance-2d": {
-        strideFloats: 18,
+        strideFloats: 28,
         attrs: [
-            { location: 1, size: 2, offsetFloats: 0 },
-            { location: 2, size: 2, offsetFloats: 2 },
-            { location: 3, size: 2, offsetFloats: 4 },
-            { location: 4, size: 2, offsetFloats: 6 },
-            { location: 5, size: 4, offsetFloats: 8 },
-            { location: 6, size: 4, offsetFloats: 12 },
-            { location: 7, size: 2, offsetFloats: 16 },
+            { location: 1, size: 4, offsetFloats: 0 },
+            { location: 2, size: 4, offsetFloats: 4 },
+            { location: 3, size: 4, offsetFloats: 8 },
+            { location: 4, size: 2, offsetFloats: 12 },
+            { location: 5, size: 4, offsetFloats: 14 },
+            { location: 6, size: 4, offsetFloats: 18 },
+            { location: 7, size: 4, offsetFloats: 22 },
+            { location: 8, size: 2, offsetFloats: 26 },
         ],
     },
 };
@@ -99,14 +101,6 @@ export function isRender2DQuadInstanceItem(
     );
 }
 
-function toClipX(width: number, x: number): number {
-    return (x / width) * 2 - 1;
-}
-
-function toClipY(height: number, y: number): number {
-    return 1 - (y / height) * 2;
-}
-
 function writeColor(
     data: Float32Array,
     offset: number,
@@ -132,52 +126,32 @@ function writeUv(
     return offset;
 }
 
-function writeTransformBasis(
+function writeInstanceTransform(
     data: Float32Array,
     offset: number,
-    frame: Render2DPreparedFrame,
     item: Render2DPreparedItem,
 ): number {
-    const transform = item.transform;
-    const target = frame.target;
+    const transform = item.instanceTransform;
+    const x = transform?.x ?? 0;
+    const y = transform?.y ?? 0;
+    const scaleX = transform?.scaleX ?? 1;
+    const scaleY = transform?.scaleY ?? 1;
+    const radians = transform?.radians ?? 0;
 
-    if (!transform) {
-        data[offset++] = toClipX(target.w, 0);
-        data[offset++] = toClipY(target.h, 0);
-        data[offset++] = 2 / target.w;
-        data[offset++] = 0;
-        data[offset++] = 0;
-        data[offset++] = -2 / target.h;
-        return offset;
-    }
-
-    const cos = Math.cos(transform.radians);
-    const sin = Math.sin(transform.radians);
-    const originLocalX = -transform.pivotX * transform.scaleX;
-    const originLocalY = -transform.pivotY * transform.scaleY;
-    const originX =
-        transform.x +
-        transform.offsetX +
-        transform.pivotX +
-        originLocalX * cos -
-        originLocalY * sin;
-    const originY =
-        transform.y +
-        transform.offsetY +
-        transform.pivotY +
-        originLocalX * sin +
-        originLocalY * cos;
-    const axisXX = transform.scaleX * cos;
-    const axisXY = transform.scaleX * sin;
-    const axisYX = -transform.scaleY * sin;
-    const axisYY = transform.scaleY * cos;
-
-    data[offset++] = toClipX(target.w, originX);
-    data[offset++] = toClipY(target.h, originY);
-    data[offset++] = (axisXX / target.w) * 2;
-    data[offset++] = -(axisXY / target.h) * 2;
-    data[offset++] = (axisYX / target.w) * 2;
-    data[offset++] = -(axisYY / target.h) * 2;
+    data[offset++] = x;
+    data[offset++] = y;
+    data[offset++] = transform?.prevX ?? x;
+    data[offset++] = transform?.prevY ?? y;
+    data[offset++] = scaleX;
+    data[offset++] = scaleY;
+    data[offset++] = transform?.prevScaleX ?? scaleX;
+    data[offset++] = transform?.prevScaleY ?? scaleY;
+    data[offset++] = radians;
+    data[offset++] = transform?.prevRadians ?? radians;
+    data[offset++] = transform?.offsetX ?? 0;
+    data[offset++] = transform?.offsetY ?? 0;
+    data[offset++] = transform?.pivotX ?? 0;
+    data[offset++] = transform?.pivotY ?? 0;
     return offset;
 }
 
@@ -208,7 +182,9 @@ export function writeRender2DQuadInstanceDataAtOffset(
         const item = frame.items[itemStart + i];
         if (item.geometry.kind !== "rect-quad") continue;
 
-        offset = writeTransformBasis(data, offset, frame, item);
+        offset = writeInstanceTransform(data, offset, item);
+        data[offset++] = 0;
+        data[offset++] = 0;
         data[offset++] = item.geometry.w;
         data[offset++] = item.geometry.h;
 

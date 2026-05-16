@@ -64,12 +64,12 @@ describe("createRender2DUpload", () => {
         expect(uploadFrame.stats).toEqual({
             layoutUploadCount: 1,
             rangeCount: 2,
-            uploadByteLength: 112,
-            uploadFloatLength: 28,
+            uploadByteLength: 192,
+            uploadFloatLength: 48,
         });
         expect(uploadFrame.rangesByBatchIndex[1]).toMatchObject({
-            byteOffset: 56,
-            byteLength: 56,
+            byteOffset: 96,
+            byteLength: 96,
             vertexCount: 6,
             instanceCount: 1,
         });
@@ -120,8 +120,8 @@ describe("createRender2DUpload", () => {
         expect(uploadFrame.stats).toEqual({
             layoutUploadCount: 2,
             rangeCount: 3,
-            uploadByteLength: 184,
-            uploadFloatLength: 46,
+            uploadByteLength: 304,
+            uploadFloatLength: 76,
         });
     });
 
@@ -158,7 +158,7 @@ describe("createRender2DUpload", () => {
                 batchIndex: 0,
                 itemStart: 0,
                 itemCount: 1,
-                byteLength: 56,
+                byteLength: 96,
                 vertexCount: 6,
                 instanceCount: 1,
             },
@@ -175,8 +175,8 @@ describe("createRender2DUpload", () => {
         expect(uploadFrame.stats).toEqual({
             layoutUploadCount: 2,
             rangeCount: 2,
-            uploadByteLength: 1784,
-            uploadFloatLength: 446,
+            uploadByteLength: 1824,
+            uploadFloatLength: 456,
         });
     });
 });

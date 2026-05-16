@@ -46,37 +46,71 @@ void main() {
 
 const SOLID_QUAD_INSTANCE_VERTEX_SHADER = `#version 300 es
 layout(location = 0) in vec2 a_unit;
-layout(location = 1) in vec2 i_origin;
-layout(location = 2) in vec2 i_axisX;
-layout(location = 3) in vec2 i_axisY;
-layout(location = 4) in vec2 i_size;
-layout(location = 5) in vec4 i_color;
-layout(location = 6) in vec2 i_group;
+layout(location = 1) in vec4 i_position;
+layout(location = 2) in vec4 i_scale;
+layout(location = 3) in vec4 i_rotationOffset;
+layout(location = 4) in vec2 i_pivot;
+layout(location = 5) in vec4 i_rect;
+layout(location = 6) in vec4 i_color;
+layout(location = 7) in vec2 i_group;
+uniform vec4 u_frame;
+uniform vec4 u_camera;
+uniform vec4 u_cameraExtra;
 out vec4 v_color;
+vec2 projectQuadCorner() {
+    float alpha = u_frame.x;
+    vec2 target = u_frame.yz;
+    vec2 position = mix(i_position.zw, i_position.xy, alpha);
+    vec2 scale = mix(i_scale.zw, i_scale.xy, alpha);
+    float radians = mix(i_rotationOffset.y, i_rotationOffset.x, alpha);
+    vec2 local = i_rect.xy + a_unit * i_rect.zw;
+    vec2 scaled = (local - i_pivot) * scale;
+    float c = cos(radians);
+    float s = sin(radians);
+    vec2 rotated = vec2(scaled.x * c - scaled.y * s, scaled.x * s + scaled.y * c);
+    vec2 world = position + i_rotationOffset.zw + i_pivot + rotated;
+    vec2 screen = (world - u_camera.xy) * u_camera.z + vec2(u_camera.w, u_cameraExtra.x);
+    return vec2((screen.x / target.x) * 2.0 - 1.0, 1.0 - (screen.y / target.y) * 2.0);
+}
 void main() {
-    vec2 local = a_unit * i_size;
-    vec2 position = i_origin + i_axisX * local.x + i_axisY * local.y;
     v_color = i_color;
-    gl_Position = vec4(position, 0.0, 1.0);
+    gl_Position = vec4(projectQuadCorner(), 0.0, 1.0);
 }`;
 
 const TEXTURED_QUAD_INSTANCE_VERTEX_SHADER = `#version 300 es
 layout(location = 0) in vec2 a_unit;
-layout(location = 1) in vec2 i_origin;
-layout(location = 2) in vec2 i_axisX;
-layout(location = 3) in vec2 i_axisY;
-layout(location = 4) in vec2 i_size;
-layout(location = 5) in vec4 i_uvRect;
-layout(location = 6) in vec4 i_tint;
-layout(location = 7) in vec2 i_group;
+layout(location = 1) in vec4 i_position;
+layout(location = 2) in vec4 i_scale;
+layout(location = 3) in vec4 i_rotationOffset;
+layout(location = 4) in vec2 i_pivot;
+layout(location = 5) in vec4 i_rect;
+layout(location = 6) in vec4 i_uvRect;
+layout(location = 7) in vec4 i_tint;
+layout(location = 8) in vec2 i_group;
+uniform vec4 u_frame;
+uniform vec4 u_camera;
+uniform vec4 u_cameraExtra;
 out vec2 v_uv;
 out vec4 v_tint;
+vec2 projectQuadCorner() {
+    float alpha = u_frame.x;
+    vec2 target = u_frame.yz;
+    vec2 position = mix(i_position.zw, i_position.xy, alpha);
+    vec2 scale = mix(i_scale.zw, i_scale.xy, alpha);
+    float radians = mix(i_rotationOffset.y, i_rotationOffset.x, alpha);
+    vec2 local = i_rect.xy + a_unit * i_rect.zw;
+    vec2 scaled = (local - i_pivot) * scale;
+    float c = cos(radians);
+    float s = sin(radians);
+    vec2 rotated = vec2(scaled.x * c - scaled.y * s, scaled.x * s + scaled.y * c);
+    vec2 world = position + i_rotationOffset.zw + i_pivot + rotated;
+    vec2 screen = (world - u_camera.xy) * u_camera.z + vec2(u_camera.w, u_cameraExtra.x);
+    return vec2((screen.x / target.x) * 2.0 - 1.0, 1.0 - (screen.y / target.y) * 2.0);
+}
 void main() {
-    vec2 local = a_unit * i_size;
-    vec2 position = i_origin + i_axisX * local.x + i_axisY * local.y;
     v_uv = i_uvRect.xy + a_unit * i_uvRect.zw;
     v_tint = i_tint;
-    gl_Position = vec4(position, 0.0, 1.0);
+    gl_Position = vec4(projectQuadCorner(), 0.0, 1.0);
 }`;
 
 export function resolveWebGl2ShaderSource(

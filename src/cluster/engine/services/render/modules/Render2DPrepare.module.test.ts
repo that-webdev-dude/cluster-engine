@@ -717,7 +717,7 @@ describe("createRender2DPrepare", () => {
         });
     });
 
-    it("resolves rect positions through fallback interpolation", () => {
+    it("keeps rect instance transforms raw for shader interpolation", () => {
         const prepare = createRender2DPrepare();
         const createFrameAt = (alpha: number) =>
             prepare.prepare(
@@ -745,20 +745,41 @@ describe("createRender2DPrepare", () => {
             );
 
         expect(activeItems(createFrameAt(0))[0]).toMatchObject({
-            x: 10,
-            y: 20,
+            x: undefined,
+            y: undefined,
+            transform: undefined,
+            instanceTransform: expect.objectContaining({
+                prevX: 10,
+                prevY: 20,
+                x: 30,
+                y: 60,
+            }),
         });
         expect(activeItems(createFrameAt(0.5))[0]).toMatchObject({
-            x: 20,
-            y: 40,
+            x: undefined,
+            y: undefined,
+            transform: undefined,
+            instanceTransform: expect.objectContaining({
+                prevX: 10,
+                prevY: 20,
+                x: 30,
+                y: 60,
+            }),
         });
         expect(activeItems(createFrameAt(1))[0]).toMatchObject({
-            x: 30,
-            y: 60,
+            x: undefined,
+            y: undefined,
+            transform: undefined,
+            instanceTransform: expect.objectContaining({
+                prevX: 10,
+                prevY: 20,
+                x: 30,
+                y: 60,
+            }),
         });
     });
 
-    it("falls back to current transform values when previous values are missing", () => {
+    it("preserves current instance transform values when previous values are missing", () => {
         const prepare = createRender2DPrepare();
         const frame = prepare.prepare(
             createInput([
@@ -779,7 +800,12 @@ describe("createRender2DPrepare", () => {
             ]),
         );
 
-        expect(activeItems(frame)[0]).toMatchObject({ x: 30, y: 60 });
+        expect(activeItems(frame)[0]).toMatchObject({
+            x: undefined,
+            y: undefined,
+            transform: undefined,
+            instanceTransform: expect.objectContaining({ x: 30, y: 60 }),
+        });
     });
 
     it("ignores stale arena entries after preparing a smaller frame", () => {

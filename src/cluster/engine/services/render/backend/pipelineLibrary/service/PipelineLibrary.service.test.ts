@@ -156,6 +156,18 @@ describe("PipelineLibraryService", () => {
             expect.any(Object),
             expect.stringContaining("a_unit"),
         );
+        expect(gl.shaderSource).toHaveBeenCalledWith(
+            expect.any(Object),
+            expect.stringContaining("uniform vec4 u_frame"),
+        );
+        expect(gl.shaderSource).toHaveBeenCalledWith(
+            expect.any(Object),
+            expect.stringContaining("uniform vec4 u_camera"),
+        );
+        expect(gl.shaderSource).toHaveBeenCalledWith(
+            expect.any(Object),
+            expect.stringContaining("layout(location = 8) in vec2 i_group"),
+        );
 
         await pipelines.dispose();
     });
@@ -194,9 +206,24 @@ describe("PipelineLibraryService", () => {
             expect.objectContaining({
                 vertex: expect.objectContaining({
                     buffers: expect.arrayContaining([
-                        expect.objectContaining({ stepMode: "instance" }),
+                        expect.objectContaining({
+                            stepMode: "instance",
+                            attributes: expect.arrayContaining([
+                                expect.objectContaining({
+                                    shaderLocation: 8,
+                                    format: "float32x2",
+                                }),
+                            ]),
+                        }),
                     ]),
                 }),
+            }),
+        );
+        expect(webGpu.device.createShaderModule).toHaveBeenCalledWith(
+            expect.objectContaining({
+                code: expect.stringContaining(
+                    "@group(1) @binding(0) var<uniform> u_frameUniforms",
+                ),
             }),
         );
 

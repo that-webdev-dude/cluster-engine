@@ -523,7 +523,7 @@ describe("createRender", () => {
             drawCallCount: 1,
             vertexCount: 6,
             uploadCallCount: 1,
-            uploadByteCount: 56,
+            uploadByteCount: 96,
             uploadRangeCount: 1,
             uploadLayoutCount: 1,
             frameVertexBufferCreateCount: 1,
@@ -533,6 +533,180 @@ describe("createRender", () => {
             skippedResourceCount: 0,
             fallbackResourceCount: 0,
         });
+
+        await render.dispose();
+    });
+
+    it("keeps no-camera quad instance packing equal to explicit default camera", async () => {
+        const createFrame = (camera?: {
+            x: number;
+            y: number;
+            zoom: number;
+            shakeX: number;
+            shakeY: number;
+        }) => ({
+            target: { w: 100, h: 100, dpr: 1 },
+            alpha: 0.5,
+            camera,
+            layers: [
+                {
+                    id: "main",
+                    order: 0,
+                    items: [
+                        {
+                            kind: "rect" as const,
+                            sortKey: 0,
+                            x: 10,
+                            y: 20,
+                            prevX: 0,
+                            prevY: 5,
+                            scaleX: 2,
+                            scaleY: 3,
+                            prevScaleX: 1,
+                            prevScaleY: 1,
+                            radians: 0.5,
+                            prevRadians: 0.25,
+                            offsetX: 3,
+                            offsetY: 4,
+                            pivotX: 5,
+                            pivotY: 6,
+                            w: 7,
+                            h: 8,
+                        },
+                    ],
+                },
+            ],
+        });
+        const noCameraGl = createFakeWebGl2();
+        const noCameraRender = createRender({
+            canvas: createFakeCanvas(noCameraGl),
+        });
+        const defaultCameraGl = createFakeWebGl2();
+        const defaultCameraRender = createRender({
+            canvas: createFakeCanvas(defaultCameraGl),
+        });
+
+        await noCameraRender.start();
+        noCameraRender.prepare(createFrame());
+        noCameraRender.execute();
+        await defaultCameraRender.start();
+        defaultCameraRender.prepare(
+            createFrame({ x: 0, y: 0, zoom: 1, shakeX: 0, shakeY: 0 }),
+        );
+        defaultCameraRender.execute();
+
+        const noCameraData = Array.from(
+            noCameraGl.bufferSubData.mock.calls[0][2] as Float32Array,
+        );
+        const defaultCameraData = Array.from(
+            defaultCameraGl.bufferSubData.mock.calls[0][2] as Float32Array,
+        );
+        expect(noCameraData).toEqual(defaultCameraData);
+        expect(noCameraGl.uniform4f).toHaveBeenCalledWith(
+            expect.any(Object),
+            0,
+            0,
+            1,
+            0,
+        );
+
+        await noCameraRender.dispose();
+        await defaultCameraRender.dispose();
+    });
+
+    it("submits camera offset and zoom through private WebGL2 uniforms", async () => {
+        const gl = createFakeWebGl2();
+        const render = createRender({ canvas: createFakeCanvas(gl) });
+
+        await render.start();
+        render.prepare({
+            target: { w: 100, h: 100, dpr: 1 },
+            alpha: 0.25,
+            camera: { x: 11, y: 12, zoom: 2, shakeX: 3, shakeY: 4 },
+            layers: [
+                {
+                    id: "main",
+                    order: 0,
+                    items: [
+                        {
+                            kind: "rect",
+                            sortKey: 0,
+                            x: 0,
+                            y: 0,
+                            w: 10,
+                            h: 10,
+                        },
+                    ],
+                },
+            ],
+        });
+
+        render.execute();
+
+        expect(gl.uniform4f).toHaveBeenCalledWith(
+            expect.any(Object),
+            0.25,
+            100,
+            100,
+            1,
+        );
+        expect(gl.uniform4f).toHaveBeenCalledWith(
+            expect.any(Object),
+            11,
+            12,
+            2,
+            3,
+        );
+        expect(gl.uniform4f).toHaveBeenCalledWith(expect.any(Object), 4, 0, 0, 0);
+
+        await render.dispose();
+    });
+
+    it("passes previous and current transform fields into quad instance packing", async () => {
+        const gl = createFakeWebGl2();
+        const render = createRender({ canvas: createFakeCanvas(gl) });
+
+        await render.start();
+        render.prepare({
+            target: { w: 100, h: 100, dpr: 1 },
+            alpha: 0.5,
+            layers: [
+                {
+                    id: "main",
+                    order: 0,
+                    items: [
+                        {
+                            kind: "rect",
+                            sortKey: 0,
+                            x: 10,
+                            y: 20,
+                            prevX: 1,
+                            prevY: 2,
+                            scaleX: 3,
+                            scaleY: 4,
+                            prevScaleX: 5,
+                            prevScaleY: 6,
+                            radians: 0.75,
+                            prevRadians: 0.25,
+                            offsetX: 7,
+                            offsetY: 8,
+                            pivotX: 9,
+                            pivotY: 10,
+                            w: 11,
+                            h: 12,
+                        },
+                    ],
+                },
+            ],
+        });
+
+        render.execute();
+
+        const instanceData = gl.bufferSubData.mock.calls[0][2] as Float32Array;
+        expect(Array.from(instanceData.subarray(0, 18))).toEqual([
+            10, 20, 1, 2, 3, 4, 5, 6, 0.75, 0.25, 7, 8, 9, 10, 0, 0, 11,
+            12,
+        ]);
 
         await render.dispose();
     });

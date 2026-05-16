@@ -263,7 +263,7 @@ describe("createSubmitFrame", () => {
                 drawCallCount: 1,
                 vertexCount: 6,
                 uploadCallCount: 1,
-                uploadByteCount: 56,
+                uploadByteCount: 96,
                 uploadRangeCount: 1,
                 uploadLayoutCount: 1,
                 frameVertexBufferCreateCount: 1,
@@ -632,7 +632,7 @@ describe("createSubmitFrame", () => {
                 drawCallCount: 3,
                 vertexCount: 18,
                 uploadCallCount: 2,
-                uploadByteCount: 184,
+                uploadByteCount: 304,
                 uploadRangeCount: 3,
                 uploadLayoutCount: 2,
                 frameVertexBufferCreateCount: 2,
@@ -646,19 +646,19 @@ describe("createSubmitFrame", () => {
         expect(gl.bufferSubData).toHaveBeenCalledTimes(2);
         expect(gl.vertexAttribPointer).toHaveBeenCalledWith(
             1,
-            2,
-            gl.FLOAT,
-            false,
-            56,
-            56,
-        );
-        expect(gl.vertexAttribPointer).toHaveBeenCalledWith(
-            5,
             4,
             gl.FLOAT,
             false,
-            56,
-            88,
+            96,
+            96,
+        );
+        expect(gl.vertexAttribPointer).toHaveBeenCalledWith(
+            6,
+            4,
+            gl.FLOAT,
+            false,
+            96,
+            168,
         );
 
         await pipelineLibrary.dispose();
@@ -702,7 +702,7 @@ describe("createSubmitFrame", () => {
                 drawCallCount: 0,
                 vertexCount: 0,
                 uploadCallCount: 1,
-                uploadByteCount: 56,
+                uploadByteCount: 96,
                 uploadRangeCount: 1,
                 uploadLayoutCount: 1,
                 frameVertexBufferCreateCount: 1,

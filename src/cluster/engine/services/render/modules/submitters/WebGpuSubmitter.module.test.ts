@@ -8,10 +8,14 @@ import { createWebGpuSubmitter } from "./WebGpuSubmitter.module";
 import type { GfxRuntime } from "../../backend/gfxBackend";
 import type { RenderFrameInput } from "../../service/Render.types";
 
-function createInput(layers: RenderFrameInput["layers"]): RenderFrameInput {
+function createInput(
+    layers: RenderFrameInput["layers"],
+    input: Partial<Pick<RenderFrameInput, "alpha" | "camera">> = {},
+): RenderFrameInput {
     return {
         target: { w: 100, h: 100, dpr: 1 },
-        alpha: 1,
+        alpha: input.alpha ?? 1,
+        camera: input.camera,
         layers,
     };
 }
@@ -118,7 +122,7 @@ describe("createWebGpuSubmitter", () => {
                 drawCallCount: 1,
                 vertexCount: 6,
                 uploadCallCount: 1,
-                uploadByteCount: 56,
+                uploadByteCount: 96,
                 uploadRangeCount: 1,
                 uploadLayoutCount: 1,
                 frameVertexBufferCreateCount: 1,
@@ -129,11 +133,15 @@ describe("createWebGpuSubmitter", () => {
                 fallbackResourceCount: 0,
             },
         });
-        expect(webGpu.device.createBuffer).toHaveBeenCalledTimes(3);
+        expect(webGpu.device.createBuffer).toHaveBeenCalledTimes(4);
         expect(webGpu.device.queue.writeBuffer).toHaveBeenCalledWith(
             expect.any(Object),
             0,
             expect.any(Float32Array),
+        );
+        expect(webGpu.renderPass.setBindGroup).toHaveBeenCalledWith(
+            1,
+            expect.any(Object),
         );
         expect(webGpu.renderPass.setVertexBuffer).toHaveBeenNthCalledWith(
             1,
@@ -229,8 +237,8 @@ describe("createWebGpuSubmitter", () => {
         submitter.submit(frame, runtime);
         const second = submitter.submit(frame, runtime);
 
-        expect(webGpu.device.createBuffer).toHaveBeenCalledTimes(3);
-        expect(webGpu.device.queue.writeBuffer).toHaveBeenCalledTimes(4);
+        expect(webGpu.device.createBuffer).toHaveBeenCalledTimes(4);
+        expect(webGpu.device.queue.writeBuffer).toHaveBeenCalledTimes(6);
         expect(second.metrics).toMatchObject({
             frameVertexBufferCreateCount: 0,
             frameVertexBufferGrowCount: 0,
@@ -321,7 +329,7 @@ describe("createWebGpuSubmitter", () => {
 
         expect(grown.metrics).toMatchObject({
             uploadCallCount: 1,
-            uploadByteCount: 280,
+            uploadByteCount: 480,
             frameVertexBufferCreateCount: 0,
             frameVertexBufferGrowCount: 1,
             frameVertexBufferReuseCount: 0,
@@ -381,7 +389,7 @@ describe("createWebGpuSubmitter", () => {
                 drawCallCount: 3,
                 vertexCount: 18,
                 uploadCallCount: 2,
-                uploadByteCount: 184,
+                uploadByteCount: 304,
                 uploadRangeCount: 3,
                 uploadLayoutCount: 2,
                 frameVertexBufferCreateCount: 2,
@@ -391,7 +399,7 @@ describe("createWebGpuSubmitter", () => {
                 fallbackResourceCount: 1,
             },
         });
-        expect(webGpu.device.queue.writeBuffer).toHaveBeenCalledTimes(4);
+        expect(webGpu.device.queue.writeBuffer).toHaveBeenCalledTimes(5);
         expect(webGpu.renderPass.setVertexBuffer).toHaveBeenNthCalledWith(
             1,
             0,
@@ -426,7 +434,7 @@ describe("createWebGpuSubmitter", () => {
             6,
             1,
             expect.any(Object),
-            56,
+            96,
         );
         expect(webGpu.renderPass.draw).toHaveBeenNthCalledWith(1, 6, 1);
         expect(webGpu.renderPass.draw).toHaveBeenNthCalledWith(2, 6, 1);
@@ -468,7 +476,7 @@ describe("createWebGpuSubmitter", () => {
                 drawCallCount: 0,
                 vertexCount: 0,
                 uploadCallCount: 1,
-                uploadByteCount: 56,
+                uploadByteCount: 96,
                 uploadRangeCount: 1,
                 uploadLayoutCount: 1,
                 frameVertexBufferCreateCount: 1,
@@ -480,6 +488,82 @@ describe("createWebGpuSubmitter", () => {
             },
         });
         expect(webGpu.renderPass.draw).not.toHaveBeenCalled();
+
+        await pipelineLibrary.dispose();
+        await gpuResource.dispose();
+    });
+
+    it("uploads default and explicit frame uniform data", async () => {
+        const webGpu = createFakeWebGpu();
+        const { gpuResource, pipelineLibrary, submitter } =
+            await createStartedSubmitter();
+        const defaultFrame = createRender2DPrepare().prepare(
+            createInput([
+                {
+                    id: "main",
+                    order: 0,
+                    items: [
+                        {
+                            kind: "rect",
+                            sortKey: 0,
+                            x: 0,
+                            y: 0,
+                            w: 10,
+                            h: 10,
+                        },
+                    ],
+                },
+            ]),
+        );
+        const explicitFrame = createRender2DPrepare().prepare(
+            createInput(
+                [
+                    {
+                        id: "main",
+                        order: 0,
+                        items: [
+                            {
+                                kind: "rect",
+                                sortKey: 0,
+                                x: 0,
+                                y: 0,
+                                w: 10,
+                                h: 10,
+                            },
+                        ],
+                    },
+                ],
+                {
+                    alpha: 0.5,
+                    camera: {
+                        x: 7,
+                        y: 8,
+                        zoom: 1.5,
+                        shakeX: 2,
+                        shakeY: 3,
+                    },
+                },
+            ),
+        );
+        const runtime = createWebGpuRuntime(webGpu);
+
+        submitter.submit(defaultFrame, runtime);
+        submitter.submit(explicitFrame, runtime);
+
+        const uniformWrites = webGpu.device.queue.writeBuffer.mock.calls
+            .map((call) => call[2])
+            .filter(
+                (data): data is Float32Array =>
+                    data instanceof Float32Array &&
+                    data.length === 12 &&
+                    data[1] === 100,
+            );
+        expect(Array.from(uniformWrites[0].subarray(0, 9))).toEqual([
+            1, 100, 100, 1, 0, 0, 1, 0, 0,
+        ]);
+        expect(Array.from(uniformWrites[1].subarray(0, 9))).toEqual([
+            0.5, 100, 100, 1, 7, 8, 1.5, 2, 3,
+        ]);
 
         await pipelineLibrary.dispose();
         await gpuResource.dispose();

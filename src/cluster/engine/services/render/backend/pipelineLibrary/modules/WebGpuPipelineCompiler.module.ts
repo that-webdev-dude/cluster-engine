@@ -72,49 +72,89 @@ fn main(
 }`;
 
 const SOLID_QUAD_INSTANCE_VERTEX_SHADER = `
+struct FrameUniforms {
+    frame: vec4f,
+    camera: vec4f,
+    cameraExtra: vec4f,
+};
+
 struct VertexOut {
     @builtin(position) position: vec4f,
     @location(0) color: vec4f,
 };
 
+@group(1) @binding(0) var<uniform> u_frameUniforms: FrameUniforms;
+
 @vertex
 fn main(
     @location(0) unit: vec2f,
-    @location(1) origin: vec2f,
-    @location(2) axisX: vec2f,
-    @location(3) axisY: vec2f,
-    @location(4) size: vec2f,
-    @location(5) color: vec4f,
-    @location(6) group: vec2f,
+    @location(1) positionData: vec4f,
+    @location(2) scaleData: vec4f,
+    @location(3) rotationOffset: vec4f,
+    @location(4) pivot: vec2f,
+    @location(5) rect: vec4f,
+    @location(6) color: vec4f,
+    @location(7) group: vec2f,
 ) -> VertexOut {
     var out: VertexOut;
-    let local = unit * size;
-    out.position = vec4f(origin + axisX * local.x + axisY * local.y, 0.0, 1.0);
+    let alpha = u_frameUniforms.frame.x;
+    let target = u_frameUniforms.frame.yz;
+    let position = mix(positionData.zw, positionData.xy, vec2f(alpha));
+    let scale = mix(scaleData.zw, scaleData.xy, vec2f(alpha));
+    let radians = mix(rotationOffset.y, rotationOffset.x, alpha);
+    let local = rect.xy + unit * rect.zw;
+    let scaled = (local - pivot) * scale;
+    let c = cos(radians);
+    let s = sin(radians);
+    let rotated = vec2f(scaled.x * c - scaled.y * s, scaled.x * s + scaled.y * c);
+    let world = position + rotationOffset.zw + pivot + rotated;
+    let screen = (world - u_frameUniforms.camera.xy) * u_frameUniforms.camera.z + vec2f(u_frameUniforms.camera.w, u_frameUniforms.cameraExtra.x);
+    out.position = vec4f(vec2f((screen.x / target.x) * 2.0 - 1.0, 1.0 - (screen.y / target.y) * 2.0), 0.0, 1.0);
     out.color = color;
     return out;
 }`;
 
 const TEXTURED_QUAD_INSTANCE_VERTEX_SHADER = `
+struct FrameUniforms {
+    frame: vec4f,
+    camera: vec4f,
+    cameraExtra: vec4f,
+};
+
 struct VertexOut {
     @builtin(position) position: vec4f,
     @location(0) uv: vec2f,
     @location(1) tint: vec4f,
 };
 
+@group(1) @binding(0) var<uniform> u_frameUniforms: FrameUniforms;
+
 @vertex
 fn main(
     @location(0) unit: vec2f,
-    @location(1) origin: vec2f,
-    @location(2) axisX: vec2f,
-    @location(3) axisY: vec2f,
-    @location(4) size: vec2f,
-    @location(5) uvRect: vec4f,
-    @location(6) tint: vec4f,
-    @location(7) group: vec2f,
+    @location(1) positionData: vec4f,
+    @location(2) scaleData: vec4f,
+    @location(3) rotationOffset: vec4f,
+    @location(4) pivot: vec2f,
+    @location(5) rect: vec4f,
+    @location(6) uvRect: vec4f,
+    @location(7) tint: vec4f,
+    @location(8) group: vec2f,
 ) -> VertexOut {
     var out: VertexOut;
-    let local = unit * size;
-    out.position = vec4f(origin + axisX * local.x + axisY * local.y, 0.0, 1.0);
+    let alpha = u_frameUniforms.frame.x;
+    let target = u_frameUniforms.frame.yz;
+    let position = mix(positionData.zw, positionData.xy, vec2f(alpha));
+    let scale = mix(scaleData.zw, scaleData.xy, vec2f(alpha));
+    let radians = mix(rotationOffset.y, rotationOffset.x, alpha);
+    let local = rect.xy + unit * rect.zw;
+    let scaled = (local - pivot) * scale;
+    let c = cos(radians);
+    let s = sin(radians);
+    let rotated = vec2f(scaled.x * c - scaled.y * s, scaled.x * s + scaled.y * c);
+    let world = position + rotationOffset.zw + pivot + rotated;
+    let screen = (world - u_frameUniforms.camera.xy) * u_frameUniforms.camera.z + vec2f(u_frameUniforms.camera.w, u_frameUniforms.cameraExtra.x);
+    out.position = vec4f(vec2f((screen.x / target.x) * 2.0 - 1.0, 1.0 - (screen.y / target.y) * 2.0), 0.0, 1.0);
     out.uv = uvRect.xy + unit * uvRect.zw;
     out.tint = tint;
     return out;
