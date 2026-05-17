@@ -94,10 +94,11 @@ export function getRender2DQuadInstanceLayout(
 export function isRender2DQuadInstanceItem(
     item: Render2DPreparedItem,
 ): boolean {
+    if (item.vertexCount !== 6) return false;
+    if (item.geometry.kind === "glyph-quad") return item.sourceKind === "text";
     return (
         item.geometry.kind === "rect-quad" &&
-        (item.sourceKind === "rect" || item.sourceKind === "sprite") &&
-        item.vertexCount === 6
+        (item.sourceKind === "rect" || item.sourceKind === "sprite")
     );
 }
 
@@ -180,11 +181,18 @@ export function writeRender2DQuadInstanceDataAtOffset(
 
     for (let i = 0; i < itemCount; i++) {
         const item = frame.items[itemStart + i];
-        if (item.geometry.kind !== "rect-quad") continue;
+        if (
+            item.geometry.kind !== "rect-quad" &&
+            item.geometry.kind !== "glyph-quad"
+        ) {
+            continue;
+        }
 
         offset = writeInstanceTransform(data, offset, item);
-        data[offset++] = 0;
-        data[offset++] = 0;
+        data[offset++] =
+            item.geometry.kind === "glyph-quad" ? item.geometry.x : 0;
+        data[offset++] =
+            item.geometry.kind === "glyph-quad" ? item.geometry.y : 0;
         data[offset++] = item.geometry.w;
         data[offset++] = item.geometry.h;
 

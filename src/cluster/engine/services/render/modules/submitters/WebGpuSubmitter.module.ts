@@ -231,6 +231,7 @@ export function createWebGpuSubmitter(
         runtime: Extract<GfxRuntime, { backend: "webgpu" }>,
         pipeline: object,
         record: WebGpuFrameUniformRecord,
+        groupIndex: number,
     ): object | undefined {
         let bindGroup = record.bindGroupsByLayout.get(pipeline);
         if (bindGroup) return bindGroup;
@@ -240,7 +241,7 @@ export function createWebGpuSubmitter(
                 pipeline as {
                     getBindGroupLayout(index: number): object;
                 }
-            ).getBindGroupLayout(1);
+            ).getBindGroupLayout(groupIndex);
             bindGroup = runtime.device.createBindGroup({
                 label: "render.2d.frame.uniforms.bindGroup",
                 layout,
@@ -346,9 +347,13 @@ export function createWebGpuSubmitter(
                     runtime,
                     pipeline.pipeline,
                     frameUniformRecord,
+                    batch.pipelineFamily === "textured-2d" ? 1 : 0,
                 );
                 if (!frameBindGroup) return false;
-                pass.setBindGroup(1, frameBindGroup);
+                pass.setBindGroup(
+                    batch.pipelineFamily === "textured-2d" ? 1 : 0,
+                    frameBindGroup,
+                );
                 pass.draw(quad.vertexCount, range.instanceCount);
             } else {
                 pass.setVertexBuffer(0, vertexBuffer, range.byteOffset);

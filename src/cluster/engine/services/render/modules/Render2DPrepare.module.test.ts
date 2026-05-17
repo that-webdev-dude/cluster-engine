@@ -475,8 +475,15 @@ describe("createRender2DPrepare", () => {
         );
 
         expect(activeItems(frame)[0]).toMatchObject({
-            x: 15,
-            y: 30,
+            x: undefined,
+            y: undefined,
+            transform: undefined,
+            instanceTransform: expect.objectContaining({
+                x: 20,
+                y: 40,
+                prevX: 10,
+                prevY: 20,
+            }),
             blendMode: "alpha",
             color: { r: 0.4, g: 0.5, b: 0.6, a: 0.25 },
         });

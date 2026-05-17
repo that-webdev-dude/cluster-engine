@@ -548,7 +548,6 @@ export function createRender2DPrepare(
         layer: IndexedRenderLayer,
         sourceIndex: number,
         item: RenderText2D,
-        alpha: number,
     ): void {
         textStats.textItemCount++;
         const font = fontRegistry?.get(item.fontId);
@@ -557,7 +556,6 @@ export function createRender2DPrepare(
         textStats.missingGlyphCount += result.missingGlyphCount;
         if (result.glyphs.length === 0) return;
 
-        const transform = getPreparedPosition(item, alpha);
         const color = getPreparedColor(item);
         const blendMode = getBlendMode(item);
 
@@ -588,7 +586,8 @@ export function createRender2DPrepare(
                 blendMode,
                 resourceId: glyph.resourceId,
                 vertexCount: GLYPH_QUAD_VERTEX_COUNT,
-                transform,
+                transform: undefined,
+                instanceTransform: item,
                 color,
                 geometry,
             });
@@ -740,7 +739,6 @@ export function createRender2DPrepare(
                             layer,
                             indexedItem.sourceIndex,
                             indexedItem.item,
-                            input.alpha,
                         );
                         continue;
                     }
@@ -782,6 +780,8 @@ export function createRender2DPrepare(
                 missingGlyphCount: textStats.missingGlyphCount,
                 textItemCount: textStats.textItemCount,
                 preparedGlyphCount: textStats.preparedGlyphCount,
+                // Compatibility metric: glyphs submit as quad instances now,
+                // but public stats still report logical triangle vertices.
                 glyphVertexCount: textStats.glyphVertexCount,
                 textBatchCount,
             };

@@ -83,7 +83,7 @@ struct VertexOut {
     @location(0) color: vec4f,
 };
 
-@group(1) @binding(0) var<uniform> u_frameUniforms: FrameUniforms;
+@group(0) @binding(0) var<uniform> u_frameUniforms: FrameUniforms;
 
 @vertex
 fn main(
@@ -98,7 +98,7 @@ fn main(
 ) -> VertexOut {
     var out: VertexOut;
     let alpha = u_frameUniforms.frame.x;
-    let target = u_frameUniforms.frame.yz;
+    let targetSize = u_frameUniforms.frame.yz;
     let position = mix(positionData.zw, positionData.xy, vec2f(alpha));
     let scale = mix(scaleData.zw, scaleData.xy, vec2f(alpha));
     let radians = mix(rotationOffset.y, rotationOffset.x, alpha);
@@ -109,7 +109,7 @@ fn main(
     let rotated = vec2f(scaled.x * c - scaled.y * s, scaled.x * s + scaled.y * c);
     let world = position + rotationOffset.zw + pivot + rotated;
     let screen = (world - u_frameUniforms.camera.xy) * u_frameUniforms.camera.z + vec2f(u_frameUniforms.camera.w, u_frameUniforms.cameraExtra.x);
-    out.position = vec4f(vec2f((screen.x / target.x) * 2.0 - 1.0, 1.0 - (screen.y / target.y) * 2.0), 0.0, 1.0);
+    out.position = vec4f(vec2f((screen.x / targetSize.x) * 2.0 - 1.0, 1.0 - (screen.y / targetSize.y) * 2.0), 0.0, 1.0);
     out.color = color;
     return out;
 }`;
@@ -143,7 +143,7 @@ fn main(
 ) -> VertexOut {
     var out: VertexOut;
     let alpha = u_frameUniforms.frame.x;
-    let target = u_frameUniforms.frame.yz;
+    let targetSize = u_frameUniforms.frame.yz;
     let position = mix(positionData.zw, positionData.xy, vec2f(alpha));
     let scale = mix(scaleData.zw, scaleData.xy, vec2f(alpha));
     let radians = mix(rotationOffset.y, rotationOffset.x, alpha);
@@ -154,7 +154,7 @@ fn main(
     let rotated = vec2f(scaled.x * c - scaled.y * s, scaled.x * s + scaled.y * c);
     let world = position + rotationOffset.zw + pivot + rotated;
     let screen = (world - u_frameUniforms.camera.xy) * u_frameUniforms.camera.z + vec2f(u_frameUniforms.camera.w, u_frameUniforms.cameraExtra.x);
-    out.position = vec4f(vec2f((screen.x / target.x) * 2.0 - 1.0, 1.0 - (screen.y / target.y) * 2.0), 0.0, 1.0);
+    out.position = vec4f(vec2f((screen.x / targetSize.x) * 2.0 - 1.0, 1.0 - (screen.y / targetSize.y) * 2.0), 0.0, 1.0);
     out.uv = uvRect.xy + unit * uvRect.zw;
     out.tint = tint;
     return out;

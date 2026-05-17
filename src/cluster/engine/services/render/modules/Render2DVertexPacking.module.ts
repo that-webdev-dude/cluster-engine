@@ -360,13 +360,7 @@ function writeItemVertices(
                 uv: item.geometry.uv,
             });
         case "glyph-quad":
-            return writeRectVertices(data, offset, frame, item, {
-                x: item.geometry.x,
-                y: item.geometry.y,
-                w: item.geometry.w,
-                h: item.geometry.h,
-                uv: item.geometry.uv,
-            });
+            return offset;
         case "circle-like":
             return writeCircleLikeVertices(
                 data,

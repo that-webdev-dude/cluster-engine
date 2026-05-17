@@ -881,7 +881,13 @@ describe("createRender", () => {
             textureResourceCount: 1,
         });
         expect(restoredGl.texImage2D).toHaveBeenCalled();
-        expect(restoredGl.drawArrays).toHaveBeenCalledWith(restoredGl.TRIANGLES, 0, 6);
+        expect(restoredGl.drawArraysInstanced).toHaveBeenCalledWith(
+            restoredGl.TRIANGLES,
+            0,
+            6,
+            1,
+        );
+        expect(restoredGl.drawArrays).not.toHaveBeenCalled();
 
         await render.dispose();
     });
@@ -1099,7 +1105,7 @@ describe("createRender", () => {
             0,
             expect.any(Object),
         );
-        expect(recoveredWebGpu.renderPass.draw).toHaveBeenCalledWith(6);
+        expect(recoveredWebGpu.renderPass.draw).toHaveBeenCalledWith(6, 1);
 
         await render.dispose();
     });

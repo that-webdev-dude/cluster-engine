@@ -140,7 +140,7 @@ describe("createWebGpuSubmitter", () => {
             expect.any(Float32Array),
         );
         expect(webGpu.renderPass.setBindGroup).toHaveBeenCalledWith(
-            1,
+            0,
             expect.any(Object),
         );
         expect(webGpu.renderPass.setVertexBuffer).toHaveBeenNthCalledWith(
@@ -203,6 +203,10 @@ describe("createWebGpuSubmitter", () => {
         );
         expect(webGpu.renderPass.setBindGroup).toHaveBeenCalledWith(
             0,
+            expect.any(Object),
+        );
+        expect(webGpu.renderPass.setBindGroup).toHaveBeenCalledWith(
+            1,
             expect.any(Object),
         );
 

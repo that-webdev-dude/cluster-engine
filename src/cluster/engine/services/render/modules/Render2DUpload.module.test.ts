@@ -1,7 +1,12 @@
 import { describe, expect, it } from "vitest";
-import type { RenderFrameInput } from "../service/Render.types";
+import type {
+    RenderBitmapFontConfig,
+    RenderFrameInput,
+} from "../service/Render.types";
+import { createFontRegistry } from "./FontRegistry.module";
 import { createRender2DPrepare } from "./Render2DPrepare.module";
 import { createRender2DUpload } from "./Render2DUpload.module";
+import { createTextLayout } from "./TextLayout.module";
 
 function createInput(items: RenderFrameInput["layers"][number]["items"]) {
     return {
@@ -15,6 +20,63 @@ function createInput(items: RenderFrameInput["layers"][number]["items"]) {
             },
         ],
     } satisfies RenderFrameInput;
+}
+
+function createTwoPageFont(): RenderBitmapFontConfig {
+    return {
+        id: "font.ui",
+        kind: "bitmap",
+        baseSize: 10,
+        lineHeight: 12,
+        baseline: 9,
+        pages: [
+            {
+                id: "main",
+                resourceId: "font.ui.page.main",
+                width: 32,
+                height: 16,
+            },
+            {
+                id: "accent",
+                resourceId: "font.ui.page.accent",
+                width: 32,
+                height: 16,
+            },
+        ],
+        glyphs: [
+            {
+                codepoint: 65,
+                pageId: "main",
+                x: 0,
+                y: 0,
+                w: 8,
+                h: 10,
+                xOffset: 0,
+                yOffset: 0,
+                xAdvance: 8,
+            },
+            {
+                codepoint: 66,
+                pageId: "accent",
+                x: 8,
+                y: 0,
+                w: 8,
+                h: 10,
+                xOffset: 1,
+                yOffset: 0,
+                xAdvance: 8,
+            },
+        ],
+    };
+}
+
+function createTextPrepare() {
+    const registry = createFontRegistry({ debug: true });
+    registry.register([createTwoPageFont()]);
+    return createRender2DPrepare({
+        fontRegistry: registry,
+        textLayout: createTextLayout(),
+    });
 }
 
 describe("createRender2DUpload", () => {
@@ -178,5 +240,62 @@ describe("createRender2DUpload", () => {
             uploadByteLength: 1824,
             uploadFloatLength: 456,
         });
+    });
+
+    it("packs glyph instances into atlas-page grouped textured ranges", () => {
+        const frame = createTextPrepare().prepare(
+            createInput([
+                {
+                    kind: "text",
+                    sortKey: 0,
+                    x: 10,
+                    y: 20,
+                    prevX: 5,
+                    prevY: 15,
+                    text: "AB",
+                    fontId: "font.ui",
+                },
+            ]),
+        );
+        const uploadFrame = createRender2DUpload().build(frame);
+
+        expect(frame.batches.map((batch) => batch.resourceId)).toEqual([
+            "font.ui.page.main",
+            "font.ui.page.accent",
+        ]);
+        expect(uploadFrame.layouts).toHaveLength(1);
+        expect(uploadFrame.layouts[0].layout).toBe("quad-textured-instance-2d");
+        expect(uploadFrame.ranges).toMatchObject([
+            {
+                kind: "instances",
+                batchIndex: 0,
+                itemStart: 0,
+                itemCount: 1,
+                vertexCount: 6,
+                instanceCount: 1,
+            },
+            {
+                kind: "instances",
+                batchIndex: 1,
+                itemStart: 1,
+                itemCount: 1,
+                vertexCount: 6,
+                instanceCount: 1,
+            },
+        ]);
+        expect(uploadFrame.stats).toEqual({
+            layoutUploadCount: 1,
+            rangeCount: 2,
+            uploadByteLength: 224,
+            uploadFloatLength: 56,
+        });
+        expect(Array.from(uploadFrame.layouts[0].data.slice(0, 28))).toEqual([
+            10, 20, 5, 15, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 8, 10, 0, 0,
+            0.25, 0.625, 1, 1, 1, 1, 1, 0,
+        ]);
+        expect(Array.from(uploadFrame.layouts[0].data.slice(28, 56))).toEqual([
+            10, 20, 5, 15, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 9, 0, 8, 10, 0.25,
+            0, 0.25, 0.625, 1, 1, 1, 1, 1, 0,
+        ]);
     });
 });

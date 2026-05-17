@@ -102,6 +102,51 @@ function createTextFont(
     };
 }
 
+function createTwoPageTextFont(): RenderBitmapFontConfig {
+    return {
+        ...createTextFont(),
+        pages: [
+            {
+                id: "main",
+                resourceId: "font.ui.page.main",
+                width: 32,
+                height: 16,
+            },
+            {
+                id: "accent",
+                resourceId: "font.ui.page.accent",
+                width: 32,
+                height: 16,
+            },
+        ],
+        glyphs: [
+            {
+                codepoint: 65,
+                pageId: "main",
+                x: 0,
+                y: 0,
+                w: 8,
+                h: 10,
+                xOffset: 0,
+                yOffset: 0,
+                xAdvance: 8,
+            },
+            {
+                codepoint: 66,
+                pageId: "accent",
+                x: 8,
+                y: 0,
+                w: 8,
+                h: 10,
+                xOffset: 0,
+                yOffset: 0,
+                xAdvance: 8,
+            },
+        ],
+        replacementCodepoint: undefined,
+    };
+}
+
 function createPreparedTextFrame(
     font: RenderBitmapFontConfig = createTextFont(),
     text = "AB",
@@ -468,7 +513,74 @@ describe("createSubmitFrame", () => {
             gl.TEXTURE_2D,
             expect.any(Object),
         );
-        expect(gl.drawArrays).toHaveBeenCalledWith(gl.TRIANGLES, 0, 12);
+        expect(gl.drawArraysInstanced).toHaveBeenCalledWith(
+            gl.TRIANGLES,
+            0,
+            6,
+            2,
+        );
+        expect(gl.drawArrays).not.toHaveBeenCalled();
+
+        await pipelineLibrary.dispose();
+        await gpuResource.dispose();
+    });
+
+    it("submits text glyphs from multiple atlas pages as separate compatible batches", async () => {
+        const gl = createFakeWebGl2();
+        const gpuResource = createGpuResource({});
+        const pipelineLibrary = createPipelineLibrary({});
+        await gpuResource.start();
+        await pipelineLibrary.start();
+        gpuResource.registerTextureResource(
+            createTextAtlasTexture("font.ui.page.main"),
+        );
+        gpuResource.registerTextureResource(
+            createTextAtlasTexture("font.ui.page.accent"),
+        );
+        const frame = createPreparedTextFrame(createTwoPageTextFont());
+        const submitFrame = createSubmitFrame({
+            getRuntime: () => createRuntime(gl),
+            gpuResource,
+            pipelineLibrary,
+        });
+
+        expect(frame.batches.map((batch) => batch.resourceId)).toEqual([
+            "font.ui.page.main",
+            "font.ui.page.accent",
+        ]);
+        expect(frame.stats).toMatchObject({
+            batchCount: 2,
+            textBatchCount: 2,
+            preparedGlyphCount: 2,
+            glyphVertexCount: 12,
+        });
+
+        const report = submitFrame.submit(frame);
+
+        expect(report).toMatchObject({
+            result: { status: "submitted" },
+            metrics: {
+                drawCallCount: 2,
+                vertexCount: 12,
+                skippedResourceCount: 0,
+                fallbackResourceCount: 0,
+            },
+        });
+        expect(gl.drawArraysInstanced).toHaveBeenCalledTimes(2);
+        expect(gl.drawArraysInstanced).toHaveBeenNthCalledWith(
+            1,
+            gl.TRIANGLES,
+            0,
+            6,
+            1,
+        );
+        expect(gl.drawArraysInstanced).toHaveBeenNthCalledWith(
+            2,
+            gl.TRIANGLES,
+            0,
+            6,
+            1,
+        );
 
         await pipelineLibrary.dispose();
         await gpuResource.dispose();
@@ -564,7 +676,11 @@ describe("createSubmitFrame", () => {
             0,
             expect.any(Object),
         );
-        expect(webGpu.renderPass.draw).toHaveBeenCalledWith(12);
+        expect(webGpu.renderPass.setBindGroup).toHaveBeenCalledWith(
+            1,
+            expect.any(Object),
+        );
+        expect(webGpu.renderPass.draw).toHaveBeenCalledWith(6, 2);
 
         await pipelineLibrary.dispose();
         await gpuResource.dispose();

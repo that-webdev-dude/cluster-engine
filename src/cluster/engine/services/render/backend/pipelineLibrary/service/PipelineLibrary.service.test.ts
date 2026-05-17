@@ -222,10 +222,21 @@ describe("PipelineLibraryService", () => {
         expect(webGpu.device.createShaderModule).toHaveBeenCalledWith(
             expect.objectContaining({
                 code: expect.stringContaining(
+                    "@group(0) @binding(0) var<uniform> u_frameUniforms",
+                ),
+            }),
+        );
+        expect(webGpu.device.createShaderModule).toHaveBeenCalledWith(
+            expect.objectContaining({
+                code: expect.stringContaining(
                     "@group(1) @binding(0) var<uniform> u_frameUniforms",
                 ),
             }),
         );
+        for (const call of webGpu.device.createShaderModule.mock.calls) {
+            const desc = call[0] as { code?: string };
+            expect(desc.code ?? "").not.toContain("let target =");
+        }
 
         await pipelines.dispose();
     });
