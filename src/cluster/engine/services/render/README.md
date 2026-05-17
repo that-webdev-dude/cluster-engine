@@ -13,9 +13,11 @@ this package.
 - Owns render lifecycle, frame preparation, backend submission, and render
   metrics.
 - Accepts ordered 2D layers with renderer-domain rect, sprite, circle, ellipse,
-  polygon, and line items.
-- Resolves previous/current transform data with frame `alpha` during
-  preparation.
+  polygon, line, and bitmap text items.
+- Lowers public input into prepared draw records, compact instance streams, and
+  cached local geometry references.
+- Keeps transform interpolation, camera projection, rotation, and clip
+  conversion in backend shaders for supported 2D primitives.
 - Keeps backend, GPU resources, pipeline compilation, batching, and submission
   private to the render package.
 - Exposes debug state through `RenderView`, which `GameDebugView.render`
@@ -72,8 +74,8 @@ API.
   registers configured resources.
 - `prepare(input)` validates and lowers renderer-domain input into a prepared
   frame while updating frame metrics.
-- `execute()` syncs backend state, submits the prepared frame when possible, and
-  records the submit result.
+- `execute()` syncs backend state, plans geometry uploads, submits instance or
+  cached local-geometry draws when possible, and records the submit result.
 - `stop()` clears pending prepared work and stops private render subservices.
 - `dispose()` clears resources and invalidates later debug-mode calls through
   the shared lifecycle guard.
@@ -107,16 +109,18 @@ stores and writes sealed `RenderFrameInput`.
 - per-frame stats such as pass, command, batch, draw-call, vertex, skipped
   resource, fallback resource, and texture counts.
 
-These values are diagnostic renderer data, not public access to backend
+`vertexCount` and `glyphVertexCount` remain public compatibility counts for
+logical submitted triangle vertices. They do not imply CPU-packed final vertex
+streams. Debug values are diagnostic renderer data, not public access to backend
 internals.
 
 ## Backend Path
 
-WebGL2 is the first active backend path. The private `backend/` subfolder groups
-backend ownership: `gfxBackend` acquires and tracks the context, `gpuResource`
-owns GPU-side resources and uploads, `pipelineLibrary` compiles/caches shader
-programs, and `SubmitFrame` submits prepared batches.
+WebGL2 and WebGPU submitters share the same prepared-frame shape. The private
+`backend/` subfolder groups backend ownership: `gfxBackend` acquires and tracks
+the runtime, `gpuResource` owns textures, transient instance buffers, static
+unit geometry, and cached polygon geometry, `pipelineLibrary` compiles/caches
+backend pipelines, and `SubmitFrame` submits prepared batches.
 
-WebGPU parity, richer resource lifetimes, asset integration, GPU-side
-interpolation, text rendering, and long-term ECS extraction remain provisional
-areas.
+Richer resource lifetimes, asset integration, and long-term ECS extraction
+remain provisional areas.
