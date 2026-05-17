@@ -1,4 +1,11 @@
 import type {
+    Entity,
+    WorldManagerService,
+} from "../../src/cluster/engine/managers/world";
+import { createWorldManager } from "../../src/cluster/engine/managers/world";
+import { extractRenderFrameInput } from "../../src/cluster/engine/game/modules/RenderExtraction.module";
+import type { RenderExtractionInput } from "../../src/cluster/engine/game/modules/RenderExtraction.module";
+import type {
     RenderCircle2D,
     RenderFrameInput,
     RenderItem2D,
@@ -14,12 +21,54 @@ export type RenderProfileScenarioName =
     | "circles-5k"
     | "lines-10k"
     | "polygons-5k"
-    | "mixed-10k";
+    | "mixed-10k"
+    | "world-rects-1k"
+    | "world-rects-10k";
 
-export type RenderProfileScenario = Readonly<{
+export type RenderProfileScenarioSource = "renderer-only" | "world-backed";
+
+type RenderProfileScenarioBase = Readonly<{
     name: RenderProfileScenarioName;
     itemCount: number;
+    source: RenderProfileScenarioSource;
+}>;
+
+export type RenderProfileRendererOnlyScenario = RenderProfileScenarioBase &
+    Readonly<{
+        source: "renderer-only";
+        input: RenderFrameInput;
+    }>;
+
+export type RenderProfileWorldBackedScenario = RenderProfileScenarioBase &
+    Readonly<{
+        source: "world-backed";
+        world: WorldManagerService;
+        storeIds: readonly string[];
+        extract(): RenderFrameInput;
+    }>;
+
+export type RenderProfileScenario =
+    | RenderProfileRendererOnlyScenario
+    | RenderProfileWorldBackedScenario;
+
+export type RenderProfileScenarioOptions = Readonly<{
+    includeWorldBacked?: boolean;
+}>;
+
+type RenderProfileStaticScenarioName = Exclude<
+    RenderProfileScenarioName,
+    "world-rects-1k" | "world-rects-10k"
+>;
+
+type RenderProfileWorldScenarioName = Extract<
+    RenderProfileScenarioName,
+    "world-rects-1k" | "world-rects-10k"
+>;
+
+type WorldRectProfileScenario = Readonly<{
+    name: RenderProfileWorldScenarioName;
     input: RenderFrameInput;
+    itemCount: number;
 }>;
 
 export const RENDER_PROFILE_SCENARIO_NAMES: readonly RenderProfileScenarioName[] =
@@ -30,9 +79,12 @@ export const RENDER_PROFILE_SCENARIO_NAMES: readonly RenderProfileScenarioName[]
         "lines-10k",
         "polygons-5k",
         "mixed-10k",
+        "world-rects-1k",
+        "world-rects-10k",
     ];
 
 const TARGET = Object.freeze({ w: 1920, h: 1080, dpr: 1 });
+const PROFILE_STORE_ID = "profile-main";
 
 function colorAt(index: number) {
     return {
@@ -169,6 +221,25 @@ function createInput(items: readonly RenderItem2D[]): RenderFrameInput {
     };
 }
 
+function createWorldRectEntity(index: number): Entity {
+    return {
+        id: `profile.rect.${index}`,
+        position: {
+            x: xAt(index),
+            y: yAt(index),
+        },
+        prevPosition: {
+            x: xAt(index) - 0.5,
+            y: yAt(index) - 0.25,
+        },
+        size: {
+            w: 7 + (index % 5),
+            h: 9 + (index % 7),
+        },
+        color: colorAt(index),
+    };
+}
+
 function createItems(
     itemCount: number,
     createItem: (index: number) => RenderItem2D,
@@ -177,36 +248,136 @@ function createItems(
 }
 
 export function createRenderProfileScenario(
-    name: RenderProfileScenarioName,
-): RenderProfileScenario {
+    name: RenderProfileStaticScenarioName,
+): RenderProfileRendererOnlyScenario {
     switch (name) {
         case "rects-10k": {
             const items = createItems(10_000, createRect);
-            return { name, itemCount: items.length, input: createInput(items) };
+            return {
+                name,
+                source: "renderer-only",
+                itemCount: items.length,
+                input: createInput(items),
+            };
         }
         case "sprites-10k": {
             const items = createItems(10_000, createSprite);
-            return { name, itemCount: items.length, input: createInput(items) };
+            return {
+                name,
+                source: "renderer-only",
+                itemCount: items.length,
+                input: createInput(items),
+            };
         }
         case "circles-5k": {
             const items = createItems(5_000, createCircle);
-            return { name, itemCount: items.length, input: createInput(items) };
+            return {
+                name,
+                source: "renderer-only",
+                itemCount: items.length,
+                input: createInput(items),
+            };
         }
         case "lines-10k": {
             const items = createItems(10_000, createLine);
-            return { name, itemCount: items.length, input: createInput(items) };
+            return {
+                name,
+                source: "renderer-only",
+                itemCount: items.length,
+                input: createInput(items),
+            };
         }
         case "polygons-5k": {
             const items = createItems(5_000, createPolygon);
-            return { name, itemCount: items.length, input: createInput(items) };
+            return {
+                name,
+                source: "renderer-only",
+                itemCount: items.length,
+                input: createInput(items),
+            };
         }
         case "mixed-10k": {
             const items = createItems(10_000, createMixedItem);
-            return { name, itemCount: items.length, input: createInput(items) };
+            return {
+                name,
+                source: "renderer-only",
+                itemCount: items.length,
+                input: createInput(items),
+            };
         }
     }
 }
 
-export function createRenderProfileScenarios(): readonly RenderProfileScenario[] {
-    return RENDER_PROFILE_SCENARIO_NAMES.map(createRenderProfileScenario);
+async function createWorldRectScenario(
+    scenario: WorldRectProfileScenario,
+): Promise<RenderProfileWorldBackedScenario> {
+    const world = createWorldManager();
+    await world.start();
+
+    for (let i = 0; i < scenario.itemCount; i++) {
+        world.commands.request.spawn(PROFILE_STORE_ID, createWorldRectEntity(i));
+    }
+
+    world.flush();
+    world.publish();
+
+    const extractionInput: RenderExtractionInput = {
+        alpha: scenario.input.alpha,
+        target: scenario.input.target,
+        storeIds: [PROFILE_STORE_ID],
+        world,
+    };
+
+    return {
+        name: scenario.name,
+        source: "world-backed",
+        itemCount: scenario.itemCount,
+        world,
+        storeIds: [PROFILE_STORE_ID],
+        extract: () => extractRenderFrameInput(extractionInput),
+    };
+}
+
+export async function createWorldBackedRenderProfileScenario(
+    name: RenderProfileWorldScenarioName,
+): Promise<RenderProfileWorldBackedScenario> {
+    switch (name) {
+        case "world-rects-1k": {
+            return createWorldRectScenario({
+                name,
+                itemCount: 1_000,
+                input: createInput([]),
+            });
+        }
+        case "world-rects-10k": {
+            return createWorldRectScenario({
+                name,
+                itemCount: 10_000,
+                input: createInput([]),
+            });
+        }
+    }
+}
+
+export async function createRenderProfileScenarios(
+    options: RenderProfileScenarioOptions = {},
+): Promise<readonly RenderProfileScenario[]> {
+    const rendererOnlyScenarios: RenderProfileScenario[] = [
+        createRenderProfileScenario("rects-10k"),
+        createRenderProfileScenario("sprites-10k"),
+        createRenderProfileScenario("circles-5k"),
+        createRenderProfileScenario("lines-10k"),
+        createRenderProfileScenario("polygons-5k"),
+        createRenderProfileScenario("mixed-10k"),
+    ];
+
+    if (options.includeWorldBacked === false) {
+        return rendererOnlyScenarios;
+    }
+
+    return [
+        ...rendererOnlyScenarios,
+        await createWorldBackedRenderProfileScenario("world-rects-1k"),
+        await createWorldBackedRenderProfileScenario("world-rects-10k"),
+    ];
 }

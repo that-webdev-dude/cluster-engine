@@ -16,8 +16,17 @@ describe("render profile runner", () => {
                 "lines-10k",
                 "polygons-5k",
                 "mixed-10k",
+                "world-rects-1k",
+                "world-rects-10k",
             ]);
+
+            for (const scenario of summary.scenarios) {
+                expect(scenario.extractMs).toBeDefined();
+                expect(scenario.totalCpuMs.median).toBeGreaterThanOrEqual(
+                    scenario.extractMs.median,
+                );
+            }
         },
-        120_000,
+        600_000,
     );
 });
