@@ -1,5 +1,17 @@
 import { resolveRenderTransform2D } from "./Interpolation.module";
 import type { RenderResolvedTransform2D } from "./Interpolation.module";
+import { createRender2DHandoffAdapter } from "./Render2DHandoff.module";
+import type {
+    Render2DHandoffBatch,
+    Render2DHandoffColor,
+    Render2DHandoffCommand,
+    Render2DHandoffFrame,
+    Render2DHandoffGeometry,
+    Render2DHandoffGlyphQuad2D,
+    Render2DHandoffPipelineFamily,
+    Render2DHandoffSourceKind,
+    Render2DHandoffVertexLayout,
+} from "./Render2DHandoff.module";
 import { createTextLayout } from "./TextLayout.module";
 import type { FontRegistry } from "./FontRegistry.module";
 import type { TextLayoutModule } from "./TextLayout.module";
@@ -10,111 +22,27 @@ import type {
     RenderFrameStats,
     RenderItem2D,
     RenderLayerId,
-    RenderLine2D,
     RenderPoint2DInput,
     RenderResourceId,
-    RenderTargetInfo,
     RenderTransform2DInput,
     RenderText2D,
-    RenderUvRectInput,
 } from "../service/Render.types";
 
-type Render2DPipelineFamily = "solid-2d" | "textured-2d";
+type Render2DPipelineFamily = Render2DHandoffPipelineFamily;
 
-type Render2DVertexLayout = "position-color-2d" | "position-uv-tint-2d";
+type Render2DVertexLayout = Render2DHandoffVertexLayout;
 
-type Render2DPreparedSourceKind = RenderItem2D["kind"];
+type Render2DPreparedSourceKind = Render2DHandoffSourceKind;
 
-type PreparedRectQuad2D = Readonly<{
-    kind: "rect-quad";
-    w: number;
-    h: number;
-    uv?: RenderUvRectInput;
-}>;
+export type PreparedGlyphQuad2D = Render2DHandoffGlyphQuad2D;
 
-type PreparedCircleLike2D = Readonly<{
-    kind: "circle-like";
-    radiusX: number;
-    radiusY: number;
-    segments: number;
-}>;
+export type Render2DPreparedGeometry = Render2DHandoffGeometry;
 
-type PreparedLine2D = Readonly<
-    {
-        kind: "line";
-    } & Pick<RenderLine2D, "startX" | "startY" | "endX" | "endY"> & {
-            strokeWidth: number;
-        }
->;
+export type Render2DPreparedItem = Render2DHandoffCommand;
 
-type PreparedPolygon2D = Readonly<{
-    kind: "polygon";
-    vertices: readonly RenderPoint2DInput[];
-    localGeometryKey: string;
-}>;
+export type Render2DPreparedBatch = Render2DHandoffBatch;
 
-export type PreparedGlyphQuad2D = Readonly<{
-    kind: "glyph-quad";
-    sourceKind: "text";
-    sourceIndex: number;
-    glyphIndex: number;
-    resourceId: RenderResourceId;
-    x: number;
-    y: number;
-    w: number;
-    h: number;
-    uv: RenderUvRectInput;
-}>;
-
-export type Render2DPreparedGeometry =
-    | PreparedRectQuad2D
-    | PreparedCircleLike2D
-    | PreparedLine2D
-    | PreparedPolygon2D
-    | PreparedGlyphQuad2D;
-
-export type Render2DPreparedItem = Readonly<{
-    layerId: RenderLayerId;
-    layerOrder: number;
-    sourceIndex: number;
-    sortKey: number;
-    sourceKind: Render2DPreparedSourceKind;
-    kind: Render2DPreparedGeometry["kind"];
-    pipelineFamily: Render2DPipelineFamily;
-    vertexLayout: Render2DVertexLayout;
-    blendMode: RenderBlendMode;
-    resourceId?: RenderResourceId;
-    vertexCount: number;
-    x?: number;
-    y?: number;
-    transform?: RenderResolvedTransform2D;
-    instanceTransform?: RenderTransform2DInput;
-    color: RenderPreparedColor;
-    geometry: Render2DPreparedGeometry;
-}>;
-
-export type Render2DPreparedBatch = Readonly<{
-    layerId: RenderLayerId;
-    pipelineFamily: Render2DPipelineFamily;
-    vertexLayout: Render2DVertexLayout;
-    blendMode: RenderBlendMode;
-    resourceId?: RenderResourceId;
-    containsText: boolean;
-    itemStart: number;
-    itemCount: number;
-    vertexCount: number;
-}>;
-
-export type Render2DPreparedFrame = Readonly<{
-    target: RenderTargetInfo;
-    alpha: number;
-    camera?: RenderFrameInput["camera"];
-    items: readonly Render2DPreparedItem[];
-    itemCount: number;
-    batches: readonly Render2DPreparedBatch[];
-    batchCount: number;
-    stats: RenderFrameStats;
-}>;
+export type Render2DPreparedFrame = Render2DHandoffFrame;
 
 export type Render2DPrepareConfig = Readonly<{
     debug?: boolean;
@@ -170,12 +98,7 @@ type MutablePreparedItem = {
     geometry: Render2DPreparedGeometry;
 };
 
-export type RenderPreparedColor = Readonly<{
-    r: number;
-    g: number;
-    b: number;
-    a: number;
-}>;
+export type RenderPreparedColor = Render2DHandoffColor;
 
 type MutablePreparedBatch = {
     layerId: RenderLayerId;
@@ -397,6 +320,7 @@ export function createRender2DPrepare(
     const debug = config.debug ?? false;
     const fontRegistry = config.fontRegistry;
     const textLayout = config.textLayout ?? createTextLayout();
+    const handoffAdapter = createRender2DHandoffAdapter();
     const layerRecords: MutableLayerRecord[] = [];
     const itemSortRecords: MutableItemSortRecord[] = [];
     const preparedItems: MutablePreparedItem[] = [];
@@ -800,7 +724,7 @@ export function createRender2DPrepare(
                 textBatchCount,
             };
 
-            return {
+            const handoffFrame: Render2DHandoffFrame = {
                 target: input.target,
                 alpha: input.alpha,
                 camera: input.camera,
@@ -810,6 +734,8 @@ export function createRender2DPrepare(
                 batchCount: preparedBatchCount,
                 stats,
             };
+
+            return handoffAdapter.fromPreparedFrame(handoffFrame);
         },
     });
 }
