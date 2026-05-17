@@ -24,7 +24,9 @@ import {
 } from "../Render2DVertexPacking.module";
 import {
     getRender2DQuadInstancePipelineDescriptor,
+    getRender2DPrimitiveInstancePipelineDescriptor,
     type Render2DInstanceLayoutInfo,
+    type Render2DInstanceLayoutKey,
 } from "../Render2DInstancePacking.module";
 import { getRender2DFrameUniformValues } from "../Render2DFrameUniforms.module";
 
@@ -239,6 +241,16 @@ function configureUnitQuadLayout(
     gl.vertexAttribDivisor(0, 0);
 }
 
+function configureStaticVec2Layout(
+    gl: WebGL2RenderingContext,
+    vertexBuffer: WebGLBuffer,
+): void {
+    gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+    gl.enableVertexAttribArray(0);
+    gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 2 * BYTES_PER_FLOAT, 0);
+    gl.vertexAttribDivisor(0, 0);
+}
+
 function bindTexturedBatch(
     gl: WebGL2RenderingContext,
     program: WebGLProgram,
@@ -265,6 +277,37 @@ function bindTexturedBatch(
     }
 
     return true;
+}
+
+function isQuadInstanceLayout(layout: Render2DUploadLayoutKey): boolean {
+    return (
+        layout === "quad-solid-instance-2d" ||
+        layout === "quad-textured-instance-2d"
+    );
+}
+
+function getStaticGeometryForRange(
+    gl: WebGL2RenderingContext,
+    range: Render2DUploadRange,
+    uploadFrame: Render2DUploadFrame,
+    gpuResource: GpuResourceService,
+): { vertexBuffer: WebGLBuffer; vertexCount: number } | undefined {
+    if (range.layout === "line-solid-instance-2d") {
+        return gpuResource.getWebGl2UnitLineGeometry(gl);
+    }
+    if (range.layout === "circle-solid-instance-2d") {
+        return gpuResource.getWebGl2UnitCircleGeometry(gl);
+    }
+    if (range.layout === "polygon-solid-instance-2d") {
+        const item = uploadFrame.source.items[range.itemStart];
+        if (item.geometry.kind !== "polygon") return undefined;
+        return gpuResource.getWebGl2PolygonGeometry({
+            key: item.geometry.localGeometryKey,
+            vertices: item.geometry.vertices,
+            gl,
+        });
+    }
+    return undefined;
 }
 
 function bindFrameUniforms(
@@ -354,7 +397,12 @@ export function createWebGl2Submitter(
         const pipeline = config.pipelineLibrary.getWebGl2Pipeline({
             desc:
                 range.kind === "instances"
-                    ? getRender2DQuadInstancePipelineDescriptor(batch)
+                    ? isQuadInstanceLayout(range.layout)
+                        ? getRender2DQuadInstancePipelineDescriptor(batch)
+                        : getRender2DPrimitiveInstancePipelineDescriptor(
+                              batch,
+                              range.layout as Render2DInstanceLayoutKey,
+                          )
                     : getRender2DPipelineDescriptor(batch),
             gl,
         });
@@ -392,15 +440,26 @@ export function createWebGl2Submitter(
             }
 
             if (range.kind === "instances") {
-                const quad = config.gpuResource.getWebGl2UnitQuadGeometry(gl);
-                if (!quad) {
+                const staticGeometry = isQuadInstanceLayout(range.layout)
+                    ? config.gpuResource.getWebGl2UnitQuadGeometry(gl)
+                    : getStaticGeometryForRange(
+                          gl,
+                          range,
+                          uploadFrame,
+                          config.gpuResource,
+                      );
+                if (!staticGeometry) {
                     return {
                         result: "no-submitter",
                         metrics: snapshotSubmitMetrics(metrics),
                     };
                 }
                 bindFrameUniforms(gl, pipeline.program, uploadFrame.source);
-                configureUnitQuadLayout(gl, quad.vertexBuffer);
+                if (isQuadInstanceLayout(range.layout)) {
+                    configureUnitQuadLayout(gl, staticGeometry.vertexBuffer);
+                } else {
+                    configureStaticVec2Layout(gl, staticGeometry.vertexBuffer);
+                }
                 unitQuadLayoutConfigured = true;
                 gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
                 configureInstanceLayout(
@@ -412,7 +471,7 @@ export function createWebGl2Submitter(
                 gl.drawArraysInstanced(
                     gl.TRIANGLES,
                     0,
-                    quad.vertexCount,
+                    staticGeometry.vertexCount,
                     range.instanceCount,
                 );
             } else {

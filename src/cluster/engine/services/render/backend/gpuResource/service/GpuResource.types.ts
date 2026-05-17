@@ -29,7 +29,10 @@ export type GpuFrameVertexLayoutKey =
     | "position-color-2d"
     | "position-uv-tint-2d"
     | "quad-solid-instance-2d"
-    | "quad-textured-instance-2d";
+    | "quad-textured-instance-2d"
+    | "line-solid-instance-2d"
+    | "circle-solid-instance-2d"
+    | "polygon-solid-instance-2d";
 
 export type GpuTextureDesc = Readonly<{
     label?: string;
@@ -232,6 +235,16 @@ export type WebGl2UnitQuadGeometry = Readonly<{
 export type WebGpuUnitQuadGeometry = Readonly<{
     vertexBuffer: WebGpuBufferLike;
     indexBuffer: WebGpuBufferLike;
+    vertexCount: number;
+}>;
+
+export type WebGl2StaticGeometry = Readonly<{
+    vertexBuffer: WebGLBuffer;
+    vertexCount: number;
+}>;
+
+export type WebGpuStaticGeometry = Readonly<{
+    vertexBuffer: WebGpuBufferLike;
     vertexCount: number;
 }>;
 

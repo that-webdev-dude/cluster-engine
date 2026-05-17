@@ -297,6 +297,47 @@ describe("GpuResourceService", () => {
         await gpuResource.dispose();
     });
 
+    it("clears native static and cached geometry on WebGL2 loss and recreates after recovery", async () => {
+        const firstGl = createFakeWebGl2();
+        const restoredGl = createFakeWebGl2();
+        const gpuResource = createGpuResource({});
+        await gpuResource.start();
+
+        const circle = gpuResource.getWebGl2UnitCircleGeometry(firstGl);
+        const polygon = gpuResource.getWebGl2PolygonGeometry({
+            key: "0,0|10,0|0,10",
+            vertices: [
+                { x: 0, y: 0 },
+                { x: 10, y: 0 },
+                { x: 0, y: 10 },
+            ],
+            gl: firstGl,
+        });
+
+        gpuResource.sync({ gfxStatus: "lost" });
+        gpuResource.sync({ gfxStatus: "ok" });
+        const recoveredCircle =
+            gpuResource.getWebGl2UnitCircleGeometry(restoredGl);
+        const recoveredPolygon = gpuResource.getWebGl2PolygonGeometry({
+            key: "0,0|10,0|0,10",
+            vertices: [
+                { x: 0, y: 0 },
+                { x: 10, y: 0 },
+                { x: 0, y: 10 },
+            ],
+            gl: restoredGl,
+        });
+
+        expect(circle).toBeDefined();
+        expect(polygon).toBeDefined();
+        expect(recoveredCircle).toBeDefined();
+        expect(recoveredPolygon).toBeDefined();
+        expect(firstGl.deleteBuffer).toHaveBeenCalledTimes(2);
+        expect(restoredGl.createBuffer).toHaveBeenCalledTimes(2);
+
+        await gpuResource.dispose();
+    });
+
     it("grows and reuses WebGPU frame vertex buffers by layout", async () => {
         const webGpu = createFakeWebGpu();
         const gpuResource = createGpuResource({});

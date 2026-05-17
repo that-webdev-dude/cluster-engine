@@ -10,7 +10,10 @@ import { BYTES_PER_FLOAT } from "./Render2DVertexPacking.module";
 
 export type Render2DInstanceLayoutKey =
     | "quad-solid-instance-2d"
-    | "quad-textured-instance-2d";
+    | "quad-textured-instance-2d"
+    | "line-solid-instance-2d"
+    | "circle-solid-instance-2d"
+    | "polygon-solid-instance-2d";
 
 export type Render2DInstanceLayoutInfo = Readonly<{
     strideFloats: number;
@@ -57,6 +60,37 @@ export const RENDER_2D_INSTANCE_LAYOUTS: Record<
             { location: 8, size: 2, offsetFloats: 26 },
         ],
     },
+    "line-solid-instance-2d": {
+        strideFloats: 12,
+        attrs: [
+            { location: 1, size: 4, offsetFloats: 0 },
+            { location: 2, size: 4, offsetFloats: 4 },
+            { location: 3, size: 4, offsetFloats: 8 },
+        ],
+    },
+    "circle-solid-instance-2d": {
+        strideFloats: 22,
+        attrs: [
+            { location: 1, size: 4, offsetFloats: 0 },
+            { location: 2, size: 4, offsetFloats: 4 },
+            { location: 3, size: 4, offsetFloats: 8 },
+            { location: 4, size: 2, offsetFloats: 12 },
+            { location: 5, size: 2, offsetFloats: 14 },
+            { location: 6, size: 4, offsetFloats: 16 },
+            { location: 7, size: 2, offsetFloats: 20 },
+        ],
+    },
+    "polygon-solid-instance-2d": {
+        strideFloats: 20,
+        attrs: [
+            { location: 1, size: 4, offsetFloats: 0 },
+            { location: 2, size: 4, offsetFloats: 4 },
+            { location: 3, size: 4, offsetFloats: 8 },
+            { location: 4, size: 2, offsetFloats: 12 },
+            { location: 5, size: 4, offsetFloats: 14 },
+            { location: 6, size: 2, offsetFloats: 18 },
+        ],
+    },
 };
 
 export function getRender2DQuadInstancePipelineDescriptor(
@@ -83,6 +117,20 @@ export function getRender2DQuadInstancePipelineDescriptor(
     };
 }
 
+export function getRender2DPrimitiveInstancePipelineDescriptor(
+    batch: Render2DPreparedBatch,
+    layout: Render2DInstanceLayoutKey,
+): PipelineDescriptor {
+    return {
+        shaderFamily: "solid-2d",
+        passKey: batch.layerId,
+        materialKey: `solid:${layout}`,
+        primitive: "triangles",
+        blend: batch.blendMode,
+        vertexLayoutKey: layout,
+    };
+}
+
 export function getRender2DQuadInstanceLayout(
     item: Render2DPreparedItem,
 ): Render2DInstanceLayoutKey {
@@ -100,6 +148,31 @@ export function isRender2DQuadInstanceItem(
         item.geometry.kind === "rect-quad" &&
         (item.sourceKind === "rect" || item.sourceKind === "sprite")
     );
+}
+
+export function isRender2DPrimitiveInstanceItem(
+    item: Render2DPreparedItem,
+): boolean {
+    return (
+        item.geometry.kind === "line" ||
+        item.geometry.kind === "circle-like" ||
+        item.geometry.kind === "polygon"
+    );
+}
+
+export function getRender2DPrimitiveInstanceLayout(
+    item: Render2DPreparedItem,
+): Render2DInstanceLayoutKey {
+    switch (item.geometry.kind) {
+        case "line":
+            return "line-solid-instance-2d";
+        case "circle-like":
+            return "circle-solid-instance-2d";
+        case "polygon":
+            return "polygon-solid-instance-2d";
+        default:
+            return getRender2DQuadInstanceLayout(item);
+    }
 }
 
 function writeColor(
@@ -213,11 +286,89 @@ export function writeRender2DQuadInstanceDataAtOffset(
     };
 }
 
+export function writeRender2DPrimitiveInstanceDataAtOffset(
+    arena: Float32Array<ArrayBufferLike>,
+    frame: Render2DPreparedFrame,
+    itemStart: number,
+    itemCount: number,
+    layout: Render2DInstanceLayoutKey,
+    offset: number,
+): PackedRender2DInstanceRange {
+    const layoutInfo = RENDER_2D_INSTANCE_LAYOUTS[layout];
+    const neededFloats = offset + itemCount * layoutInfo.strideFloats;
+    const data = ensureRender2DInstanceArenaCapacity(arena, neededFloats);
+    const startOffset = offset;
+
+    for (let i = 0; i < itemCount; i++) {
+        const item = frame.items[itemStart + i];
+
+        if (layout === "line-solid-instance-2d") {
+            if (item.geometry.kind !== "line") continue;
+            data[offset++] = item.geometry.startX;
+            data[offset++] = item.geometry.startY;
+            data[offset++] = item.geometry.endX;
+            data[offset++] = item.geometry.endY;
+            data[offset++] = item.geometry.strokeWidth;
+            data[offset++] = 0;
+            data[offset++] = 0;
+            data[offset++] = 0;
+            offset = writeColor(data, offset, item.color);
+            continue;
+        }
+
+        offset = writeInstanceTransform(data, offset, item);
+
+        if (layout === "circle-solid-instance-2d") {
+            if (item.geometry.kind !== "circle-like") continue;
+            data[offset++] = item.geometry.radiusX;
+            data[offset++] = item.geometry.radiusY;
+            offset = writeColor(data, offset, item.color);
+            data[offset++] = item.sourceIndex;
+            data[offset++] = 0;
+            continue;
+        }
+
+        if (item.geometry.kind !== "polygon") continue;
+        offset = writeColor(data, offset, item.color);
+        data[offset++] = item.sourceIndex;
+        data[offset++] = 0;
+    }
+
+    return {
+        data,
+        offset: startOffset,
+        length: offset - startOffset,
+        nextOffset: offset,
+    };
+}
+
 export const RENDER_2D_UNIT_QUAD_VERTEX_DATA = new Float32Array([
     0, 0, 1, 0, 0, 1, 0, 1, 1, 0, 1, 1,
 ]);
 
 export const RENDER_2D_UNIT_QUAD_VERTEX_BYTE_LENGTH =
     RENDER_2D_UNIT_QUAD_VERTEX_DATA.byteLength;
+
+export const RENDER_2D_UNIT_LINE_VERTEX_DATA = new Float32Array([
+    0, 1, 1, 1, 0, -1, 0, -1, 1, 1, 1, -1,
+]);
+
+function createUnitCircleVertexData(segments = 24): Float32Array {
+    const data = new Float32Array(segments * 6);
+    let offset = 0;
+    for (let i = 0; i < segments; i++) {
+        const start = (i / segments) * Math.PI * 2;
+        const end = ((i + 1) / segments) * Math.PI * 2;
+        data[offset++] = 0;
+        data[offset++] = 0;
+        data[offset++] = Math.cos(start);
+        data[offset++] = Math.sin(start);
+        data[offset++] = Math.cos(end);
+        data[offset++] = Math.sin(end);
+    }
+    return data;
+}
+
+export const RENDER_2D_UNIT_CIRCLE_VERTEX_DATA = createUnitCircleVertexData();
 
 export const RENDER_2D_INSTANCE_BYTES_PER_FLOAT = BYTES_PER_FLOAT;

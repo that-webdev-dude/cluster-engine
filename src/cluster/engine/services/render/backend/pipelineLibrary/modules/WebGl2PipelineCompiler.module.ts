@@ -113,6 +113,94 @@ void main() {
     gl_Position = vec4(projectQuadCorner(), 0.0, 1.0);
 }`;
 
+const SOLID_LINE_INSTANCE_VERTEX_SHADER = `#version 300 es
+layout(location = 0) in vec2 a_lineUnit;
+layout(location = 1) in vec4 i_points;
+layout(location = 2) in vec4 i_style;
+layout(location = 3) in vec4 i_color;
+uniform vec4 u_frame;
+uniform vec4 u_camera;
+uniform vec4 u_cameraExtra;
+out vec4 v_color;
+vec2 projectPoint(vec2 world) {
+    vec2 target = u_frame.yz;
+    vec2 screen = (world - u_camera.xy) * u_camera.z + vec2(u_camera.w, u_cameraExtra.x);
+    return vec2((screen.x / target.x) * 2.0 - 1.0, 1.0 - (screen.y / target.y) * 2.0);
+}
+void main() {
+    vec2 start = i_points.xy;
+    vec2 end = i_points.zw;
+    vec2 direction = end - start;
+    float lengthValue = length(direction);
+    vec2 normal = lengthValue > 0.0 ? vec2(-direction.y, direction.x) / lengthValue : vec2(0.0);
+    vec2 local = mix(start, end, a_lineUnit.x) + normal * a_lineUnit.y * i_style.x * 0.5;
+    v_color = i_color;
+    gl_Position = vec4(projectPoint(local), 0.0, 1.0);
+}`;
+
+const SOLID_CIRCLE_INSTANCE_VERTEX_SHADER = `#version 300 es
+layout(location = 0) in vec2 a_unit;
+layout(location = 1) in vec4 i_position;
+layout(location = 2) in vec4 i_scale;
+layout(location = 3) in vec4 i_rotationOffset;
+layout(location = 4) in vec2 i_pivot;
+layout(location = 5) in vec2 i_radius;
+layout(location = 6) in vec4 i_color;
+layout(location = 7) in vec2 i_group;
+uniform vec4 u_frame;
+uniform vec4 u_camera;
+uniform vec4 u_cameraExtra;
+out vec4 v_color;
+vec2 projectLocal(vec2 local) {
+    float alpha = u_frame.x;
+    vec2 target = u_frame.yz;
+    vec2 position = mix(i_position.zw, i_position.xy, alpha);
+    vec2 scale = mix(i_scale.zw, i_scale.xy, alpha);
+    float radians = mix(i_rotationOffset.y, i_rotationOffset.x, alpha);
+    vec2 scaled = (local - i_pivot) * scale;
+    float c = cos(radians);
+    float s = sin(radians);
+    vec2 rotated = vec2(scaled.x * c - scaled.y * s, scaled.x * s + scaled.y * c);
+    vec2 world = position + i_rotationOffset.zw + i_pivot + rotated;
+    vec2 screen = (world - u_camera.xy) * u_camera.z + vec2(u_camera.w, u_cameraExtra.x);
+    return vec2((screen.x / target.x) * 2.0 - 1.0, 1.0 - (screen.y / target.y) * 2.0);
+}
+void main() {
+    v_color = i_color;
+    gl_Position = vec4(projectLocal(a_unit * i_radius), 0.0, 1.0);
+}`;
+
+const SOLID_POLYGON_INSTANCE_VERTEX_SHADER = `#version 300 es
+layout(location = 0) in vec2 a_local;
+layout(location = 1) in vec4 i_position;
+layout(location = 2) in vec4 i_scale;
+layout(location = 3) in vec4 i_rotationOffset;
+layout(location = 4) in vec2 i_pivot;
+layout(location = 5) in vec4 i_color;
+layout(location = 6) in vec2 i_group;
+uniform vec4 u_frame;
+uniform vec4 u_camera;
+uniform vec4 u_cameraExtra;
+out vec4 v_color;
+vec2 projectLocal(vec2 local) {
+    float alpha = u_frame.x;
+    vec2 target = u_frame.yz;
+    vec2 position = mix(i_position.zw, i_position.xy, alpha);
+    vec2 scale = mix(i_scale.zw, i_scale.xy, alpha);
+    float radians = mix(i_rotationOffset.y, i_rotationOffset.x, alpha);
+    vec2 scaled = (local - i_pivot) * scale;
+    float c = cos(radians);
+    float s = sin(radians);
+    vec2 rotated = vec2(scaled.x * c - scaled.y * s, scaled.x * s + scaled.y * c);
+    vec2 world = position + i_rotationOffset.zw + i_pivot + rotated;
+    vec2 screen = (world - u_camera.xy) * u_camera.z + vec2(u_camera.w, u_cameraExtra.x);
+    return vec2((screen.x / target.x) * 2.0 - 1.0, 1.0 - (screen.y / target.y) * 2.0);
+}
+void main() {
+    v_color = i_color;
+    gl_Position = vec4(projectLocal(a_local), 0.0, 1.0);
+}`;
+
 export function resolveWebGl2ShaderSource(
     desc: PipelineDescriptor,
 ): WebGl2ShaderSource | undefined {
@@ -153,6 +241,36 @@ export function resolveWebGl2ShaderSource(
         return {
             vertex: TEXTURED_QUAD_INSTANCE_VERTEX_SHADER,
             fragment: TEXTURED_FRAGMENT_SHADER,
+        };
+    }
+
+    if (
+        desc.shaderFamily === "solid-2d" &&
+        desc.vertexLayoutKey === "line-solid-instance-2d"
+    ) {
+        return {
+            vertex: SOLID_LINE_INSTANCE_VERTEX_SHADER,
+            fragment: SOLID_FRAGMENT_SHADER,
+        };
+    }
+
+    if (
+        desc.shaderFamily === "solid-2d" &&
+        desc.vertexLayoutKey === "circle-solid-instance-2d"
+    ) {
+        return {
+            vertex: SOLID_CIRCLE_INSTANCE_VERTEX_SHADER,
+            fragment: SOLID_FRAGMENT_SHADER,
+        };
+    }
+
+    if (
+        desc.shaderFamily === "solid-2d" &&
+        desc.vertexLayoutKey === "polygon-solid-instance-2d"
+    ) {
+        return {
+            vertex: SOLID_POLYGON_INSTANCE_VERTEX_SHADER,
+            fragment: SOLID_FRAGMENT_SHADER,
         };
     }
 

@@ -229,7 +229,7 @@ describe("createWebGl2Submitter", () => {
         await gpuResource.dispose();
     });
 
-    it("keeps unsupported primitives on the legacy draw path", async () => {
+    it("submits circles through static geometry and compact instances", async () => {
         const gl = createFakeWebGl2();
         const { gpuResource, pipelineLibrary, submitter } =
             await createStartedSubmitter();
@@ -259,13 +259,122 @@ describe("createWebGl2Submitter", () => {
                 drawCallCount: 1,
                 vertexCount: 72,
                 uploadCallCount: 1,
-                uploadByteCount: 1728,
+                uploadByteCount: 88,
                 uploadRangeCount: 1,
                 uploadLayoutCount: 1,
             },
         });
-        expect(gl.drawArrays).toHaveBeenCalledWith(gl.TRIANGLES, 0, 72);
-        expect(gl.drawArraysInstanced).not.toHaveBeenCalled();
+        expect(gl.bufferSubData).toHaveBeenCalledWith(
+            gl.ARRAY_BUFFER,
+            0,
+            expect.any(Float32Array),
+        );
+        expect(gl.drawArraysInstanced).toHaveBeenCalledWith(
+            gl.TRIANGLES,
+            0,
+            72,
+            1,
+        );
+        expect(gl.drawArrays).not.toHaveBeenCalled();
+
+        await pipelineLibrary.dispose();
+        await gpuResource.dispose();
+    });
+
+    it("reuses circle and ellipse static geometry across frames", async () => {
+        const gl = createFakeWebGl2();
+        const { gpuResource, pipelineLibrary, submitter } =
+            await createStartedSubmitter();
+        const frame = createRender2DPrepare().prepare(
+            createInput([
+                {
+                    id: "main",
+                    order: 0,
+                    items: [
+                        {
+                            kind: "circle",
+                            sortKey: 0,
+                            x: 10,
+                            y: 10,
+                            radius: 5,
+                        },
+                    ],
+                },
+            ]),
+        );
+        const ellipseFrame = createRender2DPrepare().prepare(
+            createInput([
+                {
+                    id: "main",
+                    order: 0,
+                    items: [
+                        {
+                            kind: "ellipse",
+                            sortKey: 0,
+                            x: 10,
+                            y: 10,
+                            radiusX: 5,
+                            radiusY: 8,
+                        },
+                    ],
+                },
+            ]),
+        );
+        const runtime = createWebGl2Runtime(gl);
+
+        submitter.submit(frame, runtime);
+        submitter.submit(ellipseFrame, runtime);
+
+        expect(gl.createBuffer).toHaveBeenCalledTimes(2);
+        expect(gl.bufferData).toHaveBeenCalledWith(
+            gl.ARRAY_BUFFER,
+            expect.any(Float32Array),
+            gl.STATIC_DRAW,
+        );
+
+        await pipelineLibrary.dispose();
+        await gpuResource.dispose();
+    });
+
+    it("reuses and invalidates polygon static geometry by local vertex key", async () => {
+        const gl = createFakeWebGl2();
+        const { gpuResource, pipelineLibrary, submitter } =
+            await createStartedSubmitter();
+        const runtime = createWebGl2Runtime(gl);
+        const createPolygonFrame = (x2: number) =>
+            createRender2DPrepare().prepare(
+                createInput([
+                    {
+                        id: "main",
+                        order: 0,
+                        items: [
+                            {
+                                kind: "polygon",
+                                sortKey: 0,
+                                x: 0,
+                                y: 0,
+                                vertices: [
+                                    { x: 0, y: 0 },
+                                    { x: x2, y: 0 },
+                                    { x: 0, y: 10 },
+                                ],
+                            },
+                        ],
+                    },
+                ]),
+            );
+
+        submitter.submit(createPolygonFrame(10), runtime);
+        submitter.submit(createPolygonFrame(10), runtime);
+        submitter.submit(createPolygonFrame(20), runtime);
+
+        expect(gl.createBuffer).toHaveBeenCalledTimes(3);
+        expect(gl.drawArraysInstanced).toHaveBeenCalledWith(
+            gl.TRIANGLES,
+            0,
+            3,
+            1,
+        );
 
         await pipelineLibrary.dispose();
         await gpuResource.dispose();

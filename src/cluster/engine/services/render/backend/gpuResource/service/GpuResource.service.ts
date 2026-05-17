@@ -33,15 +33,21 @@ import type {
     GpuTextureResourceConfig,
     GpuUploadRequest,
     WebGl2TextureBinding,
+    WebGl2StaticGeometry,
     WebGl2UnitQuadGeometry,
     WebGpuBindGroupLike,
     WebGpuDeviceLike,
     WebGpuFrameVertexBuffer,
+    WebGpuStaticGeometry,
     WebGpuUnitQuadGeometry,
     WebGpuTextureBinding,
     WebGl2FrameVertexBuffer,
 } from "./GpuResource.types";
-import { RENDER_2D_UNIT_QUAD_VERTEX_DATA } from "../../../modules/Render2DInstancePacking.module";
+import {
+    RENDER_2D_UNIT_CIRCLE_VERTEX_DATA,
+    RENDER_2D_UNIT_LINE_VERTEX_DATA,
+    RENDER_2D_UNIT_QUAD_VERTEX_DATA,
+} from "../../../modules/Render2DInstancePacking.module";
 
 export type GpuResourceService = Readonly<{
     start(): Promise<boolean>;
@@ -73,6 +79,28 @@ export type GpuResourceService = Readonly<{
     getWebGpuUnitQuadGeometry(
         device: WebGpuDeviceLike,
     ): WebGpuUnitQuadGeometry | undefined;
+    getWebGl2UnitLineGeometry(
+        gl: WebGL2RenderingContext,
+    ): WebGl2StaticGeometry | undefined;
+    getWebGpuUnitLineGeometry(
+        device: WebGpuDeviceLike,
+    ): WebGpuStaticGeometry | undefined;
+    getWebGl2UnitCircleGeometry(
+        gl: WebGL2RenderingContext,
+    ): WebGl2StaticGeometry | undefined;
+    getWebGpuUnitCircleGeometry(
+        device: WebGpuDeviceLike,
+    ): WebGpuStaticGeometry | undefined;
+    getWebGl2PolygonGeometry(args: {
+        key: string;
+        vertices: readonly { x: number; y: number }[];
+        gl: WebGL2RenderingContext;
+    }): WebGl2StaticGeometry | undefined;
+    getWebGpuPolygonGeometry(args: {
+        key: string;
+        vertices: readonly { x: number; y: number }[];
+        device: WebGpuDeviceLike;
+    }): WebGpuStaticGeometry | undefined;
     resolveWebGl2Texture(
         resourceId: string | undefined,
         gl: WebGL2RenderingContext,
@@ -119,6 +147,11 @@ type UnitQuadGeometryRecord = {
     webgpu?: WebGpuUnitQuadGeometry;
 };
 
+type StaticGeometryRecord = {
+    webgl2?: WebGl2StaticGeometry;
+    webgpu?: WebGpuStaticGeometry;
+};
+
 const FALLBACK_TEXTURE_RESOURCE_ID = "cluster.render.fallbackTexture";
 const FALLBACK_TEXTURE_DATA = new Uint8Array([255, 0, 255, 255]);
 const WEBGPU_BUFFER_USAGE_VERTEX_COPY_DST = 0x20 | 0x8;
@@ -144,6 +177,9 @@ function createGpuResourceService(
     const transientBuffers = new Set<GpuBufferHandle>();
     const frameVertexBuffers = new Map<GpuFrameVertexLayoutKey, BufferRecord>();
     const unitQuadGeometry: UnitQuadGeometryRecord = {};
+    const unitLineGeometry: StaticGeometryRecord = {};
+    const unitCircleGeometry: StaticGeometryRecord = {};
+    const polygonGeometry = new Map<string, StaticGeometryRecord>();
 
     const pendingUploads: GpuUploadRequest[] = [];
 
@@ -269,6 +305,25 @@ function createGpuResourceService(
         unitQuadGeometry.webgpu = undefined;
     }
 
+    function deleteStaticGeometry(
+        record: StaticGeometryRecord,
+        gl = lastWebGl2Context,
+    ): void {
+        deleteWebGl2NativeBuffer(gl, record.webgl2?.vertexBuffer);
+        record.webgpu?.vertexBuffer.destroy?.();
+        record.webgl2 = undefined;
+        record.webgpu = undefined;
+    }
+
+    function deleteStaticGeometryCaches(gl = lastWebGl2Context): void {
+        deleteStaticGeometry(unitLineGeometry, gl);
+        deleteStaticGeometry(unitCircleGeometry, gl);
+        for (const record of polygonGeometry.values()) {
+            deleteStaticGeometry(record, gl);
+        }
+        polygonGeometry.clear();
+    }
+
     function releaseTransientBuffers(): void {
         for (const handle of transientBuffers) {
             deleteWebGl2Buffer(buffers.get(handle));
@@ -317,6 +372,7 @@ function createGpuResourceService(
             deleteWebGpuObjects();
             deleteFrameVertexBuffers();
             deleteUnitQuadGeometry();
+            deleteStaticGeometryCaches();
             markAllInvalidated();
         },
         onStop: (_from: LifecycleActivePhase) => {
@@ -327,6 +383,7 @@ function createGpuResourceService(
             deleteWebGpuObjects();
             deleteFrameVertexBuffers();
             deleteUnitQuadGeometry();
+            deleteStaticGeometryCaches();
             markAllInvalidated();
         },
         onDispose: (_from: LifecycleLivePhase) => {
@@ -337,6 +394,7 @@ function createGpuResourceService(
             deleteWebGpuObjects();
             deleteFrameVertexBuffers();
             deleteUnitQuadGeometry();
+            deleteStaticGeometryCaches();
             textures.clear();
             buffers.clear();
             samplers.clear();
@@ -356,6 +414,7 @@ function createGpuResourceService(
             deleteWebGpuObjects();
             deleteFrameVertexBuffers();
             deleteUnitQuadGeometry();
+            deleteStaticGeometryCaches();
             markAllInvalidated();
             return;
         }
@@ -643,6 +702,47 @@ function createGpuResourceService(
         return unitQuadGeometry.webgl2;
     }
 
+    function createWebGl2StaticGeometry(args: {
+        gl: WebGL2RenderingContext;
+        record: StaticGeometryRecord;
+        data: Float32Array;
+    }): WebGl2StaticGeometry | undefined {
+        lastWebGl2Context = args.gl;
+        if (args.record.webgl2) return args.record.webgl2;
+
+        const vertexBuffer = createWebGl2Buffer(args.gl);
+        if (!vertexBuffer) return undefined;
+
+        args.gl.bindBuffer(args.gl.ARRAY_BUFFER, vertexBuffer);
+        args.gl.bufferData(args.gl.ARRAY_BUFFER, args.data, args.gl.STATIC_DRAW);
+        args.gl.bindBuffer(args.gl.ARRAY_BUFFER, null);
+
+        args.record.webgl2 = {
+            vertexBuffer,
+            vertexCount: Math.floor(args.data.length / 2),
+        };
+        return args.record.webgl2;
+    }
+
+    function triangulatePolygonVertices(
+        vertices: readonly { x: number; y: number }[],
+    ): Float32Array {
+        const data = new Float32Array((vertices.length - 2) * 6);
+        let offset = 0;
+        const origin = vertices[0];
+        for (let i = 1; i < vertices.length - 1; i++) {
+            const b = vertices[i];
+            const c = vertices[i + 1];
+            data[offset++] = origin.x;
+            data[offset++] = origin.y;
+            data[offset++] = b.x;
+            data[offset++] = b.y;
+            data[offset++] = c.x;
+            data[offset++] = c.y;
+        }
+        return data;
+    }
+
     function createStaticWebGpuBuffer(args: {
         device: WebGpuDeviceLike;
         label: string;
@@ -704,6 +804,119 @@ function createGpuResourceService(
             vertexCount: 6,
         };
         return unitQuadGeometry.webgpu;
+    }
+
+    function createWebGpuStaticGeometry(args: {
+        device: WebGpuDeviceLike;
+        record: StaticGeometryRecord;
+        label: string;
+        data: Float32Array;
+    }): WebGpuStaticGeometry | undefined {
+        if (args.record.webgpu) return args.record.webgpu;
+        const vertexBuffer = createStaticWebGpuBuffer({
+            device: args.device,
+            label: args.label,
+            byteLength: args.data.byteLength,
+            usage: WEBGPU_BUFFER_USAGE_VERTEX_COPY_DST,
+            data: args.data,
+        });
+        if (!vertexBuffer) return undefined;
+        args.record.webgpu = {
+            vertexBuffer,
+            vertexCount: Math.floor(args.data.length / 2),
+        };
+        return args.record.webgpu;
+    }
+
+    function getWebGl2UnitLineGeometry(
+        gl: WebGL2RenderingContext,
+    ): WebGl2StaticGeometry | undefined {
+        lifecycle.assertNotDisposed();
+        if (!assertRunning("getWebGl2UnitLineGeometry")) return undefined;
+        return createWebGl2StaticGeometry({
+            gl,
+            record: unitLineGeometry,
+            data: RENDER_2D_UNIT_LINE_VERTEX_DATA,
+        });
+    }
+
+    function getWebGpuUnitLineGeometry(
+        device: WebGpuDeviceLike,
+    ): WebGpuStaticGeometry | undefined {
+        lifecycle.assertNotDisposed();
+        if (!assertRunning("getWebGpuUnitLineGeometry")) return undefined;
+        return createWebGpuStaticGeometry({
+            device,
+            record: unitLineGeometry,
+            label: "render.2d.unitLine.vertices",
+            data: RENDER_2D_UNIT_LINE_VERTEX_DATA,
+        });
+    }
+
+    function getWebGl2UnitCircleGeometry(
+        gl: WebGL2RenderingContext,
+    ): WebGl2StaticGeometry | undefined {
+        lifecycle.assertNotDisposed();
+        if (!assertRunning("getWebGl2UnitCircleGeometry")) return undefined;
+        return createWebGl2StaticGeometry({
+            gl,
+            record: unitCircleGeometry,
+            data: RENDER_2D_UNIT_CIRCLE_VERTEX_DATA,
+        });
+    }
+
+    function getWebGpuUnitCircleGeometry(
+        device: WebGpuDeviceLike,
+    ): WebGpuStaticGeometry | undefined {
+        lifecycle.assertNotDisposed();
+        if (!assertRunning("getWebGpuUnitCircleGeometry")) return undefined;
+        return createWebGpuStaticGeometry({
+            device,
+            record: unitCircleGeometry,
+            label: "render.2d.unitCircle.vertices",
+            data: RENDER_2D_UNIT_CIRCLE_VERTEX_DATA,
+        });
+    }
+
+    function getPolygonGeometryRecord(key: string): StaticGeometryRecord {
+        let record = polygonGeometry.get(key);
+        if (record) return record;
+        record = {};
+        polygonGeometry.set(key, record);
+        return record;
+    }
+
+    function getWebGl2PolygonGeometry(args: {
+        key: string;
+        vertices: readonly { x: number; y: number }[];
+        gl: WebGL2RenderingContext;
+    }): WebGl2StaticGeometry | undefined {
+        lifecycle.assertNotDisposed();
+        if (!assertRunning("getWebGl2PolygonGeometry")) return undefined;
+        const record = getPolygonGeometryRecord(args.key);
+        if (record.webgl2) return record.webgl2;
+        return createWebGl2StaticGeometry({
+            gl: args.gl,
+            record,
+            data: triangulatePolygonVertices(args.vertices),
+        });
+    }
+
+    function getWebGpuPolygonGeometry(args: {
+        key: string;
+        vertices: readonly { x: number; y: number }[];
+        device: WebGpuDeviceLike;
+    }): WebGpuStaticGeometry | undefined {
+        lifecycle.assertNotDisposed();
+        if (!assertRunning("getWebGpuPolygonGeometry")) return undefined;
+        const record = getPolygonGeometryRecord(args.key);
+        if (record.webgpu) return record.webgpu;
+        return createWebGpuStaticGeometry({
+            device: args.device,
+            record,
+            label: `render.2d.polygon.${args.key}.vertices`,
+            data: triangulatePolygonVertices(args.vertices),
+        });
     }
 
     function getWebGl2Sampler(
@@ -1114,6 +1327,12 @@ function createGpuResourceService(
         getWebGl2FrameVertexBuffer,
         getWebGl2UnitQuadGeometry,
         getWebGpuUnitQuadGeometry,
+        getWebGl2UnitLineGeometry,
+        getWebGpuUnitLineGeometry,
+        getWebGl2UnitCircleGeometry,
+        getWebGpuUnitCircleGeometry,
+        getWebGl2PolygonGeometry,
+        getWebGpuPolygonGeometry,
         resolveWebGl2Texture,
         resolveWebGpuTexture,
         release,

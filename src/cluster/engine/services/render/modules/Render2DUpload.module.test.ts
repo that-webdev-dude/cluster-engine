@@ -187,7 +187,7 @@ describe("createRender2DUpload", () => {
         });
     });
 
-    it("splits mixed quad and unsupported primitive batches into instance and legacy ranges", () => {
+    it("splits mixed quad and circle batches into separate instance ranges", () => {
         const frame = createRender2DPrepare().prepare(
             createInput([
                 {
@@ -212,7 +212,7 @@ describe("createRender2DUpload", () => {
         expect(frame.batchCount).toBe(1);
         expect(uploadFrame.layouts.map((upload) => upload.layout)).toEqual([
             "quad-solid-instance-2d",
-            "position-color-2d",
+            "circle-solid-instance-2d",
         ]);
         expect(uploadFrame.ranges).toMatchObject([
             {
@@ -225,21 +225,116 @@ describe("createRender2DUpload", () => {
                 instanceCount: 1,
             },
             {
-                kind: "vertices",
+                kind: "instances",
                 batchIndex: 0,
                 itemStart: 1,
                 itemCount: 1,
-                byteLength: 1728,
+                byteLength: 88,
                 vertexCount: 72,
-                instanceCount: 0,
+                instanceCount: 1,
             },
         ]);
         expect(uploadFrame.stats).toEqual({
             layoutUploadCount: 2,
             rangeCount: 2,
-            uploadByteLength: 1824,
-            uploadFloatLength: 456,
+            uploadByteLength: 184,
+            uploadFloatLength: 46,
         });
+    });
+
+    it("packs line instances and skips degenerate lines", () => {
+        const frame = createRender2DPrepare().prepare(
+            createInput([
+                {
+                    kind: "line",
+                    sortKey: 0,
+                    startX: 1,
+                    startY: 2,
+                    endX: 11,
+                    endY: 12,
+                    strokeWidth: 3,
+                    color: { r: 0.25, g: 0.5, b: 0.75 },
+                },
+                {
+                    kind: "line",
+                    sortKey: 1,
+                    startX: 5,
+                    startY: 5,
+                    endX: 5,
+                    endY: 5,
+                },
+            ]),
+        );
+        const uploadFrame = createRender2DUpload().build(frame);
+
+        expect(frame.itemCount).toBe(1);
+        expect(uploadFrame.layouts[0].layout).toBe("line-solid-instance-2d");
+        expect(uploadFrame.ranges[0]).toMatchObject({
+            kind: "instances",
+            vertexCount: 6,
+            instanceCount: 1,
+            byteLength: 48,
+        });
+        expect(Array.from(uploadFrame.layouts[0].data.slice(0, 12))).toEqual([
+            1, 2, 11, 12, 3, 0, 0, 0, 0.25, 0.5, 0.75, 1,
+        ]);
+    });
+
+    it("uses polygon local geometry keys to split cacheable instance ranges", () => {
+        const firstVertices = [
+            { x: 0, y: 0 },
+            { x: 10, y: 0 },
+            { x: 10, y: 10 },
+        ];
+        const secondVertices = [
+            { x: 0, y: 0 },
+            { x: 20, y: 0 },
+            { x: 10, y: 10 },
+        ];
+        const frame = createRender2DPrepare().prepare(
+            createInput([
+                {
+                    kind: "polygon",
+                    sortKey: 0,
+                    x: 0,
+                    y: 0,
+                    vertices: firstVertices,
+                },
+                {
+                    kind: "polygon",
+                    sortKey: 1,
+                    x: 20,
+                    y: 0,
+                    vertices: firstVertices,
+                },
+                {
+                    kind: "polygon",
+                    sortKey: 2,
+                    x: 40,
+                    y: 0,
+                    vertices: secondVertices,
+                },
+            ]),
+        );
+        const uploadFrame = createRender2DUpload().build(frame);
+
+        expect(uploadFrame.layouts[0].layout).toBe("polygon-solid-instance-2d");
+        expect(uploadFrame.ranges).toMatchObject([
+            {
+                kind: "instances",
+                itemStart: 0,
+                itemCount: 2,
+                instanceCount: 2,
+                staticGeometryKey: "0,0|10,0|10,10",
+            },
+            {
+                kind: "instances",
+                itemStart: 2,
+                itemCount: 1,
+                instanceCount: 1,
+                staticGeometryKey: "0,0|20,0|10,10",
+            },
+        ]);
     });
 
     it("packs glyph instances into atlas-page grouped textured ranges", () => {

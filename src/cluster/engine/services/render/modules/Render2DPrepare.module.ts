@@ -50,6 +50,7 @@ type PreparedLine2D = Readonly<
 type PreparedPolygon2D = Readonly<{
     kind: "polygon";
     vertices: readonly RenderPoint2DInput[];
+    localGeometryKey: string;
 }>;
 
 export type PreparedGlyphQuad2D = Readonly<{
@@ -277,12 +278,10 @@ function getItemVertexCount(item: RenderItem2D): number {
                 : 0;
         case "line": {
             const strokeWidth = item.strokeWidth ?? 1;
-            const length = Math.hypot(
-                item.endX - item.startX,
-                item.endY - item.startY,
-            );
+            const dx = item.endX - item.startX;
+            const dy = item.endY - item.startY;
 
-            return length > 0 && strokeWidth > 0 ? 6 : 0;
+            return (dx !== 0 || dy !== 0) && strokeWidth > 0 ? 6 : 0;
         }
         case "polygon":
             return item.vertices.length >= 3 &&
@@ -292,6 +291,12 @@ function getItemVertexCount(item: RenderItem2D): number {
         case "text":
             return 0;
     }
+}
+
+function getPolygonLocalGeometryKey(
+    vertices: readonly RenderPoint2DInput[],
+): string {
+    return vertices.map((vertex) => `${vertex.x},${vertex.y}`).join("|");
 }
 
 function getPreparedPosition(
@@ -370,6 +375,7 @@ function createPrimitiveGeometry(
             return {
                 kind: "polygon",
                 vertices: item.vertices,
+                localGeometryKey: getPolygonLocalGeometryKey(item.vertices),
             };
     }
 }
@@ -532,11 +538,19 @@ export function createRender2DPrepare(
             resourceId: item.resourceId,
             vertexCount,
             transform:
-                item.kind === "rect" || item.kind === "sprite"
+                item.kind === "rect" ||
+                item.kind === "sprite" ||
+                item.kind === "circle" ||
+                item.kind === "ellipse" ||
+                item.kind === "polygon"
                     ? undefined
                     : getPreparedPosition(item, alpha),
             instanceTransform:
-                item.kind === "rect" || item.kind === "sprite"
+                item.kind === "rect" ||
+                item.kind === "sprite" ||
+                item.kind === "circle" ||
+                item.kind === "ellipse" ||
+                item.kind === "polygon"
                     ? item
                     : undefined,
             color: getPreparedColor(item),

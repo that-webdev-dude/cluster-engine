@@ -17,7 +17,11 @@ import type {
     SubmitFrameMetrics,
 } from "../SubmitFrame.module";
 import { getRender2DPipelineDescriptor } from "../Render2DVertexPacking.module";
-import { getRender2DQuadInstancePipelineDescriptor } from "../Render2DInstancePacking.module";
+import {
+    getRender2DPrimitiveInstancePipelineDescriptor,
+    getRender2DQuadInstancePipelineDescriptor,
+    type Render2DInstanceLayoutKey,
+} from "../Render2DInstancePacking.module";
 import {
     RENDER_2D_FRAME_UNIFORM_FLOAT_COUNT,
     writeRender2DFrameUniformData,
@@ -149,6 +153,13 @@ function addFrameVertexBufferMetrics(
     metrics.frameVertexBufferCreateCount += 1;
 }
 
+function isQuadInstanceLayout(layout: Render2DUploadLayoutKey): boolean {
+    return (
+        layout === "quad-solid-instance-2d" ||
+        layout === "quad-textured-instance-2d"
+    );
+}
+
 function createRenderPass(runtime: Extract<GfxRuntime, { backend: "webgpu" }>):
     | {
           encoder: WebGpuCommandEncoderLike;
@@ -182,7 +193,9 @@ export function createWebGpuSubmitter(
 ): WebGpuSubmitter {
     const buffersByLayout = new Map<Render2DUploadLayoutKey, object>();
     const frameUniformsByDevice = new WeakMap<object, WebGpuFrameUniformRecord>();
-    let frameUniformData = new Float32Array(RENDER_2D_FRAME_UNIFORM_FLOAT_COUNT);
+    let frameUniformData: Float32Array<ArrayBufferLike> = new Float32Array(
+        RENDER_2D_FRAME_UNIFORM_FLOAT_COUNT,
+    );
 
     function getFrameUniformRecord(
         runtime: Extract<GfxRuntime, { backend: "webgpu" }>,
@@ -299,6 +312,7 @@ export function createWebGpuSubmitter(
 
     function submitWebGpuBatch(
         runtime: Extract<GfxRuntime, { backend: "webgpu" }>,
+        uploadFrame: Render2DUploadFrame,
         batch: Render2DPreparedBatch,
         range: Render2DUploadRange,
         pass: WebGpuRenderPassEncoderLike,
@@ -308,7 +322,12 @@ export function createWebGpuSubmitter(
         const pipeline = config.pipelineLibrary.getWebGpuPipeline({
             desc:
                 range.kind === "instances"
-                    ? getRender2DQuadInstancePipelineDescriptor(batch)
+                    ? isQuadInstanceLayout(range.layout)
+                        ? getRender2DQuadInstancePipelineDescriptor(batch)
+                        : getRender2DPrimitiveInstancePipelineDescriptor(
+                              batch,
+                              range.layout as Render2DInstanceLayoutKey,
+                          )
                     : getRender2DPipelineDescriptor(batch),
             device: runtime.device,
             format: runtime.format,
@@ -336,11 +355,32 @@ export function createWebGpuSubmitter(
         try {
             pass.setPipeline(pipeline.pipeline);
             if (range.kind === "instances") {
-                const quad = config.gpuResource.getWebGpuUnitQuadGeometry(
-                    runtime.device,
-                );
-                if (!quad) return false;
-                pass.setVertexBuffer(0, quad.vertexBuffer, 0);
+                const staticGeometry = (() => {
+                    if (isQuadInstanceLayout(range.layout)) {
+                        return config.gpuResource.getWebGpuUnitQuadGeometry(
+                            runtime.device,
+                        );
+                    }
+                    if (range.layout === "line-solid-instance-2d") {
+                        return config.gpuResource.getWebGpuUnitLineGeometry(
+                            runtime.device,
+                        );
+                    }
+                    if (range.layout === "circle-solid-instance-2d") {
+                        return config.gpuResource.getWebGpuUnitCircleGeometry(
+                            runtime.device,
+                        );
+                    }
+                    const item = uploadFrame.source.items[range.itemStart];
+                    if (item.geometry.kind !== "polygon") return undefined;
+                    return config.gpuResource.getWebGpuPolygonGeometry({
+                        key: item.geometry.localGeometryKey,
+                        vertices: item.geometry.vertices,
+                        device: runtime.device,
+                    });
+                })();
+                if (!staticGeometry) return false;
+                pass.setVertexBuffer(0, staticGeometry.vertexBuffer, 0);
                 pass.setVertexBuffer(1, vertexBuffer, range.byteOffset);
                 if (bindGroup) pass.setBindGroup(0, bindGroup);
                 const frameBindGroup = getFrameUniformBindGroup(
@@ -354,7 +394,7 @@ export function createWebGpuSubmitter(
                     batch.pipelineFamily === "textured-2d" ? 1 : 0,
                     frameBindGroup,
                 );
-                pass.draw(quad.vertexCount, range.instanceCount);
+                pass.draw(staticGeometry.vertexCount, range.instanceCount);
             } else {
                 pass.setVertexBuffer(0, vertexBuffer, range.byteOffset);
                 if (bindGroup) pass.setBindGroup(0, bindGroup);
@@ -410,6 +450,7 @@ export function createWebGpuSubmitter(
                     if (
                         !submitWebGpuBatch(
                             runtime,
+                            uploadFrame,
                             batch,
                             range,
                             renderPass.pass,

@@ -13,7 +13,10 @@ export type PipelineVertexLayoutKey =
     | "position-color-2d"
     | "position-uv-tint-2d"
     | "quad-solid-instance-2d"
-    | "quad-textured-instance-2d";
+    | "quad-textured-instance-2d"
+    | "line-solid-instance-2d"
+    | "circle-solid-instance-2d"
+    | "polygon-solid-instance-2d";
 
 export type PipelineDescriptor = Readonly<{
     shaderFamily: PipelineShaderFamily;

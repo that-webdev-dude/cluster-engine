@@ -10,9 +10,12 @@ import {
 } from "./Render2DVertexPacking.module";
 import {
     getRender2DQuadInstanceLayout,
+    getRender2DPrimitiveInstanceLayout,
     isRender2DQuadInstanceItem,
+    isRender2DPrimitiveInstanceItem,
     RENDER_2D_INSTANCE_LAYOUTS,
     writeRender2DQuadInstanceDataAtOffset,
+    writeRender2DPrimitiveInstanceDataAtOffset,
     type Render2DInstanceLayoutInfo,
     type Render2DInstanceLayoutKey,
 } from "./Render2DInstancePacking.module";
@@ -41,6 +44,7 @@ export type Render2DUploadRange = Readonly<{
     vertexCount: number;
     instanceOffset: number;
     instanceCount: number;
+    staticGeometryKey?: string;
 }>;
 
 export type Render2DLayoutUpload = Readonly<{
@@ -165,10 +169,13 @@ export function createRender2DUpload(
         upload = {
             layout,
             layoutInfo:
-                layout === "quad-solid-instance-2d" ||
-                layout === "quad-textured-instance-2d"
-                    ? RENDER_2D_INSTANCE_LAYOUTS[layout]
-                    : RENDER_2D_VERTEX_LAYOUTS[layout],
+                layout in RENDER_2D_INSTANCE_LAYOUTS
+                    ? RENDER_2D_INSTANCE_LAYOUTS[
+                          layout as Render2DInstanceLayoutKey
+                      ]
+                    : RENDER_2D_VERTEX_LAYOUTS[
+                          layout as Render2DPreparedBatch["vertexLayout"]
+                      ],
             data: new Float32Array(0),
             floatLength: 0,
             byteLength: 0,
@@ -242,16 +249,29 @@ export function createRender2DUpload(
         itemStart: number,
         itemCount: number,
         vertexCount: number,
+        staticGeometryKey?: string,
     ): void {
         const floatOffset = upload.floatLength;
-        const written = writeRender2DQuadInstanceDataAtOffset(
-            upload.data,
-            frame,
-            itemStart,
-            itemCount,
-            upload.layout as Render2DInstanceLayoutKey,
-            floatOffset,
-        );
+        const layout = upload.layout as Render2DInstanceLayoutKey;
+        const written =
+            layout === "quad-solid-instance-2d" ||
+            layout === "quad-textured-instance-2d"
+                ? writeRender2DQuadInstanceDataAtOffset(
+                      upload.data,
+                      frame,
+                      itemStart,
+                      itemCount,
+                      layout,
+                      floatOffset,
+                  )
+                : writeRender2DPrimitiveInstanceDataAtOffset(
+                      upload.data,
+                      frame,
+                      itemStart,
+                      itemCount,
+                      layout,
+                      floatOffset,
+                  );
         const instanceOffset = Math.floor(
             written.offset / upload.layoutInfo.strideFloats,
         );
@@ -276,6 +296,7 @@ export function createRender2DUpload(
             vertexCount,
             instanceOffset,
             instanceCount: itemCount,
+            staticGeometryKey,
         };
 
         upload.ranges.push(range);
@@ -293,6 +314,7 @@ export function createRender2DUpload(
         let runVertexCount = 0;
         let runInstances = false;
         let runLayout: Render2DUploadLayoutKey = batch.vertexLayout;
+        let runStaticGeometryKey: string | undefined;
 
         function flushRun(): void {
             if (runItemCount <= 0 || runVertexCount <= 0) return;
@@ -306,6 +328,7 @@ export function createRender2DUpload(
                     runStart,
                     runItemCount,
                     runVertexCount,
+                    runStaticGeometryKey,
                 );
             } else {
                 appendVertexRange(
@@ -323,12 +346,25 @@ export function createRender2DUpload(
         for (let i = 0; i < batch.itemCount; i++) {
             const itemIndex = batch.itemStart + i;
             const item = frame.items[itemIndex];
-            const itemInstances = isRender2DQuadInstanceItem(item);
+            const itemInstances =
+                isRender2DQuadInstanceItem(item) ||
+                isRender2DPrimitiveInstanceItem(item);
             const itemLayout = itemInstances
-                ? getRender2DQuadInstanceLayout(item)
+                ? isRender2DQuadInstanceItem(item)
+                    ? getRender2DQuadInstanceLayout(item)
+                    : getRender2DPrimitiveInstanceLayout(item)
                 : batch.vertexLayout;
+            const itemStaticGeometryKey =
+                item.geometry.kind === "polygon"
+                    ? item.geometry.localGeometryKey
+                    : undefined;
 
-            if (runItemCount > 0 && (itemInstances !== runInstances || itemLayout !== runLayout)) {
+            if (
+                runItemCount > 0 &&
+                (itemInstances !== runInstances ||
+                    itemLayout !== runLayout ||
+                    itemStaticGeometryKey !== runStaticGeometryKey)
+            ) {
                 flushRun();
                 runStart = itemIndex;
                 runItemCount = 0;
@@ -337,6 +373,7 @@ export function createRender2DUpload(
 
             runInstances = itemInstances;
             runLayout = itemLayout;
+            runStaticGeometryKey = itemStaticGeometryKey;
             runItemCount++;
             runVertexCount += item.vertexCount;
         }
