@@ -3,7 +3,7 @@ import { createGpuResource } from "../../backend/gpuResource";
 import { createPipelineLibrary } from "../../backend/pipelineLibrary";
 import { createFakeWebGpu } from "../../testing/FakeWebGl2.test-utils";
 import { createRender2DPrepare } from "../Render2DPrepare.module";
-import { createRender2DUpload } from "../Render2DUpload.module";
+import { createRender2DGeometryUpload } from "../Render2DGeometryUpload.module";
 import { createWebGpuSubmitter } from "./WebGpuSubmitter.module";
 import type { GfxRuntime } from "../../backend/gfxBackend";
 import type { RenderFrameInput } from "../../service/Render.types";
@@ -44,7 +44,7 @@ async function createStartedSubmitter() {
         submitter: createWebGpuSubmitter({
             gpuResource,
             pipelineLibrary,
-            render2DUpload: createRender2DUpload(),
+            render2DGeometryUpload: createRender2DGeometryUpload(),
         }),
     };
 }

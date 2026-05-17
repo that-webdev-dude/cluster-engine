@@ -3,7 +3,7 @@ import type { GpuResourceService } from "../backend/gpuResource";
 import type { PipelineLibraryService } from "../backend/pipelineLibrary";
 import type { Render2DPreparedFrame } from "./Render2DPrepare.module";
 import type { RenderFrameStats, RenderSubmitResult } from "../service/Render.types";
-import { createRender2DUpload } from "./Render2DUpload.module";
+import { createRender2DGeometryUpload } from "./Render2DGeometryUpload.module";
 import { createWebGl2Submitter } from "./submitters/WebGl2Submitter.module";
 import { createWebGpuSubmitter } from "./submitters/WebGpuSubmitter.module";
 
@@ -54,16 +54,16 @@ const EMPTY_SUBMIT_METRICS: SubmitFrameMetrics = Object.freeze({
 });
 
 export function createSubmitFrame(config: SubmitFrameConfig): SubmitFrameModule {
-    const render2DUpload = createRender2DUpload();
+    const render2DGeometryUpload = createRender2DGeometryUpload();
     const webGl2Submitter = createWebGl2Submitter({
         gpuResource: config.gpuResource,
         pipelineLibrary: config.pipelineLibrary,
-        render2DUpload,
+        render2DGeometryUpload,
     });
     const webGpuSubmitter = createWebGpuSubmitter({
         gpuResource: config.gpuResource,
         pipelineLibrary: config.pipelineLibrary,
-        render2DUpload,
+        render2DGeometryUpload,
     });
 
     return Object.freeze({

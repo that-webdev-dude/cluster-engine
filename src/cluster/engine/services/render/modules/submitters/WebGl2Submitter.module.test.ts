@@ -5,7 +5,7 @@ import { createPipelineLibrary } from "../../backend/pipelineLibrary";
 import type { RenderFrameInput } from "../../service/Render.types";
 import { createFakeWebGl2 } from "../../testing/FakeWebGl2.test-utils";
 import { createRender2DPrepare } from "../Render2DPrepare.module";
-import { createRender2DUpload } from "../Render2DUpload.module";
+import { createRender2DGeometryUpload } from "../Render2DGeometryUpload.module";
 import { createWebGl2Submitter } from "./WebGl2Submitter.module";
 
 function createInput(
@@ -41,7 +41,7 @@ async function createStartedSubmitter() {
         submitter: createWebGl2Submitter({
             gpuResource,
             pipelineLibrary,
-            render2DUpload: createRender2DUpload(),
+            render2DGeometryUpload: createRender2DGeometryUpload(),
         }),
     };
 }

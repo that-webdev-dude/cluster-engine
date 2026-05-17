@@ -7,7 +7,7 @@ import type {
 import {
     BYTES_PER_FLOAT,
     RENDER_2D_VERTEX_LAYOUTS,
-} from "../../../modules/Render2DVertexPacking.module";
+} from "../../../modules/Render2DGeometryLayout.module";
 import { RENDER_2D_INSTANCE_LAYOUTS } from "../../../modules/Render2DInstancePacking.module";
 
 export type WebGpuShaderSource = Readonly<{

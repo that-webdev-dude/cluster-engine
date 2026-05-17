@@ -3,7 +3,7 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { createRender2DPrepare } from "../../src/cluster/engine/services/render/modules/Render2DPrepare.module";
-import { createRender2DUpload } from "../../src/cluster/engine/services/render/modules/Render2DUpload.module";
+import { createRender2DGeometryUpload } from "../../src/cluster/engine/services/render/modules/Render2DGeometryUpload.module";
 import {
     createRenderProfileScenarios,
     type RenderProfileScenario,
@@ -74,7 +74,7 @@ function measureScenario(
     scenario: RenderProfileScenario,
 ): RenderProfileScenarioResult {
     const prepare = createRender2DPrepare();
-    const upload = createRender2DUpload();
+    const upload = createRender2DGeometryUpload();
     const samples = createTimingSamples();
     let stats: RenderProfileStats = {
         commandCount: 0,

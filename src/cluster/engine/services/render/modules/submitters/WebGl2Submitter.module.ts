@@ -7,21 +7,17 @@ import type {
 } from "../Render2DPrepare.module";
 import type {
     Render2DLayoutUpload,
-    Render2DUpload,
-    Render2DUploadFrame,
-    Render2DUploadLayoutKey,
-    Render2DUploadRange,
-} from "../Render2DUpload.module";
+    render2DGeometryUpload,
+    Render2DGeometryUploadFrame,
+    Render2DGeometryUploadLayoutKey,
+    Render2DGeometryUploadRange,
+} from "../Render2DGeometryUpload.module";
 import type { RenderBlendMode } from "../../service/Render.types";
 import type {
     SubmitFrameMetrics,
     SubmitFrameReport,
 } from "../SubmitFrame.module";
-import {
-    BYTES_PER_FLOAT,
-    getRender2DPipelineDescriptor,
-    type Render2DVertexLayoutInfo,
-} from "../Render2DVertexPacking.module";
+import { BYTES_PER_FLOAT } from "../Render2DGeometryLayout.module";
 import {
     getRender2DQuadInstancePipelineDescriptor,
     getRender2DPrimitiveInstancePipelineDescriptor,
@@ -40,7 +36,7 @@ export type WebGl2Submitter = Readonly<{
 export type WebGl2SubmitterConfig = Readonly<{
     gpuResource: GpuResourceService;
     pipelineLibrary: PipelineLibraryService;
-    render2DUpload: Render2DUpload;
+    render2DGeometryUpload: Render2DGeometryUpload;
 }>;
 
 type MutableSubmitMetrics = {
@@ -136,7 +132,7 @@ function mergeSubmitMetrics(
 
 function addUploadPlannerMetrics(
     metrics: MutableSubmitMetrics,
-    uploadFrame: Render2DUploadFrame,
+    uploadFrame: Render2DGeometryUploadFrame,
 ): void {
     metrics.uploadByteCount += uploadFrame.stats.uploadByteLength;
     metrics.uploadRangeCount += uploadFrame.stats.rangeCount;
@@ -171,26 +167,6 @@ function applyBlendMode(
     gl.disable(gl.BLEND);
 }
 
-function configureVertexLayout(
-    gl: WebGL2RenderingContext,
-    layout: Render2DVertexLayoutInfo,
-    baseByteOffset: number,
-): void {
-    const strideBytes = layout.strideFloats * BYTES_PER_FLOAT;
-
-    for (const attr of layout.attrs) {
-        gl.enableVertexAttribArray(attr.location);
-        gl.vertexAttribPointer(
-            attr.location,
-            attr.size,
-            gl.FLOAT,
-            false,
-            strideBytes,
-            baseByteOffset + attr.offsetFloats * BYTES_PER_FLOAT,
-        );
-    }
-}
-
 function configureInstanceLayout(
     gl: WebGL2RenderingContext,
     layout: Render2DInstanceLayoutInfo,
@@ -218,15 +194,6 @@ function disableInstanceLayout(
 ): void {
     for (const attr of layout.attrs) {
         gl.vertexAttribDivisor(attr.location, 0);
-        gl.disableVertexAttribArray(attr.location);
-    }
-}
-
-function disableVertexLayout(
-    gl: WebGL2RenderingContext,
-    layout: Render2DVertexLayoutInfo,
-): void {
-    for (const attr of layout.attrs) {
         gl.disableVertexAttribArray(attr.location);
     }
 }
@@ -279,7 +246,7 @@ function bindTexturedBatch(
     return true;
 }
 
-function isQuadInstanceLayout(layout: Render2DUploadLayoutKey): boolean {
+function isQuadInstanceLayout(layout: Render2DGeometryUploadLayoutKey): boolean {
     return (
         layout === "quad-solid-instance-2d" ||
         layout === "quad-textured-instance-2d"
@@ -288,8 +255,8 @@ function isQuadInstanceLayout(layout: Render2DUploadLayoutKey): boolean {
 
 function getStaticGeometryForRange(
     gl: WebGL2RenderingContext,
-    range: Render2DUploadRange,
-    uploadFrame: Render2DUploadFrame,
+    range: Render2DGeometryUploadRange,
+    uploadFrame: Render2DGeometryUploadFrame,
     gpuResource: GpuResourceService,
 ): { vertexBuffer: WebGLBuffer; vertexCount: number } | undefined {
     if (range.layout === "line-solid-instance-2d") {
@@ -347,7 +314,7 @@ function bindFrameUniforms(
 export function createWebGl2Submitter(
     config: WebGl2SubmitterConfig,
 ): WebGl2Submitter {
-    const buffersByLayout = new Map<Render2DUploadLayoutKey, WebGLBuffer>();
+    const buffersByLayout = new Map<Render2DGeometryUploadLayoutKey, WebGLBuffer>();
 
     function uploadLayout(
         gl: WebGL2RenderingContext,
@@ -373,7 +340,7 @@ export function createWebGl2Submitter(
 
     function uploadLayouts(
         gl: WebGL2RenderingContext,
-        uploadFrame: Render2DUploadFrame,
+        uploadFrame: Render2DGeometryUploadFrame,
         metrics: MutableSubmitMetrics,
     ): boolean {
         buffersByLayout.clear();
@@ -390,20 +357,17 @@ export function createWebGl2Submitter(
     function submitWebGl2Range(
         gl: WebGL2RenderingContext,
         batch: Render2DPreparedBatch,
-        range: Render2DUploadRange,
-        uploadFrame: Render2DUploadFrame,
+        range: Render2DGeometryUploadRange,
+        uploadFrame: Render2DGeometryUploadFrame,
     ): BatchSubmitReport {
         const metrics = createMutableSubmitMetrics();
         const pipeline = config.pipelineLibrary.getWebGl2Pipeline({
-            desc:
-                range.kind === "instances"
-                    ? isQuadInstanceLayout(range.layout)
-                        ? getRender2DQuadInstancePipelineDescriptor(batch)
-                        : getRender2DPrimitiveInstancePipelineDescriptor(
-                              batch,
-                              range.layout as Render2DInstanceLayoutKey,
-                          )
-                    : getRender2DPipelineDescriptor(batch),
+            desc: isQuadInstanceLayout(range.layout)
+                ? getRender2DQuadInstancePipelineDescriptor(batch)
+                : getRender2DPrimitiveInstancePipelineDescriptor(
+                      batch,
+                      range.layout as Render2DInstanceLayoutKey,
+                  ),
             gl,
         });
         if (!pipeline) return { result: "no-submitter", metrics: EMPTY_SUBMIT_METRICS };
@@ -416,7 +380,6 @@ export function createWebGl2Submitter(
         )?.layoutInfo;
         if (!layout) return { result: "no-submitter", metrics: EMPTY_SUBMIT_METRICS };
 
-        let vertexLayoutConfigured = false;
         let instanceLayoutConfigured = false;
         let unitQuadLayoutConfigured = false;
 
@@ -439,51 +402,40 @@ export function createWebGl2Submitter(
                 };
             }
 
-            if (range.kind === "instances") {
-                const staticGeometry = isQuadInstanceLayout(range.layout)
-                    ? config.gpuResource.getWebGl2UnitQuadGeometry(gl)
-                    : getStaticGeometryForRange(
-                          gl,
-                          range,
-                          uploadFrame,
-                          config.gpuResource,
-                      );
-                if (!staticGeometry) {
-                    return {
-                        result: "no-submitter",
-                        metrics: snapshotSubmitMetrics(metrics),
-                    };
-                }
-                bindFrameUniforms(gl, pipeline.program, uploadFrame.source);
-                if (isQuadInstanceLayout(range.layout)) {
-                    configureUnitQuadLayout(gl, staticGeometry.vertexBuffer);
-                } else {
-                    configureStaticVec2Layout(gl, staticGeometry.vertexBuffer);
-                }
-                unitQuadLayoutConfigured = true;
-                gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
-                configureInstanceLayout(
-                    gl,
-                    layout as Render2DInstanceLayoutInfo,
-                    range.byteOffset,
-                );
-                instanceLayoutConfigured = true;
-                gl.drawArraysInstanced(
-                    gl.TRIANGLES,
-                    0,
-                    staticGeometry.vertexCount,
-                    range.instanceCount,
-                );
-            } else {
-                gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
-                configureVertexLayout(
-                    gl,
-                    layout as Render2DVertexLayoutInfo,
-                    range.byteOffset,
-                );
-                vertexLayoutConfigured = true;
-                gl.drawArrays(gl.TRIANGLES, 0, range.vertexCount);
+            const staticGeometry = isQuadInstanceLayout(range.layout)
+                ? config.gpuResource.getWebGl2UnitQuadGeometry(gl)
+                : getStaticGeometryForRange(
+                      gl,
+                      range,
+                      uploadFrame,
+                      config.gpuResource,
+                  );
+            if (!staticGeometry) {
+                return {
+                    result: "no-submitter",
+                    metrics: snapshotSubmitMetrics(metrics),
+                };
             }
+            bindFrameUniforms(gl, pipeline.program, uploadFrame.source);
+            if (isQuadInstanceLayout(range.layout)) {
+                configureUnitQuadLayout(gl, staticGeometry.vertexBuffer);
+            } else {
+                configureStaticVec2Layout(gl, staticGeometry.vertexBuffer);
+            }
+            unitQuadLayoutConfigured = true;
+            gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+            configureInstanceLayout(
+                gl,
+                layout as Render2DInstanceLayoutInfo,
+                range.byteOffset,
+            );
+            instanceLayoutConfigured = true;
+            gl.drawArraysInstanced(
+                gl.TRIANGLES,
+                0,
+                staticGeometry.vertexCount,
+                range.instanceCount,
+            );
             metrics.drawCallCount += 1;
             metrics.vertexCount += range.vertexCount;
         } finally {
@@ -492,9 +444,6 @@ export function createWebGl2Submitter(
                     gl,
                     layout as Render2DInstanceLayoutInfo,
                 );
-            }
-            if (vertexLayoutConfigured) {
-                disableVertexLayout(gl, layout as Render2DVertexLayoutInfo);
             }
             if (unitQuadLayoutConfigured) {
                 gl.vertexAttribDivisor(0, 0);
@@ -530,7 +479,7 @@ export function createWebGl2Submitter(
                 };
             }
 
-            const uploadFrame = config.render2DUpload.build(frame);
+            const uploadFrame = config.render2DGeometryUpload.build(frame);
             addUploadPlannerMetrics(metrics, uploadFrame);
             if (!uploadLayouts(gl, uploadFrame, metrics)) {
                 return {

@@ -6,7 +6,7 @@ import type {
     RenderPreparedColor,
 } from "./Render2DPrepare.module";
 import type { RenderUvRectInput } from "../service/Render.types";
-import { BYTES_PER_FLOAT } from "./Render2DVertexPacking.module";
+import { BYTES_PER_FLOAT } from "./Render2DGeometryLayout.module";
 
 export type Render2DInstanceLayoutKey =
     | "quad-solid-instance-2d"

@@ -416,6 +416,48 @@ describe("GpuResourceService", () => {
         await gpuResource.dispose();
     });
 
+    it("clears native static and cached geometry on WebGPU loss and recreates after recovery", async () => {
+        const firstWebGpu = createFakeWebGpu();
+        const recoveredWebGpu = createFakeWebGpu();
+        const gpuResource = createGpuResource({});
+        await gpuResource.start();
+
+        const circle = gpuResource.getWebGpuUnitCircleGeometry(firstWebGpu.device);
+        const polygon = gpuResource.getWebGpuPolygonGeometry({
+            key: "0,0|10,0|0,10",
+            vertices: [
+                { x: 0, y: 0 },
+                { x: 10, y: 0 },
+                { x: 0, y: 10 },
+            ],
+            device: firstWebGpu.device,
+        });
+
+        gpuResource.sync({ gfxStatus: "lost" });
+        gpuResource.sync({ gfxStatus: "ok" });
+        const recoveredCircle = gpuResource.getWebGpuUnitCircleGeometry(
+            recoveredWebGpu.device,
+        );
+        const recoveredPolygon = gpuResource.getWebGpuPolygonGeometry({
+            key: "0,0|10,0|0,10",
+            vertices: [
+                { x: 0, y: 0 },
+                { x: 10, y: 0 },
+                { x: 0, y: 10 },
+            ],
+            device: recoveredWebGpu.device,
+        });
+
+        expect(circle).toBeDefined();
+        expect(polygon).toBeDefined();
+        expect(recoveredCircle).toBeDefined();
+        expect(recoveredPolygon).toBeDefined();
+        expect(firstWebGpu.device.createBuffer).toHaveBeenCalledTimes(2);
+        expect(recoveredWebGpu.device.createBuffer).toHaveBeenCalledTimes(2);
+
+        await gpuResource.dispose();
+    });
+
     it("releases backend-native texture, sampler, and buffer objects", async () => {
         const gl = createFakeWebGl2();
         const gpuResource = createGpuResource({});

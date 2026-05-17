@@ -211,6 +211,7 @@ export type RenderFrameStats = Readonly<{
     commandCount: number;
     batchCount: number;
     drawCallCount: number;
+    /** Compatibility count of logical triangle vertices submitted, not CPU-packed final vertices. */
     vertexCount: number;
     uploadCallCount: number;
     uploadByteCount: number;
@@ -231,6 +232,7 @@ export type RenderFrameStats = Readonly<{
     missingGlyphCount: number;
     textItemCount: number;
     preparedGlyphCount: number;
+    /** Compatibility count of logical glyph triangle vertices; glyphs upload as quad instances. */
     glyphVertexCount: number;
     textBatchCount: number;
 }>;

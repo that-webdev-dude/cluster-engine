@@ -2,12 +2,7 @@ import type {
     Render2DPreparedBatch,
     Render2DPreparedFrame,
 } from "./Render2DPrepare.module";
-import {
-    BYTES_PER_FLOAT,
-    RENDER_2D_VERTEX_LAYOUTS,
-    writeRender2DBatchVertexDataAtOffset,
-    type Render2DVertexLayoutInfo,
-} from "./Render2DVertexPacking.module";
+import { BYTES_PER_FLOAT } from "./Render2DGeometryLayout.module";
 import {
     getRender2DQuadInstanceLayout,
     getRender2DPrimitiveInstanceLayout,
@@ -20,20 +15,18 @@ import {
     type Render2DInstanceLayoutKey,
 } from "./Render2DInstancePacking.module";
 
-export type Render2DUploadLayoutKey =
-    | Render2DPreparedBatch["vertexLayout"]
-    | Render2DInstanceLayoutKey;
+export type Render2DGeometryUploadLayoutKey =
+    Render2DInstanceLayoutKey;
 
-export type Render2DUploadRangeKind = "vertices" | "instances";
+export type Render2DGeometryUploadRangeKind = "instances";
 
-export type Render2DUploadLayoutInfo =
-    | Render2DVertexLayoutInfo
-    | Render2DInstanceLayoutInfo;
+export type Render2DGeometryUploadLayoutInfo =
+    Render2DInstanceLayoutInfo;
 
-export type Render2DUploadRange = Readonly<{
-    kind: Render2DUploadRangeKind;
+export type Render2DGeometryUploadRange = Readonly<{
+    kind: Render2DGeometryUploadRangeKind;
     batchIndex: number;
-    layout: Render2DUploadLayoutKey;
+    layout: Render2DGeometryUploadLayoutKey;
     itemStart: number;
     itemCount: number;
     floatOffset: number;
@@ -48,103 +41,61 @@ export type Render2DUploadRange = Readonly<{
 }>;
 
 export type Render2DLayoutUpload = Readonly<{
-    layout: Render2DUploadLayoutKey;
-    layoutInfo: Render2DUploadLayoutInfo;
+    layout: Render2DGeometryUploadLayoutKey;
+    layoutInfo: Render2DGeometryUploadLayoutInfo;
     data: Float32Array<ArrayBufferLike>;
     floatLength: number;
     byteLength: number;
     capacityFloats: number;
-    ranges: readonly Render2DUploadRange[];
+    ranges: readonly Render2DGeometryUploadRange[];
 }>;
 
-export type Render2DUploadRangeTable = ReadonlyArray<
-    Render2DUploadRange | undefined
+export type Render2DGeometryUploadRangeTable = ReadonlyArray<
+    Render2DGeometryUploadRange | undefined
 >;
 
-export type Render2DUploadFrameStats = Readonly<{
+export type Render2DGeometryUploadFrameStats = Readonly<{
     layoutUploadCount: number;
     rangeCount: number;
     uploadByteLength: number;
     uploadFloatLength: number;
 }>;
 
-export type Render2DUploadFrame = Readonly<{
+export type Render2DGeometryUploadFrame = Readonly<{
     source: Render2DPreparedFrame;
     layouts: readonly Render2DLayoutUpload[];
-    ranges: readonly Render2DUploadRange[];
-    rangesByBatchIndex: Render2DUploadRangeTable;
-    stats: Render2DUploadFrameStats;
+    ranges: readonly Render2DGeometryUploadRange[];
+    rangesByBatchIndex: Render2DGeometryUploadRangeTable;
+    stats: Render2DGeometryUploadFrameStats;
 }>;
 
-export type Render2DUploadBatchWriteResult = Readonly<{
-    data: Float32Array<ArrayBufferLike>;
-    floatOffset: number;
-    floatLength: number;
-    nextFloatOffset: number;
-}>;
-
-export type Render2DUploadBatchWriter = (
-    arena: Float32Array<ArrayBufferLike>,
-    frame: Render2DPreparedFrame,
-    batch: Render2DPreparedBatch,
-    floatOffset: number,
-) => Render2DUploadBatchWriteResult;
-
-export type Render2DUploadConfig = Readonly<{
-    batchWriter?: Render2DUploadBatchWriter;
-}>;
-
-export type Render2DUpload = Readonly<{
-    build(frame: Render2DPreparedFrame): Render2DUploadFrame;
+export type Render2DGeometryUpload = Readonly<{
+    build(frame: Render2DPreparedFrame): Render2DGeometryUploadFrame;
 }>;
 
 type MutableLayoutUpload = {
-    layout: Render2DUploadLayoutKey;
-    layoutInfo: Render2DUploadLayoutInfo;
+    layout: Render2DGeometryUploadLayoutKey;
+    layoutInfo: Render2DGeometryUploadLayoutInfo;
     data: Float32Array<ArrayBufferLike>;
     floatLength: number;
     byteLength: number;
     capacityFloats: number;
-    ranges: Render2DUploadRange[];
+    ranges: Render2DGeometryUploadRange[];
     active: boolean;
 };
 
-const EMPTY_UPLOAD_STATS: Render2DUploadFrameStats = Object.freeze({
+const EMPTY_UPLOAD_STATS: Render2DGeometryUploadFrameStats = Object.freeze({
     layoutUploadCount: 0,
     rangeCount: 0,
     uploadByteLength: 0,
     uploadFloatLength: 0,
 });
 
-function defaultBatchWriter(
-    arena: Float32Array<ArrayBufferLike>,
-    frame: Render2DPreparedFrame,
-    batch: Render2DPreparedBatch,
-    floatOffset: number,
-): Render2DUploadBatchWriteResult {
-    const written = writeRender2DBatchVertexDataAtOffset(
-        arena,
-        frame,
-        batch,
-        floatOffset,
-    );
-
-    return {
-        data: written.data,
-        floatOffset: written.offset,
-        floatLength: written.length,
-        nextFloatOffset: written.nextOffset,
-    };
-}
-
-export function createRender2DUpload(
-    config: Render2DUploadConfig = {},
-): Render2DUpload {
-    const batchWriter = config.batchWriter ?? defaultBatchWriter;
-    const uploadsByLayout = new Map<Render2DUploadLayoutKey, MutableLayoutUpload>();
+export function createRender2DGeometryUpload(): Render2DGeometryUpload {
+    const uploadsByLayout = new Map<Render2DGeometryUploadLayoutKey, MutableLayoutUpload>();
     const activeUploads: MutableLayoutUpload[] = [];
-    const orderedRanges: Render2DUploadRange[] = [];
-    const rangesByBatchIndex: Array<Render2DUploadRange | undefined> = [];
+    const orderedRanges: Render2DGeometryUploadRange[] = [];
+    const rangesByBatchIndex: Array<Render2DGeometryUploadRange | undefined> = [];
 
     function resetFrameState(frame: Render2DPreparedFrame): void {
         activeUploads.length = 0;
@@ -161,21 +112,14 @@ export function createRender2DUpload(
     }
 
     function getLayoutUpload(
-        layout: Render2DUploadLayoutKey,
+        layout: Render2DGeometryUploadLayoutKey,
     ): MutableLayoutUpload {
         let upload = uploadsByLayout.get(layout);
         if (upload) return upload;
 
         upload = {
             layout,
-            layoutInfo:
-                layout in RENDER_2D_INSTANCE_LAYOUTS
-                    ? RENDER_2D_INSTANCE_LAYOUTS[
-                          layout as Render2DInstanceLayoutKey
-                      ]
-                    : RENDER_2D_VERTEX_LAYOUTS[
-                          layout as Render2DPreparedBatch["vertexLayout"]
-                      ],
+            layoutInfo: RENDER_2D_INSTANCE_LAYOUTS[layout],
             data: new Float32Array(0),
             floatLength: 0,
             byteLength: 0,
@@ -192,54 +136,6 @@ export function createRender2DUpload(
         if (upload.active) return;
         upload.active = true;
         activeUploads.push(upload);
-    }
-
-    function appendVertexRange(
-        upload: MutableLayoutUpload,
-        frame: Render2DPreparedFrame,
-        batchIndex: number,
-        batch: Render2DPreparedBatch,
-        itemStart: number,
-        itemCount: number,
-        vertexCount: number,
-    ): void {
-        const floatOffset = upload.floatLength;
-        const runBatch: Render2DPreparedBatch = {
-            ...batch,
-            itemStart,
-            itemCount,
-            vertexCount,
-        };
-        const written = batchWriter(upload.data, frame, runBatch, floatOffset);
-        const vertexOffset = Math.floor(
-            written.floatOffset / upload.layoutInfo.strideFloats,
-        );
-
-        upload.data = written.data;
-        upload.floatLength = written.nextFloatOffset;
-        upload.byteLength = upload.floatLength * BYTES_PER_FLOAT;
-        upload.capacityFloats = upload.data.length;
-
-        const floatLength = written.floatLength;
-        const range: Render2DUploadRange = {
-            kind: "vertices",
-            batchIndex,
-            layout: upload.layout,
-            itemStart,
-            itemCount,
-            floatOffset: written.floatOffset,
-            floatLength,
-            byteOffset: written.floatOffset * BYTES_PER_FLOAT,
-            byteLength: floatLength * BYTES_PER_FLOAT,
-            vertexOffset,
-            vertexCount,
-            instanceOffset: 0,
-            instanceCount: 0,
-        };
-
-        upload.ranges.push(range);
-        orderedRanges.push(range);
-        rangesByBatchIndex[batchIndex] ??= range;
     }
 
     function appendInstanceRange(
@@ -282,7 +178,7 @@ export function createRender2DUpload(
         upload.capacityFloats = upload.data.length;
 
         const floatLength = written.length;
-        const range: Render2DUploadRange = {
+        const range: Render2DGeometryUploadRange = {
             kind: "instances",
             batchIndex,
             layout: upload.layout,
@@ -312,35 +208,22 @@ export function createRender2DUpload(
         let runStart = batch.itemStart;
         let runItemCount = 0;
         let runVertexCount = 0;
-        let runInstances = false;
-        let runLayout: Render2DUploadLayoutKey = batch.vertexLayout;
+        let runLayout: Render2DGeometryUploadLayoutKey | undefined;
         let runStaticGeometryKey: string | undefined;
 
         function flushRun(): void {
-            if (runItemCount <= 0 || runVertexCount <= 0) return;
+            if (runItemCount <= 0 || runVertexCount <= 0 || !runLayout) return;
             const upload = getLayoutUpload(runLayout);
             activateUpload(upload);
-            if (runInstances) {
-                appendInstanceRange(
-                    upload,
-                    frame,
-                    batchIndex,
-                    runStart,
-                    runItemCount,
-                    runVertexCount,
-                    runStaticGeometryKey,
-                );
-            } else {
-                appendVertexRange(
-                    upload,
-                    frame,
-                    batchIndex,
-                    batch,
-                    runStart,
-                    runItemCount,
-                    runVertexCount,
-                );
-            }
+            appendInstanceRange(
+                upload,
+                frame,
+                batchIndex,
+                runStart,
+                runItemCount,
+                runVertexCount,
+                runStaticGeometryKey,
+            );
         }
 
         for (let i = 0; i < batch.itemCount; i++) {
@@ -349,11 +232,10 @@ export function createRender2DUpload(
             const itemInstances =
                 isRender2DQuadInstanceItem(item) ||
                 isRender2DPrimitiveInstanceItem(item);
-            const itemLayout = itemInstances
-                ? isRender2DQuadInstanceItem(item)
-                    ? getRender2DQuadInstanceLayout(item)
-                    : getRender2DPrimitiveInstanceLayout(item)
-                : batch.vertexLayout;
+            if (!itemInstances) continue;
+            const itemLayout = isRender2DQuadInstanceItem(item)
+                ? getRender2DQuadInstanceLayout(item)
+                : getRender2DPrimitiveInstanceLayout(item);
             const itemStaticGeometryKey =
                 item.geometry.kind === "polygon"
                     ? item.geometry.localGeometryKey
@@ -361,8 +243,7 @@ export function createRender2DUpload(
 
             if (
                 runItemCount > 0 &&
-                (itemInstances !== runInstances ||
-                    itemLayout !== runLayout ||
+                (itemLayout !== runLayout ||
                     itemStaticGeometryKey !== runStaticGeometryKey)
             ) {
                 flushRun();
@@ -371,7 +252,6 @@ export function createRender2DUpload(
                 runVertexCount = 0;
             }
 
-            runInstances = itemInstances;
             runLayout = itemLayout;
             runStaticGeometryKey = itemStaticGeometryKey;
             runItemCount++;
@@ -381,7 +261,7 @@ export function createRender2DUpload(
         flushRun();
     }
 
-    function createStats(): Render2DUploadFrameStats {
+    function createStats(): Render2DGeometryUploadFrameStats {
         if (activeUploads.length === 0) return EMPTY_UPLOAD_STATS;
 
         let rangeCount = 0;
@@ -403,7 +283,7 @@ export function createRender2DUpload(
     }
 
     return Object.freeze({
-        build(frame: Render2DPreparedFrame): Render2DUploadFrame {
+        build(frame: Render2DPreparedFrame): Render2DGeometryUploadFrame {
             resetFrameState(frame);
 
             for (let batchIndex = 0; batchIndex < frame.batchCount; batchIndex++) {

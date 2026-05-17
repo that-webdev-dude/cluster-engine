@@ -5,7 +5,7 @@ import type {
 } from "../service/Render.types";
 import { createFontRegistry } from "./FontRegistry.module";
 import { createRender2DPrepare } from "./Render2DPrepare.module";
-import { createRender2DUpload } from "./Render2DUpload.module";
+import { createRender2DGeometryUpload } from "./Render2DGeometryUpload.module";
 import { createTextLayout } from "./TextLayout.module";
 
 function createInput(items: RenderFrameInput["layers"][number]["items"]) {
@@ -79,10 +79,10 @@ function createTextPrepare() {
     });
 }
 
-describe("createRender2DUpload", () => {
+describe("createRender2DGeometryUpload", () => {
     it("reports zero upload stats for an empty frame", () => {
         const frame = createRender2DPrepare().prepare(createInput([]));
-        const uploadFrame = createRender2DUpload().build(frame);
+        const uploadFrame = createRender2DGeometryUpload().build(frame);
 
         expect(uploadFrame.layouts).toHaveLength(0);
         expect(uploadFrame.stats).toEqual({
@@ -115,7 +115,7 @@ describe("createRender2DUpload", () => {
                 },
             ]),
         );
-        const uploadFrame = createRender2DUpload().build(frame);
+        const uploadFrame = createRender2DGeometryUpload().build(frame);
 
         expect(uploadFrame.layouts).toHaveLength(1);
         expect(uploadFrame.layouts[0].layout).toBe("quad-solid-instance-2d");
@@ -168,7 +168,7 @@ describe("createRender2DUpload", () => {
                 },
             ]),
         );
-        const uploadFrame = createRender2DUpload().build(frame);
+        const uploadFrame = createRender2DGeometryUpload().build(frame);
 
         expect(uploadFrame.layouts.map((upload) => upload.layout)).toEqual([
             "quad-solid-instance-2d",
@@ -185,6 +185,118 @@ describe("createRender2DUpload", () => {
             uploadByteLength: 304,
             uploadFloatLength: 76,
         });
+    });
+
+    it("does not plan final vertex uploads for supported 2D primitives", () => {
+        const frame = createTextPrepare().prepare(
+            createInput([
+                {
+                    kind: "rect",
+                    sortKey: 0,
+                    x: 0,
+                    y: 0,
+                    w: 10,
+                    h: 10,
+                },
+                {
+                    kind: "sprite",
+                    sortKey: 1,
+                    x: 20,
+                    y: 0,
+                    w: 10,
+                    h: 10,
+                    resourceId: "sprite.a",
+                },
+                {
+                    kind: "line",
+                    sortKey: 2,
+                    startX: 0,
+                    startY: 0,
+                    endX: 10,
+                    endY: 10,
+                },
+                {
+                    kind: "circle",
+                    sortKey: 3,
+                    x: 30,
+                    y: 10,
+                    radius: 5,
+                },
+                {
+                    kind: "polygon",
+                    sortKey: 4,
+                    x: 40,
+                    y: 10,
+                    vertices: [
+                        { x: 0, y: 0 },
+                        { x: 10, y: 0 },
+                        { x: 0, y: 10 },
+                    ],
+                },
+                {
+                    kind: "text",
+                    sortKey: 5,
+                    x: 50,
+                    y: 10,
+                    text: "A",
+                    fontId: "font.ui",
+                },
+            ]),
+        );
+        const uploadFrame = createRender2DGeometryUpload().build(frame);
+
+        expect(uploadFrame.ranges).toHaveLength(6);
+        expect(new Set(uploadFrame.ranges.map((range) => range.kind))).toEqual(
+            new Set(["instances"]),
+        );
+        expect(uploadFrame.layouts.map((upload) => upload.layout)).toEqual([
+            "quad-solid-instance-2d",
+            "quad-textured-instance-2d",
+            "line-solid-instance-2d",
+            "circle-solid-instance-2d",
+            "polygon-solid-instance-2d",
+        ]);
+    });
+
+    it("uses fewer upload bytes for repeated quads and glyphs than final vertex streams", () => {
+        const quads = createRender2DPrepare().prepare(
+            createInput([
+                {
+                    kind: "rect",
+                    sortKey: 0,
+                    x: 0,
+                    y: 0,
+                    w: 10,
+                    h: 10,
+                },
+                {
+                    kind: "rect",
+                    sortKey: 1,
+                    x: 20,
+                    y: 0,
+                    w: 10,
+                    h: 10,
+                },
+            ]),
+        );
+        const glyphs = createTextPrepare().prepare(
+            createInput([
+                {
+                    kind: "text",
+                    sortKey: 0,
+                    x: 0,
+                    y: 0,
+                    text: "AA",
+                    fontId: "font.ui",
+                },
+            ]),
+        );
+
+        const quadUpload = createRender2DGeometryUpload().build(quads);
+        const glyphUpload = createRender2DGeometryUpload().build(glyphs);
+
+        expect(quadUpload.stats.uploadByteLength).toBeLessThan(2 * 6 * 6 * 4);
+        expect(glyphUpload.stats.uploadByteLength).toBeLessThan(2 * 6 * 8 * 4);
     });
 
     it("splits mixed quad and circle batches into separate instance ranges", () => {
@@ -207,7 +319,7 @@ describe("createRender2DUpload", () => {
                 },
             ]),
         );
-        const uploadFrame = createRender2DUpload().build(frame);
+        const uploadFrame = createRender2DGeometryUpload().build(frame);
 
         expect(frame.batchCount).toBe(1);
         expect(uploadFrame.layouts.map((upload) => upload.layout)).toEqual([
@@ -265,7 +377,7 @@ describe("createRender2DUpload", () => {
                 },
             ]),
         );
-        const uploadFrame = createRender2DUpload().build(frame);
+        const uploadFrame = createRender2DGeometryUpload().build(frame);
 
         expect(frame.itemCount).toBe(1);
         expect(uploadFrame.layouts[0].layout).toBe("line-solid-instance-2d");
@@ -316,7 +428,7 @@ describe("createRender2DUpload", () => {
                 },
             ]),
         );
-        const uploadFrame = createRender2DUpload().build(frame);
+        const uploadFrame = createRender2DGeometryUpload().build(frame);
 
         expect(uploadFrame.layouts[0].layout).toBe("polygon-solid-instance-2d");
         expect(uploadFrame.ranges).toMatchObject([
@@ -352,7 +464,7 @@ describe("createRender2DUpload", () => {
                 },
             ]),
         );
-        const uploadFrame = createRender2DUpload().build(frame);
+        const uploadFrame = createRender2DGeometryUpload().build(frame);
 
         expect(frame.batches.map((batch) => batch.resourceId)).toEqual([
             "font.ui.page.main",
