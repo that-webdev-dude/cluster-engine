@@ -253,7 +253,7 @@ export function createRender2DUpload(
             floatOffset,
         );
         const instanceOffset = Math.floor(
-            written.floatOffset / upload.layoutInfo.strideFloats,
+            written.offset / upload.layoutInfo.strideFloats,
         );
 
         upload.data = written.data;
