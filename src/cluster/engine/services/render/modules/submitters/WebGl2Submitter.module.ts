@@ -7,7 +7,7 @@ import type {
 } from "../Render2DPrepare.module";
 import type {
     Render2DLayoutUpload,
-    render2DGeometryUpload,
+    Render2DGeometryUpload,
     Render2DGeometryUploadFrame,
     Render2DGeometryUploadLayoutKey,
     Render2DGeometryUploadRange,
