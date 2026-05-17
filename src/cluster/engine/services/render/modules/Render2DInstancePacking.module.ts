@@ -31,6 +31,13 @@ export type PackedRender2DInstanceRange = Readonly<{
     nextOffset: number;
 }>;
 
+type MutablePackedRender2DInstanceRange = {
+    data: Float32Array<ArrayBufferLike>;
+    offset: number;
+    length: number;
+    nextOffset: number;
+};
+
 export const RENDER_2D_INSTANCE_LAYOUTS: Record<
     Render2DInstanceLayoutKey,
     Render2DInstanceLayoutInfo
@@ -192,11 +199,18 @@ function writeUv(
     offset: number,
     uv: RenderUvRectInput | undefined,
 ): number {
-    const rect = uv ?? { u: 0, v: 0, w: 1, h: 1 };
-    data[offset++] = rect.u;
-    data[offset++] = rect.v;
-    data[offset++] = rect.w;
-    data[offset++] = rect.h;
+    if (uv) {
+        data[offset++] = uv.u;
+        data[offset++] = uv.v;
+        data[offset++] = uv.w;
+        data[offset++] = uv.h;
+        return offset;
+    }
+
+    data[offset++] = 0;
+    data[offset++] = 0;
+    data[offset++] = 1;
+    data[offset++] = 1;
     return offset;
 }
 
@@ -236,7 +250,9 @@ export function ensureRender2DInstanceArenaCapacity(
     if (arena.length >= floats) return arena;
     let size = Math.max(64, arena.length);
     while (size < floats) size *= 2;
-    return new Float32Array(size);
+    const next = new Float32Array(size);
+    next.set(arena);
+    return next;
 }
 
 export function writeRender2DQuadInstanceDataAtOffset(
@@ -246,6 +262,7 @@ export function writeRender2DQuadInstanceDataAtOffset(
     itemCount: number,
     layout: Render2DInstanceLayoutKey,
     offset: number,
+    target?: MutablePackedRender2DInstanceRange,
 ): PackedRender2DInstanceRange {
     const layoutInfo = RENDER_2D_INSTANCE_LAYOUTS[layout];
     const neededFloats = offset + itemCount * layoutInfo.strideFloats;
@@ -278,12 +295,20 @@ export function writeRender2DQuadInstanceDataAtOffset(
         data[offset++] = item.sourceIndex;
     }
 
-    return {
-        data,
-        offset: startOffset,
-        length: offset - startOffset,
-        nextOffset: offset,
-    };
+    const result =
+        target ??
+        ({
+            data,
+            offset: startOffset,
+            length: 0,
+            nextOffset: offset,
+        } satisfies MutablePackedRender2DInstanceRange);
+    result.data = data;
+    result.offset = startOffset;
+    result.length = offset - startOffset;
+    result.nextOffset = offset;
+
+    return result;
 }
 
 export function writeRender2DPrimitiveInstanceDataAtOffset(
@@ -293,6 +318,7 @@ export function writeRender2DPrimitiveInstanceDataAtOffset(
     itemCount: number,
     layout: Render2DInstanceLayoutKey,
     offset: number,
+    target?: MutablePackedRender2DInstanceRange,
 ): PackedRender2DInstanceRange {
     const layoutInfo = RENDER_2D_INSTANCE_LAYOUTS[layout];
     const neededFloats = offset + itemCount * layoutInfo.strideFloats;
@@ -334,12 +360,20 @@ export function writeRender2DPrimitiveInstanceDataAtOffset(
         data[offset++] = 0;
     }
 
-    return {
-        data,
-        offset: startOffset,
-        length: offset - startOffset,
-        nextOffset: offset,
-    };
+    const result =
+        target ??
+        ({
+            data,
+            offset: startOffset,
+            length: 0,
+            nextOffset: offset,
+        } satisfies MutablePackedRender2DInstanceRange);
+    result.data = data;
+    result.offset = startOffset;
+    result.length = offset - startOffset;
+    result.nextOffset = offset;
+
+    return result;
 }
 
 export const RENDER_2D_UNIT_QUAD_VERTEX_DATA = new Float32Array([

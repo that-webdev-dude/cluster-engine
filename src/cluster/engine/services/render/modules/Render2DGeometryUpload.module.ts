@@ -1,13 +1,10 @@
 import type {
     Render2DPreparedBatch,
     Render2DPreparedFrame,
+    Render2DPreparedItem,
 } from "./Render2DPrepare.module";
 import { BYTES_PER_FLOAT } from "./Render2DGeometryLayout.module";
 import {
-    getRender2DQuadInstanceLayout,
-    getRender2DPrimitiveInstanceLayout,
-    isRender2DQuadInstanceItem,
-    isRender2DPrimitiveInstanceItem,
     RENDER_2D_INSTANCE_LAYOUTS,
     writeRender2DQuadInstanceDataAtOffset,
     writeRender2DPrimitiveInstanceDataAtOffset,
@@ -84,24 +81,81 @@ type MutableLayoutUpload = {
     active: boolean;
 };
 
-const EMPTY_UPLOAD_STATS: Render2DGeometryUploadFrameStats = Object.freeze({
-    layoutUploadCount: 0,
-    rangeCount: 0,
-    uploadByteLength: 0,
-    uploadFloatLength: 0,
-});
+type MutableGeometryUploadRange = {
+    -readonly [Key in keyof Render2DGeometryUploadRange]: Render2DGeometryUploadRange[Key];
+};
+
+type MutableGeometryUploadFrameStats = {
+    -readonly [Key in keyof Render2DGeometryUploadFrameStats]: Render2DGeometryUploadFrameStats[Key];
+};
+
+type MutableGeometryUploadFrame = {
+    -readonly [Key in keyof Render2DGeometryUploadFrame]: Render2DGeometryUploadFrame[Key];
+};
+
+function getUploadItemLayout(
+    item: Render2DPreparedItem,
+): Render2DGeometryUploadLayoutKey | undefined {
+    switch (item.geometry.kind) {
+        case "rect-quad":
+            if (item.vertexCount !== 6) return undefined;
+            if (item.sourceKind !== "rect" && item.sourceKind !== "sprite") {
+                return undefined;
+            }
+            return item.pipelineFamily === "textured-2d"
+                ? "quad-textured-instance-2d"
+                : "quad-solid-instance-2d";
+        case "glyph-quad":
+            if (item.vertexCount !== 6 || item.sourceKind !== "text") {
+                return undefined;
+            }
+            return item.pipelineFamily === "textured-2d"
+                ? "quad-textured-instance-2d"
+                : "quad-solid-instance-2d";
+        case "line":
+            return "line-solid-instance-2d";
+        case "circle-like":
+            return "circle-solid-instance-2d";
+        case "polygon":
+            return "polygon-solid-instance-2d";
+    }
+}
 
 export function createRender2DGeometryUpload(): Render2DGeometryUpload {
     const uploadsByLayout = new Map<Render2DGeometryUploadLayoutKey, MutableLayoutUpload>();
     const activeUploads: MutableLayoutUpload[] = [];
     const orderedRanges: Render2DGeometryUploadRange[] = [];
     const rangesByBatchIndex: Array<Render2DGeometryUploadRange | undefined> = [];
+    const activeRangeBatchIndices: number[] = [];
+    const rangeRecords: MutableGeometryUploadRange[] = [];
+    const packedRangeScratch = {
+        data: new Float32Array(0),
+        offset: 0,
+        length: 0,
+        nextOffset: 0,
+    };
+    const uploadStats: MutableGeometryUploadFrameStats = {
+        layoutUploadCount: 0,
+        rangeCount: 0,
+        uploadByteLength: 0,
+        uploadFloatLength: 0,
+    };
+    const uploadFrame: MutableGeometryUploadFrame = {
+        source: undefined as unknown as Render2DPreparedFrame,
+        layouts: activeUploads,
+        ranges: orderedRanges,
+        rangesByBatchIndex,
+        stats: uploadStats,
+    };
 
     function resetFrameState(frame: Render2DPreparedFrame): void {
+        for (let i = 0; i < activeRangeBatchIndices.length; i++) {
+            rangesByBatchIndex[activeRangeBatchIndices[i]] = undefined;
+        }
+        activeRangeBatchIndices.length = 0;
         activeUploads.length = 0;
         orderedRanges.length = 0;
         rangesByBatchIndex.length = frame.batchCount;
-        rangesByBatchIndex.fill(undefined);
 
         for (const upload of uploadsByLayout.values()) {
             upload.floatLength = 0;
@@ -159,6 +213,7 @@ export function createRender2DGeometryUpload(): Render2DGeometryUpload {
                       itemCount,
                       layout,
                       floatOffset,
+                      packedRangeScratch,
                   )
                 : writeRender2DPrimitiveInstanceDataAtOffset(
                       upload.data,
@@ -167,6 +222,7 @@ export function createRender2DGeometryUpload(): Render2DGeometryUpload {
                       itemCount,
                       layout,
                       floatOffset,
+                      packedRangeScratch,
                   );
         const instanceOffset = Math.floor(
             written.offset / upload.layoutInfo.strideFloats,
@@ -178,26 +234,46 @@ export function createRender2DGeometryUpload(): Render2DGeometryUpload {
         upload.capacityFloats = upload.data.length;
 
         const floatLength = written.length;
-        const range: Render2DGeometryUploadRange = {
-            kind: "instances",
-            batchIndex,
-            layout: upload.layout,
-            itemStart,
-            itemCount,
-            floatOffset: written.offset,
-            floatLength,
-            byteOffset: written.offset * BYTES_PER_FLOAT,
-            byteLength: floatLength * BYTES_PER_FLOAT,
-            vertexOffset: 0,
-            vertexCount,
-            instanceOffset,
-            instanceCount: itemCount,
-            staticGeometryKey,
-        };
+        const rangeIndex = orderedRanges.length;
+        const range =
+            rangeRecords[rangeIndex] ??
+            (rangeRecords[rangeIndex] = {
+                kind: "instances",
+                batchIndex: 0,
+                layout: upload.layout,
+                itemStart: 0,
+                itemCount: 0,
+                floatOffset: 0,
+                floatLength: 0,
+                byteOffset: 0,
+                byteLength: 0,
+                vertexOffset: 0,
+                vertexCount: 0,
+                instanceOffset: 0,
+                instanceCount: 0,
+            });
+
+        range.kind = "instances";
+        range.batchIndex = batchIndex;
+        range.layout = upload.layout;
+        range.itemStart = itemStart;
+        range.itemCount = itemCount;
+        range.floatOffset = written.offset;
+        range.floatLength = floatLength;
+        range.byteOffset = written.offset * BYTES_PER_FLOAT;
+        range.byteLength = floatLength * BYTES_PER_FLOAT;
+        range.vertexOffset = 0;
+        range.vertexCount = vertexCount;
+        range.instanceOffset = instanceOffset;
+        range.instanceCount = itemCount;
+        range.staticGeometryKey = staticGeometryKey;
 
         upload.ranges.push(range);
         orderedRanges.push(range);
-        rangesByBatchIndex[batchIndex] ??= range;
+        if (rangesByBatchIndex[batchIndex] === undefined) {
+            rangesByBatchIndex[batchIndex] = range;
+            activeRangeBatchIndices.push(batchIndex);
+        }
     }
 
     function appendBatchRuns(
@@ -205,37 +281,37 @@ export function createRender2DGeometryUpload(): Render2DGeometryUpload {
         batchIndex: number,
         batch: Render2DPreparedBatch,
     ): void {
-        let runStart = batch.itemStart;
-        let runItemCount = 0;
-        let runVertexCount = 0;
-        let runLayout: Render2DGeometryUploadLayoutKey | undefined;
-        let runStaticGeometryKey: string | undefined;
-
-        function flushRun(): void {
-            if (runItemCount <= 0 || runVertexCount <= 0 || !runLayout) return;
-            const upload = getLayoutUpload(runLayout);
+        if (batch.itemCount === 1) {
+            const item = frame.items[batch.itemStart];
+            const layout = getUploadItemLayout(item);
+            if (!layout) return;
+            const upload = getLayoutUpload(layout);
             activateUpload(upload);
             appendInstanceRange(
                 upload,
                 frame,
                 batchIndex,
-                runStart,
-                runItemCount,
-                runVertexCount,
-                runStaticGeometryKey,
+                batch.itemStart,
+                1,
+                item.vertexCount,
+                item.geometry.kind === "polygon"
+                    ? item.geometry.localGeometryKey
+                    : undefined,
             );
+            return;
         }
+
+        let runStart = 0;
+        let runItemCount = 0;
+        let runVertexCount = 0;
+        let runLayout: Render2DGeometryUploadLayoutKey | undefined;
+        let runStaticGeometryKey: string | undefined;
 
         for (let i = 0; i < batch.itemCount; i++) {
             const itemIndex = batch.itemStart + i;
             const item = frame.items[itemIndex];
-            const itemInstances =
-                isRender2DQuadInstanceItem(item) ||
-                isRender2DPrimitiveInstanceItem(item);
-            if (!itemInstances) continue;
-            const itemLayout = isRender2DQuadInstanceItem(item)
-                ? getRender2DQuadInstanceLayout(item)
-                : getRender2DPrimitiveInstanceLayout(item);
+            const itemLayout = getUploadItemLayout(item);
+            if (!itemLayout) continue;
             const itemStaticGeometryKey =
                 item.geometry.kind === "polygon"
                     ? item.geometry.localGeometryKey
@@ -246,24 +322,45 @@ export function createRender2DGeometryUpload(): Render2DGeometryUpload {
                 (itemLayout !== runLayout ||
                     itemStaticGeometryKey !== runStaticGeometryKey)
             ) {
-                flushRun();
-                runStart = itemIndex;
+                if (runLayout && runVertexCount > 0) {
+                    const upload = getLayoutUpload(runLayout);
+                    activateUpload(upload);
+                    appendInstanceRange(
+                        upload,
+                        frame,
+                        batchIndex,
+                        runStart,
+                        runItemCount,
+                        runVertexCount,
+                        runStaticGeometryKey,
+                    );
+                }
                 runItemCount = 0;
                 runVertexCount = 0;
             }
 
+            if (runItemCount === 0) runStart = itemIndex;
             runLayout = itemLayout;
             runStaticGeometryKey = itemStaticGeometryKey;
             runItemCount++;
             runVertexCount += item.vertexCount;
         }
 
-        flushRun();
+        if (runItemCount <= 0 || runVertexCount <= 0 || !runLayout) return;
+        const upload = getLayoutUpload(runLayout);
+        activateUpload(upload);
+        appendInstanceRange(
+            upload,
+            frame,
+            batchIndex,
+            runStart,
+            runItemCount,
+            runVertexCount,
+            runStaticGeometryKey,
+        );
     }
 
-    function createStats(): Render2DGeometryUploadFrameStats {
-        if (activeUploads.length === 0) return EMPTY_UPLOAD_STATS;
-
+    function writeStats(): Render2DGeometryUploadFrameStats {
         let rangeCount = 0;
         let uploadByteLength = 0;
         let uploadFloatLength = 0;
@@ -274,12 +371,12 @@ export function createRender2DGeometryUpload(): Render2DGeometryUpload {
             uploadFloatLength += upload.floatLength;
         }
 
-        return {
-            layoutUploadCount: activeUploads.length,
-            rangeCount,
-            uploadByteLength,
-            uploadFloatLength,
-        };
+        uploadStats.layoutUploadCount = activeUploads.length;
+        uploadStats.rangeCount = rangeCount;
+        uploadStats.uploadByteLength = uploadByteLength;
+        uploadStats.uploadFloatLength = uploadFloatLength;
+
+        return uploadStats;
     }
 
     return Object.freeze({
@@ -293,13 +390,10 @@ export function createRender2DGeometryUpload(): Render2DGeometryUpload {
                 appendBatchRuns(frame, batchIndex, batch);
             }
 
-            return {
-                source: frame,
-                layouts: activeUploads,
-                ranges: orderedRanges,
-                rangesByBatchIndex,
-                stats: createStats(),
-            };
+            uploadFrame.source = frame;
+            uploadFrame.stats = writeStats();
+
+            return uploadFrame;
         },
     });
 }
