@@ -1,6 +1,8 @@
 import type {
     RenderColorInput,
     RenderFrameInput,
+    RenderItem2D,
+    RenderLayerInput,
     RenderRect2D,
     RenderTargetInfo,
 } from "../../services/render";
@@ -35,6 +37,10 @@ export type RenderExtractionInput = Readonly<{
     debug?: boolean;
 }>;
 
+export type RenderExtractionAdapter = Readonly<{
+    extract(input: RenderExtractionInput): RenderFrameInput;
+}>;
+
 type Point2D = Readonly<{
     x: number;
     y: number;
@@ -49,6 +55,22 @@ type OptionalRenderData = Readonly<{
     prevPositionByEntityId: ReadonlyMap<string, Point2D>;
     colorByEntityId: ReadonlyMap<string, RenderColorInput>;
 }>;
+
+type MutableRenderRect2D = {
+    -readonly [Key in keyof RenderRect2D]: RenderRect2D[Key];
+};
+
+type MutableRenderLayerInput = {
+    id: RenderLayerInput["id"];
+    order: number;
+    items: RenderItem2D[];
+};
+
+type MutableRenderFrameInput = {
+    target: RenderFrameInput["target"];
+    alpha: number;
+    layers: MutableRenderLayerInput[];
+};
 
 const RECT_COMPONENTS = ["position", "size"] as const;
 const PREV_POSITION_COMPONENTS = ["prevPosition"] as const;
@@ -190,54 +212,131 @@ function readOptionalRenderData(
     };
 }
 
-function extractStoreItems(
-    world: RenderExtractionWorldReader,
-    storeId: string,
-    debug: boolean,
-): readonly RenderRect2D[] {
-    const optionalData = readOptionalRenderData(world, storeId, debug);
-    const rows = world.query(storeId, RECT_COMPONENTS);
-    const items: RenderRect2D[] = [];
+function writeRectItem(
+    target: MutableRenderRect2D,
+    args: Readonly<{
+        sortKey: number;
+        position: Point2D;
+        prevPosition: Point2D;
+        size: Size2D;
+        color?: RenderColorInput;
+    }>,
+): RenderRect2D {
+    target.kind = "rect";
+    target.sortKey = args.sortKey;
+    target.x = args.position.x;
+    target.y = args.position.y;
+    target.prevX = args.prevPosition.x;
+    target.prevY = args.prevPosition.y;
+    target.w = args.size.w;
+    target.h = args.size.h;
+    target.color = args.color;
 
-    for (let i = 0; i < rows.length; i++) {
-        const row = rows[i];
-        const position = readRequiredPoint(row, "position", debug);
-        const size = readRequiredSize(row, debug);
+    return target;
+}
+
+function createRectItemSlot(): MutableRenderRect2D {
+    return {
+        kind: "rect",
+        sortKey: 0,
+        x: 0,
+        y: 0,
+        prevX: 0,
+        prevY: 0,
+        w: 0,
+        h: 0,
+        color: undefined,
+    };
+}
+
+function writeStoreLayer(
+    target: MutableRenderLayerInput,
+    args: Readonly<{
+        world: RenderExtractionWorldReader;
+        storeId: string;
+        layerIndex: number;
+        debug: boolean;
+    }>,
+): RenderLayerInput {
+    const optionalData = readOptionalRenderData(
+        args.world,
+        args.storeId,
+        args.debug,
+    );
+    const rows = args.world.query(args.storeId, RECT_COMPONENTS);
+    target.id = `game.layer.${args.layerIndex}`;
+    target.order = args.layerIndex;
+
+    let itemCount = 0;
+    for (let rowIndex = 0; rowIndex < rows.length; rowIndex++) {
+        const row = rows[rowIndex];
+        const position = readRequiredPoint(row, "position", args.debug);
+        const size = readRequiredSize(row, args.debug);
         if (!position || !size) continue;
 
         const prevPosition =
             optionalData.prevPositionByEntityId.get(row.entityId) ?? position;
-        const color = optionalData.colorByEntityId.get(row.entityId);
+        const item =
+            (target.items[itemCount] as MutableRenderRect2D | undefined) ??
+            createRectItemSlot();
 
-        items.push({
-            kind: "rect",
-            sortKey: i,
-            x: position.x,
-            y: position.y,
-            prevX: prevPosition.x,
-            prevY: prevPosition.y,
-            w: size.w,
-            h: size.h,
-            color,
+        target.items[itemCount] = writeRectItem(item, {
+            sortKey: rowIndex,
+            position,
+            prevPosition,
+            size,
+            color: optionalData.colorByEntityId.get(row.entityId),
         });
+        itemCount++;
     }
 
-    return items;
+    target.items.length = itemCount;
+
+    return target;
+}
+
+function createLayerSlot(): MutableRenderLayerInput {
+    return {
+        id: "",
+        order: 0,
+        items: [],
+    };
 }
 
 /** Converts current game/world rows into sealed renderer-domain frame input. */
 export function extractRenderFrameInput(
     input: RenderExtractionInput,
 ): RenderFrameInput {
-    const debug = input.debug ?? false;
+    return createRenderExtractionAdapter().extract(input);
+}
 
-    return {
-        target: input.target,
-        alpha: input.alpha,
-        layers: input.storeIds.map((storeId, index) => ({
-            id: `game.layer.${index}`,
-            order: index,
-            items: extractStoreItems(input.world, storeId, debug),
-        })),
+export function createRenderExtractionAdapter(): RenderExtractionAdapter {
+    const frame: MutableRenderFrameInput = {
+        target: { w: 0, h: 0, dpr: 1 },
+        alpha: 0,
+        layers: [],
     };
+
+    function extract(input: RenderExtractionInput): RenderFrameInput {
+        const debug = input.debug ?? false;
+
+        frame.target = input.target;
+        frame.alpha = input.alpha;
+
+        for (let i = 0; i < input.storeIds.length; i++) {
+            const layer = frame.layers[i] ?? createLayerSlot();
+            frame.layers[i] = writeStoreLayer(layer, {
+                world: input.world,
+                storeId: input.storeIds[i],
+                layerIndex: i,
+                debug,
+            }) as MutableRenderLayerInput;
+        }
+
+        frame.layers.length = input.storeIds.length;
+
+        return frame;
+    }
+
+    return Object.freeze({ extract });
 }
