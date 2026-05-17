@@ -26,6 +26,7 @@ import type {
     RenderResourceId,
     RenderTransform2DInput,
     RenderText2D,
+    RenderUvRectInput,
 } from "../service/Render.types";
 
 type Render2DPipelineFamily = Render2DHandoffPipelineFamily;
@@ -100,6 +101,55 @@ type MutablePreparedItem = {
 
 export type RenderPreparedColor = Render2DHandoffColor;
 
+type MutablePreparedColor = {
+    r: number;
+    g: number;
+    b: number;
+    a: number;
+};
+
+type MutableRectQuadGeometry = {
+    kind: "rect-quad";
+    w: number;
+    h: number;
+    uv?: RenderUvRectInput;
+};
+
+type MutableCircleLikeGeometry = {
+    kind: "circle-like";
+    radiusX: number;
+    radiusY: number;
+    segments: number;
+};
+
+type MutableLineGeometry = {
+    kind: "line";
+    startX: number;
+    startY: number;
+    endX: number;
+    endY: number;
+    strokeWidth: number;
+};
+
+type MutablePolygonGeometry = {
+    kind: "polygon";
+    vertices: readonly RenderPoint2DInput[];
+    localGeometryKey: string;
+};
+
+type MutableGlyphQuadGeometry = {
+    kind: "glyph-quad";
+    sourceKind: "text";
+    sourceIndex: number;
+    glyphIndex: number;
+    resourceId: RenderResourceId;
+    x: number;
+    y: number;
+    w: number;
+    h: number;
+    uv: Extract<Render2DPreparedGeometry, { kind: "glyph-quad" }>["uv"];
+};
+
 type MutablePreparedBatch = {
     layerId: RenderLayerId;
     pipelineFamily: Render2DPipelineFamily;
@@ -118,6 +168,21 @@ type MutableTextStats = {
     glyphVertexCount: number;
     missingFontCount: number;
     missingGlyphCount: number;
+};
+
+type MutableRenderFrameStats = {
+    -readonly [Key in keyof RenderFrameStats]: RenderFrameStats[Key];
+};
+
+type MutablePreparedFrame = {
+    target: RenderFrameInput["target"];
+    alpha: number;
+    camera?: RenderFrameInput["camera"];
+    items: MutablePreparedItem[];
+    itemCount: number;
+    batches: MutablePreparedBatch[];
+    batchCount: number;
+    stats: MutableRenderFrameStats;
 };
 
 const DEFAULT_CIRCLE_SEGMENTS = 24;
@@ -240,68 +305,71 @@ function getColorValue(
     return color?.[channel] ?? 1;
 }
 
-function getPreparedColor(item: RenderItem2D): RenderPreparedColor {
+function writePreparedColor(
+    target: MutablePreparedColor,
+    item: RenderItem2D,
+): RenderPreparedColor {
     const color =
         item.kind === "sprite" || item.kind === "text"
             ? item.tint ?? item.color
             : item.color;
 
-    return {
-        r: getColorValue(color, "r"),
-        g: getColorValue(color, "g"),
-        b: getColorValue(color, "b"),
-        a: item.opacity ?? 1,
-    };
+    target.r = getColorValue(color, "r");
+    target.g = getColorValue(color, "g");
+    target.b = getColorValue(color, "b");
+    target.a = item.opacity ?? 1;
+
+    return target;
 }
 
-function createPrimitiveGeometry(
+function writePrimitiveGeometry(
+    geometries: MutableGeometrySlot,
     item: Exclude<RenderItem2D, RenderText2D>,
 ): Render2DPreparedGeometry {
     switch (item.kind) {
         case "rect":
-            return {
-                kind: "rect-quad",
-                w: item.w,
-                h: item.h,
-            };
+            geometries.rect.w = item.w;
+            geometries.rect.h = item.h;
+            geometries.rect.uv = undefined;
+            return geometries.rect;
         case "sprite":
-            return {
-                kind: "rect-quad",
-                w: item.w,
-                h: item.h,
-                uv: item.uv,
-            };
+            geometries.rect.w = item.w;
+            geometries.rect.h = item.h;
+            geometries.rect.uv = item.uv;
+            return geometries.rect;
         case "circle":
-            return {
-                kind: "circle-like",
-                radiusX: item.radius,
-                radiusY: item.radius,
-                segments: DEFAULT_CIRCLE_SEGMENTS,
-            };
+            geometries.circle.radiusX = item.radius;
+            geometries.circle.radiusY = item.radius;
+            geometries.circle.segments = DEFAULT_CIRCLE_SEGMENTS;
+            return geometries.circle;
         case "ellipse":
-            return {
-                kind: "circle-like",
-                radiusX: item.radiusX,
-                radiusY: item.radiusY,
-                segments: DEFAULT_ELLIPSE_SEGMENTS,
-            };
+            geometries.circle.radiusX = item.radiusX;
+            geometries.circle.radiusY = item.radiusY;
+            geometries.circle.segments = DEFAULT_ELLIPSE_SEGMENTS;
+            return geometries.circle;
         case "line":
-            return {
-                kind: "line",
-                startX: item.startX,
-                startY: item.startY,
-                endX: item.endX,
-                endY: item.endY,
-                strokeWidth: item.strokeWidth ?? 1,
-            };
+            geometries.line.startX = item.startX;
+            geometries.line.startY = item.startY;
+            geometries.line.endX = item.endX;
+            geometries.line.endY = item.endY;
+            geometries.line.strokeWidth = item.strokeWidth ?? 1;
+            return geometries.line;
         case "polygon":
-            return {
-                kind: "polygon",
-                vertices: item.vertices,
-                localGeometryKey: getPolygonLocalGeometryKey(item.vertices),
-            };
+            geometries.polygon.vertices = item.vertices;
+            geometries.polygon.localGeometryKey = getPolygonLocalGeometryKey(
+                item.vertices,
+            );
+            return geometries.polygon;
     }
 }
+
+type MutableGeometrySlot = {
+    rect: MutableRectQuadGeometry;
+    circle: MutableCircleLikeGeometry;
+    line: MutableLineGeometry;
+    polygon: MutablePolygonGeometry;
+    glyph: MutableGlyphQuadGeometry;
+};
 
 function assertValidAlpha(input: RenderFrameInput, debug: boolean): void {
     if (!debug) return;
@@ -325,12 +393,24 @@ export function createRender2DPrepare(
     const itemSortRecords: MutableItemSortRecord[] = [];
     const preparedItems: MutablePreparedItem[] = [];
     const preparedBatches: MutablePreparedBatch[] = [];
+    const preparedColors: MutablePreparedColor[] = [];
+    const preparedGeometries: MutableGeometrySlot[] = [];
     const textStats: MutableTextStats = {
         textItemCount: 0,
         preparedGlyphCount: 0,
         glyphVertexCount: 0,
         missingFontCount: 0,
         missingGlyphCount: 0,
+    };
+    const preparedStats = createEmptyStats() as MutableRenderFrameStats;
+    const preparedFrame: MutablePreparedFrame = {
+        target: { w: 0, h: 0, dpr: 1 },
+        alpha: 0,
+        items: preparedItems,
+        itemCount: 0,
+        batches: preparedBatches,
+        batchCount: 0,
+        stats: preparedStats,
     };
     let layerRecordCount = 0;
     let itemSortRecordCount = 0;
@@ -370,6 +450,53 @@ export function createRender2DPrepare(
         layerRecordCount = Math.max(layerRecordCount, index + 1);
 
         return record;
+    }
+
+    function getPreparedColorSlot(index: number): MutablePreparedColor {
+        return (
+            preparedColors[index] ??
+            (preparedColors[index] = { r: 1, g: 1, b: 1, a: 1 })
+        );
+    }
+
+    function getPreparedGeometrySlot(index: number): MutableGeometrySlot {
+        return (
+            preparedGeometries[index] ??
+            (preparedGeometries[index] = {
+                rect: { kind: "rect-quad", w: 0, h: 0 },
+                circle: {
+                    kind: "circle-like",
+                    radiusX: 0,
+                    radiusY: 0,
+                    segments: DEFAULT_CIRCLE_SEGMENTS,
+                },
+                line: {
+                    kind: "line",
+                    startX: 0,
+                    startY: 0,
+                    endX: 0,
+                    endY: 0,
+                    strokeWidth: 1,
+                },
+                polygon: {
+                    kind: "polygon",
+                    vertices: [],
+                    localGeometryKey: "",
+                },
+                glyph: {
+                    kind: "glyph-quad",
+                    sourceKind: "text",
+                    sourceIndex: 0,
+                    glyphIndex: 0,
+                    resourceId: "",
+                    x: 0,
+                    y: 0,
+                    w: 0,
+                    h: 0,
+                    uv: { u: 0, v: 0, w: 1, h: 1 },
+                },
+            })
+        );
     }
 
     function writeItemSortRecord(
@@ -451,6 +578,13 @@ export function createRender2DPrepare(
         vertexCount: number,
         alpha: number,
     ): void {
+        const index = preparedItemCount;
+        const color = writePreparedColor(getPreparedColorSlot(index), item);
+        const geometry = writePrimitiveGeometry(
+            getPreparedGeometrySlot(index),
+            item,
+        );
+
         appendPreparedGeometry({
             layer,
             sourceIndex,
@@ -477,8 +611,8 @@ export function createRender2DPrepare(
                 item.kind === "polygon"
                     ? item
                     : undefined,
-            color: getPreparedColor(item),
-            geometry: createPrimitiveGeometry(item),
+            color,
+            geometry,
         });
     }
 
@@ -494,25 +628,23 @@ export function createRender2DPrepare(
         textStats.missingGlyphCount += result.missingGlyphCount;
         if (result.glyphs.length === 0) return;
 
-        const color = getPreparedColor(item);
         const blendMode = getBlendMode(item);
 
         for (let glyphIndex = 0; glyphIndex < result.glyphs.length; glyphIndex++) {
             const glyph = result.glyphs[glyphIndex];
             if (glyph.w <= 0 || glyph.h <= 0) continue;
 
-            const geometry: PreparedGlyphQuad2D = {
-                kind: "glyph-quad",
-                sourceKind: "text",
-                sourceIndex,
-                glyphIndex,
-                resourceId: glyph.resourceId,
-                x: glyph.x,
-                y: glyph.y,
-                w: glyph.w,
-                h: glyph.h,
-                uv: glyph.uv,
-            };
+            const index = preparedItemCount;
+            const color = writePreparedColor(getPreparedColorSlot(index), item);
+            const geometry = getPreparedGeometrySlot(index).glyph;
+            geometry.sourceIndex = sourceIndex;
+            geometry.glyphIndex = glyphIndex;
+            geometry.resourceId = glyph.resourceId;
+            geometry.x = glyph.x;
+            geometry.y = glyph.y;
+            geometry.w = glyph.w;
+            geometry.h = glyph.h;
+            geometry.uv = glyph.uv;
 
             appendPreparedGeometry({
                 layer,
@@ -616,6 +748,45 @@ export function createRender2DPrepare(
         );
     }
 
+    function writePreparedStats(args: {
+        passCount: number;
+        commandCount: number;
+        batchCount: number;
+        vertexCount: number;
+        textBatchCount: number;
+    }): RenderFrameStats {
+        preparedStats.passCount = args.passCount;
+        preparedStats.commandCount = args.commandCount;
+        preparedStats.batchCount = args.batchCount;
+        preparedStats.drawCallCount = 0;
+        preparedStats.vertexCount = args.vertexCount;
+        preparedStats.uploadCallCount = 0;
+        preparedStats.uploadByteCount = 0;
+        preparedStats.uploadRangeCount = 0;
+        preparedStats.uploadLayoutCount = 0;
+        preparedStats.frameVertexBufferCreateCount = 0;
+        preparedStats.frameVertexBufferGrowCount = 0;
+        preparedStats.frameVertexBufferReuseCount = 0;
+        preparedStats.frameVertexBufferCapacityBytes = 0;
+        preparedStats.skippedResourceCount = 0;
+        preparedStats.fallbackResourceCount = 0;
+        preparedStats.textureResourceCount = 0;
+        preparedStats.fontResourceCount = 0;
+        preparedStats.fontPageResourceCount = 0;
+        preparedStats.fontReplacementRegistrationCount = 0;
+        preparedStats.invalidFontRegistrationCount = 0;
+        preparedStats.missingFontCount = textStats.missingFontCount;
+        preparedStats.missingGlyphCount = textStats.missingGlyphCount;
+        preparedStats.textItemCount = textStats.textItemCount;
+        preparedStats.preparedGlyphCount = textStats.preparedGlyphCount;
+        // Compatibility metric: glyphs submit as quad instances now,
+        // but public stats still report logical triangle vertices.
+        preparedStats.glyphVertexCount = textStats.glyphVertexCount;
+        preparedStats.textBatchCount = args.textBatchCount;
+
+        return preparedStats;
+    }
+
     function sortLayerRecords(): void {
         for (let i = 1; i < layerRecordCount; i++) {
             const record = layerRecords[i];
@@ -708,34 +879,24 @@ export function createRender2DPrepare(
                 if (preparedBatches[i].containsText) textBatchCount++;
             }
 
-            const stats = {
-                ...createEmptyStats(),
+            const stats = writePreparedStats({
                 passCount: layerRecordCount,
                 commandCount: preparedItemCount,
                 batchCount: preparedBatchCount,
                 vertexCount,
-                missingFontCount: textStats.missingFontCount,
-                missingGlyphCount: textStats.missingGlyphCount,
-                textItemCount: textStats.textItemCount,
-                preparedGlyphCount: textStats.preparedGlyphCount,
-                // Compatibility metric: glyphs submit as quad instances now,
-                // but public stats still report logical triangle vertices.
-                glyphVertexCount: textStats.glyphVertexCount,
                 textBatchCount,
-            };
+            });
 
-            const handoffFrame: Render2DHandoffFrame = {
-                target: input.target,
-                alpha: input.alpha,
-                camera: input.camera,
-                items: preparedItems,
-                itemCount: preparedItemCount,
-                batches: preparedBatches,
-                batchCount: preparedBatchCount,
-                stats,
-            };
+            preparedFrame.target = input.target;
+            preparedFrame.alpha = input.alpha;
+            preparedFrame.camera = input.camera;
+            preparedFrame.itemCount = preparedItemCount;
+            preparedFrame.batchCount = preparedBatchCount;
+            preparedFrame.stats = stats;
 
-            return handoffAdapter.fromPreparedFrame(handoffFrame);
+            return handoffAdapter.fromPreparedFrame(
+                preparedFrame as Render2DHandoffFrame,
+            );
         },
     });
 }

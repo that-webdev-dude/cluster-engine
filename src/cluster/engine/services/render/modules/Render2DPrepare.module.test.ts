@@ -860,6 +860,324 @@ describe("createRender2DPrepare", () => {
         expect(smallerFrame.batches.length).toBeGreaterThanOrEqual(3);
     });
 
+    it("reuses command, color, and geometry slots without leaking stale primitive fields", () => {
+        const prepare = createRender2DPrepare();
+        const firstFrame = prepare.prepare(
+            createInput([
+                {
+                    id: "main",
+                    order: 0,
+                    items: [
+                        {
+                            kind: "sprite",
+                            sortKey: 0,
+                            x: 1,
+                            y: 2,
+                            w: 10,
+                            h: 20,
+                            resourceId: "sprite.a",
+                            uv: { u: 0.1, v: 0.2, w: 0.3, h: 0.4 },
+                            tint: { r: 0.2, g: 0.3, b: 0.4 },
+                            opacity: 0.5,
+                        },
+                    ],
+                },
+            ]),
+        );
+        const reusedCommand = activeItems(firstFrame)[0];
+        const reusedColor = reusedCommand.color;
+        const reusedRectGeometry = reusedCommand.geometry;
+
+        expect(reusedCommand.geometry).toMatchObject({
+            kind: "rect-quad",
+            w: 10,
+            h: 20,
+            uv: { u: 0.1, v: 0.2, w: 0.3, h: 0.4 },
+        });
+        expect(reusedCommand.color).toEqual({ r: 0.2, g: 0.3, b: 0.4, a: 0.5 });
+
+        const secondFrame = prepare.prepare(
+            createInput([
+                {
+                    id: "main",
+                    order: 0,
+                    items: [
+                        {
+                            kind: "line",
+                            sortKey: 0,
+                            startX: 3,
+                            startY: 4,
+                            endX: 9,
+                            endY: 10,
+                            strokeWidth: 2,
+                            color: { r: 0.6, g: 0.7, b: 0.8 },
+                        },
+                    ],
+                },
+            ]),
+        );
+
+        expect(activeItems(secondFrame)[0]).toBe(reusedCommand);
+        expect(activeItems(secondFrame)[0].color).toBe(reusedColor);
+        expect(activeItems(secondFrame)[0].geometry).not.toBe(reusedRectGeometry);
+        expect(activeItems(secondFrame)[0]).toMatchObject({
+            sourceKind: "line",
+            kind: "line",
+            vertexCount: 6,
+            color: { r: 0.6, g: 0.7, b: 0.8, a: 1 },
+            geometry: {
+                kind: "line",
+                startX: 3,
+                startY: 4,
+                endX: 9,
+                endY: 10,
+                strokeWidth: 2,
+            },
+        });
+        expect(activeItems(secondFrame)[0].geometry).not.toHaveProperty("uv");
+    });
+
+    it("keeps text glyph arena data fresh across text, missing glyph, and missing font prepares", () => {
+        const prepare = createTextPrepare();
+        const firstFrame = prepare.prepare(
+            createInput([
+                {
+                    id: "main",
+                    order: 0,
+                    items: [
+                        {
+                            kind: "text",
+                            sortKey: 0,
+                            x: 0,
+                            y: 0,
+                            text: "AC",
+                            fontId: "font.ui",
+                        },
+                    ],
+                },
+            ]),
+        );
+        const firstGlyphCommand = activeItems(firstFrame)[0];
+        const firstGlyphGeometry = firstGlyphCommand.geometry;
+
+        expect(activeItems(firstFrame).map((item) => item.resourceId)).toEqual([
+            "font.ui.page.main",
+            "font.ui.page.accent",
+        ]);
+        expect(frameStatsPick(firstFrame)).toEqual({
+            commandCount: 2,
+            batchCount: 2,
+            vertexCount: 12,
+            textItemCount: 1,
+            preparedGlyphCount: 2,
+            missingFontCount: 0,
+            missingGlyphCount: 0,
+            textBatchCount: 2,
+        });
+
+        const secondFrame = prepare.prepare(
+            createInput([
+                {
+                    id: "main",
+                    order: 0,
+                    items: [
+                        {
+                            kind: "text",
+                            sortKey: 0,
+                            x: 5,
+                            y: 6,
+                            text: "BZ",
+                            fontId: "font.ui",
+                        },
+                        {
+                            kind: "text",
+                            sortKey: 1,
+                            x: 0,
+                            y: 0,
+                            text: "A",
+                            fontId: "font.missing",
+                        },
+                    ],
+                },
+            ]),
+        );
+
+        expect(activeItems(secondFrame)).toHaveLength(1);
+        expect(activeItems(secondFrame)[0]).toBe(firstGlyphCommand);
+        expect(activeItems(secondFrame)[0].geometry).toBe(firstGlyphGeometry);
+        expect(activeItems(secondFrame)[0]).toMatchObject({
+            sourceKind: "text",
+            sourceIndex: 0,
+            kind: "glyph-quad",
+            resourceId: "font.ui.page.main",
+            geometry: {
+                kind: "glyph-quad",
+                sourceIndex: 0,
+                glyphIndex: 0,
+                resourceId: "font.ui.page.main",
+                x: 1,
+                y: 0,
+                w: 8,
+                h: 8,
+            },
+        });
+        expect(frameStatsPick(secondFrame)).toEqual({
+            commandCount: 1,
+            batchCount: 1,
+            vertexCount: 6,
+            textItemCount: 2,
+            preparedGlyphCount: 1,
+            missingFontCount: 1,
+            missingGlyphCount: 1,
+            textBatchCount: 1,
+        });
+    });
+
+    it("keeps polygon keys, batching, stats, and degenerate skipping fresh across reused arenas", () => {
+        const prepare = createTextPrepare();
+        const firstFrame = prepare.prepare(
+            createInput([
+                {
+                    id: "main",
+                    order: 0,
+                    items: [
+                        {
+                            kind: "polygon",
+                            sortKey: 0,
+                            x: 0,
+                            y: 0,
+                            vertices: [
+                                { x: 0, y: 0 },
+                                { x: 4, y: 0 },
+                                { x: 4, y: 4 },
+                            ],
+                        },
+                        createRect({ sortKey: 1 }),
+                    ],
+                },
+            ]),
+        );
+        const polygonCommand = activeItems(firstFrame)[0];
+
+        expect(polygonCommand.geometry).toEqual({
+            kind: "polygon",
+            vertices: [
+                { x: 0, y: 0 },
+                { x: 4, y: 0 },
+                { x: 4, y: 4 },
+            ],
+            localGeometryKey: "0,0|4,0|4,4",
+        });
+        expect(frameStatsPick(firstFrame)).toMatchObject({
+            commandCount: 2,
+            batchCount: 1,
+            vertexCount: 9,
+        });
+
+        const secondFrame = prepare.prepare(
+            createInput([
+                {
+                    id: "main",
+                    order: 0,
+                    items: [
+                        createRect({ sortKey: 0, w: 0 }),
+                        {
+                            kind: "polygon",
+                            sortKey: 1,
+                            x: 1,
+                            y: 1,
+                            vertices: [
+                                { x: 1, y: 1 },
+                                { x: 5, y: 1 },
+                                { x: 5, y: 6 },
+                                { x: 1, y: 6 },
+                            ],
+                        },
+                        {
+                            kind: "sprite",
+                            sortKey: 2,
+                            x: 0,
+                            y: 0,
+                            w: 2,
+                            h: 2,
+                            resourceId: "sprite.a",
+                        },
+                        {
+                            kind: "text",
+                            sortKey: 3,
+                            x: 0,
+                            y: 0,
+                            text: "A",
+                            fontId: "font.ui",
+                        },
+                    ],
+                },
+            ]),
+        );
+
+        expect(activeItems(secondFrame)[0]).toBe(polygonCommand);
+        expect(activeItems(secondFrame).map((item) => item.sourceKind)).toEqual([
+            "polygon",
+            "sprite",
+            "text",
+        ]);
+        expect(activeItems(secondFrame)[0].geometry).toEqual({
+            kind: "polygon",
+            vertices: [
+                { x: 1, y: 1 },
+                { x: 5, y: 1 },
+                { x: 5, y: 6 },
+                { x: 1, y: 6 },
+            ],
+            localGeometryKey: "1,1|5,1|5,6|1,6",
+        });
+        expect(
+            activeBatches(secondFrame).map((batch) => ({
+                pipelineFamily: batch.pipelineFamily,
+                resourceId: batch.resourceId,
+                itemStart: batch.itemStart,
+                itemCount: batch.itemCount,
+                vertexCount: batch.vertexCount,
+                containsText: batch.containsText,
+            })),
+        ).toEqual([
+            {
+                pipelineFamily: "solid-2d",
+                resourceId: undefined,
+                itemStart: 0,
+                itemCount: 1,
+                vertexCount: 6,
+                containsText: false,
+            },
+            {
+                pipelineFamily: "textured-2d",
+                resourceId: "sprite.a",
+                itemStart: 1,
+                itemCount: 1,
+                vertexCount: 6,
+                containsText: false,
+            },
+            {
+                pipelineFamily: "textured-2d",
+                resourceId: "font.ui.page.main",
+                itemStart: 2,
+                itemCount: 1,
+                vertexCount: 6,
+                containsText: true,
+            },
+        ]);
+        expect(frameStatsPick(secondFrame)).toEqual({
+            commandCount: 3,
+            batchCount: 3,
+            vertexCount: 18,
+            textItemCount: 1,
+            preparedGlyphCount: 1,
+            missingFontCount: 0,
+            missingGlyphCount: 0,
+            textBatchCount: 1,
+        });
+    });
+
     it("rejects invalid alpha in debug mode", () => {
         const prepare = createRender2DPrepare({ debug: true });
 
@@ -867,4 +1185,68 @@ describe("createRender2DPrepare", () => {
             "Render2DPrepare.prepare: alpha must be a finite number between 0 and 1",
         );
     });
+
+    it("rejects invalid alpha before mutating active prepared frame state in debug mode", () => {
+        const prepare = createRender2DPrepare({ debug: true });
+        const frame = prepare.prepare(
+            createInput([
+                {
+                    id: "main",
+                    order: 0,
+                    items: [createRect({ x: 7, y: 8, w: 9, h: 10 })],
+                },
+            ]),
+        );
+        const activeCommand = activeItems(frame)[0];
+
+        expect(() =>
+            prepare.prepare(
+                createInput(
+                    [
+                        {
+                            id: "main",
+                            order: 0,
+                            items: [
+                                {
+                                    kind: "line",
+                                    sortKey: 0,
+                                    startX: 1,
+                                    startY: 2,
+                                    endX: 3,
+                                    endY: 4,
+                                },
+                            ],
+                        },
+                    ],
+                    Number.POSITIVE_INFINITY,
+                ),
+            ),
+        ).toThrow(
+            "Render2DPrepare.prepare: alpha must be a finite number between 0 and 1",
+        );
+
+        expect(frame.itemCount).toBe(1);
+        expect(frame.batchCount).toBe(1);
+        expect(activeItems(frame)[0]).toBe(activeCommand);
+        expect(activeItems(frame)[0]).toMatchObject({
+            sourceKind: "rect",
+            kind: "rect-quad",
+            instanceTransform: expect.objectContaining({ x: 7, y: 8 }),
+            geometry: { kind: "rect-quad", w: 9, h: 10 },
+        });
+        expect(frame.stats.commandCount).toBe(1);
+    });
 });
+
+function frameStatsPick(frame: Render2DPreparedFrame) {
+    return {
+        commandCount: frame.stats.commandCount,
+        batchCount: frame.stats.batchCount,
+        vertexCount: frame.stats.vertexCount,
+        textItemCount: frame.stats.textItemCount,
+        preparedGlyphCount: frame.stats.preparedGlyphCount,
+        missingFontCount: frame.stats.missingFontCount,
+        missingGlyphCount: frame.stats.missingGlyphCount,
+        textBatchCount: frame.stats.textBatchCount,
+    };
+}
