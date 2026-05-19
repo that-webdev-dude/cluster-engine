@@ -1,4 +1,4 @@
 import "./style.css";
-import demoTextRender from "./demos/demoTextRender";
+import demoLines from "./demos/demoLines";
 
-demoTextRender();
+demoLines();
