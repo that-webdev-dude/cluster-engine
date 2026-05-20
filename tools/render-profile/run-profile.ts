@@ -30,12 +30,13 @@ export type RenderProfileScenarioResult = Readonly<{
     itemCount: number;
     warmupFrames: number;
     sampleFrames: number;
-    frameCpuMs: TimingSummary;
-    extractMs: TimingSummary;
+    extractOnlyMs: TimingSummary;
+    publishOnlyMs: TimingSummary;
+    prepareRenderFullMs: TimingSummary;
+    frameTotalMs: TimingSummary;
     prepareMs: TimingSummary;
     uploadBuildMs: TimingSummary;
     submitCpuMs: TimingSummary;
-    totalCpuMs: TimingSummary;
     stats: RenderProfileStats;
 }>;
 
@@ -48,22 +49,24 @@ export type RenderProfileSummary = Readonly<{
 }>;
 
 type MutableTimingSamples = {
-    frameCpuMs: number[];
-    extractMs: number[];
+    extractOnlyMs: number[];
+    publishOnlyMs: number[];
+    prepareRenderFullMs: number[];
+    frameTotalMs: number[];
     prepareMs: number[];
     uploadBuildMs: number[];
     submitCpuMs: number[];
-    totalCpuMs: number[];
 };
 
 function createTimingSamples(): MutableTimingSamples {
     return {
-        frameCpuMs: [],
-        extractMs: [],
+        extractOnlyMs: [],
+        publishOnlyMs: [],
+        prepareRenderFullMs: [],
+        frameTotalMs: [],
         prepareMs: [],
         uploadBuildMs: [],
         submitCpuMs: [],
-        totalCpuMs: [],
     };
 }
 
@@ -102,15 +105,34 @@ function measureScenario(
         frameIndex++
     ) {
         const isSample = frameIndex >= options.warmupFrames;
-        const frameStart = globalThis.performance.now();
+
+        const publishOnlyStart = globalThis.performance.now();
+        if (scenario.source === "world-backed") {
+            scenario.world.publish();
+        }
+        const publishOnlyEnd = globalThis.performance.now();
+
         const extractStart = globalThis.performance.now();
-        const input =
-            scenario.source === "world-backed"
-                ? scenario.extract()
-                : scenario.input;
+        if (scenario.source === "world-backed") {
+            scenario.extract();
+        }
         const extractEnd = globalThis.performance.now();
+
+        const prepareRenderFullStart = globalThis.performance.now();
+        const fullInput =
+            scenario.source === "world-backed"
+                ? prepareWorldBackedRenderInput(scenario)
+                : scenario.input;
+        prepare.prepare(fullInput);
+        const prepareRenderFullEnd = globalThis.performance.now();
+
+        const frameStart = globalThis.performance.now();
+        const frameInput =
+            scenario.source === "world-backed"
+                ? prepareWorldBackedRenderInput(scenario)
+                : scenario.input;
         const prepareStart = globalThis.performance.now();
-        const preparedFrame = prepare.prepare(input);
+        const preparedFrame = prepare.prepare(frameInput);
         const prepareEnd = globalThis.performance.now();
         const uploadStart = globalThis.performance.now();
         const uploadFrame = upload.build(preparedFrame);
@@ -130,20 +152,24 @@ function measureScenario(
 
         if (!isSample) continue;
 
-        const extractMs =
+        const extractOnlyMs =
             scenario.source === "world-backed" ? extractEnd - extractStart : 0;
+        const publishOnlyMs =
+            scenario.source === "world-backed"
+                ? publishOnlyEnd - publishOnlyStart
+                : 0;
+        const prepareRenderFullMs = prepareRenderFullEnd - prepareRenderFullStart;
         const prepareMs = prepareEnd - prepareStart;
         const uploadBuildMs = uploadEnd - uploadStart;
 
-        samples.frameCpuMs.push(frameEnd - frameStart);
-        samples.extractMs.push(extractMs);
+        samples.extractOnlyMs.push(extractOnlyMs);
+        samples.publishOnlyMs.push(publishOnlyMs);
+        samples.prepareRenderFullMs.push(prepareRenderFullMs);
+        samples.frameTotalMs.push(frameEnd - frameStart);
         samples.prepareMs.push(prepareMs);
         samples.uploadBuildMs.push(uploadBuildMs);
         samples.submitCpuMs.push(submitCpuMs);
-        samples.totalCpuMs.push(extractMs + prepareMs + uploadBuildMs + submitCpuMs);
     }
-
-    const frameCpuMs = roundTiming(summarizeTimingSeries(samples.frameCpuMs));
 
     return {
         profileVersion: 1,
@@ -152,14 +178,25 @@ function measureScenario(
         itemCount: scenario.itemCount,
         warmupFrames: options.warmupFrames,
         sampleFrames: options.sampleFrames,
-        frameCpuMs,
-        extractMs: roundTiming(summarizeTimingSeries(samples.extractMs)),
+        extractOnlyMs: roundTiming(summarizeTimingSeries(samples.extractOnlyMs)),
+        publishOnlyMs: roundTiming(summarizeTimingSeries(samples.publishOnlyMs)),
+        prepareRenderFullMs: roundTiming(
+            summarizeTimingSeries(samples.prepareRenderFullMs),
+        ),
+        frameTotalMs: roundTiming(summarizeTimingSeries(samples.frameTotalMs)),
         prepareMs: roundTiming(summarizeTimingSeries(samples.prepareMs)),
         uploadBuildMs: roundTiming(summarizeTimingSeries(samples.uploadBuildMs)),
         submitCpuMs: roundTiming(summarizeTimingSeries(samples.submitCpuMs)),
-        totalCpuMs: roundTiming(summarizeTimingSeries(samples.totalCpuMs)),
         stats,
     };
+}
+
+function prepareWorldBackedRenderInput(
+    scenario: Extract<RenderProfileScenario, { source: "world-backed" }>,
+) {
+    scenario.world.flush();
+    scenario.world.publish();
+    return scenario.extract();
 }
 
 function createReadme(commandUsed: string): string {
@@ -171,10 +208,13 @@ function createReadme(commandUsed: string): string {
         `Command: \`${commandUsed}\``,
         "",
         "- No browser, canvas, WebGL2, or WebGPU context is required.",
-        "- Renderer-only scenarios use prebuilt `RenderFrameInput` and report `extractMs` as zero.",
-        "- World-backed scenarios populate `WorldManager` storage and call `extractRenderFrameInput(...)` every measured frame.",
+        "- Renderer-only scenarios use prebuilt `RenderFrameInput` and report world-only timings as zero.",
+        "- World-backed scenarios populate `WorldManager` storage and measure publication, extraction, prepare-render, and frame-total timing separately.",
         "- `submitCpuMs` is zero because this baseline does not include a backend-free fake submit path.",
-        "- `totalCpuMs` is the measured sum of `extractMs`, `prepareMs`, `uploadBuildMs`, and `submitCpuMs`.",
+        "- `extractOnlyMs` measures only `extractRenderFrameInput(...)` for world-backed scenarios.",
+        "- `publishOnlyMs` measures only `WorldManager.publish()` for world-backed scenarios.",
+        "- `prepareRenderFullMs` measures the game-like prepare-render phase: world flush, world publish, extraction, and render prepare.",
+        "- `frameTotalMs` measures the CPU profile frame: world flush, world publish, extraction, render prepare, upload build, and fake submit.",
         "- Scenario JSON files and `summary.json` are written in this directory.",
         "",
     ].join("\n");

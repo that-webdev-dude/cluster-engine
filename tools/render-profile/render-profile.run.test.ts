@@ -21,9 +21,11 @@ describe("render profile runner", () => {
             ]);
 
             for (const scenario of summary.scenarios) {
-                expect(scenario.extractMs).toBeDefined();
-                expect(scenario.totalCpuMs.median).toBeGreaterThanOrEqual(
-                    scenario.extractMs.median,
+                expect(scenario.extractOnlyMs).toBeDefined();
+                expect(scenario.publishOnlyMs).toBeDefined();
+                expect(scenario.prepareRenderFullMs).toBeDefined();
+                expect(scenario.frameTotalMs.median).toBeGreaterThanOrEqual(
+                    scenario.prepareMs.median,
                 );
             }
         },
