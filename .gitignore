@@ -1,8 +1,10 @@
 node_modules
-dist
-.vite
 coverage
+dev
+dist
+legacy
 *.log
+.vite
 .vscode
 .backup
 .artifacts
